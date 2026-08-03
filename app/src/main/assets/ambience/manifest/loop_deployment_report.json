@@ -1,0 +1,1758 @@
+{
+  "analysis_version": 2,
+  "processed_originals": 21,
+  "sources": {
+    "birds": {
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "birds_loop_001",
+          "path": "ambience/birds/continuous/birds_loop_001.ogg",
+          "duration_ms": 38708,
+          "bytes": 493084,
+          "original": "birds_continuous_001.flac",
+          "loop_start_seconds": 18.53,
+          "loop_end_seconds": 57.238,
+          "crossfade_seconds": 6.046,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.123411,
+            "lufs_diff": 0.014843,
+            "spectrum_distance": 0.042961,
+            "centroid_relative_diff": 0.013338,
+            "flux_diff": 0.004934,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": 0.083367,
+            "dc_offset_diff": 2e-06
+          },
+          "qa": {
+            "score": 19.61,
+            "passed": false,
+            "failures": [
+              "rms_jump",
+              "spectrum_jump"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 7.824274,
+              "spectrum_distance": 0.521826,
+              "click_peak_delta": 0.061125,
+              "peak": 0.062752,
+              "silence_dbfs": -53.805302,
+              "dc_offset_diff": 4e-06,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": 0.011239
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "birds_loop_002",
+          "path": "ambience/birds/continuous/birds_loop_002.ogg",
+          "duration_ms": 38731,
+          "bytes": 490816,
+          "original": "birds_continuous_001.flac",
+          "loop_start_seconds": 4.504,
+          "loop_end_seconds": 43.235,
+          "crossfade_seconds": 5.416,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.032612,
+            "lufs_diff": 0.055798,
+            "spectrum_distance": 0.018007,
+            "centroid_relative_diff": 0.0829,
+            "flux_diff": 0.008253,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": 0.056113,
+            "dc_offset_diff": 2e-06
+          },
+          "qa": {
+            "score": 47.56,
+            "passed": false,
+            "failures": [
+              "rms_jump"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 5.456718,
+              "spectrum_distance": 0.285788,
+              "click_peak_delta": 0.037723,
+              "peak": 0.03805,
+              "silence_dbfs": -54.854572,
+              "dc_offset_diff": 4e-06,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": -0.011787
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "birds_loop_003",
+          "path": "ambience/birds/continuous/birds_loop_003.ogg",
+          "duration_ms": 38728,
+          "bytes": 494135,
+          "original": "birds_continuous_001.flac",
+          "loop_start_seconds": 14.009,
+          "loop_end_seconds": 52.738,
+          "crossfade_seconds": 6.868,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 1.223851,
+            "lufs_diff": 1.213543,
+            "spectrum_distance": 0.02095,
+            "centroid_relative_diff": 0.008274,
+            "flux_diff": 0.009863,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": -0.12798,
+            "dc_offset_diff": 5e-06
+          },
+          "qa": {
+            "score": 56.3,
+            "passed": false,
+            "failures": [
+              "rms_jump",
+              "spectrum_jump"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 3.670767,
+              "spectrum_distance": 0.371544,
+              "click_peak_delta": 0.036573,
+              "peak": 0.020734,
+              "silence_dbfs": -54.650186,
+              "dc_offset_diff": 6e-06,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": 0.014646
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "birds_loop_001",
+        "birds_loop_002",
+        "birds_loop_003"
+      ]
+    },
+    "cafe": {
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "cafe_loop_001",
+          "path": "ambience/cafe/continuous/cafe_loop_001.ogg",
+          "duration_ms": 177466,
+          "bytes": 2212288,
+          "original": "cafe_continuous_002.mp3",
+          "loop_start_seconds": 75.25,
+          "loop_end_seconds": 252.716,
+          "crossfade_seconds": 5.369,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.038684,
+            "lufs_diff": 0.043545,
+            "spectrum_distance": 0.010163,
+            "centroid_relative_diff": 0.043075,
+            "flux_diff": 0.066748,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": -0.007331,
+            "dc_offset_diff": 6e-06
+          },
+          "qa": {
+            "score": 74.19,
+            "passed": false,
+            "failures": [
+              "spectrum_jump"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.016463,
+              "spectrum_distance": 0.376714,
+              "click_peak_delta": 0.047726,
+              "peak": 0.189485,
+              "silence_dbfs": -28.177613,
+              "dc_offset_diff": 6.1e-05,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": -0.01155
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "cafe_loop_002",
+          "path": "ambience/cafe/continuous/cafe_loop_002.ogg",
+          "duration_ms": 177453,
+          "bytes": 2207625,
+          "original": "cafe_continuous_002.mp3",
+          "loop_start_seconds": 10.75,
+          "loop_end_seconds": 188.203,
+          "crossfade_seconds": 5.596,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.119943,
+            "lufs_diff": 0.157587,
+            "spectrum_distance": 0.013215,
+            "centroid_relative_diff": 0.027462,
+            "flux_diff": 0.021571,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": 0.003096,
+            "dc_offset_diff": 2.4e-05
+          },
+          "qa": {
+            "score": 75.1,
+            "passed": false,
+            "failures": [
+              "spectrum_jump"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.877014,
+              "spectrum_distance": 0.372496,
+              "click_peak_delta": 0.052241,
+              "peak": 0.193402,
+              "silence_dbfs": -27.514948,
+              "dc_offset_diff": 8e-06,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": -0.032686
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "cafe_loop_003",
+          "path": "ambience/cafe/continuous/cafe_loop_003.ogg",
+          "duration_ms": 177498,
+          "bytes": 2213174,
+          "original": "cafe_continuous_002.mp3",
+          "loop_start_seconds": 96.75,
+          "loop_end_seconds": 274.249,
+          "crossfade_seconds": 5.758,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.065724,
+            "lufs_diff": 0.024439,
+            "spectrum_distance": 0.021617,
+            "centroid_relative_diff": 0.043617,
+            "flux_diff": 0.061082,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": -0.005374,
+            "dc_offset_diff": 2e-06
+          },
+          "qa": {
+            "score": 63.69,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 2.799325,
+              "spectrum_distance": 0.333247,
+              "click_peak_delta": 0.048271,
+              "peak": 0.222902,
+              "silence_dbfs": -27.750833,
+              "dc_offset_diff": 0.000132,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": 0.096454
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "cafe_loop_001",
+        "cafe_loop_002",
+        "cafe_loop_003"
+      ]
+    },
+    "city": {
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "city_loop_001",
+          "path": "ambience/city/continuous/city_loop_001.ogg",
+          "duration_ms": 21695,
+          "bytes": 381347,
+          "original": "city_continuous_001.wav",
+          "loop_start_seconds": 0.275,
+          "loop_end_seconds": 21.97,
+          "crossfade_seconds": 5.424,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.424085,
+            "lufs_diff": 0.471649,
+            "spectrum_distance": 0.010617,
+            "centroid_relative_diff": 0.025939,
+            "flux_diff": 0.01007,
+            "stereo_balance_diff": 0.013823,
+            "waveform_correlation": 0.042459,
+            "dc_offset_diff": 3.2e-05
+          },
+          "qa": {
+            "score": 77.2,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.446845,
+              "spectrum_distance": 0.240719,
+              "click_peak_delta": 0.030762,
+              "peak": 0.045514,
+              "silence_dbfs": -40.959905,
+              "dc_offset_diff": 2.6e-05,
+              "stereo_balance_diff": 0.024053,
+              "waveform_correlation": -0.007566
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "city_loop_002",
+          "path": "ambience/city/continuous/city_loop_002.ogg",
+          "duration_ms": 21718,
+          "bytes": 379296,
+          "original": "city_continuous_001.wav",
+          "loop_start_seconds": 10.507,
+          "loop_end_seconds": 32.226,
+          "crossfade_seconds": 5.43,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.24318,
+            "lufs_diff": 0.188969,
+            "spectrum_distance": 0.012021,
+            "centroid_relative_diff": 0.078029,
+            "flux_diff": 0.011343,
+            "stereo_balance_diff": 0.062813,
+            "waveform_correlation": -0.000752,
+            "dc_offset_diff": 1.8e-05
+          },
+          "qa": {
+            "score": 64.19,
+            "passed": false,
+            "failures": [
+              "rms_jump"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 3.046888,
+              "spectrum_distance": 0.275833,
+              "click_peak_delta": 0.020447,
+              "peak": 0.070374,
+              "silence_dbfs": -41.420054,
+              "dc_offset_diff": 2e-05,
+              "stereo_balance_diff": 0.038519,
+              "waveform_correlation": -0.038123
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "city_loop_003",
+          "path": "ambience/city/continuous/city_loop_003.ogg",
+          "duration_ms": 21709,
+          "bytes": 379706,
+          "original": "city_continuous_001.wav",
+          "loop_start_seconds": 11.763,
+          "loop_end_seconds": 33.473,
+          "crossfade_seconds": 5.427,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.634249,
+            "lufs_diff": 0.671852,
+            "spectrum_distance": 0.009317,
+            "centroid_relative_diff": 0.023599,
+            "flux_diff": 0.002598,
+            "stereo_balance_diff": 0.031852,
+            "waveform_correlation": 0.004311,
+            "dc_offset_diff": 9e-06
+          },
+          "qa": {
+            "score": 80.6,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.148542,
+              "spectrum_distance": 0.290272,
+              "click_peak_delta": 0.017487,
+              "peak": 0.060577,
+              "silence_dbfs": -39.36374,
+              "dc_offset_diff": 9.5e-05,
+              "stereo_balance_diff": 0.146873,
+              "waveform_correlation": -0.050227
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "city_loop_001",
+        "city_loop_002",
+        "city_loop_003"
+      ]
+    },
+    "fan": {
+      "loop_mode": "seamless",
+      "candidates": [
+        {
+          "asset_id": "fan_loop_001",
+          "path": "ambience/fan/continuous/fan_loop_001.ogg",
+          "duration_ms": 148445,
+          "bytes": 1875438,
+          "original": "fan_continuous_003.wav",
+          "loop_start_seconds": 0.035,
+          "loop_end_seconds": 29.724,
+          "crossfade_seconds": 1.136,
+          "tiles": 5,
+          "seamless_eligible": true,
+          "boundary_features": {
+            "rms_db_diff": 0.176433,
+            "lufs_diff": 0.176399,
+            "spectrum_distance": 0.005344,
+            "centroid_relative_diff": 0.006134,
+            "flux_diff": 0.019404,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": -0.00763,
+            "dc_offset_diff": 2e-05
+          },
+          "qa": {
+            "score": 83.71,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.075538,
+              "spectrum_distance": 0.213496,
+              "click_peak_delta": 0.173888,
+              "peak": 0.098737,
+              "silence_dbfs": -27.835783,
+              "dc_offset_diff": 0.000282,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": 0.001236
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "fan_loop_002",
+          "path": "ambience/fan/continuous/fan_loop_002.ogg",
+          "duration_ms": 299985,
+          "bytes": 5447072,
+          "original": "fan_continuous_001.mp3",
+          "loop_start_seconds": 2098.5,
+          "loop_end_seconds": 2398.486,
+          "crossfade_seconds": 1.215,
+          "tiles": 1,
+          "seamless_eligible": true,
+          "boundary_features": {
+            "rms_db_diff": 0.385259,
+            "lufs_diff": 0.405094,
+            "spectrum_distance": 0.002445,
+            "centroid_relative_diff": 0.03744,
+            "flux_diff": 0.02459,
+            "stereo_balance_diff": 0.016618,
+            "waveform_correlation": 0.134622,
+            "dc_offset_diff": 7.1e-05
+          },
+          "qa": {
+            "score": 85.22,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.982276,
+              "spectrum_distance": 0.120997,
+              "click_peak_delta": 0.031142,
+              "peak": 0.130705,
+              "silence_dbfs": -32.629235,
+              "dc_offset_diff": 0.000997,
+              "stereo_balance_diff": 0.03722,
+              "waveform_correlation": 0.236916
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "fan_loop_003",
+          "path": "ambience/fan/continuous/fan_loop_003.ogg",
+          "duration_ms": 148365,
+          "bytes": 1797527,
+          "original": "fan_continuous_002.wav",
+          "loop_start_seconds": 0.028,
+          "loop_end_seconds": 29.701,
+          "crossfade_seconds": 1.247,
+          "tiles": 5,
+          "seamless_eligible": true,
+          "boundary_features": {
+            "rms_db_diff": 0.392901,
+            "lufs_diff": 0.390768,
+            "spectrum_distance": 0.005667,
+            "centroid_relative_diff": 0.021519,
+            "flux_diff": 0.115827,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": 0.069277,
+            "dc_offset_diff": 0.000443
+          },
+          "qa": {
+            "score": 87.09,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.065221,
+              "spectrum_distance": 0.20913,
+              "click_peak_delta": 0.067811,
+              "peak": 0.098785,
+              "silence_dbfs": -29.17642,
+              "dc_offset_diff": 0.001999,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": -0.034409
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "fan_loop_004",
+          "path": "ambience/fan/continuous/fan_loop_004.ogg",
+          "duration_ms": 299950,
+          "bytes": 5446451,
+          "original": "fan_continuous_001.mp3",
+          "loop_start_seconds": 1199.75,
+          "loop_end_seconds": 1499.701,
+          "crossfade_seconds": 1.083,
+          "tiles": 1,
+          "seamless_eligible": true,
+          "boundary_features": {
+            "rms_db_diff": 0.067796,
+            "lufs_diff": 0.122887,
+            "spectrum_distance": 0.00542,
+            "centroid_relative_diff": 0.019769,
+            "flux_diff": 0.014623,
+            "stereo_balance_diff": 0.060262,
+            "waveform_correlation": -0.141731,
+            "dc_offset_diff": 0.000476
+          },
+          "qa": {
+            "score": 67.41,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 2.81567,
+              "spectrum_distance": 0.165161,
+              "click_peak_delta": 0.077916,
+              "peak": 0.134967,
+              "silence_dbfs": -33.731331,
+              "dc_offset_diff": 0.001088,
+              "stereo_balance_diff": 0.057634,
+              "waveform_correlation": -0.144301
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "fan_loop_005",
+          "path": "ambience/fan/continuous/fan_loop_005.ogg",
+          "duration_ms": 299970,
+          "bytes": 5445419,
+          "original": "fan_continuous_001.mp3",
+          "loop_start_seconds": 2398.25,
+          "loop_end_seconds": 2698.221,
+          "crossfade_seconds": 1.094,
+          "tiles": 1,
+          "seamless_eligible": true,
+          "boundary_features": {
+            "rms_db_diff": 0.169256,
+            "lufs_diff": 0.174976,
+            "spectrum_distance": 0.001022,
+            "centroid_relative_diff": 0.036473,
+            "flux_diff": 0.011506,
+            "stereo_balance_diff": 0.055144,
+            "waveform_correlation": -0.078566,
+            "dc_offset_diff": 0.000368
+          },
+          "qa": {
+            "score": 84.26,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.649219,
+              "spectrum_distance": 0.177439,
+              "click_peak_delta": 0.038995,
+              "peak": 0.137001,
+              "silence_dbfs": -32.958767,
+              "dc_offset_diff": 0.001249,
+              "stereo_balance_diff": 0.044699,
+              "waveform_correlation": -0.039275
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "fan_loop_003"
+      ]
+    },
+    "fire": {
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "fire_loop_001",
+          "path": "ambience/fire/continuous/fire_loop_001.ogg",
+          "duration_ms": 17478,
+          "bytes": 385013,
+          "original": "fire_continuous_001.wav",
+          "loop_start_seconds": 8.261,
+          "loop_end_seconds": 25.739,
+          "crossfade_seconds": 3.353,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.365209,
+            "lufs_diff": 0.393856,
+            "spectrum_distance": 0.003231,
+            "centroid_relative_diff": 0.190976,
+            "flux_diff": 0.003098,
+            "stereo_balance_diff": 0.011268,
+            "waveform_correlation": 0.172184,
+            "dc_offset_diff": 0.000775
+          },
+          "qa": {
+            "score": 84.92,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.614566,
+              "spectrum_distance": 0.150315,
+              "click_peak_delta": 0.063604,
+              "peak": 0.072352,
+              "silence_dbfs": -42.918052,
+              "dc_offset_diff": 0.003825,
+              "stereo_balance_diff": 0.006515,
+              "waveform_correlation": -0.127964
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "fire_loop_002",
+          "path": "ambience/fire/continuous/fire_loop_002.ogg",
+          "duration_ms": 17484,
+          "bytes": 382344,
+          "original": "fire_continuous_001.wav",
+          "loop_start_seconds": 5.002,
+          "loop_end_seconds": 22.486,
+          "crossfade_seconds": 3.631,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.53578,
+            "lufs_diff": 0.533314,
+            "spectrum_distance": 0.012311,
+            "centroid_relative_diff": 0.069939,
+            "flux_diff": 0.010736,
+            "stereo_balance_diff": 0.006731,
+            "waveform_correlation": -0.02421,
+            "dc_offset_diff": 0.000886
+          },
+          "qa": {
+            "score": 86.05,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.256243,
+              "spectrum_distance": 0.204171,
+              "click_peak_delta": 0.063605,
+              "peak": 0.07235,
+              "silence_dbfs": -42.607294,
+              "dc_offset_diff": 0.00035,
+              "stereo_balance_diff": 0.021824,
+              "waveform_correlation": 0.03121
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "fire_loop_003",
+          "path": "ambience/fire/continuous/fire_loop_003.ogg",
+          "duration_ms": 17457,
+          "bytes": 381605,
+          "original": "fire_continuous_001.wav",
+          "loop_start_seconds": 4.032,
+          "loop_end_seconds": 21.489,
+          "crossfade_seconds": 3.792,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.852237,
+            "lufs_diff": 0.851475,
+            "spectrum_distance": 0.005476,
+            "centroid_relative_diff": 0.019605,
+            "flux_diff": 0.004614,
+            "stereo_balance_diff": 0.004119,
+            "waveform_correlation": -0.082738,
+            "dc_offset_diff": 0.000578
+          },
+          "qa": {
+            "score": 83.1,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.880066,
+              "spectrum_distance": 0.209665,
+              "click_peak_delta": 0.027175,
+              "peak": 0.037467,
+              "silence_dbfs": -43.879585,
+              "dc_offset_diff": 0.000209,
+              "stereo_balance_diff": 0.009948,
+              "waveform_correlation": 0.049387
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "fire_loop_001",
+        "fire_loop_002",
+        "fire_loop_003"
+      ]
+    },
+    "ocean": {
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "ocean_loop_001",
+          "path": "ambience/ocean/continuous/ocean_loop_001.ogg",
+          "duration_ms": 32445,
+          "bytes": 609239,
+          "original": "ocean_continuous_001.wav",
+          "loop_start_seconds": 19.517,
+          "loop_end_seconds": 51.963,
+          "crossfade_seconds": 6.977,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 1.10675,
+            "lufs_diff": 1.102728,
+            "spectrum_distance": 0.004405,
+            "centroid_relative_diff": 0.009231,
+            "flux_diff": 0.020982,
+            "stereo_balance_diff": 0.0243,
+            "waveform_correlation": -0.016168,
+            "dc_offset_diff": 7e-06
+          },
+          "qa": {
+            "score": 64.39,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 2.5178,
+              "spectrum_distance": 0.245819,
+              "click_peak_delta": 0.12042,
+              "peak": 0.202441,
+              "silence_dbfs": -30.075934,
+              "dc_offset_diff": 5e-06,
+              "stereo_balance_diff": 0.090292,
+              "waveform_correlation": 0.03016
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "ocean_loop_002",
+          "path": "ambience/ocean/continuous/ocean_loop_002.ogg",
+          "duration_ms": 32453,
+          "bytes": 605177,
+          "original": "ocean_continuous_001.wav",
+          "loop_start_seconds": 17.502,
+          "loop_end_seconds": 49.956,
+          "crossfade_seconds": 7.737,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 1.438525,
+            "lufs_diff": 2.155928,
+            "spectrum_distance": 0.011306,
+            "centroid_relative_diff": 0.0494,
+            "flux_diff": 0.017938,
+            "stereo_balance_diff": 5.1e-05,
+            "waveform_correlation": 0.000188,
+            "dc_offset_diff": 3.7e-05
+          },
+          "qa": {
+            "score": 82.93,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.131083,
+              "spectrum_distance": 0.230388,
+              "click_peak_delta": 0.123531,
+              "peak": 0.186015,
+              "silence_dbfs": -31.014778,
+              "dc_offset_diff": 2.2e-05,
+              "stereo_balance_diff": 0.042335,
+              "waveform_correlation": -0.037489
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "ocean_loop_003",
+          "path": "ambience/ocean/continuous/ocean_loop_003.ogg",
+          "duration_ms": 32442,
+          "bytes": 604068,
+          "original": "ocean_continuous_001.wav",
+          "loop_start_seconds": 15.527,
+          "loop_end_seconds": 47.97,
+          "crossfade_seconds": 8.111,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 1.565195,
+            "lufs_diff": 1.988617,
+            "spectrum_distance": 0.02277,
+            "centroid_relative_diff": 0.081375,
+            "flux_diff": 0.048315,
+            "stereo_balance_diff": 0.00844,
+            "waveform_correlation": -0.013247,
+            "dc_offset_diff": 3e-05
+          },
+          "qa": {
+            "score": 74.2,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.633171,
+              "spectrum_distance": 0.215186,
+              "click_peak_delta": 0.114588,
+              "peak": 0.218667,
+              "silence_dbfs": -28.6056,
+              "dc_offset_diff": 2e-06,
+              "stereo_balance_diff": 0.022306,
+              "waveform_correlation": 0.00624
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "ocean_loop_001",
+        "ocean_loop_002",
+        "ocean_loop_003"
+      ]
+    },
+    "rain": {
+      "loop_mode": "seamless",
+      "candidates": [
+        {
+          "asset_id": "rain_loop_001",
+          "path": "ambience/rain/continuous/rain_loop_001.ogg",
+          "duration_ms": 186059,
+          "bytes": 3517952,
+          "original": "rain_continuous_004.mp3",
+          "loop_start_seconds": 0.033,
+          "loop_end_seconds": 37.245,
+          "crossfade_seconds": 1.259,
+          "tiles": 5,
+          "seamless_eligible": true,
+          "boundary_features": {
+            "rms_db_diff": 0.091252,
+            "lufs_diff": 0.085232,
+            "spectrum_distance": 0.023756,
+            "centroid_relative_diff": 0.011797,
+            "flux_diff": 0.080158,
+            "stereo_balance_diff": 0.002315,
+            "waveform_correlation": 0.016029,
+            "dc_offset_diff": 1.1e-05
+          },
+          "qa": {
+            "score": 81.63,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.232021,
+              "spectrum_distance": 0.242797,
+              "click_peak_delta": 0.149108,
+              "peak": 0.194697,
+              "silence_dbfs": -36.175658,
+              "dc_offset_diff": 2.3e-05,
+              "stereo_balance_diff": 0.019786,
+              "waveform_correlation": 0.022136
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "rain_loop_002",
+          "path": "ambience/rain/continuous/rain_loop_002.ogg",
+          "duration_ms": 186111,
+          "bytes": 3513648,
+          "original": "rain_continuous_008.ogg",
+          "loop_start_seconds": 0.017,
+          "loop_end_seconds": 37.239,
+          "crossfade_seconds": 1.284,
+          "tiles": 5,
+          "seamless_eligible": true,
+          "boundary_features": {
+            "rms_db_diff": 0.118897,
+            "lufs_diff": 0.112961,
+            "spectrum_distance": 0.024977,
+            "centroid_relative_diff": 0.011921,
+            "flux_diff": 0.076375,
+            "stereo_balance_diff": 0.002699,
+            "waveform_correlation": 0.013807,
+            "dc_offset_diff": 2e-05
+          },
+          "qa": {
+            "score": 80.38,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.474611,
+              "spectrum_distance": 0.243839,
+              "click_peak_delta": 0.136671,
+              "peak": 0.171923,
+              "silence_dbfs": -36.256983,
+              "dc_offset_diff": 2.9e-05,
+              "stereo_balance_diff": 0.017471,
+              "waveform_correlation": -0.001149
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "rain_loop_003",
+          "path": "ambience/rain/continuous/rain_loop_003.ogg",
+          "duration_ms": 25707,
+          "bytes": 501389,
+          "original": "rain_continuous_006.ogg",
+          "loop_start_seconds": 0.034,
+          "loop_end_seconds": 25.741,
+          "crossfade_seconds": 1.205,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.394918,
+            "lufs_diff": 0.370104,
+            "spectrum_distance": 0.000834,
+            "centroid_relative_diff": 0.013868,
+            "flux_diff": 0.020296,
+            "stereo_balance_diff": 0.021514,
+            "waveform_correlation": 0.026306,
+            "dc_offset_diff": 3.9e-05
+          },
+          "qa": {
+            "score": 66.45,
+            "passed": false,
+            "failures": [
+              "click"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.625583,
+              "spectrum_distance": 0.217875,
+              "click_peak_delta": 0.351144,
+              "peak": 0.581506,
+              "silence_dbfs": -22.617218,
+              "dc_offset_diff": 3.2e-05,
+              "stereo_balance_diff": 0.002137,
+              "waveform_correlation": 0.041755
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "rain_loop_004",
+          "path": "ambience/rain/continuous/rain_loop_004.ogg",
+          "duration_ms": 25693,
+          "bytes": 481876,
+          "original": "rain_continuous_002.mp3",
+          "loop_start_seconds": 0.007,
+          "loop_end_seconds": 25.7,
+          "crossfade_seconds": 1.21,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.403954,
+            "lufs_diff": 0.382217,
+            "spectrum_distance": 0.000851,
+            "centroid_relative_diff": 0.013084,
+            "flux_diff": 0.02114,
+            "stereo_balance_diff": 0.020066,
+            "waveform_correlation": 0.026113,
+            "dc_offset_diff": 3.6e-05
+          },
+          "qa": {
+            "score": 66.13,
+            "passed": false,
+            "failures": [
+              "click"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.540594,
+              "spectrum_distance": 0.220697,
+              "click_peak_delta": 0.374316,
+              "peak": 0.567049,
+              "silence_dbfs": -22.639174,
+              "dc_offset_diff": 7.5e-05,
+              "stereo_balance_diff": 0.001165,
+              "waveform_correlation": 0.010421
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "rain_loop_005",
+          "path": "ambience/rain/continuous/rain_loop_005.ogg",
+          "duration_ms": 223439,
+          "bytes": 4247325,
+          "original": "rain_continuous_003.mp3",
+          "loop_start_seconds": 0.027,
+          "loop_end_seconds": 44.715,
+          "crossfade_seconds": 1.716,
+          "tiles": 5,
+          "seamless_eligible": true,
+          "boundary_features": {
+            "rms_db_diff": 0.362362,
+            "lufs_diff": 0.325607,
+            "spectrum_distance": 0.05939,
+            "centroid_relative_diff": 0.047676,
+            "flux_diff": 0.095702,
+            "stereo_balance_diff": 0.03576,
+            "waveform_correlation": 0.022812,
+            "dc_offset_diff": 7.2e-05
+          },
+          "qa": {
+            "score": 74.62,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.685705,
+              "spectrum_distance": 0.237443,
+              "click_peak_delta": 0.274015,
+              "peak": 0.399043,
+              "silence_dbfs": -28.60629,
+              "dc_offset_diff": 5e-05,
+              "stereo_balance_diff": 0.003253,
+              "waveform_correlation": -0.03881
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "rain_loop_006",
+          "path": "ambience/rain/continuous/rain_loop_006.ogg",
+          "duration_ms": 223470,
+          "bytes": 4209064,
+          "original": "rain_continuous_007.ogg",
+          "loop_start_seconds": 0.035,
+          "loop_end_seconds": 44.73,
+          "crossfade_seconds": 1.724,
+          "tiles": 5,
+          "seamless_eligible": true,
+          "boundary_features": {
+            "rms_db_diff": 0.339459,
+            "lufs_diff": 0.30315,
+            "spectrum_distance": 0.061636,
+            "centroid_relative_diff": 0.051202,
+            "flux_diff": 0.096653,
+            "stereo_balance_diff": 0.035135,
+            "waveform_correlation": 0.024158,
+            "dc_offset_diff": 0.00011
+          },
+          "qa": {
+            "score": 73.57,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.78741,
+              "spectrum_distance": 0.246348,
+              "click_peak_delta": 0.279051,
+              "peak": 0.402013,
+              "silence_dbfs": -28.535937,
+              "dc_offset_diff": 0.000151,
+              "stereo_balance_diff": 0.000878,
+              "waveform_correlation": 0.00633
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "rain_loop_001"
+      ]
+    },
+    "stream": {
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "stream_loop_001",
+          "path": "ambience/stream/continuous/stream_loop_001.ogg",
+          "duration_ms": 13425,
+          "bytes": 307777,
+          "original": "stream_continuous_002.wav",
+          "loop_start_seconds": 5.533,
+          "loop_end_seconds": 18.959,
+          "crossfade_seconds": 3.1,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.053322,
+            "lufs_diff": 0.037621,
+            "spectrum_distance": 0.003725,
+            "centroid_relative_diff": 0.002395,
+            "flux_diff": 0.009762,
+            "stereo_balance_diff": 0.025916,
+            "waveform_correlation": 0.043857,
+            "dc_offset_diff": 9e-06
+          },
+          "qa": {
+            "score": 72.98,
+            "passed": false,
+            "failures": [
+              "click"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.320301,
+              "spectrum_distance": 0.219704,
+              "click_peak_delta": 0.407471,
+              "peak": 0.336639,
+              "silence_dbfs": -34.493374,
+              "dc_offset_diff": 3.4e-05,
+              "stereo_balance_diff": 0.015015,
+              "waveform_correlation": -0.033162
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "stream_loop_002",
+          "path": "ambience/stream/continuous/stream_loop_002.ogg",
+          "duration_ms": 13447,
+          "bytes": 305796,
+          "original": "stream_continuous_002.wav",
+          "loop_start_seconds": 3.771,
+          "loop_end_seconds": 17.219,
+          "crossfade_seconds": 3.193,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.035015,
+            "lufs_diff": 0.055531,
+            "spectrum_distance": 0.010951,
+            "centroid_relative_diff": 0.003701,
+            "flux_diff": 0.051069,
+            "stereo_balance_diff": 0.002707,
+            "waveform_correlation": -0.01674,
+            "dc_offset_diff": 2.4e-05
+          },
+          "qa": {
+            "score": 46.85,
+            "passed": false,
+            "failures": [
+              "click"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.170504,
+              "spectrum_distance": 0.243724,
+              "click_peak_delta": 1.11546,
+              "peak": 0.614439,
+              "silence_dbfs": -33.915403,
+              "dc_offset_diff": 1.5e-05,
+              "stereo_balance_diff": 0.064857,
+              "waveform_correlation": 0.031517
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "stream_loop_003",
+          "path": "ambience/stream/continuous/stream_loop_003.ogg",
+          "duration_ms": 13435,
+          "bytes": 310835,
+          "original": "stream_continuous_002.wav",
+          "loop_start_seconds": 7.78,
+          "loop_end_seconds": 21.216,
+          "crossfade_seconds": 3.169,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.041562,
+            "lufs_diff": 0.060204,
+            "spectrum_distance": 0.008978,
+            "centroid_relative_diff": 0.001023,
+            "flux_diff": 0.003315,
+            "stereo_balance_diff": 0.031665,
+            "waveform_correlation": -0.009595,
+            "dc_offset_diff": 1.2e-05
+          },
+          "qa": {
+            "score": 72.88,
+            "passed": false,
+            "failures": [
+              "click"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.042419,
+              "spectrum_distance": 0.222978,
+              "click_peak_delta": 0.475616,
+              "peak": 0.268494,
+              "silence_dbfs": -34.294879,
+              "dc_offset_diff": 2e-06,
+              "stereo_balance_diff": 0.00363,
+              "waveform_correlation": -0.005989
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "stream_loop_001",
+        "stream_loop_002",
+        "stream_loop_003"
+      ]
+    },
+    "train": {
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "train_loop_001",
+          "path": "ambience/train/continuous/train_loop_001.ogg",
+          "duration_ms": 7959,
+          "bytes": 137873,
+          "original": "train_continuous_001.wav",
+          "loop_start_seconds": 1.773,
+          "loop_end_seconds": 9.733,
+          "crossfade_seconds": 1.99,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.157579,
+            "lufs_diff": 0.061863,
+            "spectrum_distance": 0.017254,
+            "centroid_relative_diff": 0.039461,
+            "flux_diff": 0.00023,
+            "stereo_balance_diff": 0.03483,
+            "waveform_correlation": 0.005457,
+            "dc_offset_diff": 9.7e-05
+          },
+          "qa": {
+            "score": 72.41,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 2.069823,
+              "spectrum_distance": 0.234767,
+              "click_peak_delta": 0.012115,
+              "peak": 0.081709,
+              "silence_dbfs": -38.537982,
+              "dc_offset_diff": 0.000128,
+              "stereo_balance_diff": 0.069506,
+              "waveform_correlation": 0.017393
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "train_loop_002",
+          "path": "ambience/train/continuous/train_loop_002.ogg",
+          "duration_ms": 7967,
+          "bytes": 138336,
+          "original": "train_continuous_001.wav",
+          "loop_start_seconds": 2.758,
+          "loop_end_seconds": 10.726,
+          "crossfade_seconds": 1.992,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.203662,
+            "lufs_diff": 0.024296,
+            "spectrum_distance": 0.013916,
+            "centroid_relative_diff": 0.035208,
+            "flux_diff": 0.009795,
+            "stereo_balance_diff": 0.047513,
+            "waveform_correlation": -0.054732,
+            "dc_offset_diff": 0.000107
+          },
+          "qa": {
+            "score": 83.52,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.112616,
+              "spectrum_distance": 0.149459,
+              "click_peak_delta": 0.016467,
+              "peak": 0.084223,
+              "silence_dbfs": -40.153754,
+              "dc_offset_diff": 0.000177,
+              "stereo_balance_diff": 0.04076,
+              "waveform_correlation": -0.024399
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "train_loop_003",
+          "path": "ambience/train/continuous/train_loop_003.ogg",
+          "duration_ms": 7914,
+          "bytes": 137749,
+          "original": "train_continuous_001.wav",
+          "loop_start_seconds": 4.044,
+          "loop_end_seconds": 11.958,
+          "crossfade_seconds": 1.979,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 0.866785,
+            "lufs_diff": 0.799736,
+            "spectrum_distance": 0.004786,
+            "centroid_relative_diff": 0.046818,
+            "flux_diff": 0.028793,
+            "stereo_balance_diff": 0.067924,
+            "waveform_correlation": -0.031478,
+            "dc_offset_diff": 4.7e-05
+          },
+          "qa": {
+            "score": 84.3,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.991457,
+              "spectrum_distance": 0.169811,
+              "click_peak_delta": 0.012176,
+              "peak": 0.088532,
+              "silence_dbfs": -40.315924,
+              "dc_offset_diff": 7.6e-05,
+              "stereo_balance_diff": 0.022494,
+              "waveform_correlation": 0.078768
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "train_loop_001",
+        "train_loop_002",
+        "train_loop_003"
+      ]
+    },
+    "ventilation": {
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "ventilation_loop_001",
+          "path": "ambience/ventilation/continuous/ventilation_loop_001.ogg",
+          "duration_ms": 217696,
+          "bytes": 3737357,
+          "original": "ventilation_continuous_001.wav",
+          "loop_start_seconds": 0.282,
+          "loop_end_seconds": 217.978,
+          "crossfade_seconds": 4.0,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 6.255272,
+            "lufs_diff": 6.241045,
+            "spectrum_distance": 0.00924,
+            "centroid_relative_diff": 0.015896,
+            "flux_diff": 0.032467,
+            "stereo_balance_diff": 0.002592,
+            "waveform_correlation": 0.172364,
+            "dc_offset_diff": 0.02988
+          },
+          "qa": {
+            "score": 53.92,
+            "passed": false,
+            "failures": [
+              "click",
+              "peak"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.42655,
+              "spectrum_distance": 0.193621,
+              "click_peak_delta": 0.632607,
+              "peak": 0.999969,
+              "silence_dbfs": -12.197253,
+              "dc_offset_diff": 0.01965,
+              "stereo_balance_diff": 0.010954,
+              "waveform_correlation": 0.224602
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "ventilation_loop_001"
+      ]
+    },
+    "wind": {
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "wind_loop_001",
+          "path": "ambience/wind/continuous/wind_loop_001.ogg",
+          "duration_ms": 45466,
+          "bytes": 566240,
+          "original": "wind_continuous_001.mp3",
+          "loop_start_seconds": 0.5,
+          "loop_end_seconds": 45.966,
+          "crossfade_seconds": 8.0,
+          "tiles": 1,
+          "seamless_eligible": false,
+          "boundary_features": {
+            "rms_db_diff": 15.350919,
+            "lufs_diff": 16.418316,
+            "spectrum_distance": 0.049686,
+            "centroid_relative_diff": 0.221711,
+            "flux_diff": 0.308265,
+            "stereo_balance_diff": 7e-06,
+            "waveform_correlation": -0.176437,
+            "dc_offset_diff": 0.000641
+          },
+          "qa": {
+            "score": 3.81,
+            "passed": false,
+            "failures": [
+              "rms_jump"
+            ],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 12.638335,
+              "spectrum_distance": 0.118748,
+              "click_peak_delta": 0.023766,
+              "peak": 0.04712,
+              "silence_dbfs": -49.830342,
+              "dc_offset_diff": 0.001181,
+              "stereo_balance_diff": 2e-06,
+              "waveform_correlation": -0.250097
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ],
+      "deployed": [
+        "wind_loop_001"
+      ]
+    }
+  },
+  "excluded": [
+    {
+      "source": "fan",
+      "file": "fan_continuous_004.mp3",
+      "reason": "unreadable_or_shorter_than_8s"
+    },
+    {
+      "source": "rain",
+      "file": "rain_continuous_009.ogg",
+      "reason": "unreadable_or_shorter_than_8s"
+    },
+    {
+      "source": "stream",
+      "file": "stream_continuous_001.ogg",
+      "reason": "unreadable_or_shorter_than_8s"
+    },
+    {
+      "source": "ventilation",
+      "file": "ventilation_continuous_002.wav",
+      "reason": "unreadable_or_shorter_than_8s"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,257 @@
+{
+  "train_trim_gain_db": 3.0,
+  "noise": {
+    "white_noise": {
+      "asset_id": "white_noise_loop_001",
+      "path": "ambience/white_noise/continuous/white_noise_loop_001.ogg",
+      "duration_ms": 305000,
+      "crossfade_ms": 5000,
+      "bytes": 3847168,
+      "pcm_rms_dbfs": -27.959,
+      "pcm_peak_dbfs": -13.572,
+      "qa": {
+        "score": 81.77,
+        "passed": true,
+        "failures": [],
+        "limits": {
+          "rms_db_jump": 3.0,
+          "spectrum_distance": 0.35,
+          "click_peak_delta": 0.35,
+          "peak": 0.9995,
+          "silence_dbfs": -60.0,
+          "dc_offset_diff": 0.03,
+          "stereo_balance_diff": 0.25
+        },
+        "metrics": {
+          "rms_db_jump": 0.026275,
+          "spectrum_distance": 0.217077,
+          "click_peak_delta": 0.23516,
+          "peak": 0.175141,
+          "silence_dbfs": -27.964823,
+          "dc_offset_diff": 0.000202,
+          "stereo_balance_diff": 0.0,
+          "waveform_correlation": 0.005931
+        },
+        "boundaries_checked": 3
+      }
+    },
+    "pink_noise": {
+      "asset_id": "pink_noise_loop_001",
+      "path": "ambience/pink_noise/continuous/pink_noise_loop_001.ogg",
+      "duration_ms": 305000,
+      "crossfade_ms": 6000,
+      "bytes": 3608611,
+      "pcm_rms_dbfs": -27.959,
+      "pcm_peak_dbfs": -12.786,
+      "qa": {
+        "score": 81.28,
+        "passed": true,
+        "failures": [],
+        "limits": {
+          "rms_db_jump": 3.0,
+          "spectrum_distance": 0.35,
+          "click_peak_delta": 0.35,
+          "peak": 0.9995,
+          "silence_dbfs": -60.0,
+          "dc_offset_diff": 0.03,
+          "stereo_balance_diff": 0.25
+        },
+        "metrics": {
+          "rms_db_jump": 0.111759,
+          "spectrum_distance": 0.260459,
+          "click_peak_delta": 0.110744,
+          "peak": 0.171974,
+          "silence_dbfs": -28.026373,
+          "dc_offset_diff": 0.009362,
+          "stereo_balance_diff": 0.0,
+          "waveform_correlation": 0.02415
+        },
+        "boundaries_checked": 3
+      }
+    },
+    "brown_noise": {
+      "asset_id": "brown_noise_loop_001",
+      "path": "ambience/brown_noise/continuous/brown_noise_loop_001.ogg",
+      "duration_ms": 305000,
+      "crossfade_ms": 7000,
+      "bytes": 3607568,
+      "pcm_rms_dbfs": -27.959,
+      "pcm_peak_dbfs": -13.49,
+      "qa": {
+        "score": 86.13,
+        "passed": true,
+        "failures": [],
+        "limits": {
+          "rms_db_jump": 3.0,
+          "spectrum_distance": 0.35,
+          "click_peak_delta": 0.35,
+          "peak": 0.9995,
+          "silence_dbfs": -60.0,
+          "dc_offset_diff": 0.03,
+          "stereo_balance_diff": 0.25
+        },
+        "metrics": {
+          "rms_db_jump": 0.362671,
+          "spectrum_distance": 0.214133,
+          "click_peak_delta": 0.022524,
+          "peak": 0.156824,
+          "silence_dbfs": -28.071566,
+          "dc_offset_diff": 0.000595,
+          "stereo_balance_diff": 0.0,
+          "waveform_correlation": -0.15258
+        },
+        "boundaries_checked": 3
+      }
+    }
+  },
+  "cricket": {
+    "classification_before": "hybrid",
+    "classification_after": "continuous_crossfade",
+    "duration_seconds": 11.452063,
+    "silent_frames_below_minus_50_dbfs": 0,
+    "rms_dbfs_min": -40.717,
+    "rms_dbfs_max": -36.881,
+    "crest_max": 5.866,
+    "assets": [
+      {
+        "asset_id": "crickets_loop_001",
+        "path": "ambience/crickets/continuous/crickets_loop_001.ogg",
+        "duration_ms": 7952,
+        "crossfade_ms": 1988,
+        "bytes": 171061,
+        "original": "crickets_hybrid_001.mp3",
+        "trim_start_seconds": 3.0,
+        "trim_end_seconds": 10.953,
+        "analysis_score": 3.781,
+        "boundary_features": {
+          "rms_db_diff": 0.35309662842637835,
+          "lufs_diff": 0.3109855651855469,
+          "spectrum_distance": 0.001665353775024414,
+          "centroid_relative_diff": 0.010264405116402822,
+          "flux_diff": 0.011386441066861153,
+          "stereo_balance_diff": 0.03367923945188522,
+          "waveform_correlation": 0.024142810087813354,
+          "dc_offset_diff": 2.092650504437188e-06
+        },
+        "seam_qa": {
+          "score": 84.67,
+          "passed": true,
+          "failures": [],
+          "limits": {
+            "rms_db_jump": 3.0,
+            "spectrum_distance": 0.35,
+            "click_peak_delta": 0.35,
+            "peak": 0.9995,
+            "silence_dbfs": -60.0,
+            "dc_offset_diff": 0.03,
+            "stereo_balance_diff": 0.25
+          },
+          "metrics": {
+            "rms_db_jump": 0.215961,
+            "spectrum_distance": 0.234321,
+            "click_peak_delta": 0.063715,
+            "peak": 0.101532,
+            "silence_dbfs": -36.381336,
+            "dc_offset_diff": 2e-06,
+            "stereo_balance_diff": 0.032329,
+            "waveform_correlation": -0.014416
+          },
+          "boundaries_checked": 3
+        }
+      },
+      {
+        "asset_id": "crickets_loop_002",
+        "path": "ambience/crickets/continuous/crickets_loop_002.ogg",
+        "duration_ms": 7950,
+        "crossfade_ms": 1987,
+        "bytes": 170776,
+        "original": "crickets_hybrid_001.mp3",
+        "trim_start_seconds": 2.5,
+        "trim_end_seconds": 10.45,
+        "analysis_score": 3.865,
+        "boundary_features": {
+          "rms_db_diff": 0.34758842170118953,
+          "lufs_diff": 0.40241241455078125,
+          "spectrum_distance": 0.0013137459754943848,
+          "centroid_relative_diff": 0.00521400388116905,
+          "flux_diff": 0.008783046156167984,
+          "stereo_balance_diff": 0.035008031874895096,
+          "waveform_correlation": 0.015496451015468605,
+          "dc_offset_diff": 1.628453105695371e-08
+        },
+        "seam_qa": {
+          "score": 79.22,
+          "passed": true,
+          "failures": [],
+          "limits": {
+            "rms_db_jump": 3.0,
+            "spectrum_distance": 0.35,
+            "click_peak_delta": 0.35,
+            "peak": 0.9995,
+            "silence_dbfs": -60.0,
+            "dc_offset_diff": 0.03,
+            "stereo_balance_diff": 0.25
+          },
+          "metrics": {
+            "rms_db_jump": 0.459891,
+            "spectrum_distance": 0.330929,
+            "click_peak_delta": 0.06451,
+            "peak": 0.11404,
+            "silence_dbfs": -37.072515,
+            "dc_offset_diff": 1e-06,
+            "stereo_balance_diff": 0.013815,
+            "waveform_correlation": 0.005373
+          },
+          "boundaries_checked": 3
+        }
+      },
+      {
+        "asset_id": "crickets_loop_003",
+        "path": "ambience/crickets/continuous/crickets_loop_003.ogg",
+        "duration_ms": 7969,
+        "crossfade_ms": 1992,
+        "bytes": 171759,
+        "original": "crickets_hybrid_001.mp3",
+        "trim_start_seconds": 0.25,
+        "trim_end_seconds": 8.22,
+        "analysis_score": 4.373,
+        "boundary_features": {
+          "rms_db_diff": 0.13635628673871736,
+          "lufs_diff": 0.12993240356445312,
+          "spectrum_distance": 0.0015622973442077637,
+          "centroid_relative_diff": 0.004446825343282898,
+          "flux_diff": 0.006178107112646103,
+          "stereo_balance_diff": 0.10797588666900992,
+          "waveform_correlation": -0.1044656437601621,
+          "dc_offset_diff": 1.0227447262423084e-06
+        },
+        "seam_qa": {
+          "score": 80.63,
+          "passed": true,
+          "failures": [],
+          "limits": {
+            "rms_db_jump": 3.0,
+            "spectrum_distance": 0.35,
+            "click_peak_delta": 0.35,
+            "peak": 0.9995,
+            "silence_dbfs": -60.0,
+            "dc_offset_diff": 0.03,
+            "stereo_balance_diff": 0.25
+          },
+          "metrics": {
+            "rms_db_jump": 0.828322,
+            "spectrum_distance": 0.202872,
+            "click_peak_delta": 0.072141,
+            "peak": 0.110993,
+            "silence_dbfs": -37.158371,
+            "dc_offset_diff": 0.0,
+            "stereo_balance_diff": 0.063897,
+            "waveform_correlation": -0.001031
+          },
+          "boundaries_checked": 3
+        }
+      }
+    ]
+  },
+  "errors": []
+}

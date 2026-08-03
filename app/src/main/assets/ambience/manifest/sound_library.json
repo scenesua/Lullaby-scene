@@ -1,0 +1,664 @@
+{
+  "version": 4,
+  "sources": [
+    {
+      "id": "bamboo_forest",
+      "category": "nature",
+      "display_name_key": "source_bamboo_forest",
+      "default_volume": 0.3,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "bamboo_forest_loop_001",
+          "path": "ambience/bamboo_forest/continuous/bamboo_forest_loop_001.ogg",
+          "duration_ms": 94744,
+          "crossfade_ms": 5517
+        },
+        {
+          "asset_id": "bamboo_forest_loop_002",
+          "path": "ambience/bamboo_forest/continuous/bamboo_forest_loop_002.ogg",
+          "duration_ms": 94746,
+          "crossfade_ms": 5938
+        },
+        {
+          "asset_id": "bamboo_forest_loop_003",
+          "path": "ambience/bamboo_forest/continuous/bamboo_forest_loop_003.ogg",
+          "duration_ms": 94688,
+          "crossfade_ms": 7224
+        }
+      ],
+      "events": []
+    },
+    {
+      "id": "birds",
+      "category": "nature",
+      "display_name_key": "source_birds",
+      "default_volume": 0.3,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "birds_loop_001",
+          "path": "ambience/birds/continuous/birds_loop_001.ogg",
+          "duration_ms": 38708,
+          "crossfade_ms": 6046
+        },
+        {
+          "asset_id": "birds_loop_002",
+          "path": "ambience/birds/continuous/birds_loop_002.ogg",
+          "duration_ms": 38731,
+          "crossfade_ms": 5416
+        },
+        {
+          "asset_id": "birds_loop_003",
+          "path": "ambience/birds/continuous/birds_loop_003.ogg",
+          "duration_ms": 38728,
+          "crossfade_ms": 6868
+        }
+      ]
+    },
+    {
+      "id": "brown_noise",
+      "category": "other",
+      "display_name_key": "source_brown_noise",
+      "default_volume": 0.3,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "brown_noise_loop_001",
+          "path": "ambience/brown_noise/continuous/brown_noise_loop_001.ogg",
+          "duration_ms": 305000,
+          "crossfade_ms": 7000
+        }
+      ],
+      "events": []
+    },
+    {
+      "id": "cafe",
+      "category": "indoor",
+      "display_name_key": "source_cafe",
+      "default_volume": 0.3,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "cafe_loop_001",
+          "path": "ambience/cafe/continuous/cafe_loop_001.ogg",
+          "duration_ms": 177466,
+          "crossfade_ms": 5369
+        },
+        {
+          "asset_id": "cafe_loop_002",
+          "path": "ambience/cafe/continuous/cafe_loop_002.ogg",
+          "duration_ms": 177453,
+          "crossfade_ms": 5596
+        },
+        {
+          "asset_id": "cafe_loop_003",
+          "path": "ambience/cafe/continuous/cafe_loop_003.ogg",
+          "duration_ms": 177498,
+          "crossfade_ms": 5758
+        }
+      ]
+    },
+    {
+      "id": "city",
+      "category": "travel",
+      "display_name_key": "source_city",
+      "default_volume": 0.3,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "city_loop_001",
+          "path": "ambience/city/continuous/city_loop_001.ogg",
+          "duration_ms": 21695,
+          "crossfade_ms": 5424
+        },
+        {
+          "asset_id": "city_loop_002",
+          "path": "ambience/city/continuous/city_loop_002.ogg",
+          "duration_ms": 21718,
+          "crossfade_ms": 5430
+        },
+        {
+          "asset_id": "city_loop_003",
+          "path": "ambience/city/continuous/city_loop_003.ogg",
+          "duration_ms": 21709,
+          "crossfade_ms": 5427
+        }
+      ]
+    },
+    {
+      "id": "crickets",
+      "category": "nature",
+      "display_name_key": "source_crickets",
+      "default_volume": 0.3,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "crickets_loop_001",
+          "path": "ambience/crickets/continuous/crickets_loop_001.ogg",
+          "duration_ms": 7952,
+          "crossfade_ms": 1988
+        },
+        {
+          "asset_id": "crickets_loop_002",
+          "path": "ambience/crickets/continuous/crickets_loop_002.ogg",
+          "duration_ms": 7950,
+          "crossfade_ms": 1987
+        },
+        {
+          "asset_id": "crickets_loop_003",
+          "path": "ambience/crickets/continuous/crickets_loop_003.ogg",
+          "duration_ms": 7969,
+          "crossfade_ms": 1992
+        }
+      ]
+    },
+    {
+      "id": "fan",
+      "category": "indoor",
+      "display_name_key": "source_fan",
+      "default_volume": 0.4,
+      "events": [],
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "fan_loop_003",
+          "path": "ambience/fan/continuous/fan_loop_003.ogg",
+          "duration_ms": 148365,
+          "crossfade_ms": 1247
+        }
+      ]
+    },
+    {
+      "id": "fire",
+      "category": "indoor",
+      "display_name_key": "source_fire",
+      "default_volume": 0.35,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "fire_loop_001",
+          "path": "ambience/fire/continuous/fire_loop_001.ogg",
+          "duration_ms": 17478,
+          "crossfade_ms": 3353
+        },
+        {
+          "asset_id": "fire_loop_002",
+          "path": "ambience/fire/continuous/fire_loop_002.ogg",
+          "duration_ms": 17484,
+          "crossfade_ms": 3631
+        },
+        {
+          "asset_id": "fire_loop_003",
+          "path": "ambience/fire/continuous/fire_loop_003.ogg",
+          "duration_ms": 17457,
+          "crossfade_ms": 3792
+        }
+      ]
+    },
+    {
+      "id": "forest",
+      "category": "nature",
+      "display_name_key": "source_forest",
+      "default_volume": 0.3,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "forest_loop_001",
+          "path": "ambience/forest/continuous/forest_loop_001.ogg",
+          "duration_ms": 46202,
+          "crossfade_ms": 5892
+        },
+        {
+          "asset_id": "forest_loop_002",
+          "path": "ambience/forest/continuous/forest_loop_002.ogg",
+          "duration_ms": 46207,
+          "crossfade_ms": 5455
+        },
+        {
+          "asset_id": "forest_loop_003",
+          "path": "ambience/forest/continuous/forest_loop_003.ogg",
+          "duration_ms": 46203,
+          "crossfade_ms": 6401
+        }
+      ],
+      "events": []
+    },
+    {
+      "id": "ocean",
+      "category": "nature",
+      "display_name_key": "source_ocean",
+      "default_volume": 0.35,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "ocean_loop_001",
+          "path": "ambience/ocean/continuous/ocean_loop_001.ogg",
+          "duration_ms": 32445,
+          "crossfade_ms": 6977
+        },
+        {
+          "asset_id": "ocean_loop_002",
+          "path": "ambience/ocean/continuous/ocean_loop_002.ogg",
+          "duration_ms": 32453,
+          "crossfade_ms": 7737
+        },
+        {
+          "asset_id": "ocean_loop_003",
+          "path": "ambience/ocean/continuous/ocean_loop_003.ogg",
+          "duration_ms": 32442,
+          "crossfade_ms": 8111
+        }
+      ]
+    },
+    {
+      "id": "pink_noise",
+      "category": "other",
+      "display_name_key": "source_pink_noise",
+      "default_volume": 0.3,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "pink_noise_loop_001",
+          "path": "ambience/pink_noise/continuous/pink_noise_loop_001.ogg",
+          "duration_ms": 305000,
+          "crossfade_ms": 6000
+        }
+      ],
+      "events": []
+    },
+    {
+      "id": "rain",
+      "category": "nature",
+      "display_name_key": "source_rain",
+      "default_volume": 0.35,
+      "events": [
+        {
+          "asset_id": "rain_e_001",
+          "path": "ambience/rain/events/rain_e_001.ogg",
+          "duration_ms": 6826
+        }
+      ],
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "rain_loop_001",
+          "path": "ambience/rain/continuous/rain_loop_001.ogg",
+          "duration_ms": 186059,
+          "crossfade_ms": 1259
+        }
+      ]
+    },
+    {
+      "id": "singing_bowl",
+      "category": "other",
+      "display_name_key": "source_singing_bowl",
+      "default_volume": 0.3,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "singing_bowl_loop_001",
+          "path": "ambience/singing_bowl/continuous/singing_bowl_loop_001.ogg",
+          "duration_ms": 65452,
+          "crossfade_ms": 15000
+        },
+        {
+          "asset_id": "singing_bowl_loop_002",
+          "path": "ambience/singing_bowl/continuous/singing_bowl_loop_002.ogg",
+          "duration_ms": 65453,
+          "crossfade_ms": 15000
+        },
+        {
+          "asset_id": "singing_bowl_loop_003",
+          "path": "ambience/singing_bowl/continuous/singing_bowl_loop_003.ogg",
+          "duration_ms": 65483,
+          "crossfade_ms": 15000
+        }
+      ],
+      "events": []
+    },
+    {
+      "id": "stream",
+      "category": "nature",
+      "display_name_key": "source_stream",
+      "default_volume": 0.3,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "stream_loop_001",
+          "path": "ambience/stream/continuous/stream_loop_001.ogg",
+          "duration_ms": 13425,
+          "crossfade_ms": 3100
+        },
+        {
+          "asset_id": "stream_loop_002",
+          "path": "ambience/stream/continuous/stream_loop_002.ogg",
+          "duration_ms": 13447,
+          "crossfade_ms": 3193
+        },
+        {
+          "asset_id": "stream_loop_003",
+          "path": "ambience/stream/continuous/stream_loop_003.ogg",
+          "duration_ms": 13435,
+          "crossfade_ms": 3169
+        }
+      ]
+    },
+    {
+      "id": "thunder",
+      "category": "nature",
+      "display_name_key": "source_thunder",
+      "default_volume": 0.3,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "thunder_loop_001",
+          "path": "ambience/thunder/continuous/thunder_loop_001.ogg",
+          "duration_ms": 34696,
+          "crossfade_ms": 6462
+        },
+        {
+          "asset_id": "thunder_loop_002",
+          "path": "ambience/thunder/continuous/thunder_loop_002.ogg",
+          "duration_ms": 34695,
+          "crossfade_ms": 7278
+        },
+        {
+          "asset_id": "thunder_loop_003",
+          "path": "ambience/thunder/continuous/thunder_loop_003.ogg",
+          "duration_ms": 34698,
+          "crossfade_ms": 6101
+        }
+      ]
+    },
+    {
+      "id": "train",
+      "category": "travel",
+      "display_name_key": "source_train",
+      "default_volume": 0.35,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "train_loop_001",
+          "path": "ambience/train/continuous/train_loop_001.ogg",
+          "duration_ms": 7959,
+          "crossfade_ms": 1990
+        },
+        {
+          "asset_id": "train_loop_002",
+          "path": "ambience/train/continuous/train_loop_002.ogg",
+          "duration_ms": 7967,
+          "crossfade_ms": 1992
+        },
+        {
+          "asset_id": "train_loop_003",
+          "path": "ambience/train/continuous/train_loop_003.ogg",
+          "duration_ms": 7914,
+          "crossfade_ms": 1979
+        }
+      ]
+    },
+    {
+      "id": "ventilation",
+      "category": "indoor",
+      "display_name_key": "source_ventilation",
+      "default_volume": 0.4,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "ventilation_loop_001",
+          "path": "ambience/ventilation/continuous/ventilation_loop_001.ogg",
+          "duration_ms": 217696,
+          "crossfade_ms": 4000
+        }
+      ]
+    },
+    {
+      "id": "water",
+      "category": "other",
+      "display_name_key": "source_water",
+      "default_volume": 0.35,
+      "events": [
+        {
+          "asset_id": "water_e_001",
+          "path": "ambience/water/events/water_e_001.ogg",
+          "duration_ms": 4491
+        },
+        {
+          "asset_id": "water_e_002",
+          "path": "ambience/water/events/water_e_002.ogg",
+          "duration_ms": 696
+        },
+        {
+          "asset_id": "water_e_003",
+          "path": "ambience/water/events/water_e_003.ogg",
+          "duration_ms": 360
+        },
+        {
+          "asset_id": "water_e_004",
+          "path": "ambience/water/events/water_e_004.ogg",
+          "duration_ms": 547
+        },
+        {
+          "asset_id": "water_e_005",
+          "path": "ambience/water/events/water_e_005.ogg",
+          "duration_ms": 4407
+        },
+        {
+          "asset_id": "water_e_006",
+          "path": "ambience/water/events/water_e_006.ogg",
+          "duration_ms": 7333
+        },
+        {
+          "asset_id": "water_e_007",
+          "path": "ambience/water/events/water_e_007.ogg",
+          "duration_ms": 3380
+        },
+        {
+          "asset_id": "water_e_008",
+          "path": "ambience/water/events/water_e_008.ogg",
+          "duration_ms": 7014
+        },
+        {
+          "asset_id": "water_e_009",
+          "path": "ambience/water/events/water_e_009.ogg",
+          "duration_ms": 3541
+        },
+        {
+          "asset_id": "water_e_010",
+          "path": "ambience/water/events/water_e_010.ogg",
+          "duration_ms": 473
+        },
+        {
+          "asset_id": "water_e_011",
+          "path": "ambience/water/events/water_e_011.ogg",
+          "duration_ms": 449
+        },
+        {
+          "asset_id": "water_e_012",
+          "path": "ambience/water/events/water_e_012.ogg",
+          "duration_ms": 570
+        },
+        {
+          "asset_id": "water_e_013",
+          "path": "ambience/water/events/water_e_013.ogg",
+          "duration_ms": 472
+        },
+        {
+          "asset_id": "water_e_014",
+          "path": "ambience/water/events/water_e_014.ogg",
+          "duration_ms": 455
+        },
+        {
+          "asset_id": "water_e_015",
+          "path": "ambience/water/events/water_e_015.ogg",
+          "duration_ms": 413
+        },
+        {
+          "asset_id": "water_e_016",
+          "path": "ambience/water/events/water_e_016.ogg",
+          "duration_ms": 450
+        },
+        {
+          "asset_id": "water_e_017",
+          "path": "ambience/water/events/water_e_017.ogg",
+          "duration_ms": 529
+        },
+        {
+          "asset_id": "water_e_018",
+          "path": "ambience/water/events/water_e_018.ogg",
+          "duration_ms": 653
+        },
+        {
+          "asset_id": "water_e_019",
+          "path": "ambience/water/events/water_e_019.ogg",
+          "duration_ms": 585
+        },
+        {
+          "asset_id": "water_e_020",
+          "path": "ambience/water/events/water_e_020.ogg",
+          "duration_ms": 409
+        },
+        {
+          "asset_id": "water_e_021",
+          "path": "ambience/water/events/water_e_021.ogg",
+          "duration_ms": 574
+        },
+        {
+          "asset_id": "water_e_022",
+          "path": "ambience/water/events/water_e_022.ogg",
+          "duration_ms": 447
+        },
+        {
+          "asset_id": "water_e_023",
+          "path": "ambience/water/events/water_e_023.ogg",
+          "duration_ms": 495
+        },
+        {
+          "asset_id": "water_e_024",
+          "path": "ambience/water/events/water_e_024.ogg",
+          "duration_ms": 432
+        },
+        {
+          "asset_id": "water_e_025",
+          "path": "ambience/water/events/water_e_025.ogg",
+          "duration_ms": 1381
+        },
+        {
+          "asset_id": "water_e_026",
+          "path": "ambience/water/events/water_e_026.ogg",
+          "duration_ms": 717
+        },
+        {
+          "asset_id": "water_e_027",
+          "path": "ambience/water/events/water_e_027.ogg",
+          "duration_ms": 771
+        },
+        {
+          "asset_id": "water_e_028",
+          "path": "ambience/water/events/water_e_028.ogg",
+          "duration_ms": 1010
+        },
+        {
+          "asset_id": "water_e_029",
+          "path": "ambience/water/events/water_e_029.ogg",
+          "duration_ms": 1170
+        },
+        {
+          "asset_id": "water_e_030",
+          "path": "ambience/water/events/water_e_030.ogg",
+          "duration_ms": 456
+        },
+        {
+          "asset_id": "water_e_031",
+          "path": "ambience/water/events/water_e_031.ogg",
+          "duration_ms": 1259
+        },
+        {
+          "asset_id": "water_e_032",
+          "path": "ambience/water/events/water_e_032.ogg",
+          "duration_ms": 692
+        },
+        {
+          "asset_id": "water_e_033",
+          "path": "ambience/water/events/water_e_033.ogg",
+          "duration_ms": 359
+        },
+        {
+          "asset_id": "water_e_034",
+          "path": "ambience/water/events/water_e_034.ogg",
+          "duration_ms": 318
+        },
+        {
+          "asset_id": "water_e_035",
+          "path": "ambience/water/events/water_e_035.ogg",
+          "duration_ms": 1127
+        },
+        {
+          "asset_id": "water_e_036",
+          "path": "ambience/water/events/water_e_036.ogg",
+          "duration_ms": 785
+        },
+        {
+          "asset_id": "water_e_037",
+          "path": "ambience/water/events/water_e_037.ogg",
+          "duration_ms": 763
+        },
+        {
+          "asset_id": "water_e_038",
+          "path": "ambience/water/events/water_e_038.ogg",
+          "duration_ms": 559
+        },
+        {
+          "asset_id": "water_e_039",
+          "path": "ambience/water/events/water_e_039.ogg",
+          "duration_ms": 479
+        }
+      ],
+      "loop_mode": "event",
+      "continuous": []
+    },
+    {
+      "id": "white_noise",
+      "category": "other",
+      "display_name_key": "source_white_noise",
+      "default_volume": 0.3,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "white_noise_loop_001",
+          "path": "ambience/white_noise/continuous/white_noise_loop_001.ogg",
+          "duration_ms": 305000,
+          "crossfade_ms": 5000
+        }
+      ],
+      "events": []
+    },
+    {
+      "id": "wind",
+      "category": "nature",
+      "display_name_key": "source_wind",
+      "default_volume": 0.35,
+      "events": [],
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "wind_loop_001",
+          "path": "ambience/wind/continuous/wind_loop_001.ogg",
+          "duration_ms": 45466,
+          "crossfade_ms": 8000
+        }
+      ]
+    }
+  ]
+}

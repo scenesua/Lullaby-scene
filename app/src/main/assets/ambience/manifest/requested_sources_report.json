@@ -1,0 +1,637 @@
+{
+  "analysis_version": 2,
+  "sources": {
+    "thunder": {
+      "original": "sound_effect_library\\library\\thunder\\event\\thunder_event_001.wav",
+      "original_duration_seconds": 57.952854,
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "thunder_loop_001",
+          "path": "ambience/thunder/continuous/thunder_loop_001.ogg",
+          "duration_ms": 34696,
+          "crossfade_ms": 6462,
+          "deployed": true,
+          "bytes": 634303,
+          "original": "thunder_event_001.wav",
+          "trim_start_seconds": 16.51,
+          "trim_end_seconds": 51.206,
+          "analysis_score": 11.347,
+          "crossfade_seconds": 6.462,
+          "input_peak_dbfs": 0.996,
+          "safety_gain_db": -1.996,
+          "boundary_features": {
+            "rms_db_diff": 1.062517,
+            "lufs_diff": 0.880135,
+            "spectrum_distance": 0.010591,
+            "centroid_relative_diff": 0.149202,
+            "flux_diff": 0.005661,
+            "stereo_balance_diff": 0.049949,
+            "waveform_correlation": 0.007997,
+            "dc_offset_diff": 0.000284
+          },
+          "qa": {
+            "score": 81.8,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.511893,
+              "spectrum_distance": 0.234696,
+              "click_peak_delta": 0.035205,
+              "peak": 0.225122,
+              "silence_dbfs": -30.440441,
+              "dc_offset_diff": 0.001076,
+              "stereo_balance_diff": 0.08029,
+              "waveform_correlation": -0.029595
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "thunder_loop_002",
+          "path": "ambience/thunder/continuous/thunder_loop_002.ogg",
+          "duration_ms": 34695,
+          "crossfade_ms": 7278,
+          "deployed": true,
+          "bytes": 637211,
+          "original": "thunder_event_001.wav",
+          "trim_start_seconds": 18.516,
+          "trim_end_seconds": 53.211,
+          "analysis_score": 18.856,
+          "crossfade_seconds": 7.279,
+          "input_peak_dbfs": 0.996,
+          "safety_gain_db": -1.996,
+          "boundary_features": {
+            "rms_db_diff": 1.813612,
+            "lufs_diff": 1.79636,
+            "spectrum_distance": 0.007766,
+            "centroid_relative_diff": 0.277453,
+            "flux_diff": 0.053598,
+            "stereo_balance_diff": 0.055174,
+            "waveform_correlation": -0.015445,
+            "dc_offset_diff": 6.8e-05
+          },
+          "qa": {
+            "score": 65.29,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 2.836045,
+              "spectrum_distance": 0.187276,
+              "click_peak_delta": 0.038539,
+              "peak": 0.108254,
+              "silence_dbfs": -38.101213,
+              "dc_offset_diff": 0.000491,
+              "stereo_balance_diff": 0.160059,
+              "waveform_correlation": -0.03124
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "thunder_loop_003",
+          "path": "ambience/thunder/continuous/thunder_loop_003.ogg",
+          "duration_ms": 34698,
+          "crossfade_ms": 6101,
+          "deployed": true,
+          "bytes": 640536,
+          "original": "thunder_event_001.wav",
+          "trim_start_seconds": 4.034,
+          "trim_end_seconds": 38.732,
+          "analysis_score": 18.926,
+          "crossfade_seconds": 6.102,
+          "input_peak_dbfs": 0.996,
+          "safety_gain_db": -1.996,
+          "boundary_features": {
+            "rms_db_diff": 0.199566,
+            "lufs_diff": 1.711771,
+            "spectrum_distance": 0.041381,
+            "centroid_relative_diff": 0.524404,
+            "flux_diff": 0.136155,
+            "stereo_balance_diff": 0.119084,
+            "waveform_correlation": 0.029076,
+            "dc_offset_diff": 0.000261
+          },
+          "qa": {
+            "score": 73.74,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.895904,
+              "spectrum_distance": 0.209329,
+              "click_peak_delta": 0.074751,
+              "peak": 0.260203,
+              "silence_dbfs": -27.596589,
+              "dc_offset_diff": 0.000429,
+              "stereo_balance_diff": 0.028169,
+              "waveform_correlation": 0.008816
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ]
+    },
+    "singing_bowl": {
+      "original": "sound_effect_library\\library\\singing bowl\\161478__phluidbox__tibetan-singing-bowls.wav",
+      "original_duration_seconds": 109.401417,
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "singing_bowl_loop_001",
+          "path": "ambience/singing_bowl/continuous/singing_bowl_loop_001.ogg",
+          "duration_ms": 65452,
+          "crossfade_ms": 15000,
+          "deployed": true,
+          "bytes": 561621,
+          "original": "161478__phluidbox__tibetan-singing-bowls.wav",
+          "trim_start_seconds": 3.776,
+          "trim_end_seconds": 69.229,
+          "analysis_score": 26.634,
+          "crossfade_seconds": 15.0,
+          "input_peak_dbfs": -0.01,
+          "safety_gain_db": -0.99,
+          "boundary_features": {
+            "rms_db_diff": 3.059656,
+            "lufs_diff": 2.724447,
+            "spectrum_distance": 0.189408,
+            "centroid_relative_diff": 0.147552,
+            "flux_diff": 0.010105,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": 0.235087,
+            "dc_offset_diff": 4.2e-05
+          },
+          "qa": {
+            "score": 91.72,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.051434,
+              "spectrum_distance": 0.009443,
+              "click_peak_delta": 0.011947,
+              "peak": 0.314309,
+              "silence_dbfs": -17.569659,
+              "dc_offset_diff": 0.000303,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": 0.529251
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "singing_bowl_loop_002",
+          "path": "ambience/singing_bowl/continuous/singing_bowl_loop_002.ogg",
+          "duration_ms": 65453,
+          "crossfade_ms": 15000,
+          "deployed": true,
+          "bytes": 571652,
+          "original": "161478__phluidbox__tibetan-singing-bowls.wav",
+          "trim_start_seconds": 11.284,
+          "trim_end_seconds": 76.737,
+          "analysis_score": 33.043,
+          "crossfade_seconds": 15.0,
+          "input_peak_dbfs": -0.467,
+          "safety_gain_db": -0.533,
+          "boundary_features": {
+            "rms_db_diff": 3.492559,
+            "lufs_diff": 3.471935,
+            "spectrum_distance": 0.18785,
+            "centroid_relative_diff": 0.192158,
+            "flux_diff": 0.00441,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": -0.073616,
+            "dc_offset_diff": 4.5e-05
+          },
+          "qa": {
+            "score": 90.03,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.095902,
+              "spectrum_distance": 0.033081,
+              "click_peak_delta": 0.013933,
+              "peak": 0.315737,
+              "silence_dbfs": -18.865779,
+              "dc_offset_diff": 0.000289,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": -0.050938
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "singing_bowl_loop_003",
+          "path": "ambience/singing_bowl/continuous/singing_bowl_loop_003.ogg",
+          "duration_ms": 65483,
+          "crossfade_ms": 15000,
+          "deployed": true,
+          "bytes": 599979,
+          "original": "161478__phluidbox__tibetan-singing-bowls.wav",
+          "trim_start_seconds": 22.766,
+          "trim_end_seconds": 88.25,
+          "analysis_score": 38.526,
+          "crossfade_seconds": 15.0,
+          "input_peak_dbfs": -0.467,
+          "safety_gain_db": -0.533,
+          "boundary_features": {
+            "rms_db_diff": 4.933824,
+            "lufs_diff": 4.544371,
+            "spectrum_distance": 0.170637,
+            "centroid_relative_diff": 0.201205,
+            "flux_diff": 0.035857,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": 0.1633,
+            "dc_offset_diff": 0.000215
+          },
+          "qa": {
+            "score": 88.66,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.50447,
+              "spectrum_distance": 0.009881,
+              "click_peak_delta": 0.010056,
+              "peak": 0.275571,
+              "silence_dbfs": -21.449689,
+              "dc_offset_diff": 5.9e-05,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": 0.351462
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ]
+    },
+    "forest": {
+      "original": "sound_effect_library\\library\\forest\\826326__upkey__forest-ambience-with-birds.wav",
+      "original_duration_seconds": 77.444042,
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "forest_loop_001",
+          "path": "ambience/forest/continuous/forest_loop_001.ogg",
+          "duration_ms": 46202,
+          "crossfade_ms": 5892,
+          "deployed": true,
+          "bytes": 557999,
+          "original": "826326__upkey__forest-ambience-with-birds.wav",
+          "trim_start_seconds": 22.503,
+          "trim_end_seconds": 68.705,
+          "analysis_score": 4.118,
+          "crossfade_seconds": 5.893,
+          "input_peak_dbfs": -8.082,
+          "safety_gain_db": 0.0,
+          "boundary_features": {
+            "rms_db_diff": 0.131951,
+            "lufs_diff": 0.11034,
+            "spectrum_distance": 0.022426,
+            "centroid_relative_diff": 0.09978,
+            "flux_diff": 0.002093,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": 0.084066,
+            "dc_offset_diff": 6e-06
+          },
+          "qa": {
+            "score": 87.57,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.363297,
+              "spectrum_distance": 0.205585,
+              "click_peak_delta": 0.017947,
+              "peak": 0.029339,
+              "silence_dbfs": -43.037522,
+              "dc_offset_diff": 3.6e-05,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": 0.058266
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "forest_loop_002",
+          "path": "ambience/forest/continuous/forest_loop_002.ogg",
+          "duration_ms": 46207,
+          "crossfade_ms": 5455,
+          "deployed": true,
+          "bytes": 554649,
+          "original": "826326__upkey__forest-ambience-with-birds.wav",
+          "trim_start_seconds": 30.781,
+          "trim_end_seconds": 76.988,
+          "analysis_score": 4.121,
+          "crossfade_seconds": 5.456,
+          "input_peak_dbfs": -8.082,
+          "safety_gain_db": 0.0,
+          "boundary_features": {
+            "rms_db_diff": 0.096137,
+            "lufs_diff": 0.079578,
+            "spectrum_distance": 0.009855,
+            "centroid_relative_diff": 0.071954,
+            "flux_diff": 0.001989,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": -0.065977,
+            "dc_offset_diff": 6e-06
+          },
+          "qa": {
+            "score": 88.7,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.398172,
+              "spectrum_distance": 0.163163,
+              "click_peak_delta": 0.013837,
+              "peak": 0.050161,
+              "silence_dbfs": -43.455055,
+              "dc_offset_diff": 5.4e-05,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": -0.133801
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "forest_loop_003",
+          "path": "ambience/forest/continuous/forest_loop_003.ogg",
+          "duration_ms": 46203,
+          "crossfade_ms": 6401,
+          "deployed": true,
+          "bytes": 554874,
+          "original": "826326__upkey__forest-ambience-with-birds.wav",
+          "trim_start_seconds": 17.001,
+          "trim_end_seconds": 63.204,
+          "analysis_score": 5.913,
+          "crossfade_seconds": 6.402,
+          "input_peak_dbfs": -8.082,
+          "safety_gain_db": 0.0,
+          "boundary_features": {
+            "rms_db_diff": 0.481727,
+            "lufs_diff": 0.478607,
+            "spectrum_distance": 0.019956,
+            "centroid_relative_diff": 0.038806,
+            "flux_diff": 0.013146,
+            "stereo_balance_diff": 0.0,
+            "waveform_correlation": -0.043283,
+            "dc_offset_diff": 1e-06
+          },
+          "qa": {
+            "score": 84.35,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.423535,
+              "spectrum_distance": 0.266847,
+              "click_peak_delta": 0.017507,
+              "peak": 0.02655,
+              "silence_dbfs": -43.721405,
+              "dc_offset_diff": 4.8e-05,
+              "stereo_balance_diff": 0.0,
+              "waveform_correlation": -0.010259
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ]
+    },
+    "bamboo_forest": {
+      "original": "sound_effect_library\\library\\bamboo forest\\335891__yoyodaman234__bamboo-creaking-in-wind.mp3",
+      "original_duration_seconds": 158.132917,
+      "loop_mode": "crossfade",
+      "candidates": [
+        {
+          "asset_id": "bamboo_forest_loop_001",
+          "path": "ambience/bamboo_forest/continuous/bamboo_forest_loop_001.ogg",
+          "duration_ms": 94744,
+          "crossfade_ms": 5517,
+          "deployed": true,
+          "bytes": 1835783,
+          "original": "335891__yoyodaman234__bamboo-creaking-in-wind.mp3",
+          "trim_start_seconds": 45.503,
+          "trim_end_seconds": 140.248,
+          "analysis_score": 2.963,
+          "crossfade_seconds": 5.518,
+          "input_peak_dbfs": -7.306,
+          "safety_gain_db": 0.0,
+          "boundary_features": {
+            "rms_db_diff": 0.17002,
+            "lufs_diff": 0.128696,
+            "spectrum_distance": 0.007819,
+            "centroid_relative_diff": 0.005207,
+            "flux_diff": 0.011783,
+            "stereo_balance_diff": 0.047989,
+            "waveform_correlation": 0.019936,
+            "dc_offset_diff": 9e-06
+          },
+          "qa": {
+            "score": 81.44,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.348132,
+              "spectrum_distance": 0.236875,
+              "click_peak_delta": 0.145131,
+              "peak": 0.221626,
+              "silence_dbfs": -34.49924,
+              "dc_offset_diff": 2.4e-05,
+              "stereo_balance_diff": 0.011191,
+              "waveform_correlation": -0.009345
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "bamboo_forest_loop_002",
+          "path": "ambience/bamboo_forest/continuous/bamboo_forest_loop_002.ogg",
+          "duration_ms": 94746,
+          "crossfade_ms": 5938,
+          "deployed": true,
+          "bytes": 1829307,
+          "original": "335891__yoyodaman234__bamboo-creaking-in-wind.mp3",
+          "trim_start_seconds": 7.25,
+          "trim_end_seconds": 101.997,
+          "analysis_score": 4.666,
+          "crossfade_seconds": 5.939,
+          "input_peak_dbfs": -7.306,
+          "safety_gain_db": 0.0,
+          "boundary_features": {
+            "rms_db_diff": 0.389986,
+            "lufs_diff": 0.394726,
+            "spectrum_distance": 0.009625,
+            "centroid_relative_diff": 0.008254,
+            "flux_diff": 0.031682,
+            "stereo_balance_diff": 0.028383,
+            "waveform_correlation": -0.036804,
+            "dc_offset_diff": 3e-06
+          },
+          "qa": {
+            "score": 82.23,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 0.455662,
+              "spectrum_distance": 0.22246,
+              "click_peak_delta": 0.109537,
+              "peak": 0.128417,
+              "silence_dbfs": -34.709671,
+              "dc_offset_diff": 1.2e-05,
+              "stereo_balance_diff": 0.02435,
+              "waveform_correlation": 0.033003
+            },
+            "boundaries_checked": 3
+          }
+        },
+        {
+          "asset_id": "bamboo_forest_loop_003",
+          "path": "ambience/bamboo_forest/continuous/bamboo_forest_loop_003.ogg",
+          "duration_ms": 94688,
+          "crossfade_ms": 7224,
+          "deployed": true,
+          "bytes": 1830031,
+          "original": "335891__yoyodaman234__bamboo-creaking-in-wind.mp3",
+          "trim_start_seconds": 51.047,
+          "trim_end_seconds": 145.736,
+          "analysis_score": 11.775,
+          "crossfade_seconds": 7.225,
+          "input_peak_dbfs": -7.306,
+          "safety_gain_db": 0.0,
+          "boundary_features": {
+            "rms_db_diff": 1.112097,
+            "lufs_diff": 1.147442,
+            "spectrum_distance": 0.012376,
+            "centroid_relative_diff": 0.122521,
+            "flux_diff": 0.052913,
+            "stereo_balance_diff": 0.038824,
+            "waveform_correlation": -0.054734,
+            "dc_offset_diff": 1.8e-05
+          },
+          "qa": {
+            "score": 77.47,
+            "passed": true,
+            "failures": [],
+            "limits": {
+              "rms_db_jump": 3.0,
+              "spectrum_distance": 0.35,
+              "click_peak_delta": 0.35,
+              "peak": 0.9995,
+              "silence_dbfs": -60.0,
+              "dc_offset_diff": 0.03,
+              "stereo_balance_diff": 0.25
+            },
+            "metrics": {
+              "rms_db_jump": 1.00156,
+              "spectrum_distance": 0.22902,
+              "click_peak_delta": 0.097619,
+              "peak": 0.1664,
+              "silence_dbfs": -35.114372,
+              "dc_offset_diff": 2.1e-05,
+              "stereo_balance_diff": 0.055473,
+              "waveform_correlation": -0.025009
+            },
+            "boundaries_checked": 3
+          }
+        }
+      ]
+    }
+  },
+  "removed_sources": [
+    "miscellaneous"
+  ],
+  "errors": []
+}

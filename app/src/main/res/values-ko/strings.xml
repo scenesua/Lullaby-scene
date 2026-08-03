@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">뒤로</string>
+    <string name="app_name">Lullaby Scene</string>
+    <string name="app_name_full">환경음</string>
+
+    <!-- notification -->
+    <string name="notification_channel_name">재생</string>
+    <string name="notification_playing">재생 중</string>
+    <string name="notification_paused">일시정지됨</string>
+    <string name="notification_sleep_in">%1$s 후 종료</string>
+
+    <!-- actions -->
+    <string name="action_play">재생</string>
+    <string name="action_pause">일시정지</string>
+    <string name="action_mute">음소거</string>
+    <string name="action_unmute">음소거 해제</string>
+    <string name="action_stop">정지</string>
+
+    <!-- navigation -->
+    <string name="nav_mixer">믹서</string>
+    <string name="nav_presets">프리셋</string>
+    <string name="nav_settings">설정</string>
+    <string name="timer_title">취침 타이머</string>
+
+    <!-- presets -->
+    <string name="preset_rainy_cafe">빗소리 카페</string>
+    <string name="preset_forest_night">숲의 밤</string>
+    <string name="preset_beach">해변</string>
+    <string name="preset_cozy_fireplace">아늑한 벽난로</string>
+    <string name="preset_train_journey">기차 여행</string>
+    <string name="preset_city_night">도시의 밤</string>
+    <string name="preset_thunderstorm">천둥 폭풍</string>
+    <string name="preset_forest_morning">숲의 아침</string>
+    <string name="preset_bamboo_meditation">대나무 숲 명상</string>
+    <string name="preset_deep_focus">깊은 집중</string>
+    <string name="save_current_mix">현재 믹스 저장</string>
+    <string name="preset_name_hint">프리셋 이름</string>
+    <string name="save">저장</string>
+    <string name="cancel">취소</string>
+    <string name="rename">이름 바꾸기</string>
+    <string name="delete">삭제</string>
+    <string name="preset_sources_count">소리 %1$d개</string>
+    <string name="density_low">조용함</string>
+    <string name="density_medium">보통</string>
+    <string name="density_medium_high">생동감</string>
+    <string name="density_high">활발함</string>
+
+    <!-- sources -->
+    <string name="source_rain">비</string>
+    <string name="source_thunder">천둥</string>
+    <string name="source_wind">바람</string>
+    <string name="source_ocean">바다</string>
+    <string name="source_stream">계곡</string>
+    <string name="source_forest">숲(+새)</string>
+    <string name="source_bamboo_forest">대나무 숲</string>
+    <string name="source_birds">새</string>
+    <string name="source_crickets">귀뚜라미</string>
+    <string name="source_fire">모닥불</string>
+    <string name="source_cafe">카페</string>
+    <string name="source_fan">선풍기</string>
+    <string name="source_ventilation">환풍기</string>
+    <string name="source_city">도시</string>
+    <string name="source_train">기차</string>
+    <string name="source_water">물</string>
+    <string name="source_singing_bowl">싱잉볼</string>
+    <string name="source_white_noise">화이트 노이즈</string>
+    <string name="source_pink_noise">핑크 노이즈</string>
+    <string name="source_brown_noise">브라운 노이즈</string>
+    <string name="category_nature">자연</string>
+    <string name="category_indoor">실내</string>
+    <string name="category_travel">여행</string>
+    <string name="category_other">기타</string>
+    <string name="sources_title">소리 소스 (%1$d개 활성)</string>
+    <string name="master_volume">마스터 볼륨</string>
+    <string name="no_active_sources_hint">아래에서 소리 소스를 켜면 믹싱을 시작할 수 있어요</string>
+    <string name="source_not_available">이 소리는 이 빌드에 포함된 음원이 없습니다.</string>
+
+    <!-- timer -->
+    <string name="timer_off">꺼짐</string>
+    <string name="timer_running">타이머 진행 중 — 정지 전에 볼륨이 서서히 줄어들어요</string>
+    <string name="timer_not_running">아래에서 시간을 선택하면 이 믹스를 들으며 잠들 수 있어요</string>
+    <string name="timer_cancel">타이머 취소</string>
+    <string name="timer_presets">시간</string>
+    <string name="timer_minutes">%1$d분</string>
+    <string name="timer_fade_hint">마지막 %1$d초 동안 서서히 줄어듭니다</string>
+
+    <!-- settings -->
+    <string name="settings_appearance">모양</string>
+    <string name="settings_playback">재생</string>
+    <string name="settings_timer">취침 타이머</string>
+    <string name="settings_about">앱 정보</string>
+    <string name="theme">테마</string>
+    <string name="theme_system">시스템</string>
+    <string name="theme_light">라이트</string>
+    <string name="theme_dark">다크</string>
+    <string name="focus">오디오 포커스</string>
+    <string name="focus_pause">일시정지</string>
+    <string name="focus_duck">볼륨 낮추기</string>
+    <string name="focus_continue">계속</string>
+    <string name="restore_mix">마지막 믹스 복원</string>
+    <string name="restore_mix_desc">앱 시작 시 이전 믹스를 복원합니다</string>
+    <string name="default_minutes">기본 시간 (분)</string>
+    <string name="fade_seconds">페이드아웃 (초)</string>
+
+    <!-- licenses -->
+    <string name="licenses">음원 정보</string>
+    <string name="licenses_empty">이 빌드에는 음원 라이선스 정보가 없습니다.</string>
+    <string name="license_verified">라이선스 확인됨</string>
+    <string name="attribution_required">원작자가 출처 표시를 요구합니다</string>
+
+    <!-- messages -->
+    <string name="msg_no_active_sources">먼저 소리 소스를 하나 이상 켜 주세요</string>
+    <string name="msg_no_engine_snapshot">믹서 준비 중이에요 — 잠시 후 다시 시도해 주세요</string>
+    <string name="msg_focus_lost_paused">재생 일시정지: 오디오 포커스를 잃었어요</string>
+    <string name="msg_focus_paused">다른 앱이 오디오 포커스를 사용하는 동안 일시정지했어요</string>
+    <string name="msg_noisy_paused">일시정지: 오디오 출력이 바뀌었어요</string>
+    <string name="msg_source_failed">일부 소리를 불러오지 못했어요</string>
+</resources>

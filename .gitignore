@@ -1,0 +1,27 @@
+*.iml
+.gradle
+.kotlin
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+app/build
+*.jks
+*.keystore
+keystore.properties
+
+# 빌드/디버그 로그
+*.log
+kotlin_errors*.txt
+
+# 루트에 남은 일회성 스크래치 xml
+/*.xml
+
+# 로컬 opencode 설정 (절대경로 플러그인 포함)
+opencode.json
+
+# 원본 오디오 작업 폴더 (대용량 + 라이선스 소재) — 앱 자산은 app/assets로 번들됨
+sound_effect_library/
