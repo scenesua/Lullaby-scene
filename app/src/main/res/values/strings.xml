@@ -109,8 +109,11 @@
     <string name="eq_preset_reduce_lows">저음 줄이기</string>
     <string name="eq_preset_reduce_highs">고음 줄이기</string>
     <string name="eq_preset_reduce_both">저음·고음 줄이기</string>
-    <string name="eq_preset_section">Preset</string>
-    <string name="eq_band_section">Frequency bands</string>
+    <string name="eq_preset_custom">커스텀</string>
+    <string name="eq_preset_section">프리셋</string>
+    <string name="eq_band_section">주파수 밴드</string>
+    <string name="eq_reset_hint">노브를 끌어 조절 · 두 번 탭하면 해당 노브 초기화</string>
+    <string name="eq_reset_all">전체 초기화</string>
     <string name="eq_close">닫기</string>
     <string name="settings_about">About</string>
     <string name="theme">Theme</string>

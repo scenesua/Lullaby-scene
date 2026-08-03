@@ -40,6 +40,7 @@ import com.scene.ambience.R
 import com.scene.ambience.data.model.PlaybackState
 import com.scene.ambience.presentation.AmbienceUiEvent
 import com.scene.ambience.presentation.AmbienceViewModel
+import com.scene.ambience.ui.screens.EqScreen
 import com.scene.ambience.ui.screens.LicensesScreen
 import com.scene.ambience.ui.screens.MixerScreen
 import com.scene.ambience.ui.screens.PresetsScreen
@@ -50,6 +51,7 @@ const val ROUTE_MIXER = "mixer"
 const val ROUTE_PRESETS = "presets"
 const val ROUTE_TIMER = "timer"
 const val ROUTE_SETTINGS = "settings"
+const val ROUTE_EQ = "eq"
 const val ROUTE_LICENSES = "licenses"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,7 +99,7 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
             TopAppBar(
                 title = { Text(titleForRoute(context, currentRoute)) },
                 navigationIcon = {
-                    if (currentRoute == ROUTE_TIMER || currentRoute == ROUTE_LICENSES) {
+                    if (currentRoute == ROUTE_TIMER || currentRoute == ROUTE_EQ || currentRoute == ROUTE_LICENSES) {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
@@ -161,7 +163,14 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                 SettingsScreen(
                     state = state,
                     viewModel = viewModel,
+                    onOpenEq = { navController.navigate(ROUTE_EQ) },
                     onOpenLicenses = { navController.navigate(ROUTE_LICENSES) },
+                )
+            }
+            composable(ROUTE_EQ) {
+                EqScreen(
+                    initial = state.eqSettings,
+                    onApply = { eq -> viewModel.setEqualizer(eq.enabled, eq.presetName, eq.bands) },
                 )
             }
             composable(ROUTE_LICENSES) { LicensesScreen(state) }
@@ -182,6 +191,7 @@ private fun titleForRoute(context: android.content.Context, route: String): Stri
     ROUTE_PRESETS -> context.getString(R.string.nav_presets)
     ROUTE_TIMER -> context.getString(R.string.timer_title)
     ROUTE_SETTINGS -> context.getString(R.string.nav_settings)
+    ROUTE_EQ -> context.getString(R.string.settings_eq)
     ROUTE_LICENSES -> context.getString(R.string.licenses)
     else -> context.getString(R.string.app_name)
 }
