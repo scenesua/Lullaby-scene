@@ -1,0 +1,75 @@
+{
+  "algorithm": "equal_power_rotated_seam_v2",
+  "sources": {
+    "white_noise": {
+      "asset": "white_noise_loop_001.ogg",
+      "bytes": 3784456,
+      "duration_ms": 300000,
+      "seam": {
+        "passed": true,
+        "failures": [],
+        "rms_db_jump": 0.052586,
+        "spectrum_distance": 0.216302,
+        "boundary_delta": 0.064879,
+        "ordinary_delta_p99_9": 0.186171
+      }
+    },
+    "pink_noise": {
+      "asset": "pink_noise_loop_001.ogg",
+      "bytes": 3550164,
+      "duration_ms": 300000,
+      "seam": {
+        "passed": true,
+        "failures": [],
+        "rms_db_jump": 0.495698,
+        "spectrum_distance": 0.17565,
+        "boundary_delta": 0.040027,
+        "ordinary_delta_p99_9": 0.083917
+      }
+    },
+    "brown_noise": {
+      "asset": "brown_noise_loop_001.ogg",
+      "bytes": 3548218,
+      "duration_ms": 300000,
+      "seam": {
+        "passed": true,
+        "failures": [],
+        "rms_db_jump": 0.46594,
+        "spectrum_distance": 0.198309,
+        "boundary_delta": 7.3e-05,
+        "ordinary_delta_p99_9": 0.017373
+      }
+    },
+    "fan": {
+      "asset": "fan_loop_003.ogg",
+      "original": "fan_continuous_002.wav",
+      "bytes": 1721968,
+      "duration_ms": 142130,
+      "tiles": 5,
+      "seam": {
+        "passed": true,
+        "failures": [],
+        "rms_db_jump": 0.14145,
+        "spectrum_distance": 0.255308,
+        "boundary_delta": 0.000833,
+        "ordinary_delta_p99_9": 0.055145
+      }
+    },
+    "rain": {
+      "asset": "rain_loop_001.ogg",
+      "original": "rain_continuous_004.mp3",
+      "bytes": 4077107,
+      "duration_ms": 215718,
+      "tiles": 6,
+      "seam": {
+        "passed": true,
+        "failures": [],
+        "rms_db_jump": 0.996821,
+        "spectrum_distance": 0.238228,
+        "boundary_delta": 0.004014,
+        "ordinary_delta_p99_9": 0.048657
+      }
+    }
+  },
+  "errors": []
+}

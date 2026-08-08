@@ -34,4 +34,10 @@ class CrossfadeEnvelopeTest {
         assertEquals(0f, CrossfadeEnvelope.outgoingGain(2f), 1e-6f)
         assertTrue(CrossfadeEnvelope.powerSum(2f) > 0.99f)
     }
+
+    @Test
+    fun longFadesUseSmoothVolumeSteps() {
+        assertEquals(80, CrossfadeEnvelope.stepsForDuration(2_000L))
+        assertEquals(600, CrossfadeEnvelope.stepsForDuration(15_000L))
+    }
 }

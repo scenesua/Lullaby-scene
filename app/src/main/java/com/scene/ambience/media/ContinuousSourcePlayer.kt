@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioManager
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.SystemClock
 import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -22,6 +23,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CountDownLatch
 
 /**
@@ -165,13 +167,20 @@ class ContinuousSourcePlayer(
                 val configuredFade = currentFile.crossfadeMs.takeIf { it > 0L } ?: AmbienceEngine.CROSSFADE_MS
                 val reserve = minOf(configuredFade, currentFile.durationMs / 3)
                     .coerceAtLeast(200L)
-                delay((currentFile.durationMs - reserve).coerceAtLeast(50L))
+                val currentDuration = playableDuration(current, currentFile)
+                delay((currentDuration - reserve - PREPARE_LEAD_MS).coerceAtLeast(50L))
 
                 val nextFile = nextFile() ?: continue
                 val standby = 1 - current
-                prepareAndPlay(standby, nextFile, repeat = false, initialEnvelope = 0f)
+                prepare(standby, nextFile, repeat = false, initialEnvelope = 0f)
+                delay((playableDuration(current, currentFile) - players[current].currentPosition - reserve)
+                    .coerceAtLeast(0L))
+                playPrepared(standby)
+                val remaining = (playableDuration(current, currentFile) - players[current].currentPosition)
+                    .coerceAtLeast(50L)
+                val actualFade = minOf(reserve, remaining)
                 Log.d(TAG, "CrossfadeStart source=$sourceId from=${currentFile.assetId} to=${nextFile.assetId}")
-                crossfade(outgoingIndex = current, incomingIndex = standby, fadeMs = reserve)
+                crossfade(outgoingIndex = current, incomingIndex = standby, fadeMs = actualFade)
                 players[current].stop()
                 players[current].clearMediaItems()
                 Log.d(TAG, "CrossfadeEnd source=$sourceId item=${nextFile.assetId}")
@@ -200,32 +209,51 @@ class ContinuousSourcePlayer(
         return null
     }
 
-    private fun prepareAndPlay(index: Int, file: AudioAssetManifest, repeat: Boolean, initialEnvelope: Float) {
+    private suspend fun prepareAndPlay(index: Int, file: AudioAssetManifest, repeat: Boolean, initialEnvelope: Float) {
+        prepare(index, file, repeat, initialEnvelope)
+        playPrepared(index)
+    }
+
+    private suspend fun prepare(index: Int, file: AudioAssetManifest, repeat: Boolean, initialEnvelope: Float) {
         val player = players[index]
         player.stop()
         player.clearMediaItems()
         player.repeatMode = if (repeat) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
         player.setMediaItem(MediaItem.fromUri(uriFor(file)))
         player.prepare()
+        withTimeout(PREPARE_TIMEOUT_MS) {
+            while (player.playbackState != Player.STATE_READY) delay(10L)
+        }
         envelopes[index] = initialEnvelope
         applyEnvelopes()
         Log.d(TAG, "LoopPrepare source=$sourceId item=${file.assetId} repeat=${player.repeatMode}")
+    }
+
+    private suspend fun playPrepared(index: Int) {
+        val player = players[index]
         player.play()
-        Log.d(TAG, "LoopPlay source=$sourceId item=${file.assetId}")
+        withTimeout(START_TIMEOUT_MS) {
+            while (!player.isPlaying) delay(10L)
+        }
+        Log.d(TAG, "LoopPlay source=$sourceId")
     }
 
     private suspend fun crossfade(outgoingIndex: Int, incomingIndex: Int, fadeMs: Long) {
-        val steps = 24
-        val stepMs = (fadeMs / steps).coerceAtLeast(10L)
+        val steps = CrossfadeEnvelope.stepsForDuration(fadeMs)
+        val startedAt = SystemClock.elapsedRealtime()
         for (i in 1..steps) {
+            val target = startedAt + fadeMs * i / steps
+            delay((target - SystemClock.elapsedRealtime()).coerceAtLeast(0L))
             val t = i.toFloat() / steps
             val (outGain, inGain) = CrossfadeEnvelope.gains(t)
             envelopes[outgoingIndex] = outGain
             envelopes[incomingIndex] = inGain
             applyEnvelopes()
-            delay(stepMs)
         }
     }
+
+    private fun playableDuration(index: Int, file: AudioAssetManifest): Long =
+        players[index].duration.takeIf { it > 0L && it != C.TIME_UNSET } ?: file.durationMs
 
     private fun applyEnvelopes() {
         val base = volumeProvider()
@@ -235,5 +263,8 @@ class ContinuousSourcePlayer(
 
     companion object {
         private const val TAG = "AmbiencePlayback"
+        private const val PREPARE_LEAD_MS = 3_000L
+        private const val PREPARE_TIMEOUT_MS = 15_000L
+        private const val START_TIMEOUT_MS = 3_000L
     }
 }

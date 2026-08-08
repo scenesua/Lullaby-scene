@@ -67,7 +67,7 @@
         {
           "asset_id": "brown_noise_loop_001",
           "path": "ambience/brown_noise/continuous/brown_noise_loop_001.ogg",
-          "duration_ms": 305000,
+          "duration_ms": 300000,
           "crossfade_ms": 7000
         }
       ],
@@ -168,7 +168,7 @@
         {
           "asset_id": "fan_loop_003",
           "path": "ambience/fan/continuous/fan_loop_003.ogg",
-          "duration_ms": 148365,
+          "duration_ms": 142130,
           "crossfade_ms": 1247
         }
       ]
@@ -267,7 +267,7 @@
         {
           "asset_id": "pink_noise_loop_001",
           "path": "ambience/pink_noise/continuous/pink_noise_loop_001.ogg",
-          "duration_ms": 305000,
+          "duration_ms": 300000,
           "crossfade_ms": 6000
         }
       ],
@@ -290,7 +290,7 @@
         {
           "asset_id": "rain_loop_001",
           "path": "ambience/rain/continuous/rain_loop_001.ogg",
-          "duration_ms": 186059,
+          "duration_ms": 215718,
           "crossfade_ms": 1259
         }
       ]
@@ -384,6 +384,7 @@
       "category": "travel",
       "display_name_key": "source_train",
       "default_volume": 0.35,
+      "trim_gain_db": 3.0,
       "events": [],
       "loop_mode": "crossfade",
       "continuous": [
@@ -638,7 +639,7 @@
         {
           "asset_id": "white_noise_loop_001",
           "path": "ambience/white_noise/continuous/white_noise_loop_001.ogg",
-          "duration_ms": 305000,
+          "duration_ms": 300000,
           "crossfade_ms": 5000
         }
       ],

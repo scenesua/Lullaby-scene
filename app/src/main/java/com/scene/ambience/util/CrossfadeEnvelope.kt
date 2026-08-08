@@ -12,6 +12,8 @@ import kotlin.math.sin
  */
 object CrossfadeEnvelope {
 
+    fun stepsForDuration(fadeMs: Long): Int = (fadeMs / 25L).toInt().coerceIn(24, 600)
+
     /** t in 0..1 -> (outgoingGain, incomingGain). */
     fun gains(t: Float): Pair<Float, Float> {
         val tt = t.coerceIn(0f, 1f)
