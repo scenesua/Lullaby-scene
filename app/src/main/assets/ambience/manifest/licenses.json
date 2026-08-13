@@ -156,28 +156,6 @@
       "original_archive": null
     },
     {
-      "asset_id": "ocean_loop_002",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "ocean_continuous_001.wav",
-      "original_archive": null
-    },
-    {
-      "asset_id": "ocean_loop_003",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "ocean_continuous_001.wav",
-      "original_archive": null
-    },
-    {
       "asset_id": "rain_e_001",
       "source_name": null,
       "creator": null,
@@ -761,28 +739,6 @@
       "original_archive": null
     },
     {
-      "asset_id": "crickets_loop_002",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "crickets_hybrid_001.mp3",
-      "original_archive": null
-    },
-    {
-      "asset_id": "crickets_loop_003",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "crickets_hybrid_001.mp3",
-      "original_archive": null
-    },
-    {
       "asset_id": "thunder_loop_001",
       "source_name": null,
       "creator": null,
@@ -794,51 +750,7 @@
       "original_archive": null
     },
     {
-      "asset_id": "thunder_loop_002",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "thunder_event_001.wav",
-      "original_archive": null
-    },
-    {
-      "asset_id": "thunder_loop_003",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "thunder_event_001.wav",
-      "original_archive": null
-    },
-    {
       "asset_id": "singing_bowl_loop_001",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "161478__phluidbox__tibetan-singing-bowls.wav",
-      "original_archive": null
-    },
-    {
-      "asset_id": "singing_bowl_loop_002",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "161478__phluidbox__tibetan-singing-bowls.wav",
-      "original_archive": null
-    },
-    {
-      "asset_id": "singing_bowl_loop_003",
       "source_name": null,
       "creator": null,
       "source_page": null,

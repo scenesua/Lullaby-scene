@@ -247,6 +247,16 @@ class AmbienceEngineTest {
     }
 
     @Test
+    fun cricketKeepsPlayingAcrossThreeLoopBoundaries() = runBlocking {
+        engine.applyMix(MixState(sources = mapOf("crickets" to SourceState("crickets", true, 0.3f))))
+        engine.play()
+        withTimeout(10_000L) { engine.state.first { it.playbackState == PlaybackState.PLAYING } }
+        delay(25_000L)
+        assertEquals(PlaybackState.PLAYING, engine.state.value.playbackState)
+        assertTrue(engine.sourceGain("crickets") > 0f)
+    }
+
+    @Test
     fun trainTrimGainIsThreeDbAboveUntrimmedSource() {
         fun gainFor(id: String): Float {
             engine.applyMix(MixState(masterVolume = 0.5f, sources = mapOf(id to SourceState(id, true, 0.3f))))

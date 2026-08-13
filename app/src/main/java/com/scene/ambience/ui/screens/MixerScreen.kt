@@ -9,12 +9,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Landscape
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -32,9 +37,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -63,8 +71,8 @@ fun MixerScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item(key = "master") {
             MasterControls(
@@ -81,13 +89,13 @@ fun MixerScreen(
 
         item(key = "active") {
             val active = snapshot?.activeSourceCount ?: 0
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                 Text(
                     text = context.getString(R.string.sources_title, active),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                 )
-                IconButton(
+                TextButton(
                     onClick = viewModel::disableAllSources,
                     enabled = active > 0,
                 ) {
@@ -95,6 +103,8 @@ fun MixerScreen(
                         imageVector = Icons.Filled.Refresh,
                         contentDescription = context.getString(R.string.action_disable_all),
                     )
+                    Spacer(Modifier.width(6.dp))
+                    Text(context.getString(R.string.action_disable_all_short))
                 }
             }
         }
@@ -138,7 +148,15 @@ private fun MasterControls(
     onStop: () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    Card {
+    val darkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val panelColor = if (darkTheme) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.inverseSurface
+    val panelContentColor = if (darkTheme) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.inverseOnSurface
+    val panelAccentColor = if (darkTheme) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.inversePrimary
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = panelColor,
+        contentColor = panelContentColor,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -146,15 +164,19 @@ private fun MasterControls(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = context.getString(R.string.master_volume),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = context.getString(R.string.master_volume), style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        text = "${(volume * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = panelAccentColor,
+                    )
+                }
                 IconButton(onClick = onMute, enabled = enabled) {
                     Icon(
                         imageVector = if (muted) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp,
                         contentDescription = context.getString(if (muted) R.string.action_unmute else R.string.action_mute),
+                        tint = panelContentColor,
                     )
                 }
                 FilledIconButton(onClick = onTogglePlayPause, enabled = enabled) {
@@ -167,14 +189,19 @@ private fun MasterControls(
             Slider(
                 value = volume,
                 onValueChange = onVolume,
-                enabled = enabled,
+                enabled = true,
                 modifier = Modifier.fillMaxWidth(),
+                colors = SliderDefaults.colors(
+                    thumbColor = panelAccentColor,
+                    activeTrackColor = panelAccentColor,
+                    inactiveTrackColor = panelContentColor.copy(alpha = 0.22f),
+                ),
             )
             if (!enabled) {
                 Text(
                     text = context.getString(R.string.no_active_sources_hint),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = panelContentColor.copy(alpha = 0.68f),
                 )
             } else {
                 Row(
@@ -206,7 +233,12 @@ private fun CategoryHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Filled.GraphicEq,
+            imageVector = when (category) {
+                UiCategory.NATURE -> Icons.Filled.Landscape
+                UiCategory.INDOOR -> Icons.Filled.Home
+                UiCategory.TRAVEL -> Icons.Filled.Train
+                UiCategory.OTHER -> Icons.Filled.MoreHoriz
+            },
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.width(20.dp),
@@ -251,6 +283,6 @@ private fun SourceRow(
             Log.d("AmbiencePlayback", "SliderInput source=${def.sourceId.id} value=$it")
             viewModel.setSourceVolume(def.sourceId.id, it)
         },
-        onToggleMuted = { viewModel.toggleSourceEnabled(def.sourceId.id) },
+        onToggleMuted = { viewModel.setSourceMuted(def.sourceId.id, !muted) },
     )
 }

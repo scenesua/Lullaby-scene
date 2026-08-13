@@ -116,4 +116,5 @@
     <string name="msg_focus_paused">다른 앱이 오디오 포커스를 사용하는 동안 일시정지했어요</string>
     <string name="msg_noisy_paused">일시정지: 오디오 출력이 바뀌었어요</string>
     <string name="msg_source_failed">일부 소리를 불러오지 못했어요</string>
+    <string name="action_disable_all_short">전체 끄기</string>
 </resources>

@@ -64,8 +64,13 @@ class ManifestParsingTest {
             assertEquals("$id seamless", "seamless", source.loopMode)
             assertEquals("$id one asset", 1, source.continuous.size)
         }
-        assertEquals("crossfade", manifest.sources.first { it.id == "crickets" }.loopMode)
-        listOf("thunder", "singing_bowl", "forest", "bamboo_forest").forEach { id ->
+        listOf("crickets", "ocean", "singing_bowl", "thunder", "wind").forEach { id ->
+            val source = manifest.sources.first { it.id == id }
+            assertEquals("$id repaired seamless", "seamless", source.loopMode)
+            assertEquals("$id uses one verified asset", 1, source.continuous.size)
+            assertTrue("$id has no event assets", source.events.isEmpty())
+        }
+        listOf("forest", "bamboo_forest").forEach { id ->
             val source = manifest.sources.first { it.id == id }
             assertEquals("$id crossfade", "crossfade", source.loopMode)
             assertEquals("$id has three analyzed assets", 3, source.continuous.size)

@@ -1,0 +1,228 @@
+{
+  "algorithm": "dropout_free_seam_v1",
+  "sources": {
+    "crickets": {
+      "asset_id": "crickets_loop_001",
+      "path": "ambience/crickets/continuous/crickets_loop_001.ogg",
+      "duration_ms": 7875,
+      "crossfade_ms": 860,
+      "trim_start_seconds": 1.505,
+      "trim_end_seconds": 10.24,
+      "detected_chirp_period_seconds": 0.43,
+      "phase_crossfade_seconds": 0.86,
+      "envelope_correlation": 0.947886,
+      "bytes": 169152,
+      "safety_gain_db": 0.0,
+      "seam_qa": {
+        "score": 86.24,
+        "passed": true,
+        "failures": [],
+        "limits": {
+          "rms_db_jump": 3.0,
+          "spectrum_distance": 0.35,
+          "click_peak_delta": 0.35,
+          "peak": 0.9995,
+          "silence_dbfs": -60.0,
+          "dc_offset_diff": 0.03,
+          "stereo_balance_diff": 0.25
+        },
+        "metrics": {
+          "rms_db_jump": 0.030331,
+          "spectrum_distance": 0.246833,
+          "click_peak_delta": 0.060579,
+          "peak": 0.109016,
+          "silence_dbfs": -36.867488,
+          "dc_offset_diff": 1e-06,
+          "stereo_balance_diff": 0.010791,
+          "waveform_correlation": 0.000727
+        },
+        "boundaries_checked": 3
+      },
+      "dropout_qa": {
+        "minimum_rms_dbfs": -37.231,
+        "boundary_dip_db": -1.689,
+        "limit_db": -8.0,
+        "passed": true
+      },
+      "cadence_qa": {
+        "passed": true,
+        "boundary_interval_seconds": 0.429,
+        "median_interval_seconds": 0.394,
+        "difference_seconds": 0.035
+      }
+    },
+    "ocean": {
+      "asset_id": "ocean_loop_001",
+      "path": "ambience/ocean/continuous/ocean_loop_001.ogg",
+      "duration_ms": 46250,
+      "crossfade_ms": 8000,
+      "original": "ocean_continuous_001.wav",
+      "trim_start_seconds": 0.0,
+      "trim_end_seconds": 54.25,
+      "staggered_layers": 1,
+      "bytes": 856092,
+      "safety_gain_db": 0.0,
+      "seam_qa": {
+        "score": 66.36,
+        "passed": true,
+        "failures": [],
+        "limits": {
+          "rms_db_jump": 3.0,
+          "spectrum_distance": 0.35,
+          "click_peak_delta": 0.35,
+          "peak": 0.9995,
+          "silence_dbfs": -60.0,
+          "dc_offset_diff": 0.03,
+          "stereo_balance_diff": 0.25
+        },
+        "metrics": {
+          "rms_db_jump": 2.858915,
+          "spectrum_distance": 0.231145,
+          "click_peak_delta": 0.040985,
+          "peak": 0.103514,
+          "silence_dbfs": -36.815095,
+          "dc_offset_diff": 9.8e-05,
+          "stereo_balance_diff": 0.055235,
+          "waveform_correlation": -0.021227
+        },
+        "boundaries_checked": 3
+      },
+      "dropout_qa": {
+        "minimum_rms_dbfs": -36.558,
+        "boundary_dip_db": -4.954,
+        "limit_db": -6.0,
+        "passed": true
+      }
+    },
+    "singing_bowl": {
+      "asset_id": "singing_bowl_loop_001",
+      "path": "ambience/singing_bowl/continuous/singing_bowl_loop_001.ogg",
+      "duration_ms": 77000,
+      "crossfade_ms": 12000,
+      "original": "161478__phluidbox__tibetan-singing-bowls.wav",
+      "trim_start_seconds": 2.0,
+      "trim_end_seconds": 91.0,
+      "staggered_layers": 1,
+      "bytes": 687415,
+      "safety_gain_db": -0.533,
+      "seam_qa": {
+        "score": 79.05,
+        "passed": true,
+        "failures": [],
+        "limits": {
+          "rms_db_jump": 3.0,
+          "spectrum_distance": 0.35,
+          "click_peak_delta": 0.35,
+          "peak": 0.9995,
+          "silence_dbfs": -60.0,
+          "dc_offset_diff": 0.03,
+          "stereo_balance_diff": 0.25
+        },
+        "metrics": {
+          "rms_db_jump": 2.134433,
+          "spectrum_distance": 0.126703,
+          "click_peak_delta": 0.007247,
+          "peak": 0.196076,
+          "silence_dbfs": -24.041084,
+          "dc_offset_diff": 0.000211,
+          "stereo_balance_diff": 0.0,
+          "waveform_correlation": 0.074758
+        },
+        "boundaries_checked": 3
+      },
+      "dropout_qa": {
+        "minimum_rms_dbfs": -26.467,
+        "boundary_dip_db": -3.936,
+        "limit_db": -6.0,
+        "passed": true
+      }
+    },
+    "thunder": {
+      "asset_id": "thunder_loop_001",
+      "path": "ambience/thunder/continuous/thunder_loop_001.ogg",
+      "duration_ms": 44250,
+      "crossfade_ms": 7000,
+      "original": "thunder_event_001.wav",
+      "trim_start_seconds": 3.75,
+      "trim_end_seconds": 55.0,
+      "staggered_layers": 4,
+      "bytes": 862227,
+      "safety_gain_db": 0.0,
+      "seam_qa": {
+        "score": 76.91,
+        "passed": true,
+        "failures": [],
+        "limits": {
+          "rms_db_jump": 3.0,
+          "spectrum_distance": 0.35,
+          "click_peak_delta": 0.35,
+          "peak": 0.9995,
+          "silence_dbfs": -60.0,
+          "dc_offset_diff": 0.03,
+          "stereo_balance_diff": 0.25
+        },
+        "metrics": {
+          "rms_db_jump": 1.287916,
+          "spectrum_distance": 0.2421,
+          "click_peak_delta": 0.025648,
+          "peak": 0.407186,
+          "silence_dbfs": -25.291637,
+          "dc_offset_diff": 0.000427,
+          "stereo_balance_diff": 0.058777,
+          "waveform_correlation": -0.082943
+        },
+        "boundaries_checked": 3
+      },
+      "dropout_qa": {
+        "minimum_rms_dbfs": -25.448,
+        "boundary_dip_db": -2.138,
+        "limit_db": -6.0,
+        "passed": true
+      }
+    },
+    "wind": {
+      "asset_id": "wind_loop_001",
+      "path": "ambience/wind/continuous/wind_loop_001.ogg",
+      "duration_ms": 33250,
+      "crossfade_ms": 8000,
+      "original": "wind_continuous_001.mp3",
+      "trim_start_seconds": 4.5,
+      "trim_end_seconds": 45.75,
+      "staggered_layers": 1,
+      "bytes": 415839,
+      "safety_gain_db": 0.0,
+      "seam_qa": {
+        "score": 78.15,
+        "passed": true,
+        "failures": [],
+        "limits": {
+          "rms_db_jump": 3.0,
+          "spectrum_distance": 0.35,
+          "click_peak_delta": 0.35,
+          "peak": 0.9995,
+          "silence_dbfs": -60.0,
+          "dc_offset_diff": 0.03,
+          "stereo_balance_diff": 0.25
+        },
+        "metrics": {
+          "rms_db_jump": 2.262241,
+          "spectrum_distance": 0.117034,
+          "click_peak_delta": 0.019554,
+          "peak": 0.05985,
+          "silence_dbfs": -38.692177,
+          "dc_offset_diff": 0.000252,
+          "stereo_balance_diff": 7.9e-05,
+          "waveform_correlation": 0.122137
+        },
+        "boundaries_checked": 3
+      },
+      "dropout_qa": {
+        "minimum_rms_dbfs": -40.448,
+        "boundary_dip_db": -2.91,
+        "limit_db": -6.0,
+        "passed": true
+      }
+    }
+  },
+  "errors": []
+}

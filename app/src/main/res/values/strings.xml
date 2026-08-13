@@ -143,4 +143,5 @@
     <string name="msg_noisy_paused">Paused: audio output changed</string>
     <string name="msg_source_failed">Some sounds could not be loaded</string>
     <string name="action_disable_all">전체 비활성화</string>
+    <string name="action_disable_all_short">Turn all off</string>
 </resources>

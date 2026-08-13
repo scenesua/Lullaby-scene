@@ -135,25 +135,13 @@
       "display_name_key": "source_crickets",
       "default_volume": 0.3,
       "events": [],
-      "loop_mode": "crossfade",
+      "loop_mode": "seamless",
       "continuous": [
         {
           "asset_id": "crickets_loop_001",
           "path": "ambience/crickets/continuous/crickets_loop_001.ogg",
-          "duration_ms": 7952,
-          "crossfade_ms": 1988
-        },
-        {
-          "asset_id": "crickets_loop_002",
-          "path": "ambience/crickets/continuous/crickets_loop_002.ogg",
-          "duration_ms": 7950,
-          "crossfade_ms": 1987
-        },
-        {
-          "asset_id": "crickets_loop_003",
-          "path": "ambience/crickets/continuous/crickets_loop_003.ogg",
-          "duration_ms": 7969,
-          "crossfade_ms": 1992
+          "duration_ms": 7875,
+          "crossfade_ms": 860
         }
       ]
     },
@@ -235,25 +223,13 @@
       "display_name_key": "source_ocean",
       "default_volume": 0.35,
       "events": [],
-      "loop_mode": "crossfade",
+      "loop_mode": "seamless",
       "continuous": [
         {
           "asset_id": "ocean_loop_001",
           "path": "ambience/ocean/continuous/ocean_loop_001.ogg",
-          "duration_ms": 32445,
-          "crossfade_ms": 6977
-        },
-        {
-          "asset_id": "ocean_loop_002",
-          "path": "ambience/ocean/continuous/ocean_loop_002.ogg",
-          "duration_ms": 32453,
-          "crossfade_ms": 7737
-        },
-        {
-          "asset_id": "ocean_loop_003",
-          "path": "ambience/ocean/continuous/ocean_loop_003.ogg",
-          "duration_ms": 32442,
-          "crossfade_ms": 8111
+          "duration_ms": 46250,
+          "crossfade_ms": 8000
         }
       ]
     },
@@ -300,25 +276,13 @@
       "category": "other",
       "display_name_key": "source_singing_bowl",
       "default_volume": 0.3,
-      "loop_mode": "crossfade",
+      "loop_mode": "seamless",
       "continuous": [
         {
           "asset_id": "singing_bowl_loop_001",
           "path": "ambience/singing_bowl/continuous/singing_bowl_loop_001.ogg",
-          "duration_ms": 65452,
-          "crossfade_ms": 15000
-        },
-        {
-          "asset_id": "singing_bowl_loop_002",
-          "path": "ambience/singing_bowl/continuous/singing_bowl_loop_002.ogg",
-          "duration_ms": 65453,
-          "crossfade_ms": 15000
-        },
-        {
-          "asset_id": "singing_bowl_loop_003",
-          "path": "ambience/singing_bowl/continuous/singing_bowl_loop_003.ogg",
-          "duration_ms": 65483,
-          "crossfade_ms": 15000
+          "duration_ms": 77000,
+          "crossfade_ms": 12000
         }
       ],
       "events": []
@@ -357,25 +321,13 @@
       "display_name_key": "source_thunder",
       "default_volume": 0.3,
       "events": [],
-      "loop_mode": "crossfade",
+      "loop_mode": "seamless",
       "continuous": [
         {
           "asset_id": "thunder_loop_001",
           "path": "ambience/thunder/continuous/thunder_loop_001.ogg",
-          "duration_ms": 34696,
-          "crossfade_ms": 6462
-        },
-        {
-          "asset_id": "thunder_loop_002",
-          "path": "ambience/thunder/continuous/thunder_loop_002.ogg",
-          "duration_ms": 34695,
-          "crossfade_ms": 7278
-        },
-        {
-          "asset_id": "thunder_loop_003",
-          "path": "ambience/thunder/continuous/thunder_loop_003.ogg",
-          "duration_ms": 34698,
-          "crossfade_ms": 6101
+          "duration_ms": 44250,
+          "crossfade_ms": 7000
         }
       ]
     },
@@ -651,12 +603,12 @@
       "display_name_key": "source_wind",
       "default_volume": 0.35,
       "events": [],
-      "loop_mode": "crossfade",
+      "loop_mode": "seamless",
       "continuous": [
         {
           "asset_id": "wind_loop_001",
           "path": "ambience/wind/continuous/wind_loop_001.ogg",
-          "duration_ms": 45466,
+          "duration_ms": 33250,
           "crossfade_ms": 8000
         }
       ]

@@ -163,18 +163,18 @@ class ContinuousSourcePlayer(
         envelopes[1] = 0f
         prepareAndPlay(current, currentFile, repeat = false, initialEnvelope = 1f)
         while (kotlin.coroutines.coroutineContext.isActive) {
+            var attemptedFile: AudioAssetManifest? = null
             try {
                 val configuredFade = currentFile.crossfadeMs.takeIf { it > 0L } ?: AmbienceEngine.CROSSFADE_MS
                 val reserve = minOf(configuredFade, currentFile.durationMs / 3)
                     .coerceAtLeast(200L)
-                val currentDuration = playableDuration(current, currentFile)
-                delay((currentDuration - reserve - PREPARE_LEAD_MS).coerceAtLeast(50L))
+                delayUntilRemaining(current, currentFile, reserve + PREPARE_LEAD_MS)
 
                 val nextFile = nextFile() ?: continue
+                attemptedFile = nextFile
                 val standby = 1 - current
                 prepare(standby, nextFile, repeat = false, initialEnvelope = 0f)
-                delay((playableDuration(current, currentFile) - players[current].currentPosition - reserve)
-                    .coerceAtLeast(0L))
+                delayUntilRemaining(current, currentFile, reserve)
                 playPrepared(standby)
                 val remaining = (playableDuration(current, currentFile) - players[current].currentPosition)
                     .coerceAtLeast(50L)
@@ -189,8 +189,17 @@ class ContinuousSourcePlayer(
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                failedFiles.add(currentFile.assetId)
+                attemptedFile?.let { failedFiles.add(it.assetId) }
                 onPlayerError(sourceId)
+                if (!players[current].isPlaying) {
+                    val recovery = nextFile() ?: return
+                    val standby = 1 - current
+                    prepareAndPlay(standby, recovery, repeat = false, initialEnvelope = 1f)
+                    players[current].stop()
+                    players[current].clearMediaItems()
+                    current = standby
+                    currentFile = recovery
+                }
             }
         }
     }
@@ -254,6 +263,11 @@ class ContinuousSourcePlayer(
 
     private fun playableDuration(index: Int, file: AudioAssetManifest): Long =
         players[index].duration.takeIf { it > 0L && it != C.TIME_UNSET } ?: file.durationMs
+
+    private suspend fun delayUntilRemaining(index: Int, file: AudioAssetManifest, targetRemainingMs: Long) {
+        val remaining = playableDuration(index, file) - players[index].currentPosition
+        delay((remaining - targetRemainingMs).coerceAtLeast(0L))
+    }
 
     private fun applyEnvelopes() {
         val base = volumeProvider()

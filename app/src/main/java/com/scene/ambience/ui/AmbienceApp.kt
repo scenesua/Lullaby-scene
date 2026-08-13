@@ -15,20 +15,25 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -97,7 +102,18 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(titleForRoute(context, currentRoute)) },
+                title = {
+                    Column {
+                        Text(titleForRoute(context, currentRoute), style = MaterialTheme.typography.titleLarge)
+                        if (currentRoute == ROUTE_MIXER || currentRoute == ROUTE_PRESETS || currentRoute == ROUTE_SETTINGS) {
+                            Text(
+                                text = context.getString(R.string.app_name),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
                     if (currentRoute == ROUTE_TIMER || currentRoute == ROUTE_EQ || currentRoute == ROUTE_LICENSES) {
                         IconButton(onClick = { navController.popBackStack() }) {
@@ -109,7 +125,7 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = viewModel::togglePlayPause) {
+                    FilledIconButton(onClick = viewModel::togglePlayPause) {
                         val playing = state.snapshot?.playbackState == PlaybackState.PLAYING
                         Icon(
                             imageVector = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
@@ -125,27 +141,38 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                         }
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
         bottomBar = {
-            NavigationBar {
+            val navigationColors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
                 NavigationBarItem(
                     selected = currentRoute == ROUTE_MIXER,
                     onClick = { navController.navigateTo(ROUTE_MIXER) },
                     icon = { Icon(Icons.Filled.GraphicEq, contentDescription = null) },
                     label = { Text(context.getString(R.string.nav_mixer)) },
+                    colors = navigationColors,
                 )
                 NavigationBarItem(
                     selected = currentRoute == ROUTE_PRESETS,
                     onClick = { navController.navigateTo(ROUTE_PRESETS) },
                     icon = { Icon(Icons.Filled.Bookmarks, contentDescription = null) },
                     label = { Text(context.getString(R.string.nav_presets)) },
+                    colors = navigationColors,
                 )
                 NavigationBarItem(
                     selected = currentRoute == ROUTE_SETTINGS,
                     onClick = { navController.navigateTo(ROUTE_SETTINGS) },
                     icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
                     label = { Text(context.getString(R.string.nav_settings)) },
+                    colors = navigationColors,
                 )
             }
         },

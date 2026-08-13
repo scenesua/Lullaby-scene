@@ -1247,6 +1247,8 @@ def main() -> int:
                         help="build thunder, singing bowl, forest and bamboo forest runtime-crossfade assets")
     parser.add_argument("--repair-loop-boundaries", action="store_true",
                         help="regenerate seamless fan, rain and noise assets with corrected equal-power seams")
+    parser.add_argument("--repair-dropout-loops", action="store_true",
+                        help="repair faded variable beds and phase-align the rhythmic cricket loop")
     args = parser.parse_args()
     if args.add_noise_and_cricket:
         ffmpeg = args.ffmpeg or find_program(["ffmpeg"])
@@ -1275,6 +1277,16 @@ def main() -> int:
             error("--repair-loop-boundaries requires ffmpeg and ffprobe")
             return 1
         from repair_loop_boundaries import repair
+        report, rc = repair(Path(args.assets), Path(args.root) / "library", ffmpeg, ffprobe)
+        log(json.dumps(report, ensure_ascii=False, indent=2))
+        return rc
+    if args.repair_dropout_loops:
+        ffmpeg = args.ffmpeg or shutil.which("ffmpeg")
+        ffprobe = args.ffprobe or shutil.which("ffprobe")
+        if not ffmpeg or not ffprobe:
+            error("--repair-dropout-loops requires ffmpeg and ffprobe")
+            return 1
+        from repair_dropout_loops import repair
         report, rc = repair(Path(args.assets), Path(args.root) / "library", ffmpeg, ffprobe)
         log(json.dumps(report, ensure_ascii=False, indent=2))
         return rc
