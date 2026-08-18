@@ -1,28 +1,140 @@
 {
-  "version": 1,
+  "version": 2,
   "sources": {
     "fire": [
       {
         "asset_id": "fire_event_generated_001",
         "path": "ambience/fire/events/fire_event_generated_001.ogg",
-        "duration_ms": 550
+        "duration_ms": 550,
+        "event_weight": 1.0,
+        "cooldown_ms": 0,
+        "role": "crackle",
+        "tags": ["fire", "crackle", "generated"],
+        "provenance_id": "generated_fire_events_v1"
       },
       {
         "asset_id": "fire_event_generated_002",
         "path": "ambience/fire/events/fire_event_generated_002.ogg",
-        "duration_ms": 800
+        "duration_ms": 800,
+        "event_weight": 1.0,
+        "cooldown_ms": 0,
+        "role": "crackle",
+        "tags": ["fire", "crackle", "generated"],
+        "provenance_id": "generated_fire_events_v1"
       },
       {
         "asset_id": "fire_event_generated_003",
         "path": "ambience/fire/events/fire_event_generated_003.ogg",
-        "duration_ms": 420
+        "duration_ms": 420,
+        "event_weight": 1.0,
+        "cooldown_ms": 0,
+        "role": "crackle",
+        "tags": ["fire", "crackle", "generated"],
+        "provenance_id": "generated_fire_events_v1"
       }
     ],
     "train": [
       {
         "asset_id": "train_event_generated_001",
         "path": "ambience/train/events/train_event_generated_001.ogg",
-        "duration_ms": 1100
+        "duration_ms": 1100,
+        "event_weight": 8.0,
+        "cooldown_ms": 0,
+        "role": "rail_impact",
+        "tags": ["train", "rail_joint", "generated"],
+        "provenance_id": "generated_train_events_v1"
+      },
+      {
+        "asset_id": "train_acceleration_001",
+        "path": "ambience/train/events/train_acceleration_001.ogg",
+        "duration_ms": 5003,
+        "event_weight": 0.18,
+        "cooldown_ms": 600000,
+        "role": "state_transition",
+        "tags": ["train", "acceleration", "rare", "mono"],
+        "provenance_id": "wikimedia_e233_acceleration"
+      },
+      {
+        "asset_id": "train_acceleration_002",
+        "path": "ambience/train/events/train_acceleration_002.ogg",
+        "duration_ms": 5000,
+        "event_weight": 0.18,
+        "cooldown_ms": 600000,
+        "role": "state_transition",
+        "tags": ["train", "acceleration", "rare", "mono"],
+        "provenance_id": "wikimedia_e233_acceleration"
+      },
+      {
+        "asset_id": "train_deceleration_001",
+        "path": "ambience/train/events/train_deceleration_001.ogg",
+        "duration_ms": 5000,
+        "event_weight": 0.18,
+        "cooldown_ms": 600000,
+        "role": "state_transition",
+        "tags": ["train", "deceleration", "rare", "mono"],
+        "provenance_id": "wikimedia_e231_deceleration"
+      },
+      {
+        "asset_id": "train_deceleration_002",
+        "path": "ambience/train/events/train_deceleration_002.ogg",
+        "duration_ms": 5000,
+        "event_weight": 0.18,
+        "cooldown_ms": 600000,
+        "role": "state_transition",
+        "tags": ["train", "deceleration", "rare", "mono"],
+        "provenance_id": "wikimedia_e231_deceleration"
+      },
+      {
+        "asset_id": "train_doors_closing_001",
+        "path": "ambience/train/events/train_doors_closing_001.ogg",
+        "duration_ms": 3653,
+        "event_weight": 0.08,
+        "cooldown_ms": 900000,
+        "role": "station_transition",
+        "tags": ["train", "door", "hydraulic", "very_rare", "mono"],
+        "provenance_id": "wikimedia_train_doors"
+      }
+    ],
+    "thunder": [
+      {
+        "asset_id": "thunder_rain_close_001",
+        "path": "ambience/thunder/events/thunder_rain_close_001.ogg",
+        "duration_ms": 6000,
+        "event_weight": 0.35,
+        "cooldown_ms": 600000,
+        "role": "thunder_close",
+        "tags": ["thunder", "rain", "close", "mono"],
+        "provenance_id": "wikimedia_rain_thunder"
+      },
+      {
+        "asset_id": "thunder_rain_distant_001",
+        "path": "ambience/thunder/events/thunder_rain_distant_001.ogg",
+        "duration_ms": 6000,
+        "event_weight": 1.25,
+        "cooldown_ms": 180000,
+        "role": "thunder_distant",
+        "tags": ["thunder", "rain", "distant", "mono"],
+        "provenance_id": "wikimedia_rain_thunder"
+      },
+      {
+        "asset_id": "thunder_rumble_001",
+        "path": "ambience/thunder/events/thunder_rumble_001.ogg",
+        "duration_ms": 6000,
+        "event_weight": 1.0,
+        "cooldown_ms": 210000,
+        "role": "thunder_rumble",
+        "tags": ["thunder", "rumble", "distant", "mono"],
+        "provenance_id": "wikimedia_tonitrus"
+      },
+      {
+        "asset_id": "thunder_rumble_002",
+        "path": "ambience/thunder/events/thunder_rumble_002.ogg",
+        "duration_ms": 6000,
+        "event_weight": 1.0,
+        "cooldown_ms": 210000,
+        "role": "thunder_rumble",
+        "tags": ["thunder", "rumble", "distant", "mono"],
+        "provenance_id": "wikimedia_tonitrus"
       }
     ]
   }
