@@ -33,17 +33,40 @@ data class AudioAssetManifest(
     val path: String,
     @SerialName("duration_ms") val durationMs: Long = 0L,
     @SerialName("crossfade_ms") val crossfadeMs: Long = 0L,
+    @SerialName("event_weight") val eventWeight: Double = 1.0,
+    @SerialName("cooldown_ms") val cooldownMs: Long = 0L,
+    val role: String? = null,
+    val tags: List<String> = emptyList(),
+    @SerialName("provenance_id") val provenanceId: String? = null,
 )
 
-/**
- * Optional additive event pack. This lets us expand one-shot variety without
- * rewriting the generated v4 sound_library.json by hand. A future manifest
- * migration may fold these entries back into the canonical source records.
- */
+/** Optional additive continuous beds/textures layered onto the canonical v4 manifest. */
+@Serializable
+data class ContinuousExtensionsFile(
+    val version: Int = 1,
+    val sources: Map<String, List<AudioAssetManifest>> = emptyMap(),
+)
+
+/** Optional additive one-shot event variants layered onto the canonical v4 manifest. */
 @Serializable
 data class EventExtensionsFile(
     val version: Int = 1,
     val sources: Map<String, List<AudioAssetManifest>> = emptyMap(),
+)
+
+/** Runtime-safe overrides used while legacy v1.0.3 assets are audited or repurposed. */
+@Serializable
+data class AssetOverridesFile(
+    val version: Int = 1,
+    val sources: Map<String, SourceAssetOverride> = emptyMap(),
+)
+
+@Serializable
+data class SourceAssetOverride(
+    @SerialName("disabled_asset_ids") val disabledAssetIds: List<String> = emptyList(),
+    @SerialName("loop_mode") val loopMode: String? = null,
+    @SerialName("default_volume") val defaultVolume: Double? = null,
+    @SerialName("trim_gain_db") val trimGainDb: Double? = null,
 )
 
 /** Mirror of app/src/main/assets/ambience/manifest/category_presets.json */
@@ -65,7 +88,7 @@ data class CategoryPresetConfig(
     val maxIntervalMs: Long get() = (maxIntervalSeconds * 1000).toLong()
 }
 
-/** Mirror of app/src/main/assets/ambience/manifest/licenses.json */
+/** Mirror of packaged license/provenance ledgers. */
 @Serializable
 data class LicensesFile(
     val version: Int = 1,
@@ -83,6 +106,13 @@ data class LicenseEntry(
     @SerialName("attribution_required") val attributionRequired: Boolean = false,
     @SerialName("original_filename") val originalFilename: String = "",
     @SerialName("original_archive") val originalArchive: String? = null,
+    @SerialName("provenance_id") val provenanceId: String? = null,
+    @SerialName("original_sha256") val originalSha256: String? = null,
+    val sha256: String? = null,
+    @SerialName("sample_rate") val sampleRate: Int? = null,
+    val channels: Int? = null,
+    val bytes: Long? = null,
+    val transformation: String? = null,
 )
 
 /** Overall result of loading the packaged sound library. */
