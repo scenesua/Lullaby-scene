@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "sources": {
+    "rain": [
+      {
+        "asset_id": "rain_heavy_wikimedia_001",
+        "path": "ambience/rain/continuous/rain_heavy_wikimedia_001.ogg",
+        "duration_ms": 45000,
+        "crossfade_ms": 8000,
+        "role": "texture",
+        "tags": [
+          "heavy_rain",
+          "exterior",
+          "mono"
+        ],
+        "provenance_id": "wikimedia_rain_1"
+      }
+    ],
+    "train": [
+      {
+        "asset_id": "train_wikimedia_bed_001",
+        "path": "ambience/train/continuous/train_wikimedia_bed_001.ogg",
+        "duration_ms": 70003,
+        "crossfade_ms": 8000,
+        "role": "bed",
+        "tags": [
+          "rail",
+          "carriage",
+          "interior",
+          "mono"
+        ],
+        "provenance_id": "wikimedia_train_wheels"
+      },
+      {
+        "asset_id": "train_wikimedia_bed_002",
+        "path": "ambience/train/continuous/train_wikimedia_bed_002.ogg",
+        "duration_ms": 70000,
+        "crossfade_ms": 8000,
+        "role": "bed",
+        "tags": [
+          "rail",
+          "carriage",
+          "interior",
+          "mono"
+        ],
+        "provenance_id": "wikimedia_train_wheels"
+      },
+      {
+        "asset_id": "train_wikimedia_bed_003",
+        "path": "ambience/train/continuous/train_wikimedia_bed_003.ogg",
+        "duration_ms": 70000,
+        "crossfade_ms": 8000,
+        "role": "bed",
+        "tags": [
+          "rail",
+          "carriage",
+          "interior",
+          "mono"
+        ],
+        "provenance_id": "wikimedia_train_wheels"
+      }
+    ],
+    "wind": [
+      {
+        "asset_id": "wind_building_001",
+        "path": "ambience/wind/continuous/wind_building_001.ogg",
+        "duration_ms": 35000,
+        "crossfade_ms": 7000,
+        "role": "texture",
+        "tags": [
+          "indoor",
+          "howling",
+          "building",
+          "mono",
+          "source_16khz"
+        ],
+        "provenance_id": "wikimedia_howling_wind"
+      },
+      {
+        "asset_id": "wind_building_002",
+        "path": "ambience/wind/continuous/wind_building_002.ogg",
+        "duration_ms": 35000,
+        "crossfade_ms": 7000,
+        "role": "texture",
+        "tags": [
+          "indoor",
+          "howling",
+          "building",
+          "mono",
+          "source_16khz"
+        ],
+        "provenance_id": "wikimedia_howling_wind"
+      },
+      {
+        "asset_id": "wind_building_003",
+        "path": "ambience/wind/continuous/wind_building_003.ogg",
+        "duration_ms": 35000,
+        "crossfade_ms": 7000,
+        "role": "texture",
+        "tags": [
+          "indoor",
+          "howling",
+          "building",
+          "mono",
+          "source_16khz"
+        ],
+        "provenance_id": "wikimedia_howling_wind"
+      }
+    ]
+  }
+}
