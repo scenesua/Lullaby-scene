@@ -17,23 +17,6 @@
       "channels": 1,
       "bytes": 16630,
       "transformation": "20-second excerpt; mono mix; high-pass/low-pass; conservative loudness normalization; short fades; 48 kHz Ogg Opus"
-    },
-    {
-      "asset_id": "aircraft_cabin_cruise_002",
-      "source_name": "Airplane Cabin (near ground)",
-      "creator": "jasonm911",
-      "source_page": "https://freesound.org/people/jasonm911/sounds/853742/",
-      "license": "CC0-1.0",
-      "license_status": "verified",
-      "attribution_required": false,
-      "original_filename": "853742__jasonm911__airplane-cabin-near-ground.wav",
-      "provenance_id": "freesound_jasonm911_853742",
-      "original_sha256": "f56a15e93c1b0e3e5d53c2e2669625e9f2558371030bd1639b40ad381f2839a7",
-      "sha256": "28c1aa1e5835f6ace7333f0cf6028d33cbdaf2019f345b64ada145465f48bb88",
-      "sample_rate": 48000,
-      "channels": 1,
-      "bytes": 16604,
-      "transformation": "20-second excerpt; mono mix; high-pass/low-pass; conservative loudness normalization; short fades; 48 kHz Ogg Opus"
     }
   ]
 }
