@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "asset_id": "door_handle_creak_001",
+      "path": "ambience/scene_assets/cabin/events/door_handle_creak_001.ogg",
+      "duration_ms": 2750,
+      "role": "causal_event",
+      "environment": "interior",
+      "scene_tags": ["cabin", "wooden_door", "night"],
+      "event_weight": 0.15,
+      "cooldown_ms": 900000,
+      "provenance_id": "wikimedia_door_handle_creak",
+      "runtime_status": "scene_engine_only"
+    }
+  ]
+}
