@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.scene.ambience.controller.AmbienceControllerRepository
 import com.scene.ambience.data.BuiltInPresets
 import com.scene.ambience.data.PresetRepository
 import com.scene.ambience.data.SettingsRepository
@@ -13,16 +14,17 @@ import com.scene.ambience.data.model.EngineSnapshot
 import com.scene.ambience.data.model.EqSettings
 import com.scene.ambience.data.model.FocusPolicy
 import com.scene.ambience.data.model.MixState
+import com.scene.ambience.data.model.SceneRuntimeSnapshot
 import com.scene.ambience.data.model.SoundLibraryState
 import com.scene.ambience.data.model.ThemeMode
-import com.scene.ambience.controller.AmbienceControllerRepository
+import com.scene.ambience.media.SceneOrchestrator
+import com.scene.ambience.update.UpdateCoordinator
+import com.scene.ambience.update.UpdateUiState
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
@@ -33,6 +35,8 @@ import kotlinx.serialization.json.Json
 data class AmbienceUiState(
     val library: SoundLibraryState = SoundLibraryState(),
     val snapshot: EngineSnapshot? = null,
+    val scene: SceneRuntimeSnapshot = SceneRuntimeSnapshot(),
+    val update: UpdateUiState = UpdateUiState(),
     val connected: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val focusPolicy: FocusPolicy = FocusPolicy.PAUSE,
@@ -53,29 +57,45 @@ sealed interface AmbienceUiEvent {
     object RequestNotificationPermission : AmbienceUiEvent
 }
 
+private data class CoreUiState(
+    val library: SoundLibraryState,
+    val snapshot: EngineSnapshot?,
+    val connected: Boolean,
+    val settings: com.scene.ambience.data.model.AppSettings,
+    val scene: SceneRuntimeSnapshot,
+)
+
 class AmbienceViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val app = application
     private val json = Json { ignoreUnknownKeys = true }
 
     val libraryRepository: SoundLibraryRepository = (application as com.scene.ambience.AmbienceApplication).libraryRepository
-    val settingsRepository: SettingsRepository = (application as com.scene.ambience.AmbienceApplication).settingsRepository
-    private val presetRepository: PresetRepository = (application as com.scene.ambience.AmbienceApplication).presetRepository
+    val settingsRepository: SettingsRepository = application.settingsRepository
+    private val presetRepository: PresetRepository = application.presetRepository
     private val controllerRepository = AmbienceControllerRepository(application, viewModelScope)
+    private val updateCoordinator = UpdateCoordinator(application)
 
     private val _events = MutableSharedFlow<AmbienceUiEvent>(extraBufferCapacity = 8)
     val events: SharedFlow<AmbienceUiEvent> = _events.asSharedFlow()
 
-    val uiState: StateFlow<AmbienceUiState> = combine(
+    private val coreState = combine(
         libraryRepository.state,
         controllerRepository.snapshot,
         controllerRepository.connected,
         settingsRepository.settings,
-    ) { library, snapshot, connected, settings ->
+        controllerRepository.sceneSnapshot,
+    ) { library, snapshot, connected, settings, scene ->
+        CoreUiState(library, snapshot, connected, settings, scene)
+    }
+
+    val uiState: StateFlow<AmbienceUiState> = combine(coreState, updateCoordinator.state) { core, update ->
+        val settings = core.settings
         AmbienceUiState(
-            library = library,
-            snapshot = snapshot,
-            connected = connected,
+            library = core.library,
+            snapshot = core.snapshot,
+            scene = core.scene,
+            update = update,
+            connected = core.connected,
             themeMode = settings.themeMode,
             focusPolicy = settings.focusPolicy,
             timerDefaultMinutes = settings.timerDefaultMinutes,
@@ -90,8 +110,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
 
     init {
         controllerRepository.connect()
-
-        // Persist the last mix so the service can restore it after restart.
         viewModelScope.launch {
             controllerRepository.snapshot
                 .drop(1)
@@ -128,10 +146,23 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
 
     fun stop() = controllerRepository.stop()
 
+    // -------- scene engine ---------------------------------------------------------
+
+    fun startPassengerAircraftScene(arcMinutes: Int) {
+        if (uiState.value.library.manifestFor(SceneOrchestrator.SOURCE_AIRCRAFT) == null) {
+            _events.tryEmit(AmbienceUiEvent.ShowMessage("scene_aircraft_unavailable"))
+            return
+        }
+        controllerRepository.startScene(SceneOrchestrator.PASSENGER_AIRCRAFT, arcMinutes)
+    }
+
+    fun stopScene() = controllerRepository.stopScene()
+    fun setSceneArc(minutes: Int) = controllerRepository.setSceneArc(minutes)
+    fun setSceneMacro(key: String, value: Float) = controllerRepository.setSceneMacro(key, value)
+
     // -------- mixer ----------------------------------------------------------------
 
     fun setMasterVolume(volume: Float) = controllerRepository.setMasterVolume(volume)
-
     fun setMasterMuted(muted: Boolean) = controllerRepository.setMasterMuted(muted)
 
     fun setSourceVolume(id: String, volume: Float) {
@@ -153,12 +184,12 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /** Turns every source off at once. Used by the mixer's reset-all button. */
     fun disableAllSources() = controllerRepository.disableAllSources()
 
-    // -------- presets ----------------------------------------------------------------
+    // -------- presets --------------------------------------------------------------
 
     fun applyPreset(preset: AmbiencePreset) {
+        if (uiState.value.scene.active) controllerRepository.stopScene()
         val mixJson = json.encodeToString(MixState.serializer(), preset.mix)
         controllerRepository.applyMix(mixJson, preset.id)
         val snapshot = uiState.value.snapshot
@@ -183,58 +214,37 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun renamePreset(id: String, newName: String) {
-        viewModelScope.launch {
-            presetRepository.renamePreset(id, newName, uiState.value.userPresets)
-        }
+        viewModelScope.launch { presetRepository.renamePreset(id, newName, uiState.value.userPresets) }
     }
 
     fun deletePreset(id: String) {
-        viewModelScope.launch {
-            presetRepository.deletePreset(id, uiState.value.userPresets)
-        }
+        viewModelScope.launch { presetRepository.deletePreset(id, uiState.value.userPresets) }
     }
 
-    // -------- sleep timer -------------------------------------------------------------
+    // -------- sleep timer ----------------------------------------------------------
 
     fun startSleepTimer(durationMs: Long) {
         val fadeMs = uiState.value.timerFadeSeconds * 1000L
         controllerRepository.startSleepTimer(durationMs, fadeMs)
-        viewModelScope.launch {
-            settingsRepository.saveSleepTimer(System.currentTimeMillis() + durationMs, fadeMs)
-        }
+        viewModelScope.launch { settingsRepository.saveSleepTimer(System.currentTimeMillis() + durationMs, fadeMs) }
     }
 
     fun cancelSleepTimer() {
         controllerRepository.cancelSleepTimer()
-        viewModelScope.launch {
-            settingsRepository.clearSleepTimer()
-        }
+        viewModelScope.launch { settingsRepository.clearSleepTimer() }
     }
 
-    // -------- settings -----------------------------------------------------------------
+    // -------- settings -------------------------------------------------------------
 
-    fun setThemeMode(mode: ThemeMode) {
-        viewModelScope.launch { settingsRepository.setThemeMode(mode) }
-    }
-
-    fun setFocusPolicy(policy: FocusPolicy) {
-        viewModelScope.launch { settingsRepository.setFocusPolicy(policy) }
-    }
-
-    fun setTimerDefaults(minutes: Int, fadeSeconds: Int) {
-        viewModelScope.launch { settingsRepository.setTimerDefaults(minutes, fadeSeconds) }
-    }
-
-    fun setRestoreLastMix(enabled: Boolean) {
-        viewModelScope.launch { settingsRepository.setRestoreLastMix(enabled) }
-    }
+    fun setThemeMode(mode: ThemeMode) { viewModelScope.launch { settingsRepository.setThemeMode(mode) } }
+    fun setFocusPolicy(policy: FocusPolicy) { viewModelScope.launch { settingsRepository.setFocusPolicy(policy) } }
+    fun setTimerDefaults(minutes: Int, fadeSeconds: Int) { viewModelScope.launch { settingsRepository.setTimerDefaults(minutes, fadeSeconds) } }
+    fun setRestoreLastMix(enabled: Boolean) { viewModelScope.launch { settingsRepository.setRestoreLastMix(enabled) } }
 
     fun setEqualizer(enabled: Boolean, presetName: String, bands: List<Int>) {
         controllerRepository.setEqualizer(enabled, presetName, bands)
         viewModelScope.launch {
-            settingsRepository.setEqSettings(
-                EqSettings(enabled = enabled, presetName = presetName, bands = bands)
-            )
+            settingsRepository.setEqSettings(EqSettings(enabled = enabled, presetName = presetName, bands = bands))
         }
     }
 
@@ -260,6 +270,18 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         }
         controllerRepository.play()
     }
+
+    // -------- updates -------------------------------------------------------------
+
+    fun checkForUpdates(manual: Boolean = false) {
+        viewModelScope.launch { updateCoordinator.check(manual) }
+    }
+
+    fun downloadUpdate() { viewModelScope.launch { updateCoordinator.downloadAvailable() } }
+    fun dismissUpdatePrompt() = updateCoordinator.dismissPrompt()
+    fun suppressUpdateFor24Hours() = updateCoordinator.suppressFor24Hours()
+    fun consumeInstallUri() = updateCoordinator.consumeInstallUri()
+    fun clearUpdateMessage() = updateCoordinator.clearMessage()
 
     fun clearMessage() = controllerRepository.clearMessage()
 }
