@@ -1,0 +1,27 @@
+{
+  "version": 5,
+  "sources": [
+    {
+      "id": "aircraft_cabin",
+      "category": "travel",
+      "display_name_key": "source_aircraft_cabin",
+      "default_volume": 0.68,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "aircraft_cabin_cruise_001",
+          "path": "ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg",
+          "duration_ms": 20007,
+          "crossfade_ms": 5000
+        },
+        {
+          "asset_id": "aircraft_cabin_cruise_002",
+          "path": "ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_002.ogg",
+          "duration_ms": 20007,
+          "crossfade_ms": 5000
+        }
+      ],
+      "events": []
+    }
+  ]
+}
