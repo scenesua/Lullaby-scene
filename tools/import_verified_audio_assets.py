@@ -26,20 +26,20 @@ JOBS = []
 for i, start in enumerate((12, 90, 168), 1):
     JOBS.append((f"train_wikimedia_bed_{i:03d}", "wikimedia_train_wheels", f"ambience/train/continuous/train_wikimedia_bed_{i:03d}.ogg", start, 70, "highpass=f=28,loudnorm=I=-25:TP=-3:LRA=7,aresample=48000", 4))
 JOBS += [
-    ("train_acceleration_001", "wikimedia_e233_acceleration", "ambience/train/events/train_acceleration_001.ogg", 4, 5, "pan=mono|c0=.5*c0+.5*c1,highpass=f=45,loudnorm=I=-23:TP=-3:LRA=10,afade=t=in:d=.04,afade=t=out:st=4.75:d=.25,aresample=48000", 4),
-    ("train_acceleration_002", "wikimedia_e233_acceleration", "ambience/train/events/train_acceleration_002.ogg", 18, 5, "pan=mono|c0=.5*c0+.5*c1,highpass=f=45,loudnorm=I=-23:TP=-3:LRA=10,afade=t=in:d=.04,afade=t=out:st=4.75:d=.25,aresample=48000", 4),
-    ("train_deceleration_001", "wikimedia_e231_deceleration", "ambience/train/events/train_deceleration_001.ogg", .5, 5, "pan=mono|c0=.5*c0+.5*c1,highpass=f=45,loudnorm=I=-23:TP=-3:LRA=10,afade=t=in:d=.04,afade=t=out:st=4.75:d=.25,aresample=48000", 4),
-    ("train_deceleration_002", "wikimedia_e231_deceleration", "ambience/train/events/train_deceleration_002.ogg", 19, 5, "pan=mono|c0=.5*c0+.5*c1,highpass=f=45,loudnorm=I=-23:TP=-3:LRA=10,afade=t=in:d=.04,afade=t=out:st=4.75:d=.25,aresample=48000", 4),
-    ("train_doors_closing_001", "wikimedia_train_doors", "ambience/train/events/train_doors_closing_001.ogg", 4.25, 3.65, "pan=mono|c0=.5*c0+.5*c1,highpass=f=55,loudnorm=I=-22:TP=-2.5:LRA=10,afade=t=in:d=.03,afade=t=out:st=3.35:d=.3,aresample=48000", 4),
+    ("train_acceleration_001", "wikimedia_e233_acceleration", "ambience/train/events/train_acceleration_001.ogg", 4, 5, "pan=mono|c0=.5*c0+.5*c1,highpass=f=45,loudnorm=I=-23:TP=-3:LRA=10,afade=t=in:d=0.04,afade=t=out:st=4.75:d=0.25,aresample=48000", 4),
+    ("train_acceleration_002", "wikimedia_e233_acceleration", "ambience/train/events/train_acceleration_002.ogg", 18, 5, "pan=mono|c0=.5*c0+.5*c1,highpass=f=45,loudnorm=I=-23:TP=-3:LRA=10,afade=t=in:d=0.04,afade=t=out:st=4.75:d=0.25,aresample=48000", 4),
+    ("train_deceleration_001", "wikimedia_e231_deceleration", "ambience/train/events/train_deceleration_001.ogg", .5, 5, "pan=mono|c0=.5*c0+.5*c1,highpass=f=45,loudnorm=I=-23:TP=-3:LRA=10,afade=t=in:d=0.04,afade=t=out:st=4.75:d=0.25,aresample=48000", 4),
+    ("train_deceleration_002", "wikimedia_e231_deceleration", "ambience/train/events/train_deceleration_002.ogg", 19, 5, "pan=mono|c0=.5*c0+.5*c1,highpass=f=45,loudnorm=I=-23:TP=-3:LRA=10,afade=t=in:d=0.04,afade=t=out:st=4.75:d=0.25,aresample=48000", 4),
+    ("train_doors_closing_001", "wikimedia_train_doors", "ambience/train/events/train_doors_closing_001.ogg", 4.25, 3.65, "pan=mono|c0=.5*c0+.5*c1,highpass=f=55,loudnorm=I=-22:TP=-2.5:LRA=10,afade=t=in:d=0.03,afade=t=out:st=3.35:d=0.3,aresample=48000", 4),
     ("rain_heavy_wikimedia_001", "wikimedia_rain_1", "ambience/rain/continuous/rain_heavy_wikimedia_001.ogg", None, None, "highpass=f=70,loudnorm=I=-29:TP=-5:LRA=7,aresample=48000", 4),
-    ("thunder_rain_close_001", "wikimedia_rain_thunder", "ambience/thunder/events/thunder_rain_close_001.ogg", 2.1, 6, "highpass=f=28,lowpass=f=12000,loudnorm=I=-24:TP=-3:LRA=14,afade=t=out:st=5.55:d=.45,aresample=48000", 4),
-    ("thunder_rain_distant_001", "wikimedia_rain_thunder", "ambience/thunder/events/thunder_rain_distant_001.ogg", 11.1, 6, "highpass=f=28,lowpass=f=12000,loudnorm=I=-26:TP=-4:LRA=14,afade=t=out:st=5.55:d=.45,aresample=48000", 4),
-    ("thunder_rumble_001", "wikimedia_tonitrus", "ambience/thunder/events/thunder_rumble_001.ogg", 1.3, 6, "pan=mono|c0=.5*c0+.5*c1,highpass=f=24,lowpass=f=10000,loudnorm=I=-25:TP=-3.5:LRA=12,afade=t=out:st=5.45:d=.55,aresample=48000", 4),
-    ("thunder_rumble_002", "wikimedia_tonitrus", "ambience/thunder/events/thunder_rumble_002.ogg", 16, 6, "pan=mono|c0=.5*c0+.5*c1,highpass=f=24,lowpass=f=10000,loudnorm=I=-27:TP=-4:LRA=12,afade=t=out:st=5.45:d=.55,aresample=48000", 4),
+    ("thunder_rain_close_001", "wikimedia_rain_thunder", "ambience/thunder/events/thunder_rain_close_001.ogg", 2.1, 6, "highpass=f=28,lowpass=f=12000,loudnorm=I=-24:TP=-3:LRA=14,afade=t=out:st=5.55:d=0.45,aresample=48000", 4),
+    ("thunder_rain_distant_001", "wikimedia_rain_thunder", "ambience/thunder/events/thunder_rain_distant_001.ogg", 11.1, 6, "highpass=f=28,lowpass=f=12000,loudnorm=I=-26:TP=-4:LRA=14,afade=t=out:st=5.55:d=0.45,aresample=48000", 4),
+    ("thunder_rumble_001", "wikimedia_tonitrus", "ambience/thunder/events/thunder_rumble_001.ogg", 1.3, 6, "pan=mono|c0=.5*c0+.5*c1,highpass=f=24,lowpass=f=10000,loudnorm=I=-25:TP=-3.5:LRA=12,afade=t=out:st=5.45:d=0.55,aresample=48000", 4),
+    ("thunder_rumble_002", "wikimedia_tonitrus", "ambience/thunder/events/thunder_rumble_002.ogg", 16, 6, "pan=mono|c0=.5*c0+.5*c1,highpass=f=24,lowpass=f=10000,loudnorm=I=-27:TP=-4:LRA=12,afade=t=out:st=5.45:d=0.55,aresample=48000", 4),
 ]
 for i, start in enumerate((5, 47, 88), 1):
     JOBS.append((f"wind_building_{i:03d}", "wikimedia_howling_wind", f"ambience/wind/continuous/wind_building_{i:03d}.ogg", start, 35, "highpass=f=45,lowpass=f=7600,loudnorm=I=-29:TP=-5:LRA=7,aresample=48000", 3))
-JOBS.append(("door_handle_creak_001", "wikimedia_door_handle_creak", "ambience/scene_assets/cabin/events/door_handle_creak_001.ogg", .05, 2.75, "pan=mono|c0=.5*c0+.5*c1,highpass=f=70,loudnorm=I=-24:TP=-4:LRA=10,afade=t=out:st=2.5:d=.25,aresample=48000", 4))
+JOBS.append(("door_handle_creak_001", "wikimedia_door_handle_creak", "ambience/scene_assets/cabin/events/door_handle_creak_001.ogg", .05, 2.75, "pan=mono|c0=.5*c0+.5*c1,highpass=f=70,loudnorm=I=-24:TP=-4:LRA=10,afade=t=out:st=2.5:d=0.25,aresample=48000", 4))
 
 
 def digest(path: Path) -> str:
