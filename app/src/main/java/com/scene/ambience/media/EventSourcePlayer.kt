@@ -2,6 +2,7 @@ package com.scene.ambience.media
 
 import android.content.Context
 import android.media.SoundPool
+import android.os.SystemClock
 import com.scene.ambience.data.model.AudioAssetManifest
 import com.scene.ambience.data.model.CategoryPresetConfig
 import com.scene.ambience.util.EventScheduler
@@ -11,21 +12,15 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.cos
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * Event-sound player: plays short one-shot samples from a shared SoundPool
- * at random (never fixed) intervals, with bounded volume and pan jitter
- * (section 23).
- *
- * Scheduling lifetime is deliberately separate from audibility. Muting a
- * source/master (or a temporary zero-gain fade) must not terminate the
- * scheduler job, otherwise unmuting would leave the event source permanently
- * silent until the player is recreated. Pause/stop still cancel the job via
- * [stopScheduling].
+ * Short one-shot event player. Scheduling lifetime is separate from audibility:
+ * mute/fade skips triggers without killing the coroutine, while pause/stop owns
+ * cancellation. Per-asset weights and cooldowns keep transition sounds rare.
  */
 class EventSourcePlayer(
     context: Context,
@@ -39,8 +34,14 @@ class EventSourcePlayer(
     private val isActive: () -> Boolean,
 ) {
 
+    private data class LoadedSample(
+        val asset: AudioAssetManifest,
+        val sampleId: Int,
+    )
+
     private val random = Random(randomSeed ?: System.currentTimeMillis())
-    private val sampleIds = mutableListOf<Int>()
+    private val samples = mutableListOf<LoadedSample>()
+    private val lastPlayedAtMs = mutableMapOf<String, Long>()
     private var job: Job? = null
     private var lastSample = -1
 
@@ -50,19 +51,16 @@ class EventSourcePlayer(
                 val afd = context.assets.openFd(file.path)
                 val id = soundPool.load(afd, 1)
                 afd.close()
-                if (id != 0) sampleIds.add(id)
-            } catch (e: Exception) {
-                // Skip unreadable event files. Manifest/instrumentation tests
-                // should catch missing assets before release.
+                if (id != 0) samples += LoadedSample(file, id)
+            } catch (_: Exception) {
+                // Manifest/instrumentation validation reports missing assets.
             }
         }
     }
 
     fun start() {
         job?.cancel()
-        job = scope.launch {
-            run()
-        }
+        job = scope.launch { run() }
     }
 
     fun stopScheduling() {
@@ -72,38 +70,44 @@ class EventSourcePlayer(
 
     fun release() {
         stopScheduling()
-        sampleIds.forEach { runCatching { soundPool.unload(it) } }
-        sampleIds.clear()
+        samples.forEach { runCatching { soundPool.unload(it.sampleId) } }
+        samples.clear()
+        lastPlayedAtMs.clear()
     }
 
     fun applyBaseVolume(baseGain: Float) {
-        // Volumes are read from volumeProvider at trigger time so mute/master
-        // changes are reflected without rebuilding the SoundPool samples.
+        // Read from volumeProvider at trigger time; no persistent stream exists.
     }
 
     private suspend fun run() {
-        // Do not use isActive() as the loop condition. That callback expresses
-        // current audibility and legitimately becomes false during mute/fade.
-        // Only coroutine cancellation (pause/stop/release/restart) owns the
-        // lifetime of this scheduling loop.
         while (currentCoroutineContext().isActive) {
-            val delayMs = EventScheduler.nextDelayMs(config.minIntervalMs, config.maxIntervalMs, random)
-            delay(delayMs)
+            delay(EventScheduler.nextDelayMs(config.minIntervalMs, config.maxIntervalMs, random))
+            if (!isActive() || samples.isEmpty()) continue
 
-            // Preserve the random timeline while inaudible, but skip the actual
-            // one-shot. A later unmute therefore resumes naturally without a
-            // hidden scheduler restart requirement.
-            if (!isActive()) continue
-            if (sampleIds.isEmpty()) continue
+            val now = SystemClock.elapsedRealtime()
+            val cooldownEligible = samples.indices.filter { index ->
+                val asset = samples[index].asset
+                val previous = lastPlayedAtMs[asset.assetId] ?: Long.MIN_VALUE
+                previous == Long.MIN_VALUE || now - previous >= asset.cooldownMs.coerceAtLeast(0L)
+            }
+            if (cooldownEligible.isEmpty()) continue
 
-            val idx = EventScheduler.nextSampleIndex(sampleIds.size, lastSample, random)
-            if (idx < 0) continue
-            lastSample = idx
+            val noImmediateRepeat = if (cooldownEligible.size > 1) {
+                cooldownEligible.filterNot { it == lastSample }
+            } else {
+                cooldownEligible
+            }
+            val localIndex = EventScheduler.nextWeightedIndex(
+                noImmediateRepeat.map { samples[it].asset.eventWeight.toFloat() },
+                random,
+            )
+            if (localIndex < 0) continue
+            val sampleIndex = noImmediateRepeat[localIndex]
+            val sample = samples[sampleIndex]
 
             val baseVolume = volumeProvider().coerceIn(0f, 1f)
             if (baseVolume <= 0f) continue
-
-            val vol = EventScheduler.randomVolume(
+            val volume = EventScheduler.randomVolume(
                 config.eventVolumeRange.getOrElse(0) { 0.75 }.toFloat(),
                 config.eventVolumeRange.getOrElse(1) { 1.0 }.toFloat(),
                 random,
@@ -113,8 +117,12 @@ class EventSourcePlayer(
                 config.eventPanRange.getOrElse(1) { 0.6 }.toFloat(),
                 random,
             )
-            val (left, right) = panVolumes(vol, pan)
-            soundPool.play(sampleIds[idx], left, right, 1, 0, 1f)
+            val (left, right) = panVolumes(volume, pan)
+            val streamId = soundPool.play(sample.sampleId, left, right, 1, 0, 1f)
+            if (streamId != 0) {
+                lastSample = sampleIndex
+                lastPlayedAtMs[sample.asset.assetId] = now
+            }
         }
     }
 
