@@ -2,6 +2,7 @@ package com.scene.ambience.data
 
 import android.content.Context
 import com.scene.ambience.data.model.CategoryPresetsFile
+import com.scene.ambience.data.model.EventExtensionsFile
 import com.scene.ambience.data.model.LicensesFile
 import com.scene.ambience.data.model.SoundLibraryManifest
 import com.scene.ambience.data.model.SoundLibraryState
@@ -12,8 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.Json
 
 /**
- * Loads the packaged manifests once. The app never scans folders at runtime;
- * it reads sound_library.json exactly as the prep tool generated it.
+ * Loads the packaged manifests once. The canonical library remains generated
+ * from sound_library.json, while optional additive event packs can extend a
+ * source without mutating that generated file by hand.
  */
 class SoundLibraryRepository(context: Context) {
 
@@ -40,18 +42,34 @@ class SoundLibraryRepository(context: Context) {
     }
 
     private fun readAll(): SoundLibraryState {
-        val manifestJson = readAsset("ambience/manifest/sound_library.json") ?: return SoundLibraryState(loadError = "manifest_missing")
+        val manifestJson = readAsset("ambience/manifest/sound_library.json")
+            ?: return SoundLibraryState(loadError = "manifest_missing")
         return try {
             val manifest = json.decodeFromString<SoundLibraryManifest>(manifestJson)
+            val eventExtensions = readAsset("ambience/manifest/event_extensions.json")?.let {
+                runCatching { json.decodeFromString<EventExtensionsFile>(it) }.getOrNull()
+            }
             val presets = readAsset("ambience/manifest/category_presets.json")?.let {
                 runCatching { json.decodeFromString<CategoryPresetsFile>(it) }.getOrNull()
             }
             val licenses = readAsset("ambience/manifest/licenses.json")?.let {
                 runCatching { json.decodeFromString<LicensesFile>(it) }.getOrNull()
             }
+
+            val mergedSources = manifest.sources.map { source ->
+                val additions = eventExtensions?.sources?.get(source.id).orEmpty()
+                if (additions.isEmpty()) {
+                    source
+                } else {
+                    source.copy(
+                        events = (source.events + additions).distinctBy { it.assetId }
+                    )
+                }
+            }
+
             SoundLibraryState(
                 version = manifest.version,
-                sources = manifest.sources.filter { it.allFiles.isNotEmpty() },
+                sources = mergedSources.filter { it.allFiles.isNotEmpty() },
                 categoryPresets = presets?.categories ?: emptyMap(),
                 licenses = licenses?.entries ?: emptyList(),
                 loadError = null,
