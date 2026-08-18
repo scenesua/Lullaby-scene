@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.scene.ambience.AmbienceApplication
 import com.scene.ambience.controller.AmbienceControllerRepository
 import com.scene.ambience.data.BuiltInPresets
 import com.scene.ambience.data.PresetRepository
@@ -67,13 +68,14 @@ private data class CoreUiState(
 
 class AmbienceViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val app = application as AmbienceApplication
     private val json = Json { ignoreUnknownKeys = true }
 
-    val libraryRepository: SoundLibraryRepository = (application as com.scene.ambience.AmbienceApplication).libraryRepository
-    val settingsRepository: SettingsRepository = application.settingsRepository
-    private val presetRepository: PresetRepository = application.presetRepository
-    private val controllerRepository = AmbienceControllerRepository(application, viewModelScope)
-    private val updateCoordinator = UpdateCoordinator(application)
+    val libraryRepository: SoundLibraryRepository = app.libraryRepository
+    val settingsRepository: SettingsRepository = app.settingsRepository
+    private val presetRepository: PresetRepository = app.presetRepository
+    private val controllerRepository = AmbienceControllerRepository(app, viewModelScope)
+    private val updateCoordinator = UpdateCoordinator(app)
 
     private val _events = MutableSharedFlow<AmbienceUiEvent>(extraBufferCapacity = 8)
     val events: SharedFlow<AmbienceUiEvent> = _events.asSharedFlow()
@@ -129,8 +131,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // -------- transport -----------------------------------------------------------
-
     fun togglePlayPause() {
         val snapshot = uiState.value.snapshot
         if (snapshot?.activeSourceCount == 0) {
@@ -146,8 +146,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
 
     fun stop() = controllerRepository.stop()
 
-    // -------- scene engine ---------------------------------------------------------
-
     fun startPassengerAircraftScene(arcMinutes: Int) {
         if (uiState.value.library.manifestFor(SceneOrchestrator.SOURCE_AIRCRAFT) == null) {
             _events.tryEmit(AmbienceUiEvent.ShowMessage("scene_aircraft_unavailable"))
@@ -159,8 +157,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     fun stopScene() = controllerRepository.stopScene()
     fun setSceneArc(minutes: Int) = controllerRepository.setSceneArc(minutes)
     fun setSceneMacro(key: String, value: Float) = controllerRepository.setSceneMacro(key, value)
-
-    // -------- mixer ----------------------------------------------------------------
 
     fun setMasterVolume(volume: Float) = controllerRepository.setMasterVolume(volume)
     fun setMasterMuted(muted: Boolean) = controllerRepository.setMasterMuted(muted)
@@ -185,8 +181,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun disableAllSources() = controllerRepository.disableAllSources()
-
-    // -------- presets --------------------------------------------------------------
 
     fun applyPreset(preset: AmbiencePreset) {
         if (uiState.value.scene.active) controllerRepository.stopScene()
@@ -221,8 +215,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { presetRepository.deletePreset(id, uiState.value.userPresets) }
     }
 
-    // -------- sleep timer ----------------------------------------------------------
-
     fun startSleepTimer(durationMs: Long) {
         val fadeMs = uiState.value.timerFadeSeconds * 1000L
         controllerRepository.startSleepTimer(durationMs, fadeMs)
@@ -233,8 +225,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         controllerRepository.cancelSleepTimer()
         viewModelScope.launch { settingsRepository.clearSleepTimer() }
     }
-
-    // -------- settings -------------------------------------------------------------
 
     fun setThemeMode(mode: ThemeMode) { viewModelScope.launch { settingsRepository.setThemeMode(mode) } }
     fun setFocusPolicy(policy: FocusPolicy) { viewModelScope.launch { settingsRepository.setFocusPolicy(policy) } }
@@ -270,8 +260,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         }
         controllerRepository.play()
     }
-
-    // -------- updates -------------------------------------------------------------
 
     fun checkForUpdates(manual: Boolean = false) {
         viewModelScope.launch { updateCoordinator.check(manual) }
