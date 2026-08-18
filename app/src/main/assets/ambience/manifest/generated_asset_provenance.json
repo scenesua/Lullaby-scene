@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "generator": {
+    "kind": "procedural",
+    "created_for": "Lullaby Scene",
+    "toolchain": ["Python", "NumPy", "SciPy", "FFmpeg/libvorbis"],
+    "rights": "project-generated; no third-party recording sampled",
+    "attribution_required": false
+  },
+  "assets": [
+    {
+      "asset_id": "fire_event_generated_001",
+      "role": "event",
+      "source_id": "fire",
+      "description": "short filtered-noise fireplace crackle burst",
+      "sha256": "64da931ab249a8fcd7c4c21a8c7d12285bcee0713263c72d33ab9d7d95475163",
+      "bytes": 7231,
+      "sample_rate_hz": 44100,
+      "channels": 2,
+      "duration_ms": 550
+    },
+    {
+      "asset_id": "fire_event_generated_002",
+      "role": "event",
+      "source_id": "fire",
+      "description": "alternate filtered-noise fireplace crackle burst",
+      "sha256": "34e3d8da1410ab11080fa76cecebef8b18dd4427cc202b010be0af31ed32f747",
+      "bytes": 6036,
+      "sample_rate_hz": 32000,
+      "channels": 1,
+      "duration_ms": 800
+    },
+    {
+      "asset_id": "fire_event_generated_003",
+      "role": "event",
+      "source_id": "fire",
+      "description": "short dry fireplace crackle variant",
+      "sha256": "91fbd3d40f98e60c1d80b0272432a0b44a5e9395a93735ece127533a9fb71e5b",
+      "bytes": 4938,
+      "sample_rate_hz": 32000,
+      "channels": 1,
+      "duration_ms": 420
+    },
+    {
+      "asset_id": "train_event_generated_001",
+      "role": "event",
+      "source_id": "train",
+      "description": "low-frequency rail/body impact with damped metallic ring",
+      "sha256": "aac2341d115e1d55b533fcfa3459bfa38cd5c3e02a8ffa62b4e1b8da05eb9ebc",
+      "bytes": 8332,
+      "sample_rate_hz": 32000,
+      "channels": 1,
+      "duration_ms": 1100
+    }
+  ]
+}
