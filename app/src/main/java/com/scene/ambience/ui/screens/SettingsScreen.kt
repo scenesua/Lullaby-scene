@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
@@ -25,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.scene.ambience.BuildConfig
 import com.scene.ambience.R
 import com.scene.ambience.data.model.FocusPolicy
 import com.scene.ambience.data.model.ThemeMode
@@ -133,11 +136,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.outline,
                         )
                     }
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.outline,
-                    )
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
                     Spacer(Modifier.width(4.dp))
                     Switch(
                         checked = state.eqSettings.enabled,
@@ -151,21 +150,62 @@ fun SettingsScreen(
 
         item {
             HorizontalDivider()
-            SectionTitle(context.getString(R.string.settings_about))
-            Card(onClick = onOpenLicenses, modifier = Modifier.fillMaxWidth()) {
-                Row(
+            SectionTitle(context.getString(R.string.settings_update))
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
                     modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Text(
-                        text = context.getString(R.string.licenses),
+                        context.getString(R.string.update_current_version, BuildConfig.VERSION_NAME),
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
                     )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
+                    Text(
+                        context.getString(R.string.update_channel_github),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    state.update.available?.let { available ->
+                        Text(
+                            context.getString(R.string.update_available_version, available.version),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                    }
+                    if (state.update.downloading) {
+                        LinearProgressIndicator(
+                            progress = { ((state.update.downloadProgress ?: 0) / 100f).coerceIn(0f, 1f) },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(context.getString(R.string.update_downloading, state.update.downloadProgress ?: 0))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { viewModel.checkForUpdates(manual = true) },
+                            enabled = !state.update.checking && !state.update.downloading,
+                        ) {
+                            Text(
+                                if (state.update.checking) context.getString(R.string.update_checking)
+                                else context.getString(R.string.update_check_now)
+                            )
+                        }
+                        if (state.update.available != null && !state.update.downloading) {
+                            Button(onClick = viewModel::downloadUpdate) {
+                                Text(context.getString(R.string.update_now))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            HorizontalDivider()
+            SectionTitle(context.getString(R.string.settings_about))
+            Card(onClick = onOpenLicenses, modifier = Modifier.fillMaxWidth()) {
+                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(context.getString(R.string.licenses), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                 }
             }
         }
@@ -174,11 +214,7 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(vertical = 4.dp),
-    )
+    Text(text = text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 4.dp))
 }
 
 @Composable
@@ -192,14 +228,8 @@ private fun <T> RadioSetting(
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall)
             options.forEach { (label, value) ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(
-                        selected = value == selected,
-                        onClick = { onSelect(value) },
-                    )
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = value == selected, onClick = { onSelect(value) })
                     Text(label, modifier = Modifier.padding(start = 8.dp))
                 }
             }
@@ -216,18 +246,12 @@ private fun SwitchSetting(
 ) {
     Card {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                )
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
             }
             Switch(checked = checked, onCheckedChange = onCheckedChange)
         }
