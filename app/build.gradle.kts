@@ -1,3 +1,4 @@
+import java.util.Base64
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -5,6 +6,34 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+}
+
+val generatedSceneAudioDir = layout.buildDirectory.dir("generated/sceneAudioAssets")
+val decodeSceneAudio by tasks.registering {
+    val sourceDir = file("src/main/sceneAudioBase64")
+    inputs.dir(sourceDir)
+    outputs.dir(generatedSceneAudioDir)
+    doLast {
+        val outDir = generatedSceneAudioDir.get().asFile
+        outDir.deleteRecursively()
+        outDir.mkdirs()
+        val assets = listOf(
+            "aircraft_cabin_cruise_001" to listOf(
+                "aircraft_cabin_cruise_001.part00",
+                "aircraft_cabin_cruise_001.part01",
+            ),
+            "aircraft_cabin_cruise_002" to listOf(
+                "aircraft_cabin_cruise_002.part00",
+                "aircraft_cabin_cruise_002.part01",
+            ),
+        )
+        assets.forEach { (name, parts) ->
+            val encoded = parts.joinToString("") { sourceDir.resolve(it).readText().trim() }
+            val output = outDir.resolve("ambience/aircraft_cabin/continuous/$name.ogg")
+            output.parentFile.mkdirs()
+            output.writeBytes(Base64.getDecoder().decode(encoded))
+        }
+    }
 }
 
 android {
@@ -15,9 +44,13 @@ android {
         applicationId = "com.scene.ambience"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.1.0-alpha.1"
+        versionCode = 6
+        versionName = "1.1.0-alpha.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    sourceSets {
+        getByName("main").assets.srcDir(generatedSceneAudioDir)
     }
 
     buildTypes {
@@ -51,6 +84,8 @@ android {
         }
     }
 }
+
+tasks.named("preBuild").configure { dependsOn(decodeSceneAudio) }
 
 kotlin {
     compilerOptions {
