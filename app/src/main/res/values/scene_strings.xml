@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_scenes">Scenes</string>
+    <string name="source_aircraft_cabin">Aircraft Cabin</string>
+
+    <string name="scenes_question">Where do you want to be?</string>
+    <string name="scenes_subtitle">Living scenes evolve slowly instead of repeating a fixed mix.</string>
+    <string name="scene_aircraft_name">Passenger Aircraft Cabin</string>
+    <string name="scene_aircraft_description">A dim passenger cabin shaped for long, quiet listening.</string>
+    <string name="scene_asset_unavailable">The aircraft recording is not packaged in this build.</string>
+    <string name="scene_start">Enter this scene</string>
+    <string name="scene_end">Leave scene</string>
+    <string name="scene_arc_title">Scene Arc</string>
+    <string name="scene_macros_title">Scene controls</string>
+    <string name="scene_elapsed">Scene time %1$s</string>
+    <string name="scene_state_settling">Settling into the cabin</string>
+    <string name="scene_state_cruise">Long cruise</string>
+    <string name="scene_state_drowsy">Drowsy cabin</string>
+    <string name="scene_state_deep_night">Deep night</string>
+    <string name="scene_spatial_hint">Engine presence changes both level and high-frequency distance filtering. Night depth adds a softer occluded character.</string>
+    <string name="scene_aircraft_unavailable">Passenger Aircraft Cabin audio is not available in this build</string>
+
+    <string name="macro_engine_presence">Engine presence</string>
+    <string name="macro_engine_presence_desc">Far and softened ↔ close and present</string>
+    <string name="macro_cabin_activity">Cabin activity</string>
+    <string name="macro_cabin_activity_desc">How much small real-cabin detail comes through</string>
+    <string name="macro_turbulence">Turbulence</string>
+    <string name="macro_turbulence_desc">Subtle movement and low-frequency variation</string>
+    <string name="macro_night_depth">Night depth</string>
+    <string name="macro_night_depth_desc">Darker and softer for late-night listening</string>
+
+    <string name="settings_update">Updates</string>
+    <string name="update_channel_github">Distribution channel: GitHub Releases</string>
+    <string name="update_current_version">Current version: %1$s</string>
+    <string name="update_available_version">Version %1$s is available</string>
+    <string name="update_check_now">Check for updates</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_available_title">Update available</string>
+    <string name="update_version_change">Installed %1$s → available %2$s</string>
+    <string name="update_now">Update now</string>
+    <string name="update_later">Later</string>
+    <string name="update_hide_24h">Hide for 24h</string>
+    <string name="update_up_to_date">You already have the newest stable release</string>
+    <string name="update_check_failed">Could not check GitHub Releases. Playback is unaffected.</string>
+    <string name="update_download_failed">The update download or verification failed</string>
+    <string name="update_downloading">Downloading… %1$d%%</string>
+    <string name="update_allow_install_permission">Allow Lullaby Scene to install unknown apps, then run Update now again.</string>
+    <string name="update_install_failed">Could not open the Android package installer</string>
+</resources>
