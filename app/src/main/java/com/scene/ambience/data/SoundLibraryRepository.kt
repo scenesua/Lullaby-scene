@@ -18,16 +18,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.Json
 
 /**
- * Loads the packaged manifests once. The canonical v1.0.3 manifest stays
- * generated and immutable; additive packs and reviewed overrides are merged at
- * load time so legacy files can be preserved, disabled or repurposed without
- * hand-editing the original source catalog.
- *
- * Extension manifests may intentionally reference verified audio that is not
- * packaged in the current checkout yet. Missing staged files are ignored at
- * runtime instead of turning the whole sound library into a failure. Dropping
- * a later audio pack into the declared paths therefore activates it without a
- * Kotlin change.
+ * Loads packaged manifests once. The v1.0.3 catalog stays intact while optional
+ * additive files can provide new scene sources, extra variants and reviewed
+ * runtime overrides.
  */
 class SoundLibraryRepository(context: Context) {
 
@@ -58,6 +51,9 @@ class SoundLibraryRepository(context: Context) {
             ?: return SoundLibraryState(loadError = "manifest_missing")
         return try {
             val manifest = json.decodeFromString<SoundLibraryManifest>(manifestJson)
+            val sceneSources = decodeOptional<SoundLibraryManifest>(
+                "ambience/manifest/scene_sources.json"
+            )
             val continuousExtensions = decodeOptional<ContinuousExtensionsFile>(
                 "ambience/manifest/continuous_extensions.json"
             )
@@ -77,7 +73,10 @@ class SoundLibraryRepository(context: Context) {
                 "ambience/manifest/external_licenses.json"
             )
 
-            val mergedSources = manifest.sources.map { source ->
+            val canonicalIds = manifest.sources.mapTo(mutableSetOf()) { it.id }
+            val additive = sceneSources?.sources.orEmpty().filterNot { it.id in canonicalIds }
+            val allSources = manifest.sources + additive
+            val mergedSources = allSources.map { source ->
                 mergeSource(
                     source = source,
                     continuousAdditions = continuousExtensions?.sources?.get(source.id).orEmpty(),
@@ -87,7 +86,7 @@ class SoundLibraryRepository(context: Context) {
             }
 
             SoundLibraryState(
-                version = manifest.version,
+                version = maxOf(manifest.version, sceneSources?.version ?: 1),
                 sources = mergedSources.filter { it.allFiles.isNotEmpty() },
                 categoryPresets = presets?.categories ?: emptyMap(),
                 licenses = (legacyLicenses?.entries.orEmpty() + externalLicenses?.entries.orEmpty())
@@ -127,7 +126,7 @@ class SoundLibraryRepository(context: Context) {
         files.filter { asset ->
             val exists = assetExists(asset.path)
             if (!exists) {
-                Log.i(TAG, "Skipping staged audio asset not packaged yet: ${asset.assetId} (${asset.path})")
+                Log.i(TAG, "Skipping audio asset not packaged in this build: ${asset.assetId} (${asset.path})")
             }
             exists
         }
@@ -142,7 +141,6 @@ class SoundLibraryRepository(context: Context) {
     private inline fun <reified T> decodeOptional(path: String): T? =
         readAsset(path)?.let { runCatching { json.decodeFromString<T>(it) }.getOrNull() }
 
-    /** Manifest source for a source id, or null when the source has no packaged files. */
     fun manifestFor(sourceId: String): SourceManifest? =
         _state.value.sources.firstOrNull { it.id == sourceId }
 
