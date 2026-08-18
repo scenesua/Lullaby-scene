@@ -1,13 +1,16 @@
 package com.scene.ambience.data
 
 import android.content.Context
+import android.util.Log
 import com.scene.ambience.data.model.AssetOverridesFile
+import com.scene.ambience.data.model.AudioAssetManifest
 import com.scene.ambience.data.model.CategoryPresetsFile
 import com.scene.ambience.data.model.ContinuousExtensionsFile
 import com.scene.ambience.data.model.EventExtensionsFile
 import com.scene.ambience.data.model.LicensesFile
 import com.scene.ambience.data.model.SoundLibraryManifest
 import com.scene.ambience.data.model.SoundLibraryState
+import com.scene.ambience.data.model.SourceAssetOverride
 import com.scene.ambience.data.model.SourceManifest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +22,12 @@ import kotlinx.serialization.json.Json
  * generated and immutable; additive packs and reviewed overrides are merged at
  * load time so legacy files can be preserved, disabled or repurposed without
  * hand-editing the original source catalog.
+ *
+ * Extension manifests may intentionally reference verified audio that is not
+ * packaged in the current checkout yet. Missing staged files are ignored at
+ * runtime instead of turning the whole sound library into a failure. Dropping
+ * a later audio pack into the declared paths therefore activates it without a
+ * Kotlin change.
  */
 class SoundLibraryRepository(context: Context) {
 
@@ -92,22 +101,42 @@ class SoundLibraryRepository(context: Context) {
 
     private fun mergeSource(
         source: SourceManifest,
-        continuousAdditions: List<com.scene.ambience.data.model.AudioAssetManifest>,
-        eventAdditions: List<com.scene.ambience.data.model.AudioAssetManifest>,
-        override: com.scene.ambience.data.model.SourceAssetOverride?,
+        continuousAdditions: List<AudioAssetManifest>,
+        eventAdditions: List<AudioAssetManifest>,
+        override: SourceAssetOverride?,
     ): SourceManifest {
         val disabled = override?.disabledAssetIds.orEmpty().toSet()
         return source.copy(
             defaultVolume = override?.defaultVolume ?: source.defaultVolume,
             trimGainDb = override?.trimGainDb ?: source.trimGainDb,
             loopMode = override?.loopMode ?: source.loopMode,
-            continuous = (source.continuous + continuousAdditions)
-                .distinctBy { it.assetId }
-                .filterNot { it.assetId in disabled },
-            events = (source.events + eventAdditions)
-                .distinctBy { it.assetId }
-                .filterNot { it.assetId in disabled },
+            continuous = filterPackagedAssets(
+                (source.continuous + continuousAdditions)
+                    .distinctBy { it.assetId }
+                    .filterNot { it.assetId in disabled }
+            ),
+            events = filterPackagedAssets(
+                (source.events + eventAdditions)
+                    .distinctBy { it.assetId }
+                    .filterNot { it.assetId in disabled }
+            ),
         )
+    }
+
+    private fun filterPackagedAssets(files: List<AudioAssetManifest>): List<AudioAssetManifest> =
+        files.filter { asset ->
+            val exists = assetExists(asset.path)
+            if (!exists) {
+                Log.i(TAG, "Skipping staged audio asset not packaged yet: ${asset.assetId} (${asset.path})")
+            }
+            exists
+        }
+
+    private fun assetExists(path: String): Boolean = try {
+        appContext.assets.open(path).use { }
+        true
+    } catch (_: Exception) {
+        false
     }
 
     private inline fun <reified T> decodeOptional(path: String): T? =
@@ -119,7 +148,11 @@ class SoundLibraryRepository(context: Context) {
 
     private fun readAsset(path: String): String? = try {
         appContext.assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
+    }
+
+    companion object {
+        private const val TAG = "SoundLibrary"
     }
 }
