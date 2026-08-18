@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "sources": {
+    "cafe": {
+      "disabled_asset_ids": [
+        "cafe_loop_001",
+        "cafe_loop_002"
+      ]
+    },
+    "city": {
+      "disabled_asset_ids": [
+        "city_loop_002"
+      ]
+    },
+    "rain": {
+      "loop_mode": "crossfade"
+    },
+    "thunder": {
+      "disabled_asset_ids": [
+        "thunder_loop_001"
+      ],
+      "loop_mode": "event",
+      "default_volume": 0.24
+    },
+    "train": {
+      "disabled_asset_ids": [
+        "train_loop_001",
+        "train_loop_002",
+        "train_loop_003"
+      ],
+      "loop_mode": "crossfade"
+    },
+    "wind": {
+      "loop_mode": "crossfade"
+    }
+  }
+}
