@@ -1,0 +1,94 @@
+name: Build and publish v1.1.0-alpha.1
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: lullaby-v1.1.0-alpha.1
+  cancel-in-progress: true
+
+jobs:
+  build-and-release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.ref == 'work/lullaby-2.0-audio-foundation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout prerelease source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Run unit tests and build release APK
+        run: ./gradlew --no-daemon testDebugUnitTest assembleRelease --stacktrace
+
+      - name: Prepare release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/Lullaby-Scene-v1.1.0-alpha.1.apk
+          sha256sum dist/Lullaby-Scene-v1.1.0-alpha.1.apk > dist/Lullaby-Scene-v1.1.0-alpha.1.apk.sha256
+          test -s dist/Lullaby-Scene-v1.1.0-alpha.1.apk
+          ls -lh dist
+
+      - name: Upload CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lullaby-Scene-v1.1.0-alpha.1
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v1.1.0-alpha.1
+          TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            git tag -f "$TAG" "$TARGET_SHA"
+            git push --force origin "refs/tags/$TAG"
+            gh release upload "$TAG" \
+              dist/Lullaby-Scene-v1.1.0-alpha.1.apk \
+              dist/Lullaby-Scene-v1.1.0-alpha.1.apk.sha256 \
+              --clobber
+            gh release edit "$TAG" \
+              --title "Lullaby Scene v1.1.0-alpha.1" \
+              --notes-file RELEASE_NOTES_1.1.0-alpha.1.md \
+              --prerelease
+          else
+            gh release create "$TAG" \
+              dist/Lullaby-Scene-v1.1.0-alpha.1.apk \
+              dist/Lullaby-Scene-v1.1.0-alpha.1.apk.sha256 \
+              --target "$TARGET_SHA" \
+              --title "Lullaby Scene v1.1.0-alpha.1" \
+              --notes-file RELEASE_NOTES_1.1.0-alpha.1.md \
+              --prerelease
+          fi
