@@ -1,5 +1,6 @@
 name: Import and audit audio assets
 
+# Re-runs whenever the importer, audit rules, workflow or ambience manifests change.
 on:
   workflow_dispatch:
   push:
