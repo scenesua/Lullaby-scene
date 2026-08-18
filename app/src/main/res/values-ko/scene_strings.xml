@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_scenes">씬</string>
+    <string name="source_aircraft_cabin">여객기 기내</string>
+
+    <string name="scenes_question">오늘은 어디에서 쉬고 싶나요?</string>
+    <string name="scenes_subtitle">고정된 믹스를 반복하는 대신, 시간이 지나며 천천히 변하는 살아있는 장면입니다.</string>
+    <string name="scene_aircraft_name">Passenger Aircraft Cabin</string>
+    <string name="scene_aircraft_description">긴 시간 조용히 듣기 위한 어두운 여객기 기내 장면입니다.</string>
+    <string name="scene_asset_unavailable">이 빌드에는 여객기 기내 음원이 포함되어 있지 않습니다.</string>
+    <string name="scene_start">이 장면 시작</string>
+    <string name="scene_end">씬 종료</string>
+    <string name="scene_arc_title">씬 아크</string>
+    <string name="scene_macros_title">씬 컨트롤</string>
+    <string name="scene_elapsed">씬 진행 %1$s</string>
+    <string name="scene_state_settling">기내에 자리 잡는 중</string>
+    <string name="scene_state_cruise">장거리 순항</string>
+    <string name="scene_state_drowsy">잠잠해지는 기내</string>
+    <string name="scene_state_deep_night">깊은 밤</string>
+    <string name="scene_spatial_hint">엔진 존재감은 음량뿐 아니라 고역 거리 필터에도 반영됩니다. 밤 깊이는 더 부드럽고 가려진 질감을 만듭니다.</string>
+    <string name="scene_aircraft_unavailable">이 빌드에서는 Passenger Aircraft Cabin 음원을 사용할 수 없습니다</string>
+
+    <string name="macro_engine_presence">엔진 존재감</string>
+    <string name="macro_engine_presence_desc">멀고 부드럽게 ↔ 가깝고 선명하게</string>
+    <string name="macro_cabin_activity">기내 활동감</string>
+    <string name="macro_cabin_activity_desc">실제 기내 녹음의 작은 디테일이 얼마나 들릴지 조절합니다</string>
+    <string name="macro_turbulence">난기류</string>
+    <string name="macro_turbulence_desc">아주 미세한 움직임과 저역 변화를 조절합니다</string>
+    <string name="macro_night_depth">밤의 깊이</string>
+    <string name="macro_night_depth_desc">늦은 밤에 어울리도록 더 어둡고 부드럽게 만듭니다</string>
+
+    <string name="settings_update">업데이트</string>
+    <string name="update_channel_github">배포 채널: GitHub Releases</string>
+    <string name="update_current_version">현재 버전: %1$s</string>
+    <string name="update_available_version">새 버전 %1$s 사용 가능</string>
+    <string name="update_check_now">업데이트 확인</string>
+    <string name="update_checking">확인 중…</string>
+    <string name="update_available_title">새 업데이트가 있습니다</string>
+    <string name="update_version_change">설치됨 %1$s → 새 버전 %2$s</string>
+    <string name="update_now">지금 업데이트</string>
+    <string name="update_later">나중에</string>
+    <string name="update_hide_24h">24시간 보지 않기</string>
+    <string name="update_up_to_date">현재 최신 안정 버전을 사용 중입니다</string>
+    <string name="update_check_failed">GitHub Releases를 확인하지 못했습니다. 재생에는 영향이 없습니다.</string>
+    <string name="update_download_failed">업데이트 다운로드 또는 검증에 실패했습니다</string>
+    <string name="update_downloading">다운로드 중… %1$d%%</string>
+    <string name="update_allow_install_permission">Lullaby Scene의 알 수 없는 앱 설치를 허용한 뒤 ‘지금 업데이트’를 다시 눌러 주세요.</string>
+    <string name="update_install_failed">Android 패키지 설치 화면을 열지 못했습니다</string>
+</resources>
