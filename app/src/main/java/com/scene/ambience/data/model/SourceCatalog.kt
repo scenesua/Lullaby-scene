@@ -3,11 +3,7 @@ package com.scene.ambience.data.model
 import androidx.annotation.StringRes
 import com.scene.ambience.R
 
-/**
- * The canonical catalog of user-visible sound sources. The packaged
- * sound_library.json decides which of these actually have playable files;
- * sources without assets are shown as disabled with an explanatory message.
- */
+/** Canonical catalog of user-visible sound sources. */
 enum class SourceId(val id: String) {
     RAIN("rain"),
     THUNDER("thunder"),
@@ -21,6 +17,7 @@ enum class SourceId(val id: String) {
     CAFE("cafe"),
     CITY("city"),
     TRAIN("train"),
+    AIRCRAFT_CABIN("aircraft_cabin"),
     FAN("fan"),
     VENTILATION("ventilation"),
     WATER("water"),
@@ -65,6 +62,7 @@ object SourceCatalog {
         SourceDefinition(SourceId.VENTILATION, R.string.source_ventilation, UiCategory.INDOOR),
         SourceDefinition(SourceId.CITY, R.string.source_city, UiCategory.TRAVEL),
         SourceDefinition(SourceId.TRAIN, R.string.source_train, UiCategory.TRAVEL),
+        SourceDefinition(SourceId.AIRCRAFT_CABIN, R.string.source_aircraft_cabin, UiCategory.TRAVEL),
         SourceDefinition(SourceId.WATER, R.string.source_water, UiCategory.OTHER),
         SourceDefinition(SourceId.SINGING_BOWL, R.string.source_singing_bowl, UiCategory.OTHER),
         SourceDefinition(SourceId.WHITE_NOISE, R.string.source_white_noise, UiCategory.OTHER),
@@ -72,6 +70,5 @@ object SourceCatalog {
         SourceDefinition(SourceId.BROWN_NOISE, R.string.source_brown_noise, UiCategory.OTHER),
     )
 
-    fun definitionFor(sourceId: SourceId): SourceDefinition =
-        all.first { it.sourceId == sourceId }
+    fun definitionFor(sourceId: SourceId): SourceDefinition = all.first { it.sourceId == sourceId }
 }
