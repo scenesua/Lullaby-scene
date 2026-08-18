@@ -35,6 +35,17 @@ data class AudioAssetManifest(
     @SerialName("crossfade_ms") val crossfadeMs: Long = 0L,
 )
 
+/**
+ * Optional additive event pack. This lets us expand one-shot variety without
+ * rewriting the generated v4 sound_library.json by hand. A future manifest
+ * migration may fold these entries back into the canonical source records.
+ */
+@Serializable
+data class EventExtensionsFile(
+    val version: Int = 1,
+    val sources: Map<String, List<AudioAssetManifest>> = emptyMap(),
+)
+
 /** Mirror of app/src/main/assets/ambience/manifest/category_presets.json */
 @Serializable
 data class CategoryPresetsFile(
