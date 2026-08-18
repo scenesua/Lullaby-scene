@@ -17,22 +17,18 @@ val decodeSceneAudio by tasks.registering {
         val outDir = generatedSceneAudioDir.get().asFile
         outDir.deleteRecursively()
         outDir.mkdirs()
-        val assets = listOf(
-            "aircraft_cabin_cruise_001" to listOf(
-                "aircraft_cabin_cruise_001.part00",
-                "aircraft_cabin_cruise_001.part01",
-            ),
-            "aircraft_cabin_cruise_002" to listOf(
-                "aircraft_cabin_cruise_002.part00",
-                "aircraft_cabin_cruise_002.part01",
-            ),
+        val parts = listOf(
+            "aircraft_cabin_cruise_001.part00",
+            "aircraft_cabin_cruise_001.part01",
+            "aircraft_cabin_cruise_001.part02",
+            "aircraft_cabin_cruise_001.part03",
         )
-        assets.forEach { (name, parts) ->
-            val encoded = parts.joinToString("") { sourceDir.resolve(it).readText().trim() }
-            val output = outDir.resolve("ambience/aircraft_cabin/continuous/$name.ogg")
-            output.parentFile.mkdirs()
-            output.writeBytes(Base64.getDecoder().decode(encoded))
-        }
+        val encoded = parts.joinToString("") { sourceDir.resolve(it).readText().trim() }
+        val decoded = Base64.getDecoder().decode(encoded)
+        check(decoded.size == 16630) { "aircraft scene asset size mismatch: ${decoded.size}" }
+        val output = outDir.resolve("ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg")
+        output.parentFile.mkdirs()
+        output.writeBytes(decoded)
     }
 }
 
