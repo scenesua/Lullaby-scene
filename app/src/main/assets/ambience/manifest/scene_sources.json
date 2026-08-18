@@ -12,13 +12,10 @@
           "asset_id": "aircraft_cabin_cruise_001",
           "path": "ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg",
           "duration_ms": 20007,
-          "crossfade_ms": 5000
-        },
-        {
-          "asset_id": "aircraft_cabin_cruise_002",
-          "path": "ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_002.ogg",
-          "duration_ms": 20007,
-          "crossfade_ms": 5000
+          "crossfade_ms": 5000,
+          "role": "bed",
+          "tags": ["aircraft", "cabin", "interior", "field_recording", "cruise"],
+          "provenance_id": "freesound_jasonm911_853742"
         }
       ],
       "events": []
