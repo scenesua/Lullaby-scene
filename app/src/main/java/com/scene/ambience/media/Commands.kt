@@ -3,14 +3,10 @@ package com.scene.ambience.media
 import android.os.Bundle
 import androidx.media3.session.SessionCommand
 import com.scene.ambience.data.model.EngineSnapshot
+import com.scene.ambience.data.model.SceneRuntimeSnapshot
 import kotlinx.serialization.json.Json
 
-/**
- * Custom session command protocol between the app UI and AmbiencePlaybackService.
- * Standard play/pause/stop go through MediaSession as usual; everything
- * mixer-specific uses these commands. Engine state is pushed back through
- * session extras under [EXTRA_SNAPSHOT].
- */
+/** Custom MediaSession protocol between UI and the playback service. */
 object Commands {
     const val SET_MASTER_VOLUME = "com.scene.ambience.cmd.set_master_volume"
     const val SET_MASTER_MUTED = "com.scene.ambience.cmd.set_master_muted"
@@ -22,8 +18,13 @@ object Commands {
     const val CANCEL_SLEEP_TIMER = "com.scene.ambience.cmd.cancel_sleep_timer"
     const val CLEAR_MESSAGE = "com.scene.ambience.cmd.clear_message"
     const val SET_EQ = "com.scene.ambience.cmd.set_eq"
+    const val START_SCENE = "com.scene.ambience.cmd.start_scene"
+    const val STOP_SCENE = "com.scene.ambience.cmd.stop_scene"
+    const val SET_SCENE_MACRO = "com.scene.ambience.cmd.set_scene_macro"
+    const val SET_SCENE_ARC = "com.scene.ambience.cmd.set_scene_arc"
 
     const val EXTRA_SNAPSHOT = "ambience.snapshot"
+    const val EXTRA_SCENE_SNAPSHOT = "ambience.scene_snapshot"
     const val EXTRA_VOLUME = "volume"
     const val EXTRA_MUTED = "muted"
     const val EXTRA_SOURCE_ID = "source_id"
@@ -32,10 +33,13 @@ object Commands {
     const val EXTRA_DURATION_MS = "duration_ms"
     const val EXTRA_FADE_MS = "fade_ms"
     const val EXTRA_EQ_ENABLED = "eq_enabled"
-
     const val EXTRA_EQ_PRESET = "eq_preset"
-
     const val EXTRA_EQ_BANDS = "eq_bands"
+    const val EXTRA_SCENE_ID = "scene_id"
+    const val EXTRA_ARC_MINUTES = "arc_minutes"
+    const val EXTRA_MACRO_KEY = "macro_key"
+    const val EXTRA_MACRO_VALUE = "macro_value"
+
     private val json = Json { ignoreUnknownKeys = true }
 
     fun setMasterVolume(volume: Float): SessionCommand =
@@ -69,9 +73,7 @@ object Commands {
         })
 
     val cancelSleepTimer: SessionCommand = SessionCommand(CANCEL_SLEEP_TIMER, Bundle())
-
     val clearMessage: SessionCommand = SessionCommand(CLEAR_MESSAGE, Bundle())
-
     val disableAllSources: SessionCommand = SessionCommand(DISABLE_ALL_SOURCES, Bundle())
 
     fun setEqualizer(enabled: Boolean, presetName: String, bands: List<Int>): SessionCommand =
@@ -81,7 +83,23 @@ object Commands {
             putIntegerArrayList(EXTRA_EQ_BANDS, ArrayList(bands))
         })
 
-    /** All commands advertised on session connect. */
+    fun startScene(sceneId: String, arcMinutes: Int): SessionCommand =
+        SessionCommand(START_SCENE, Bundle().apply {
+            putString(EXTRA_SCENE_ID, sceneId)
+            putInt(EXTRA_ARC_MINUTES, arcMinutes)
+        })
+
+    val stopScene: SessionCommand = SessionCommand(STOP_SCENE, Bundle())
+
+    fun setSceneMacro(key: String, value: Float): SessionCommand =
+        SessionCommand(SET_SCENE_MACRO, Bundle().apply {
+            putString(EXTRA_MACRO_KEY, key)
+            putFloat(EXTRA_MACRO_VALUE, value)
+        })
+
+    fun setSceneArc(minutes: Int): SessionCommand =
+        SessionCommand(SET_SCENE_ARC, Bundle().apply { putInt(EXTRA_ARC_MINUTES, minutes) })
+
     val sessionCommands: List<SessionCommand> = listOf(
         SessionCommand(SET_MASTER_VOLUME, Bundle()),
         SessionCommand(SET_MASTER_MUTED, Bundle()),
@@ -93,13 +111,28 @@ object Commands {
         cancelSleepTimer,
         clearMessage,
         SessionCommand(SET_EQ, Bundle()),
+        SessionCommand(START_SCENE, Bundle()),
+        stopScene,
+        SessionCommand(SET_SCENE_MACRO, Bundle()),
+        SessionCommand(SET_SCENE_ARC, Bundle()),
     )
 
-    fun snapshotBundle(snapshot: EngineSnapshot): Bundle =
-        Bundle().apply { putString(EXTRA_SNAPSHOT, json.encodeToString(EngineSnapshot.serializer(), snapshot)) }
+    fun snapshotBundle(
+        snapshot: EngineSnapshot,
+        sceneSnapshot: SceneRuntimeSnapshot = SceneRuntimeSnapshot(),
+    ): Bundle = Bundle().apply {
+        putString(EXTRA_SNAPSHOT, json.encodeToString(EngineSnapshot.serializer(), snapshot))
+        putString(EXTRA_SCENE_SNAPSHOT, json.encodeToString(SceneRuntimeSnapshot.serializer(), sceneSnapshot))
+    }
 
     fun parseSnapshot(extras: Bundle): EngineSnapshot? {
         val raw = extras.getString(EXTRA_SNAPSHOT) ?: return null
         return runCatching { json.decodeFromString(EngineSnapshot.serializer(), raw) }.getOrNull()
+    }
+
+    fun parseSceneSnapshot(extras: Bundle): SceneRuntimeSnapshot {
+        val raw = extras.getString(EXTRA_SCENE_SNAPSHOT) ?: return SceneRuntimeSnapshot()
+        return runCatching { json.decodeFromString(SceneRuntimeSnapshot.serializer(), raw) }
+            .getOrDefault(SceneRuntimeSnapshot())
     }
 }
