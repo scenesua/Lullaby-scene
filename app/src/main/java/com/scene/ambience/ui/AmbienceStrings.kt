@@ -55,6 +55,7 @@ object AmbienceStrings {
         "focus_paused" -> context.getString(R.string.msg_focus_paused)
         "noisy_paused" -> context.getString(R.string.msg_noisy_paused)
         "source_failed" -> context.getString(R.string.msg_source_failed)
+        "scene_aircraft_unavailable" -> context.getString(R.string.scene_aircraft_unavailable)
         else -> null
     }
 
