@@ -7,6 +7,7 @@ import com.scene.ambience.data.model.CategoryPresetConfig
 import com.scene.ambience.util.EventScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -19,6 +20,12 @@ import kotlin.random.Random
  * Event-sound player: plays short one-shot samples from a shared SoundPool
  * at random (never fixed) intervals, with bounded volume and pan jitter
  * (section 23).
+ *
+ * Scheduling lifetime is deliberately separate from audibility. Muting a
+ * source/master (or a temporary zero-gain fade) must not terminate the
+ * scheduler job, otherwise unmuting would leave the event source permanently
+ * silent until the player is recreated. Pause/stop still cancel the job via
+ * [stopScheduling].
  */
 class EventSourcePlayer(
     context: Context,
@@ -45,7 +52,8 @@ class EventSourcePlayer(
                 afd.close()
                 if (id != 0) sampleIds.add(id)
             } catch (e: Exception) {
-                // skip unreadable event file
+                // Skip unreadable event files. Manifest/instrumentation tests
+                // should catch missing assets before release.
             }
         }
     }
@@ -69,23 +77,37 @@ class EventSourcePlayer(
     }
 
     fun applyBaseVolume(baseGain: Float) {
-        // volumes are applied per trigger
+        // Volumes are read from volumeProvider at trigger time so mute/master
+        // changes are reflected without rebuilding the SoundPool samples.
     }
 
     private suspend fun run() {
-        while (isActive()) {
+        // Do not use isActive() as the loop condition. That callback expresses
+        // current audibility and legitimately becomes false during mute/fade.
+        // Only coroutine cancellation (pause/stop/release/restart) owns the
+        // lifetime of this scheduling loop.
+        while (currentCoroutineContext().isActive) {
             val delayMs = EventScheduler.nextDelayMs(config.minIntervalMs, config.maxIntervalMs, random)
             delay(delayMs)
+
+            // Preserve the random timeline while inaudible, but skip the actual
+            // one-shot. A later unmute therefore resumes naturally without a
+            // hidden scheduler restart requirement.
             if (!isActive()) continue
             if (sampleIds.isEmpty()) continue
+
             val idx = EventScheduler.nextSampleIndex(sampleIds.size, lastSample, random)
             if (idx < 0) continue
             lastSample = idx
+
+            val baseVolume = volumeProvider().coerceIn(0f, 1f)
+            if (baseVolume <= 0f) continue
+
             val vol = EventScheduler.randomVolume(
                 config.eventVolumeRange.getOrElse(0) { 0.75 }.toFloat(),
                 config.eventVolumeRange.getOrElse(1) { 1.0 }.toFloat(),
                 random,
-            ) * volumeProvider()
+            ) * baseVolume
             val pan = EventScheduler.randomPan(
                 config.eventPanRange.getOrElse(0) { -0.6 }.toFloat(),
                 config.eventPanRange.getOrElse(1) { 0.6 }.toFloat(),
