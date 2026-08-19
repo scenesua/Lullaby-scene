@@ -139,9 +139,12 @@ jobs:
           grep -q 'setPointerCapture' web/scene-audio-v2.js
           grep -q 'journeyPrevPhase' web/scene-audio-v2.js
           grep -q 'journeyNextPhase' web/scene-audio-v2.js
-          grep -q 'presence.frequency.value=3574' web/scene-audio-v2.js
-          grep -q 'high.frequency.value=10544' web/scene-audio-v2.js
-          grep -q 'sceneNode.filter.frequency.value=15000' web/scene-audio-v2.js
+          grep -q 'tone685.frequency.value=685' web/scene-audio-v2.js
+          grep -q 'tone1191.frequency.value=1191' web/scene-audio-v2.js
+          grep -q 'tone2383.frequency.value=2383' web/scene-audio-v2.js
+          grep -q 'tone3574.frequency.value=3574' web/scene-audio-v2.js
+          grep -q 'tone10544.frequency.value=10544' web/scene-audio-v2.js
+          grep -q 'sceneNode.filter.frequency.value=18500' web/scene-audio-v2.js
           grep -q 'equalizer=f=10544' tools/materialize_aircraft_audio.py
           grep -q 'equalizer=f=3574' tools/materialize_aircraft_audio.py
           ! grep -q 'loudnorm=' tools/materialize_aircraft_audio.py
