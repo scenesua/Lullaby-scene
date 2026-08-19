@@ -127,10 +127,10 @@ class AmbienceControllerRepository(
     fun clearMessage() = dispatch(Commands.clearMessage)
     fun setEqualizer(enabled: Boolean, presetName: String, bands: List<Int>) = dispatch(Commands.setEqualizer(enabled, presetName, bands))
 
-    fun startScene(sceneId: String, arcMinutes: Int) = dispatch(Commands.startScene(sceneId, arcMinutes))
+    fun startScene(sceneId: String, totalDurationMinutes: Int) = dispatch(Commands.startScene(sceneId, totalDurationMinutes))
     fun stopScene() = dispatch(Commands.stopScene)
     fun setSceneMacro(key: String, value: Float) = dispatch(Commands.setSceneMacro(key, value))
-    fun setSceneArc(minutes: Int) = dispatch(Commands.setSceneArc(minutes))
+    fun setSceneDuration(minutes: Int) = dispatch(Commands.setSceneDuration(minutes))
 
     fun dispatchQuietly(command: SessionCommand) {
         val future = dispatch(command) ?: return
