@@ -7,6 +7,7 @@ import android.media.audiofx.BassBoost
 import android.media.audiofx.DynamicsProcessing
 import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
+import android.media.audiofx.Virtualizer
 import android.os.Build
 import android.util.Log
 import com.scene.ambience.data.model.CategoryPresetConfig
@@ -70,6 +71,9 @@ class AmbienceEngine(
     private val bassBoosts = mutableMapOf<Int, BassBoost>()
     private val loudnessEnhancers = mutableMapOf<Int, LoudnessEnhancer>()
     private val dynamicsProcessors = mutableMapOf<Int, DynamicsProcessing>()
+    @Suppress("DEPRECATION")
+    private val virtualizers = mutableMapOf<Int, Virtualizer>()
+    private val sessionSources = mutableMapOf<Int, String>()
     private val attachedSessions = mutableSetOf<Int>()
 
     init {
@@ -214,27 +218,35 @@ class AmbienceEngine(
 
     // -------- equalizer + internal FX rack ------------------------------------
 
-    fun attachAudioEffects(sessionId: Int) {
+    @Suppress("DEPRECATION")
+    fun attachAudioEffects(sessionId: Int, sourceId: String) {
         if (sessionId <= 0) return
+        var newlyAttached = false
         synchronized(fxLock) {
-            if (!attachedSessions.add(sessionId)) return
-            runCatching { Equalizer(0, sessionId) }
-                .onSuccess { equalizers[sessionId] = it }
-                .onFailure { Log.w(TAG, "Equalizer unavailable session=$sessionId", it) }
-            runCatching { BassBoost(0, sessionId) }
-                .onSuccess { bassBoosts[sessionId] = it }
-                .onFailure { Log.w(TAG, "BassBoost unavailable session=$sessionId", it) }
-            runCatching { LoudnessEnhancer(sessionId) }
-                .onSuccess { loudnessEnhancers[sessionId] = it }
-                .onFailure { Log.w(TAG, "LoudnessEnhancer unavailable session=$sessionId", it) }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                runCatching { DynamicsProcessing(sessionId) }
-                    .onSuccess { dynamicsProcessors[sessionId] = it }
-                    .onFailure { Log.w(TAG, "DynamicsProcessing unavailable session=$sessionId", it) }
+            sessionSources[sessionId] = sourceId
+            newlyAttached = attachedSessions.add(sessionId)
+            if (newlyAttached) {
+                runCatching { Equalizer(0, sessionId) }
+                    .onSuccess { equalizers[sessionId] = it }
+                    .onFailure { Log.w(TAG, "Equalizer unavailable session=$sessionId", it) }
+                runCatching { BassBoost(0, sessionId) }
+                    .onSuccess { bassBoosts[sessionId] = it }
+                    .onFailure { Log.w(TAG, "BassBoost unavailable session=$sessionId", it) }
+                runCatching { LoudnessEnhancer(sessionId) }
+                    .onSuccess { loudnessEnhancers[sessionId] = it }
+                    .onFailure { Log.w(TAG, "LoudnessEnhancer unavailable session=$sessionId", it) }
+                runCatching { Virtualizer(0, sessionId) }
+                    .onSuccess { virtualizers[sessionId] = it }
+                    .onFailure { Log.w(TAG, "Virtualizer unavailable session=$sessionId", it) }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    runCatching { DynamicsProcessing(sessionId) }
+                        .onSuccess { dynamicsProcessors[sessionId] = it }
+                        .onFailure { Log.w(TAG, "DynamicsProcessing unavailable session=$sessionId", it) }
+                }
             }
         }
         applyEffectsToSession(sessionId)
-        Log.d(TAG, "Audio effects attached session=$sessionId")
+        Log.d(TAG, "Audio effects attached session=$sessionId source=$sourceId new=$newlyAttached")
     }
 
     fun applyEqualizer(enabled: Boolean, presetName: String, bands: List<Int>) {
@@ -257,6 +269,8 @@ class AmbienceEngine(
         if (boost != null) applyBassTo(boost)
         val loudness = synchronized(fxLock) { loudnessEnhancers[sessionId] }
         if (loudness != null) applyLoudnessTo(loudness)
+        val virtualizer = synchronized(fxLock) { virtualizers[sessionId] }
+        if (virtualizer != null) applySpaceTo(virtualizer, synchronized(fxLock) { sessionSources[sessionId] })
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val dynamics = synchronized(fxLock) { dynamicsProcessors[sessionId] }
             if (dynamics != null) applyDynamicsTo(dynamics)
@@ -308,6 +322,47 @@ class AmbienceEngine(
                 boost.enabled = true
             }
         }.onFailure { Log.w(TAG, "BassBoost apply failed", it) }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun applySpaceTo(effect: Virtualizer, sourceId: String?) {
+        runCatching {
+            val sensitivity = spaceSensitivity(sourceId)
+            val amount = if (fxSettings.enabled) fxSettings.space * sensitivity else 0f
+            if (amount <= 0.001f || !effect.strengthSupported) {
+                effect.enabled = false
+            } else {
+                // Keep the global macro musical: even at 100%, low-sensitivity steady
+                // noise sources only receive a small amount of widening.
+                val strength = (amount * 820f).roundToInt().coerceIn(0, 1000).toShort()
+                effect.setStrength(strength)
+                effect.enabled = true
+            }
+        }.onFailure { Log.w(TAG, "Virtualizer/space apply failed source=$sourceId", it) }
+    }
+
+    private fun spaceSensitivity(sourceId: String?): Float = when (sourceId) {
+        "forest" -> 0.96f
+        "bamboo_forest" -> 0.94f
+        "cafe" -> 0.92f
+        "birds" -> 0.90f
+        "aircraft_cabin" -> 0.88f
+        "train" -> 0.86f
+        "crickets" -> 0.84f
+        "ocean" -> 0.82f
+        "wind" -> 0.80f
+        "city" -> 0.80f
+        "stream", "water" -> 0.78f
+        "singing_bowl" -> 0.76f
+        "thunder" -> 0.72f
+        "rain" -> 0.68f
+        "fire" -> 0.62f
+        "ventilation" -> 0.32f
+        "fan" -> 0.24f
+        "white_noise" -> 0.14f
+        "pink_noise" -> 0.12f
+        "brown_noise" -> 0.10f
+        else -> 0.55f
     }
 
     private fun applyLoudnessTo(effect: LoudnessEnhancer) {
@@ -445,7 +500,7 @@ class AmbienceEngine(
                 loopMode = manifest.loopMode,
                 scope = scope,
                 volumeProvider = { sourceGain(id) },
-                onAudioSessionId = { sessionId -> attachAudioEffects(sessionId) },
+                onAudioSessionId = { sessionId -> attachAudioEffects(sessionId, id) },
                 onPlayerError = { _ -> publish(message = "source_failed") },
             )
         }
@@ -479,6 +534,27 @@ class AmbienceEngine(
     private fun removePlayer(id: String) {
         continuousPlayers.remove(id)?.release()
         eventPlayers.remove(id)?.release()
+        releaseEffectsForSource(id)
+    }
+
+    private fun releaseEffectsForSource(sourceId: String) {
+        val sessions = synchronized(fxLock) {
+            sessionSources.filterValues { it == sourceId }.keys.toList()
+        }
+        sessions.forEach(::releaseEffectSession)
+    }
+
+    private fun releaseEffectSession(sessionId: Int) {
+        synchronized(fxLock) {
+            runCatching { equalizers.remove(sessionId)?.release() }
+            runCatching { bassBoosts.remove(sessionId)?.release() }
+            runCatching { loudnessEnhancers.remove(sessionId)?.release() }
+            runCatching { dynamicsProcessors.remove(sessionId)?.release() }
+            @Suppress("DEPRECATION")
+            runCatching { virtualizers.remove(sessionId)?.release() }
+            sessionSources.remove(sessionId)
+            attachedSessions.remove(sessionId)
+        }
     }
 
     private fun isAudible(id: String): Boolean {
@@ -541,10 +617,14 @@ class AmbienceEngine(
             bassBoosts.values.forEach { runCatching { it.release() } }
             loudnessEnhancers.values.forEach { runCatching { it.release() } }
             dynamicsProcessors.values.forEach { runCatching { it.release() } }
+            @Suppress("DEPRECATION")
+            virtualizers.values.forEach { runCatching { it.release() } }
             equalizers.clear()
             bassBoosts.clear()
             loudnessEnhancers.clear()
             dynamicsProcessors.clear()
+            virtualizers.clear()
+            sessionSources.clear()
             attachedSessions.clear()
         }
         soundPool.release()
