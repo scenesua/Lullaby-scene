@@ -22,6 +22,7 @@
   const input=document.getElementById('durationDirect');
   const button=document.getElementById('durationDirectApply');
   const error=document.getElementById('durationDirectError');
+  const isKo=()=>window.LullabyI18n?.language!=='en';
 
   function minutesToHHMM(minutes){
     const total=Math.round(Number(minutes)||0);
@@ -43,7 +44,7 @@
   function apply(){
     const minutes=parse(input.value);
     if(minutes===null){
-      error.textContent='04:00~12:00 사이의 HH:MM 형식으로 입력해 주세요. 예: 08:30';
+      error.textContent=isKo()?'04:00~12:00 사이의 HH:MM 형식으로 입력해 주세요. 예: 08:30':'Enter HH:MM between 04:00 and 12:00, for example 08:30.';
       error.hidden=false;
       input.setAttribute('aria-invalid','true');
       return;
@@ -67,4 +68,6 @@
   slider.addEventListener('input',sync);
   document.querySelectorAll('[data-duration]').forEach(b=>b.addEventListener('click',()=>queueMicrotask(sync)));
   sync();
+
+  const ui=document.createElement('script');ui.src='/player-ui.js';ui.defer=true;document.head.appendChild(ui);
 })();
