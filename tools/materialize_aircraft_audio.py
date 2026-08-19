@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Build the Passenger Aircraft Cabin cruise bed from verified CC0 source 853736.
+"""Build the Passenger Aircraft Cabin bed from Freesound 853735.
 
-The source is a two-minute stereo field recording. We intentionally avoid the
-end of the take where the engine texture dwindles, then make one equal-power
-cyclic overlap. No broadband denoising, mono fold-down, or aggressive EQ is
-used.
+The source matches the 2-minute 44.1 kHz stereo WAV supplied for the project.
+The uploaded WAV was analysed locally before these processing values were set.
+We keep its natural level and stereo field, remove only two persistent narrow
+whistles, and construct a circular equal-power loop. No broadband denoising,
+mono fold-down, loudness normalisation, synthetic rumble, or widening is used.
 """
 from __future__ import annotations
 
@@ -15,26 +16,36 @@ import json
 import re
 import subprocess
 import tempfile
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
-SOURCE_ID = "853736"
+SOURCE_ID = "853735"
 SOURCE_PAGE = f"https://freesound.org/people/jasonm911/sounds/{SOURCE_ID}/"
-USER_AGENT = "Lullaby-Scene-audio-materializer/2.0"
+USER_AGENT = "Lullaby-Scene-audio-materializer/3.0"
+EXPECTED_DURATION_SECONDS = 105.0
 
 
 def resolve_hq_ogg() -> str:
     request = urllib.request.Request(SOURCE_PAGE, headers={"User-Agent": USER_AGENT})
     page = urllib.request.urlopen(request, timeout=45).read().decode("utf-8", "replace")
-    page = html.unescape(page).replace("\\/", "/")
-    patterns = [
-        rf'https://cdn\.freesound\.org/previews/853/{SOURCE_ID}_[^"\'<>\s]+-hq\.ogg',
-        rf'https://freesound\.org/data/previews/853/{SOURCE_ID}_[^"\'<>\s]+-hq\.ogg',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, page)
-        if match:
-            return match.group(0)
+    page = (
+        html.unescape(page)
+        .replace("\\/", "/")
+        .replace("\\u002F", "/")
+        .replace("\\u003A", ":")
+    )
+    candidates = re.findall(r"[^\"'<>\\s]*853735[^\"'<>\\s]*\.ogg(?:\?[^\"'<>\\s]*)?", page)
+    for candidate in candidates:
+        candidate = candidate.rstrip("\\,]")
+        if "hq" not in candidate.lower():
+            continue
+        if candidate.startswith("//"):
+            candidate = "https:" + candidate
+        elif candidate.startswith("/"):
+            candidate = urllib.parse.urljoin(SOURCE_PAGE, candidate)
+        if candidate.startswith("http://") or candidate.startswith("https://"):
+            return candidate
     raise RuntimeError(f"Could not resolve Freesound {SOURCE_ID} HQ OGG preview")
 
 
@@ -71,15 +82,25 @@ def build(output: Path) -> None:
         if source.stat().st_size < 500_000:
             raise RuntimeError(f"Downloaded preview is unexpectedly small: {source.stat().st_size}")
 
-        # Keep 10s..95s of the calm take. The 10s..16s head is crossfaded with
-        # 89s..95s and placed at the file end; playback therefore crosses from
-        # the end of that overlap directly into the original 16s point.
+        # The supplied WAV contains persistent narrow tones around 10.544 kHz
+        # and 3.574 kHz. Notch only those tones; do not raise the noise floor.
+        #
+        # Circular loop construction:
+        #   body   = original 10s..110s
+        #   bridge = 110s..115s faded into 5s..10s
+        # The bridge finishes immediately before the body's first sample in the
+        # original recording, so the encoded end -> start boundary is natural.
         filter_complex = (
-            "[0:a]atrim=start=16:end=89,asetpts=PTS-STARTPTS[mid];"
-            "[0:a]atrim=start=89:end=95,asetpts=PTS-STARTPTS[tail];"
-            "[0:a]atrim=start=10:end=16,asetpts=PTS-STARTPTS[head];"
-            "[tail][head]acrossfade=d=6:c1=qsin:c2=qsin[xf];"
-            "[mid][xf]concat=n=2:v=0:a=1[out]"
+            "[0:a]highpass=f=20,"
+            "equalizer=f=10544:t=q:w=12:g=-11,"
+            "equalizer=f=3574:t=q:w=10:g=-5,asplit=3[a][b][c];"
+            "[a]atrim=start=10:end=110,asetpts=PTS-STARTPTS[body];"
+            "[b]atrim=start=110:end=115,asetpts=PTS-STARTPTS,"
+            "afade=t=out:st=0:d=5:curve=qsin[tail];"
+            "[c]atrim=start=5:end=10,asetpts=PTS-STARTPTS,"
+            "afade=t=in:st=0:d=5:curve=qsin[head];"
+            "[tail][head]amix=inputs=2:duration=longest:normalize=0[bridge];"
+            "[body][bridge]concat=n=2:v=0:a=1[out]"
         )
         run(
             "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
@@ -87,7 +108,7 @@ def build(output: Path) -> None:
             "-filter_complex", filter_complex,
             "-map", "[out]",
             "-ar", "48000", "-ac", "2",
-            "-c:a", "libopus", "-b:a", "128k", "-vbr", "on", "-compression_level", "10",
+            "-c:a", "libopus", "-b:a", "112k", "-vbr", "on", "-compression_level", "10",
             str(output),
         )
 
@@ -100,9 +121,9 @@ def build(output: Path) -> None:
         raise RuntimeError(info)
     if stream.get("sample_rate") != "48000" or int(stream.get("channels", 0)) != 2:
         raise RuntimeError(info)
-    if not 78.8 <= duration <= 79.2:
+    if not 104.8 <= duration <= 105.2:
         raise RuntimeError(f"Unexpected loop duration: {duration}")
-    if size < 850_000:
+    if size < 900_000:
         raise RuntimeError(f"Encoded loop is unexpectedly small: {size}")
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     print(json.dumps({
@@ -114,6 +135,7 @@ def build(output: Path) -> None:
         "channels": 2,
         "sample_rate": 48000,
         "codec": "opus",
+        "processing": "20 Hz HPF; narrow -11 dB @ 10.544 kHz; narrow -5 dB @ 3.574 kHz; 5 s circular equal-power bridge; no loudnorm",
     }, indent=2))
 
 
