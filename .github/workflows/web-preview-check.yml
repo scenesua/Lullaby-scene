@@ -5,6 +5,7 @@ on:
     paths:
       - 'web/**'
       - 'tools/materialize_aircraft_audio.py'
+      - 'tools/resolve_freesound_preview.mjs'
       - '.github/workflows/web-preview-check.yml'
       - '.github/scripts/web-smoke.mjs'
       - '.github/scripts/web-mixer-v14-smoke.mjs'
@@ -14,6 +15,7 @@ on:
     paths:
       - 'web/**'
       - 'tools/materialize_aircraft_audio.py'
+      - 'tools/resolve_freesound_preview.mjs'
       - '.github/workflows/web-preview-check.yml'
       - '.github/scripts/web-smoke.mjs'
       - '.github/scripts/web-mixer-v14-smoke.mjs'
@@ -33,13 +35,18 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install browser dependency
+        run: npm install --no-save playwright-core@1.55.0
+
       - name: Materialize cleaned long stereo aircraft bed
         shell: bash
         run: |
           set -euo pipefail
           TARGET='web/audio/aircraft_cabin_cruise_v2.ogg'
           if [[ ! -s "$TARGET" ]]; then
-            python3 tools/materialize_aircraft_audio.py "$TARGET"
+            SOURCE_URL="$(node tools/resolve_freesound_preview.mjs 853735)"
+            echo "Resolved Freesound 853735 preview host: $(python3 -c 'import sys,urllib.parse;print(urllib.parse.urlparse(sys.argv[1]).netloc)' "$SOURCE_URL")"
+            AIRCRAFT_SOURCE_URL="$SOURCE_URL" python3 tools/materialize_aircraft_audio.py "$TARGET"
           fi
           python3 - <<'PY'
           import json, subprocess
@@ -88,6 +95,7 @@ jobs:
           node --check web/_worker.js
           node --check web/legal-language-v9.js
           node --check web/sw.js
+          node --check tools/resolve_freesound_preview.mjs
           node --check .github/scripts/web-smoke.mjs
           node --check .github/scripts/web-mixer-v14-smoke.mjs
 
@@ -167,9 +175,6 @@ jobs:
           grep -q 'equalizer=f=3574' tools/materialize_aircraft_audio.py
           ! grep -q 'loudnorm' tools/materialize_aircraft_audio.py
           ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration,size -of json web/audio/aircraft_cabin_cruise_v2.ogg
-
-      - name: Install browser smoke dependency
-        run: npm install --no-save playwright-core@1.55.0
 
       - name: Browser interaction smoke tests
         run: |
