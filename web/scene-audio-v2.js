@@ -15,8 +15,18 @@
     await baseEnsureSceneNode();
     sceneNode.el.loop=true;
     sceneNode.el.preload='auto';
-    sceneNode.filter.Q.value=.12;
-    sceneNode.filter.frequency.value=20000;
+    if(!sceneNode.whistleGuard){
+      try{
+        sceneNode.src.disconnect();
+        const presence=ctx.createBiquadFilter(),high=ctx.createBiquadFilter();
+        presence.type='peaking';presence.frequency.value=3574;presence.Q.value=6;presence.gain.value=-9;
+        high.type='peaking';high.frequency.value=10544;high.Q.value=8;high.gain.value=-16;
+        sceneNode.src.connect(presence).connect(high).connect(sceneNode.filter);
+        sceneNode.whistleGuard={presence,high};
+      }catch(error){console.warn('aircraft whistle guard unavailable',error)}
+    }
+    sceneNode.filter.Q.value=.2;
+    sceneNode.filter.frequency.value=15000;
     return sceneNode;
   };
 
@@ -42,9 +52,9 @@
     const direct=Math.max(0,phaseDirect*presence+turbulenceLift+cabinLift);
     sceneNode.gain.gain.setTargetAtTime(direct,ctx.currentTime,.9);
 
-    // Keep the field recording open and natural. Night depth is now only a
-    // very small softening, rather than the former aggressive high-frequency cut.
-    const cutoff=Math.max(18500,20200-(macro.night*900)-((1-macro.engine)*350));
+    // Keep the field recording natural, but hold the very top end low enough
+    // that residual narrow whistling does not dominate long listening sessions.
+    const cutoff=Math.max(13500,15200-(macro.night*900)-((1-macro.engine)*350));
     sceneNode.filter.frequency.setTargetAtTime(cutoff,ctx.currentTime,1.5);
   };
 
@@ -97,6 +107,38 @@
     seekSceneToMs(ratio*durationMinutes*60000);
   }
 
+  const phaseSteps=[
+    ['Taxi out',0],['Takeoff',.025],['Climb',.0275],['Cruise',.05625],
+    ['Descent',.9125],['Approach',.96875],['Touchdown',.9854167],['Taxi in',.9875],['Arrived',1]
+  ];
+  function stepScenePhase(direction){
+    const total=Math.max(60000,durationMinutes*60000),elapsed=currentElapsed();
+    const current=phaseFor(elapsed,total)[0];
+    let index=phaseSteps.findIndex(([name])=>name===current);if(index<0)index=0;
+    const targetIndex=Math.max(0,Math.min(phaseSteps.length-1,index+(direction<0?-1:1)));
+    return seekSceneToMs(Math.min(total-1,Math.round(total*phaseSteps[targetIndex][1])));
+  }
+  function localizePhaseButtons(){
+    const en=window.LullabyI18n?.language==='en';
+    const prev=document.getElementById('journeyPrevPhase'),next=document.getElementById('journeyNextPhase');
+    if(prev)prev.textContent=en?'◀ Previous phase':'◀ 이전 단계';
+    if(next)next.textContent=en?'Next phase ▶':'다음 단계 ▶';
+  }
+  function ensurePhaseButtons(){
+    const track=document.querySelector('.journey-track');if(!track||document.getElementById('journeyPhaseButtons'))return;
+    const row=document.createElement('div');row.id='journeyPhaseButtons';row.className='journey-phase-buttons';
+    row.innerHTML='<button type="button" id="journeyPrevPhase" class="small-action"></button><button type="button" id="journeyNextPhase" class="small-action"></button>';
+    track.insertAdjacentElement('afterend',row);
+    document.getElementById('journeyPrevPhase')?.addEventListener('click',()=>stepScenePhase(-1));
+    document.getElementById('journeyNextPhase')?.addEventListener('click',()=>stepScenePhase(1));
+    if(!document.getElementById('journeyPhaseButtonStyle')){
+      const style=document.createElement('style');style.id='journeyPhaseButtonStyle';
+      style.textContent='.journey-phase-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.journey-phase-buttons .small-action{min-height:42px}@media(max-width:560px){.journey-phase-buttons{gap:8px}}';
+      document.head.appendChild(style);
+    }
+    localizePhaseButtons();
+  }
+
   function syncJourneySeekAria(){
     const track=document.querySelector('.journey-track');if(!track)return;
     const total=Math.max(1,durationMinutes*60000);
@@ -129,7 +171,7 @@
 
   const baseUpdateSceneUi=updateSceneUi;
   updateSceneUi=function(){baseUpdateSceneUi();syncJourneySeekAria()};
-  bindJourneySeek();
-  document.addEventListener('lullaby-language-changed',()=>{const track=document.querySelector('.journey-track');if(track)track.setAttribute('aria-label',window.LullabyI18n?.language==='en'?'Journey position':'여정 위치');syncJourneySeekAria()});
-  window.LullabyJourneyRuntime={seekToMs:seekSceneToMs,get elapsedMs(){return currentElapsed()},get totalMs(){return durationMinutes*60000}};
+  bindJourneySeek();ensurePhaseButtons();
+  document.addEventListener('lullaby-language-changed',()=>{const track=document.querySelector('.journey-track');if(track)track.setAttribute('aria-label',window.LullabyI18n?.language==='en'?'Journey position':'여정 위치');localizePhaseButtons();syncJourneySeekAria()});
+  window.LullabyJourneyRuntime={seekToMs:seekSceneToMs,previousPhase:()=>stepScenePhase(-1),nextPhase:()=>stepScenePhase(1),get elapsedMs(){return currentElapsed()},get totalMs(){return durationMinutes*60000}};
 })();
