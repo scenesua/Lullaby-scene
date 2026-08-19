@@ -31,7 +31,9 @@ jobs:
           node --check web/player-shell-v9.js
           node --check web/player-shell-v10.js
           node --check web/player-controls-v11.js
+          node --check web/player-runtime-bridge-v12.js
           node --check web/simple-scene-quick-mixer-v12.js
+          node --check web/saved-scenes-v13.js
           node --check web/visitor-count-v1.js
           node --check web/_worker.js
           node --check web/legal-language-v9.js
@@ -54,7 +56,9 @@ jobs:
           test -s web/mixer-fx-v9.js
           test -s web/player-shell-v10.js
           test -s web/player-controls-v11.js
+          test -s web/player-runtime-bridge-v12.js
           test -s web/simple-scene-quick-mixer-v12.js
+          test -s web/saved-scenes-v13.js
           test -s web/visitor-count-v1.js
           test -s web/_worker.js
           test -s web/mixer-sources.json
@@ -77,8 +81,10 @@ jobs:
           grep -q 'language-toggle' web/privacy/index.html
           grep -q '"start_url": "/player/"' web/manifest.webmanifest
           grep -q "media-src 'self' blob:" web/_headers
-          grep -q "lullaby-scene-site-v12" web/sw.js
+          grep -q "lullaby-scene-site-v13" web/sw.js
+          grep -q '/player-runtime-bridge-v12.js?v=12' web/_worker.js
           grep -q '/simple-scene-quick-mixer-v12.js?v=12' web/_worker.js
+          grep -q '/saved-scenes-v13.js?v=13' web/_worker.js
           grep -q '/visitor-count-v1.js?v=1' web/_worker.js
           grep -q 'VISITOR_DB' web/_worker.js
       - name: Validate full mixer catalog
@@ -107,6 +113,18 @@ jobs:
           grep -q "timeZone:'Asia/Seoul'" web/_worker.js
           grep -q 'data-visitor-today' web/visitor-count-v1.js
           grep -q 'data-visitor-total' web/visitor-count-v1.js
+      - name: Validate saved scene management wiring
+        run: |
+          grep -q 'saveUserPresets' web/player-runtime-bridge-v12.js
+          grep -q 'snapshotMix' web/player-runtime-bridge-v12.js
+          grep -q 'applyPreset' web/player-runtime-bridge-v12.js
+          grep -q 'LullabySavedScenes' web/saved-scenes-v13.js
+          grep -q 'data-saved-load' web/saved-scenes-v13.js
+          grep -q 'data-saved-rename' web/saved-scenes-v13.js
+          grep -q 'data-saved-overwrite' web/saved-scenes-v13.js
+          grep -q 'createdAt' web/saved-scenes-v13.js
+          grep -q 'updatedAt' web/saved-scenes-v13.js
+          grep -q '/saved-scenes-v13.js?v=13' web/sw.js
       - name: Validate duration and Scene FX wiring
         run: |
           grep -q "fixedDurations:\[360,480,600\]" web/player-controls-v11.js
