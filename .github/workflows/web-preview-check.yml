@@ -87,7 +87,9 @@ jobs:
           NODE
       - name: Validate duration and Scene FX wiring
         run: |
-          grep -q "n>=240&&n<=720" web/player-shell-v10.js
+          grep -q "fixedDurations:\[360,480,600\]" web/player-controls-v11.js
+          grep -q "sliderMinMinutes:1" web/player-controls-v11.js
+          grep -q "parseDirectValue" web/player-controls-v11.js
           grep -q "LullabyControls" web/player-controls-v11.js
           grep -q "data-duration" web/player-controls-v11.js
           grep -q "durationDirectApply" web/player-controls-v11.js
