@@ -62,6 +62,7 @@ await page.locator('[data-scene-mode="journey"]').click();
 await page.waitForTimeout(80);
 const track=page.locator('.journey-track');
 if((await track.getAttribute('role'))!=='slider')throw new Error('journey track is not a seek slider');
+if(!(await page.locator('#journeyPrevPhase').isVisible())||!(await page.locator('#journeyNextPhase').isVisible()))throw new Error('explicit phase step buttons are not visible');
 const box=await track.boundingBox();if(!box)throw new Error('journey track has no layout box');
 await page.mouse.click(box.x+box.width*.95,box.y+box.height/2);
 await page.waitForTimeout(60);
@@ -69,8 +70,17 @@ const seekState=await page.evaluate(()=>({elapsed:window.LullabyJourneyRuntime?.
 if(!seekState.elapsed||!seekState.total||seekState.elapsed/seekState.total<.93||seekState.elapsed/seekState.total>.97)throw new Error(`journey click seek failed: ${JSON.stringify(seekState)}`);
 if(!['Descent','Approach'].includes(seekState.phase))throw new Error(`journey seek did not advance phase: ${JSON.stringify(seekState)}`);
 
+await page.locator('#journeyPrevPhase').click();
+await page.waitForTimeout(60);
+const prevState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
+if(prevState.phase!=='Cruise'||prevState.ratio<.05||prevState.ratio>.07)throw new Error(`previous phase button failed: ${JSON.stringify(prevState)}`);
+await page.locator('#journeyNextPhase').click();
+await page.waitForTimeout(60);
+const nextState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
+if(nextState.phase!=='Descent'||nextState.ratio<.90||nextState.ratio>.93)throw new Error(`next phase button failed: ${JSON.stringify(nextState)}`);
+
 const aircraft=await page.evaluate(async()=>({url:await getAircraftUrl(),meta:window.LullabyAircraftSource}));
 if(aircraft.url!=='/audio/aircraft_cabin_cruise_v2.ogg'||aircraft.meta?.channels!==2||aircraft.meta?.durationSeconds!==105||aircraft.meta?.sourceId!=='freesound_jasonm911_853735')throw new Error(`clean long aircraft source override missing: ${JSON.stringify(aircraft)}`);
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log('web Mixer v14 + journey seek smoke test passed');
+console.log('web Mixer v14 + journey seek/phase-step smoke test passed');
