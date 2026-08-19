@@ -12,6 +12,9 @@
     get(key){try{return localStorage.getItem(key)}catch{return null}},
     set(key,value){try{localStorage.setItem(key,value);return true}catch{return false}},
   };
+  const TOTAL_MARKER='lullaby-visitor-total-counted-v2';
+  const DAY_MARKER='lullaby-visitor-day-counted-v2';
+
   function localize(){
     const today=root.querySelector('[data-visitor-today-label]'),total=root.querySelector('[data-visitor-total-label]');
     if(today)today.textContent=english()?'Today':'오늘 방문자';
@@ -34,54 +37,30 @@
     root.dataset.unavailable='false';root.dataset.backend=backend||'unknown';root.removeAttribute('title');
   }
 
-  async function loadD1(){
-    const response=await fetch('/api/visitors',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({visitorId:visitorId()}),cache:'no-store'});
-    if(!response.ok)throw new Error(`visitor api ${response.status}`);
-    const data=await response.json();if(!data.available)throw new Error('visitor counter unavailable');
-    return{today:Number(data.today||0),total:Number(data.total||0),backend:'d1'};
-  }
-
-  // Cloudflare Pages can serve this site fully statically. When a VISITOR_DB
-  // binding is not configured, use a small public counter service as a
-  // no-backend fallback. It keeps the same browser-level semantics as the D1
-  // path: total increments once per browser, today once per Seoul calendar day.
-  const FALLBACK_BASE='https://api.counterapi.dev/v1';
-  const FALLBACK_NAMESPACE='lullaby-scene-site';
-  const TOTAL_MARKER='lullaby-counterapi-total-counted-v1';
-  const DAY_MARKER='lullaby-counterapi-day-counted-v1';
-  function counterValue(data){
-    const candidates=[data?.value,data?.data?.value,data?.data,data?.count];
-    for(const candidate of candidates){const value=Number(candidate);if(Number.isFinite(value))return value}
-    throw new Error('counter response has no numeric value');
-  }
-  async function counterRequest(name,increment){
-    const path=`${FALLBACK_BASE}/${encodeURIComponent(FALLBACK_NAMESPACE)}/${encodeURIComponent(name)}${increment?'/up':''}`;
-    const response=await fetch(path,{method:'GET',headers:{Accept:'application/json'},cache:'no-store',mode:'cors'});
-    if(!response.ok)throw new Error(`public counter ${response.status}`);
-    return counterValue(await response.json());
-  }
-  async function countedValue(name,markerKey,markerValue){
-    if(storage.get(markerKey)===markerValue)return counterRequest(name,false);
-    const value=await counterRequest(name,true);storage.set(markerKey,markerValue);return value;
-  }
-  async function loadStaticFallback(){
-    visitorId();
-    const day=seoulDay();
-    const [today,total]=await Promise.all([
-      countedValue(`visitors-${day}`,DAY_MARKER,day),
-      countedValue('visitors-total-v1',TOTAL_MARKER,'1'),
-    ]);
-    return{today,total,backend:'counterapi'};
-  }
-
   async function load(){
-    let primaryError=null;
-    try{const data=await loadD1();render(data.today,data.total,data.backend);return}catch(error){primaryError=error}
-    try{const data=await loadStaticFallback();render(data.today,data.total,data.backend);return}catch(error){
+    const day=seoulDay();
+    const countTotal=storage.get(TOTAL_MARKER)!=='1';
+    const countDay=storage.get(DAY_MARKER)!==day;
+    try{
+      const response=await fetch('/api/visitors',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({visitorId:visitorId(),countTotal,countDay}),
+        cache:'no-store',
+      });
+      if(!response.ok)throw new Error(`visitor api ${response.status}`);
+      const data=await response.json();if(!data.available)throw new Error('visitor counter unavailable');
+      if(data.backend==='counterapi.com'){
+        if(countTotal)storage.set(TOTAL_MARKER,'1');
+        if(countDay)storage.set(DAY_MARKER,day);
+      }
+      render(Number(data.today||0),Number(data.total||0),data.backend);
+    }catch(error){
       root.dataset.unavailable='true';
       root.title=english()?'Visitor counter is temporarily unavailable.':'방문자 카운터를 일시적으로 불러올 수 없습니다.';
-      console.warn('Visitor counter unavailable',primaryError,error);
+      console.warn('Visitor counter unavailable',error);
     }
   }
+
   document.addEventListener('lullaby-language-changed',localize);localize();load();
 })();
