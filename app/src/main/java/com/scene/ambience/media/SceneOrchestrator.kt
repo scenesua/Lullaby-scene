@@ -18,10 +18,9 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * Service-owned living-scene runtime. It deliberately sits above AmbienceEngine:
- * the existing mixer remains the stable low-level playback primitive while the
- * scene engine owns coherent source levels, timed state transitions and semantic
- * macros. This keeps scene progression alive while the Activity is backgrounded.
+ * Service-owned living-scene runtime. The selected duration is the entire journey,
+ * while aircraft phases use absolute-time windows and cruise stretches to fill the
+ * remaining sleep time. Random events are independently scheduled inside cruise.
  */
 class SceneOrchestrator(
     private val engine: AmbienceEngine,
@@ -33,17 +32,22 @@ class SceneOrchestrator(
     val state: StateFlow<SceneRuntimeSnapshot> = _state.asStateFlow()
 
     private var job: Job? = null
+    private var timeline: AircraftJourneyTimeline? = null
+    private var scheduleSeed: Long = 0L
 
-    fun start(sceneId: String, arcMinutes: Int): Boolean {
+    fun start(sceneId: String, totalDurationMinutes: Int): Boolean {
         if (sceneId != PASSENGER_AIRCRAFT || !isSourceAvailable(SOURCE_AIRCRAFT)) return false
 
         job?.cancel()
-        val arc = normalizeArc(arcMinutes)
+        scheduleSeed = System.currentTimeMillis() xor System.nanoTime()
+        val duration = AircraftJourneyTimelineBuilder.normalizeDurationMinutes(totalDurationMinutes)
+        timeline = AircraftJourneyTimelineBuilder.build(duration, scheduleSeed)
         _state.value = SceneRuntimeSnapshot(
             sceneId = PASSENGER_AIRCRAFT,
-            stateId = STATE_SETTLING,
-            arcMinutes = arc,
+            stateId = STATE_TAXI_OUT,
+            totalDurationMinutes = duration,
             elapsedMs = 0L,
+            seatbeltSignOn = true,
             macros = SceneMacroState(),
         )
 
@@ -68,15 +72,24 @@ class SceneOrchestrator(
     fun stopScene() {
         job?.cancel()
         job = null
+        timeline = null
         _state.value = SceneRuntimeSnapshot()
         restoreUserEq()
     }
 
     fun release() = stopScene()
 
-    fun setArcMinutes(minutes: Int) {
-        if (!_state.value.active) return
-        _state.value = _state.value.copy(arcMinutes = normalizeArc(minutes), elapsedMs = 0L)
+    /** Change the whole journey length without restarting the current journey. */
+    fun setDurationMinutes(minutes: Int) {
+        val current = _state.value
+        if (!current.active) return
+        val duration = AircraftJourneyTimelineBuilder.normalizeDurationMinutes(minutes)
+        val rebuilt = AircraftJourneyTimelineBuilder.build(duration, scheduleSeed)
+        timeline = rebuilt
+        _state.value = current.copy(
+            totalDurationMinutes = duration,
+            elapsedMs = current.elapsedMs.coerceAtMost(rebuilt.journeyEndMs),
+        )
         applyFrame()
     }
 
@@ -100,24 +113,39 @@ class SceneOrchestrator(
         while (kotlin.coroutines.coroutineContext.isActive && _state.value.active) {
             delay(TICK_MS)
             if (engine.snapshot().playbackState != PlaybackState.PLAYING) continue
+            val plan = timeline ?: return
             val current = _state.value
-            val maxElapsed = if (current.arcMinutes > 0) current.arcMinutes * 60_000L else Long.MAX_VALUE
-            _state.value = current.copy(elapsedMs = (current.elapsedMs + TICK_MS).coerceAtMost(maxElapsed))
+            val elapsed = (current.elapsedMs + TICK_MS).coerceAtMost(plan.journeyEndMs)
+            _state.value = current.copy(elapsedMs = elapsed)
             applyFrame()
+            if (elapsed >= plan.journeyEndMs) {
+                engine.stop()
+                return
+            }
         }
     }
 
     private fun applyFrame() {
         val current = _state.value
         if (current.sceneId != PASSENGER_AIRCRAFT) return
-        val frame = passengerAircraftFrame(current)
-        if (frame.stateId != current.stateId) {
-            _state.value = current.copy(stateId = frame.stateId)
+        val plan = timeline ?: return
+        val phase = plan.phaseAt(current.elapsedMs)
+        val activeEvent = plan.activeEventsAt(current.elapsedMs).firstOrNull()
+        val beltOn = plan.seatbeltSignOnAt(current.elapsedMs)
+        val frame = passengerAircraftFrame(current, phase, activeEvent)
+
+        if (phase != current.stateId || beltOn != current.seatbeltSignOn || activeEvent?.kind != current.activeEventId) {
+            _state.value = current.copy(
+                stateId = phase,
+                seatbeltSignOn = beltOn,
+                activeEventId = activeEvent?.kind,
+            )
         }
+
         setVolumeIfChanged(SOURCE_AIRCRAFT, frame.aircraftVolume)
         if (isSourceAvailable(SOURCE_VENTILATION)) setVolumeIfChanged(SOURCE_VENTILATION, frame.ventilationVolume)
         if (isSourceAvailable(SOURCE_BROWN_NOISE)) setVolumeIfChanged(SOURCE_BROWN_NOISE, frame.rumbleVolume)
-        applySceneDsp(current.macros)
+        applySceneDsp(current.macros, phase, activeEvent)
     }
 
     private fun setVolumeIfChanged(sourceId: String, volume: Float) {
@@ -128,18 +156,31 @@ class SceneOrchestrator(
     }
 
     /**
-     * Internal spatial/DSP v1. Distance is modeled with both attenuation in the
-     * frame above and high-frequency roll-off here; night depth adds a softer
-     * occlusion-like top-end reduction. The user's EQ is summed underneath it.
+     * Spatial/DSP v1. User semantic controls remain the baseline; timed flight
+     * phases and short scheduled events temporarily bias the same acoustic model.
      */
-    private fun applySceneDsp(macros: SceneMacroState) {
+    private fun applySceneDsp(
+        macros: SceneMacroState,
+        phase: String,
+        event: AircraftJourneyEvent?,
+    ) {
         val user = eqSettingsProvider()
         val count = maxOf(5, user.bands.size)
         val bands = MutableList(count) { index -> if (user.enabled) user.bands.getOrElse(index) { 0 } else 0 }
-        val distance = 1f - macros.enginePresence
+        val phaseEngineBoost = when (phase) {
+            STATE_TAKEOFF -> 0.24f
+            STATE_CLIMB -> 0.14f
+            STATE_DESCENT -> 0.06f
+            STATE_APPROACH -> 0.10f
+            else -> 0f
+        }
+        val eventTurbulence = if (event?.kind == AircraftJourneyTimelineBuilder.EVENT_TURBULENCE) event.intensity else 0f
+        val effectivePresence = (macros.enginePresence + phaseEngineBoost).coerceIn(0f, 1f)
+        val effectiveTurbulence = (macros.turbulence + eventTurbulence).coerceIn(0f, 1f)
+        val distance = 1f - effectivePresence
         val highCut = (450f + 950f * distance + 650f * macros.nightDepth).toInt()
         val upperMidCut = (highCut * 0.52f).toInt()
-        val lowBody = (180f * macros.turbulence).toInt()
+        val lowBody = (180f * effectiveTurbulence + 130f * phaseEngineBoost).toInt()
         bands[0] = (bands[0] + lowBody).coerceIn(-1500, 1500)
         if (count >= 2) bands[count - 2] = (bands[count - 2] - upperMidCut).coerceIn(-1500, 1500)
         bands[count - 1] = (bands[count - 1] - highCut).coerceIn(-1500, 1500)
@@ -152,49 +193,50 @@ class SceneOrchestrator(
     }
 
     private data class AircraftFrame(
-        val stateId: String,
         val aircraftVolume: Float,
         val ventilationVolume: Float,
         val rumbleVolume: Float,
     )
 
-    private fun passengerAircraftFrame(snapshot: SceneRuntimeSnapshot): AircraftFrame {
-        val arcDuration = snapshot.arcMinutes * 60_000L
-        val progress = if (arcDuration <= 0L) 0.45f else (snapshot.elapsedMs.toFloat() / arcDuration).coerceIn(0f, 1f)
-        val state = when {
-            snapshot.arcMinutes == 0 -> STATE_CRUISE
-            progress < 0.10f -> STATE_SETTLING
-            progress < 0.72f -> STATE_CRUISE
-            progress < 0.90f -> STATE_DROWSY
-            else -> STATE_DEEP_NIGHT
-        }
-        val stateDetail = when (state) {
-            STATE_SETTLING -> 0.94f
+    private fun passengerAircraftFrame(
+        snapshot: SceneRuntimeSnapshot,
+        phase: String,
+        event: AircraftJourneyEvent?,
+    ): AircraftFrame {
+        val phaseDetail = when (phase) {
+            STATE_TAXI_OUT -> 0.82f
+            STATE_TAKEOFF -> 1.18f
+            STATE_CLIMB -> 1.10f
             STATE_CRUISE -> 1.00f
-            STATE_DROWSY -> 0.88f
-            else -> 0.78f
+            STATE_DESCENT -> 0.96f
+            STATE_APPROACH -> 1.03f
+            STATE_TAXI_IN -> 0.80f
+            else -> 0.65f
         }
-        val stateVent = when (state) {
-            STATE_SETTLING -> 1.00f
-            STATE_CRUISE -> 0.95f
-            STATE_DROWSY -> 0.90f
-            else -> 0.86f
+        val phaseVent = when (phase) {
+            STATE_TAKEOFF, STATE_CLIMB -> 0.86f
+            STATE_CRUISE -> 1.00f
+            STATE_DESCENT, STATE_APPROACH -> 0.94f
+            else -> 0.90f
         }
         val m = snapshot.macros
+        val eventTurbulence = if (event?.kind == AircraftJourneyTimelineBuilder.EVENT_TURBULENCE) event.intensity else 0f
+        val eventCabin = if (event?.kind == AircraftJourneyTimelineBuilder.EVENT_CABIN_ACTIVITY) event.intensity else 0f
+        val effectiveTurbulence = (m.turbulence + eventTurbulence).coerceIn(0f, 1f)
+        val effectiveCabin = (m.cabinActivity + eventCabin).coerceIn(0f, 1f)
         val spatial = 0.78f + 0.22f * m.enginePresence
-        val detail = 0.74f + 0.34f * m.cabinActivity
-        val turbulenceWave = 1f + (0.045f * m.turbulence * sin((snapshot.elapsedMs / 2200.0) * 2.0 * PI).toFloat())
-        val aircraft = (0.68f * stateDetail * spatial * detail * turbulenceWave).coerceIn(0.25f, 0.86f)
-        val ventilation = (0.17f * stateVent * (0.92f + 0.15f * m.nightDepth)).coerceIn(0.08f, 0.26f)
-        val rumble = (0.07f + 0.10f * m.enginePresence + 0.035f * m.turbulence).coerceIn(0.04f, 0.22f)
-        return AircraftFrame(state, aircraft, ventilation, rumble)
-    }
-
-    private fun normalizeArc(minutes: Int): Int = when {
-        minutes <= 0 -> 0
-        minutes <= 30 -> 30
-        minutes <= 60 -> 60
-        else -> 120
+        val detail = 0.74f + 0.34f * effectiveCabin
+        val turbulenceWave = 1f + (0.045f * effectiveTurbulence * sin((snapshot.elapsedMs / 2200.0) * 2.0 * PI).toFloat())
+        val aircraft = (0.68f * phaseDetail * spatial * detail * turbulenceWave).coerceIn(0.22f, 0.92f)
+        val ventilation = (0.17f * phaseVent * (0.92f + 0.15f * m.nightDepth)).coerceIn(0.08f, 0.26f)
+        val phaseRumble = when (phase) {
+            STATE_TAKEOFF -> 0.10f
+            STATE_CLIMB -> 0.06f
+            STATE_APPROACH -> 0.03f
+            else -> 0f
+        }
+        val rumble = (0.07f + 0.10f * m.enginePresence + 0.035f * effectiveTurbulence + phaseRumble).coerceIn(0.04f, 0.28f)
+        return AircraftFrame(aircraft, ventilation, rumble)
     }
 
     companion object {
@@ -208,10 +250,14 @@ class SceneOrchestrator(
         const val MACRO_TURBULENCE = "turbulence"
         const val MACRO_NIGHT_DEPTH = "night_depth"
 
-        const val STATE_SETTLING = "settling"
+        const val STATE_TAXI_OUT = "taxi_out"
+        const val STATE_TAKEOFF = "takeoff"
+        const val STATE_CLIMB = "climb"
         const val STATE_CRUISE = "cruise"
-        const val STATE_DROWSY = "drowsy"
-        const val STATE_DEEP_NIGHT = "deep_night"
+        const val STATE_DESCENT = "descent"
+        const val STATE_APPROACH = "approach"
+        const val STATE_TAXI_IN = "taxi_in"
+        const val STATE_ARRIVED = "arrived"
 
         private const val TICK_MS = 1_000L
     }
