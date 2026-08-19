@@ -48,7 +48,7 @@ async function visitors(request,env){
 }
 
 class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12">',{html:true})}}
-class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=1"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script>',{html:true})}}
+class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=1"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/mixer-zero-v13.js?v=13"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
 
 export default {
   async fetch(request,env){
