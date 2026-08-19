@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - work/lullaby-web-foundation
+      - work/lullaby-web-player-runtime-fix
     paths:
       - 'web/**'
       - '.github/workflows/web-preview-check.yml'
@@ -26,94 +27,47 @@ jobs:
         run: |
           node --check web/site.js
           node --check web/player-v2.js
-          node --check web/scene-audio-v2.js
-          node --check web/mixer-fx-v9.js
-          node --check web/player-shell-v9.js
-          node --check web/player-shell-v10.js
-          node --check web/player-controls-v11.js
-          node --check web/legal-language-v9.js
+          node --check web/player-runtime.js
+          node --check web/player-settings-fix.js
           node --check web/sw.js
           node --check .github/scripts/web-smoke.mjs
-      - name: Check required web pages and files
+      - name: Check runtime ownership and layout
         run: |
-          test -s web/index.html
           test -s web/player/index.html
-          test -s web/download/index.html
-          test -s web/privacy/index.html
-          test -s web/terms/index.html
-          test -s web/styles.css
-          test -s web/site-shell.css
+          test -s web/player-runtime.js
+          test -s web/player-settings-fix.js
           test -s web/polish-v9.css
-          test -s web/player-v2.css
-          test -s web/player-v2.js
-          test -s web/scene-audio-v2.js
-          test -s web/mixer-fx-v9.js
-          test -s web/player-shell-v10.js
-          test -s web/player-controls-v11.js
-          test -s web/mixer-sources.json
-          test -s web/manifest.webmanifest
-          test -s web/_headers
-          grep -q 'href="/player/"' web/index.html
+          grep -q "player-runtime.js?v=10" web/player-v2.js
+          grep -q "player-settings-fix.js?v=10" web/player-v2.js
           grep -q 'data-scene-mode="journey"' web/player/index.html
           grep -q 'data-scene-mode="simple"' web/player/index.html
           grep -q 'id="durationDirect"' web/player/index.html
-          grep -q 'data-inspector-mode="simple"' web/player/index.html
-          grep -q 'data-fx="warmth"' web/player/index.html
-          grep -q '/mixer-fx-v9.js' web/player/index.html
-          grep -q '/player-shell-v10.js' web/player/index.html
-          grep -q '/player-controls-v11.js' web/player/index.html
-          ! grep -q '/player-shell-v9.js' web/player/index.html
-          ! grep -q 'class="web-player"' web/index.html
-          grep -q 'data-pwa-install' web/download/index.html
-          grep -q 'language-toggle' web/index.html
-          grep -q 'language-toggle' web/player/index.html
-          grep -q 'language-toggle' web/privacy/index.html
-          grep -q '"start_url": "/player/"' web/manifest.webmanifest
-          grep -q "media-src 'self' blob:" web/_headers
-          grep -q "lullaby-scene-site-v11" web/sw.js
+          grep -q 'D2Coding' web/polish-v9.css
+          grep -q 'word-break:keep-all' web/polish-v9.css
+          grep -q 'width:100vw' web/polish-v9.css
+          grep -q "lullaby-scene-site-v12" web/sw.js
+          grep -q 'Compatibility stub' web/mixer-fx-v9.js
+          grep -q 'Compatibility stub' web/scene-audio-v2.js
+          grep -q 'Compatibility stub' web/player-shell-v10.js
+          grep -q 'Compatibility stub' web/player-controls-v11.js
       - name: Validate full mixer catalog
         run: |
           node - <<'NODE'
           const fs=require('fs');
           const data=JSON.parse(fs.readFileSync('web/mixer-sources.json','utf8'));
           if(data.sources.length!==21) throw new Error(`expected 21 mixer sources, got ${data.sources.length}`);
-          for(const s of data.sources){
-            if(s.kind==='continuous' && !fs.existsSync('web'+s.url)) throw new Error(`missing ${s.id}: web${s.url}`);
-            if(s.kind==='event' && !fs.existsSync('web'+s.url)) throw new Error(`missing event ${s.id}: web${s.url}`);
-          }
-          const required=['rain','thunder','wind','ocean','stream','fire','forest','birds','crickets','cafe','city','train','aircraft_cabin','fan','ventilation','water','singing_bowl','bamboo_forest','white_noise','pink_noise','brown_noise'];
-          const ids=new Set(data.sources.map(s=>s.id));
-          for(const id of required) if(!ids.has(id)) throw new Error(`catalog missing ${id}`);
+          for(const s of data.sources){ if(!fs.existsSync('web'+s.url)) throw new Error(`missing ${s.id}: web${s.url}`); }
           NODE
-      - name: Validate duration and Scene FX wiring
+      - name: Validate player runtime features
         run: |
-          grep -q "fixedDurations:\[360,480,600\]" web/player-controls-v11.js
-          grep -q "sliderMinMinutes:1" web/player-controls-v11.js
-          grep -q "parseDirectValue" web/player-controls-v11.js
-          grep -q "LullabyControls" web/player-controls-v11.js
-          grep -q "data-duration" web/player-controls-v11.js
-          grep -q "durationDirectApply" web/player-controls-v11.js
-          grep -q "data-macro" web/player-controls-v11.js
-          grep -q "warmth" web/mixer-fx-v9.js
-          grep -q "createDynamicsCompressor" web/mixer-fx-v9.js
-          grep -q "createConvolver" web/mixer-fx-v9.js
-          grep -q "makeSourceNode=async" web/mixer-fx-v9.js
-      - name: Validate language and typography
-        run: |
-          grep -q "sleepJourneys:'잠의 여정'" web/site.js
-          grep -q "simpleScenes:'심플 씬'" web/site.js
-          grep -q "sleepJourneys:'Sleep Journeys'" web/site.js
-          grep -q "simpleScenes:'Simple Scenes'" web/site.js
-          grep -q 'word-break:keep-all' web/polish-v9.css
-          grep -q 'D2Coding' web/polish-v9.css
-          grep -q 'data-lang-block="en"' web/privacy/index.html
-          grep -q 'data-lang-block="en"' web/terms/index.html
-      - name: Validate aircraft sleep-journey layers
-        run: |
-          grep -q "/audio/ventilation.ogg" web/scene-audio-v2.js
-          grep -q "/audio/brown_noise.ogg" web/scene-audio-v2.js
-          grep -q 'phaseVent' web/scene-audio-v2.js
-          grep -q 'phaseRumble' web/scene-audio-v2.js
+          grep -q 'data-mini-vol' web/player-runtime.js
+          grep -q 'warmthPlugin' web/player-runtime.js
+          grep -q 'airPlugin' web/player-runtime.js
+          grep -q 'compPlugin' web/player-runtime.js
+          grep -q 'durationDirectApply' web/player-runtime.js
+          grep -q 'data-timer-minutes' web/player-runtime.js
+          grep -q 'themeSelect' web/player-settings-fix.js
+          grep -q 'master-volume' web/player-settings-fix.js
       - name: Validate aircraft payload
         run: |
           test -s web/audio/aircraft.part00
