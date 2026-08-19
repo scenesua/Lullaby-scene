@@ -1,1 +1,1 @@
-(()=>{const s=document.createElement('script');s.src='/player-shell-v10.js?v=10';s.defer=false;document.head.appendChild(s)})();
+(()=>{const a=document.createElement('script');a.src='/player-shell-v10.js?v=10';a.onload=()=>{const b=document.createElement('script');b.src='/player-controls-v11.js?v=11';document.head.appendChild(b)};document.head.appendChild(a)})();
