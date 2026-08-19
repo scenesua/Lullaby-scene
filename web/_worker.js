@@ -47,8 +47,8 @@ async function visitors(request,env){
   return json({available:true,day,today:Number(today.results?.[0]?.count||0),total:Number(total.results?.[0]?.count||0)});
 }
 
-class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12">',{html:true})}}
-class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=1"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/mixer-zero-v13.js?v=13"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
+class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12"><link rel="stylesheet" href="/mixer-controls-v14.css?v=14">',{html:true})}}
+class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=1"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
 
 export default {
   async fetch(request,env){
