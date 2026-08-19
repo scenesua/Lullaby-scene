@@ -14,6 +14,9 @@
   };
   const TOTAL_MARKER='lullaby-visitor-total-counted-v2';
   const DAY_MARKER='lullaby-visitor-day-counted-v2';
+  const TOTAL_LAST='lullaby-visitor-total-last-v2';
+  const DAY_LAST='lullaby-visitor-day-last-v2';
+  // Removed legacy browser backend: https://api.counterapi.dev/v1
 
   function localize(){
     const today=root.querySelector('[data-visitor-today-label]'),total=root.querySelector('[data-visitor-total-label]');
@@ -36,6 +39,7 @@
     if(totalNode)totalNode.textContent=Number(total||0).toLocaleString();
     root.dataset.unavailable='false';root.dataset.backend=backend||'unknown';root.removeAttribute('title');
   }
+  function lastNumber(key){const value=Number(storage.get(key));return Number.isFinite(value)&&value>=0?value:0}
 
   async function load(){
     const day=seoulDay();
@@ -50,11 +54,15 @@
       });
       if(!response.ok)throw new Error(`visitor api ${response.status}`);
       const data=await response.json();if(!data.available)throw new Error('visitor counter unavailable');
+      let today=Number(data.today||0),total=Number(data.total||0);
       if(data.backend==='counterapi.com'){
+        today=Math.max(today,lastNumber(DAY_LAST));
+        total=Math.max(total,lastNumber(TOTAL_LAST));
+        storage.set(DAY_LAST,String(today));storage.set(TOTAL_LAST,String(total));
         if(countTotal)storage.set(TOTAL_MARKER,'1');
         if(countDay)storage.set(DAY_MARKER,day);
       }
-      render(Number(data.today||0),Number(data.total||0),data.backend);
+      render(today,total,data.backend);
     }catch(error){
       root.dataset.unavailable='true';
       root.title=english()?'Visitor counter is temporarily unavailable.':'방문자 카운터를 일시적으로 불러올 수 없습니다.';
