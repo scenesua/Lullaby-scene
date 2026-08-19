@@ -21,22 +21,37 @@ jobs:
         with:
           node-version: '22'
       - name: Check JavaScript syntax
-        run: node --check web/app.js && node --check web/sw.js
-      - name: Check required web files and audio
+        run: node --check web/player-v2.js && node --check web/sw.js
+      - name: Check required web files
         run: |
           test -s web/index.html
           test -s web/styles.css
+          test -s web/player-v2.css
+          test -s web/player-v2.js
+          test -s web/mixer-sources.json
           test -s web/manifest.webmanifest
           test -s web/_headers
-          test -s web/audio/rain.ogg
-          test -s web/audio/fire.ogg
-          test -s web/audio/ocean.ogg
-          test -s web/audio/train.ogg
+          grep -q 'player-v2.js' web/index.html
+          grep -q "media-src 'self' blob:" web/_headers
+      - name: Validate full mixer catalog
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const data=JSON.parse(fs.readFileSync('web/mixer-sources.json','utf8'));
+          if(data.sources.length!==21) throw new Error(`expected 21 mixer sources, got ${data.sources.length}`);
+          for(const s of data.sources){
+            if(s.kind==='continuous' && !fs.existsSync('web'+s.url)) throw new Error(`missing ${s.id}: web${s.url}`);
+            if(s.kind==='event' && !fs.existsSync('web'+s.url)) throw new Error(`missing event ${s.id}: web${s.url}`);
+          }
+          const required=['rain','thunder','wind','ocean','stream','fire','forest','birds','crickets','cafe','city','train','aircraft_cabin','fan','ventilation','water','singing_bowl','bamboo_forest','white_noise','pink_noise','brown_noise'];
+          const ids=new Set(data.sources.map(s=>s.id));
+          for(const id of required) if(!ids.has(id)) throw new Error(`catalog missing ${id}`);
+          NODE
+      - name: Validate aircraft payload
+        run: |
           test -s web/audio/aircraft.part00
           test -s web/audio/aircraft.part01
           test -s web/audio/aircraft.part02
           test -s web/audio/aircraft.part03
-      - name: Validate aircraft payload
-        run: |
           cat web/audio/aircraft.part0{0,1,2,3} | tr -d '\n\r ' | base64 -d > /tmp/aircraft.ogg
           test "$(wc -c < /tmp/aircraft.ogg)" -eq 16630
