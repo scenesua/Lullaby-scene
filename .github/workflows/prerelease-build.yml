@@ -24,11 +24,11 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout prerelease source
+      - name: Checkout prerelease source branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -37,11 +37,87 @@ jobs:
           java-version: '17'
           cache: gradle
 
+      - name: Materialize verified long stereo aircraft bed
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET='app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
+          if [[ ! -s "$TARGET" ]]; then
+            python3 tools/materialize_aircraft_audio.py "$TARGET"
+          fi
+          ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration,size -of json "$TARGET"
+          python3 - <<'PY'
+          import json, subprocess
+          path='app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
+          info=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=codec_name,sample_rate,channels','-show_entries','format=duration,size','-of','json',path]))
+          stream=info['streams'][0]; fmt=info['format']
+          assert stream['codec_name']=='opus', info
+          assert stream['sample_rate']=='48000', info
+          assert int(stream['channels'])==2, info
+          assert 78.8 <= float(fmt['duration']) <= 79.2, info
+          assert int(fmt['size']) >= 850000, info
+          PY
+
+      - name: Persist aircraft bed on source branch
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET='app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
+          git add "$TARGET"
+          if git diff --cached --quiet; then
+            echo 'Aircraft bed already committed.'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'feat(audio): materialize verified stereo aircraft bed'
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          fi
+
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Run unit tests and build release APK
+      - name: Run unit tests and compile unsigned release
         run: ./gradlew --no-daemon testDebugUnitTest assembleRelease --stacktrace
+
+      - name: Require persistent release signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.LULLABY_ANDROID_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.LULLABY_ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.LULLABY_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.LULLABY_ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for pair in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [[ -z "${!pair:-}" ]]; then
+              echo "::error::$pair is required for a stable updatable Android release"
+              missing=1
+            fi
+          done
+          [[ "$missing" -eq 0 ]] || exit 1
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/lullaby-release.jks"
+          chmod 600 "$RUNNER_TEMP/lullaby-release.jks"
+          keytool -list -keystore "$RUNNER_TEMP/lullaby-release.jks" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+          echo "LULLABY_ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/lullaby-release.jks" >> "$GITHUB_ENV"
+          echo "LULLABY_ANDROID_STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "LULLABY_ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "LULLABY_ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Build stable-signed release APK
+        run: ./gradlew --no-daemon assembleRelease --stacktrace
+
+      - name: Verify release APK signer
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/release/app-release.apk'
+          test -s "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)"
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          "$APKSIGNER" verify "$APK"
 
       - name: Prepare release files
         shell: bash
@@ -65,10 +141,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: v1.1.0-alpha.3
-          TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         shell: bash
         run: |
           set -euo pipefail
+          TARGET_SHA="$(git rev-parse HEAD)"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
