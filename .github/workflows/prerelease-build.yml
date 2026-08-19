@@ -45,6 +45,11 @@ jobs:
       - name: Install Freesound resolver dependency
         run: npm install --no-save playwright-core@1.55.0
 
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
       - name: Materialize cleaned long stereo aircraft bed
         shell: bash
         run: |
