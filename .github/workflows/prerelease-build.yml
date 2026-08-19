@@ -37,13 +37,23 @@ jobs:
           java-version: '17'
           cache: gradle
 
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Freesound resolver dependency
+        run: npm install --no-save playwright-core@1.55.0
+
       - name: Materialize cleaned long stereo aircraft bed
         shell: bash
         run: |
           set -euo pipefail
           TARGET='app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
           if [[ ! -s "$TARGET" ]]; then
-            python3 tools/materialize_aircraft_audio.py "$TARGET"
+            SOURCE_URL="$(node tools/resolve_freesound_preview.mjs 853735)"
+            echo "Resolved Freesound 853735 preview host: $(python3 -c 'import sys,urllib.parse;print(urllib.parse.urlparse(sys.argv[1]).netloc)' "$SOURCE_URL")"
+            AIRCRAFT_SOURCE_URL="$SOURCE_URL" python3 tools/materialize_aircraft_audio.py "$TARGET"
           fi
           python3 - <<'PY'
           import json, subprocess
