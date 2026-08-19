@@ -12,11 +12,30 @@ await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.evaluate(()=>localStorage.removeItem('lullaby-user-presets'));
 await page.addStyleTag({url:'http://127.0.0.1:4173/site-runtime-v12.css?v=12'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js?v=12'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-zero-v13.js?v=13'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=12'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/saved-scenes-v13.js?v=13'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/scene-recipe-v1.js?v=1'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=1'});
 const visible=async sel=>{if(!(await page.locator(sel).isVisible()))throw new Error(`${sel} not visible`)};
-await page.locator('[data-scene-mode="simple"]').click();await visible('[data-scene-content="simple"]');await visible('[data-inspector-mode="simple"]');await visible('#simpleScenePlayPause');await visible('#simpleSceneStop');await visible('#saveSceneButton');
+
+// Full Mixer: every inactive source must display 0%, and a slider move must start it.
+await page.locator('[data-view="mixer"]').first().click();await visible('[data-panel="mixer"]');
+await page.waitForTimeout(180);
+const initialNonZeroOff=await page.locator('#mixerGrid .mixer-source:not(.on) [data-source-volume]').evaluateAll(inputs=>inputs.filter(input=>input.value!=='0').map(input=>({id:input.dataset.sourceVolume,value:input.value})));
+if(initialNonZeroOff.length)throw new Error(`inactive Mixer sliders are not zero: ${JSON.stringify(initialNonZeroOff)}`);
+const mixerWind=page.locator('#mixerGrid [data-source="wind"]');
+await mixerWind.locator('[data-source-volume]').evaluate(input=>{input.value='18';input.dispatchEvent(new Event('input',{bubbles:true}))});
+await page.waitForTimeout(250);
+let mixerWindState=await page.evaluate(()=>({ui:window.LullabyPlayerRuntime.getMixerUiState('wind'),slider:document.querySelector('#mixerGrid [data-source="wind"] [data-source-volume]')?.value,on:document.querySelector('#mixerGrid [data-source="wind"]')?.classList.contains('on')}));
+if(!mixerWindState.ui.on||!mixerWindState.on||Math.abs(mixerWindState.ui.volume-18)>2||mixerWindState.slider!=='18')throw new Error(`Mixer slider did not auto-enable: ${JSON.stringify(mixerWindState)}`);
+await page.locator('#mixerGrid [data-source="wind"] [data-source-volume]').evaluate(input=>{input.value='0';input.dispatchEvent(new Event('input',{bubbles:true}))});
+await page.waitForTimeout(220);
+mixerWindState=await page.evaluate(()=>({ui:window.LullabyPlayerRuntime.getMixerUiState('wind'),slider:document.querySelector('#mixerGrid [data-source="wind"] [data-source-volume]')?.value,on:document.querySelector('#mixerGrid [data-source="wind"]')?.classList.contains('on')}));
+if(mixerWindState.ui.on||mixerWindState.on||mixerWindState.slider!=='0')throw new Error(`Mixer zero did not turn source off: ${JSON.stringify(mixerWindState)}`);
+
+await page.locator('[data-view="scene"]').first().click();
+await page.locator('[data-scene-mode="simple"]').click();await visible('[data-scene-content="simple"]');await visible('[data-inspector-mode="simple"]');await visible('#simpleScenePlayPause');await visible('#simpleSceneStop');await visible('#saveSceneButton');await visible('#shareSceneRecipe');
 if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ 일시정지')throw new Error('Simple Scene pause control missing');
 
 await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(350);
@@ -33,6 +52,22 @@ if(!windState.on||windState.value!=='25'||windState.output!=='25%')throw new Err
 await page.locator('#inspectorMixerList [data-quick-source="wind"] [data-quick-toggle]').click();await page.waitForTimeout(120);
 windState=await page.locator('#inspectorMixerList [data-quick-source="wind"]').evaluate(row=>({off:row.classList.contains('is-off'),value:row.querySelector('[data-quick-volume]')?.value}));
 if(!windState.off||windState.value!=='0')throw new Error(`turn-off did not reset source to 0%: ${JSON.stringify(windState)}`);
+
+// Cross-platform Scene Recipe schema: base64url JSON + shared source ids/0..1 gains.
+const recipeRoundTrip=await page.evaluate(()=>{
+  const recipe=window.LullabySceneRecipe.snapshot('Browser Recipe');
+  const encoded=window.LullabySceneRecipe.encode(recipe);
+  const decoded=window.LullabySceneRecipe.decode(encoded);
+  return {recipe,encoded,decoded};
+});
+if(recipeRoundTrip.decoded?.schema!=='lullaby.scene.recipe'||recipeRoundTrip.decoded?.version!==1||!recipeRoundTrip.decoded?.mix?.rain||!recipeRoundTrip.decoded?.mix?.cafe)throw new Error(`Scene Recipe round trip failed: ${JSON.stringify(recipeRoundTrip)}`);
+if(!/^[A-Za-z0-9_-]+$/.test(recipeRoundTrip.encoded))throw new Error('Scene Recipe is not base64url');
+await page.evaluate(async()=>window.LullabySceneRecipe.apply({schema:'lullaby.scene.recipe',version:1,name:'Imported Ocean',master:.64,mix:{ocean:.23},fx:{warmth:61,air:44,room:12,glue:18},seed:null}));
+await page.waitForTimeout(250);
+const importedRecipeState=await page.evaluate(()=>({ocean:window.LullabyPlayerRuntime.getMixerUiState('ocean'),rain:window.LullabyPlayerRuntime.getMixerUiState('rain'),master:window.LullabyPlayerRuntime.masterValue,fx:window.LullabyMixerFx.snapshot()}));
+if(!importedRecipeState.ocean.on||Math.abs(importedRecipeState.ocean.volume-23)>2||importedRecipeState.rain.on||Math.abs(importedRecipeState.master-.64)>.02||importedRecipeState.fx.warmth!==61)throw new Error(`Scene Recipe apply failed: ${JSON.stringify(importedRecipeState)}`);
+// Return to Rainy Cafe for saved-scene management checks.
+await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(300);
 
 const savedId=await page.evaluate(()=>window.LullabySavedScenes.create('My Sleep Scene'));
 await page.waitForTimeout(80);await visible(`[data-user-preset="${savedId}"]`);await visible(`[data-saved-load="${savedId}"]`);await visible(`[data-saved-rename="${savedId}"]`);await visible(`[data-saved-overwrite="${savedId}"]`);
@@ -55,7 +90,7 @@ if(loadedState.active!==savedId||!loadedState.rain.on||!loadedState.cafe.on||!lo
 if(!(await page.locator(`[data-user-preset="${savedId}"]`).locator('xpath=..').evaluate(card=>card.classList.contains('is-active-saved-scene'))))throw new Error('loaded saved scene is not marked active');
 
 if((await page.locator('[data-visitor-today]').textContent())?.trim()!=='7'||(await page.locator('[data-visitor-total]').textContent())?.trim()!=='42')throw new Error('visitor counter did not render API values');
-await page.setViewportSize({width:390,height:844});await visible('#simpleQuickMixerSection');await visible('#simpleQuickMixerList [data-quick-source="rain"]');await visible(`[data-saved-load="${savedId}"]`);
+await page.setViewportSize({width:390,height:844});await visible('#simpleQuickMixerSection');await visible('#simpleQuickMixerList [data-quick-source="rain"]');await visible(`[data-saved-load="${savedId}"]`);await visible('#shareSceneRecipe');
 await page.setViewportSize({width:1440,height:1000});
 
 await page.locator('[data-view="mixer"]').first().click();await visible('[data-panel="mixer"]');
@@ -76,6 +111,7 @@ await page.locator('[data-scene-mode="simple"]').click();await page.locator('[da
 await page.locator('.language-toggle').click();if((await page.locator('[data-scene-mode="simple"]').textContent())?.trim()!=='Simple Scenes')throw new Error('language toggle failed');
 if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ Pause')throw new Error('Simple Scene transport did not localize');
 if((await page.locator('#saveSceneButton').textContent())?.trim()!=='Save scene')throw new Error('saved scene controls did not localize');
+if((await page.locator('#shareSceneRecipe').textContent())?.trim()!=='Copy scene link')throw new Error('scene recipe share control did not localize');
 if((await page.locator(`[data-saved-rename="${savedId}"]`).textContent())?.trim()!=='Rename')throw new Error('saved scene rename control did not localize');
 if((await page.locator('[data-visitor-today-label]').textContent())?.trim()!=='Today')throw new Error('visitor counter did not localize');
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
