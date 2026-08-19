@@ -3,14 +3,38 @@ import { chromium } from 'playwright-core';
 const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].filter(Boolean);
 const executablePath=candidates.find(p=>fs.existsSync(p));
 if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
-const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox']});
+const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
 const context=await browser.newContext({viewport:{width:1440,height:1000},locale:'ko-KR'});
 const page=await context.newPage();
 const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,today:7,total:42,day:'2026-08-19'})}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
+await page.addStyleTag({url:'http://127.0.0.1:4173/site-runtime-v12.css?v=12'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=12'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=1'});
 const visible=async sel=>{if(!(await page.locator(sel).isVisible()))throw new Error(`${sel} not visible`)};
 await page.locator('[data-scene-mode="simple"]').click();await visible('[data-scene-content="simple"]');await visible('[data-inspector-mode="simple"]');await visible('#simpleScenePlayPause');await visible('#simpleSceneStop');
 if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ 일시정지')throw new Error('Simple Scene pause control missing');
+
+await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(350);
+const quickOrder=await page.locator('#inspectorMixerList [data-quick-source]').evaluateAll(rows=>rows.slice(0,4).map(row=>row.getAttribute('data-quick-source')));
+if(JSON.stringify(quickOrder.slice(0,2))!==JSON.stringify(['rain','cafe']))throw new Error(`preset sources were not sorted first: ${JSON.stringify(quickOrder)}`);
+const inactive=page.locator('#inspectorMixerList [data-quick-source="wind"]');
+if(!(await inactive.count()))throw new Error('inactive quick mixer source missing');
+if(!(await inactive.evaluate(row=>row.classList.contains('is-off'))))throw new Error('non-preset quick mixer source is not dimmed/off');
+if((await inactive.locator('[data-quick-volume]').inputValue())!=='0')throw new Error('inactive quick mixer slider is not 0%');
+await inactive.locator('[data-quick-volume]').evaluate(input=>{input.value='25';input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}))});
+await page.waitForTimeout(180);
+let windState=await page.locator('#inspectorMixerList [data-quick-source="wind"]').evaluate(row=>({on:row.classList.contains('is-on'),value:row.querySelector('[data-quick-volume]')?.value,output:row.querySelector('[data-quick-output]')?.textContent}));
+if(!windState.on||windState.value!=='25'||windState.output!=='25%')throw new Error(`slider did not enable source: ${JSON.stringify(windState)}`);
+await page.locator('#inspectorMixerList [data-quick-source="wind"] [data-quick-toggle]').click();await page.waitForTimeout(120);
+windState=await page.locator('#inspectorMixerList [data-quick-source="wind"]').evaluate(row=>({off:row.classList.contains('is-off'),value:row.querySelector('[data-quick-volume]')?.value}));
+if(!windState.off||windState.value!=='0')throw new Error(`turn-off did not reset source to 0%: ${JSON.stringify(windState)}`);
+
+if((await page.locator('[data-visitor-today]').textContent())?.trim()!=='7'||(await page.locator('[data-visitor-total]').textContent())?.trim()!=='42')throw new Error('visitor counter did not render API values');
+await page.setViewportSize({width:390,height:844});await visible('#simpleQuickMixerSection');await visible('#simpleQuickMixerList [data-quick-source="rain"]');
+await page.setViewportSize({width:1440,height:1000});
+
 await page.locator('[data-view="mixer"]').first().click();await visible('[data-panel="mixer"]');
 await page.locator('[data-view="timer"]').first().click();await visible('[data-panel="timer"]');
 await page.locator('[data-view="settings"]').first().click();await visible('[data-panel="settings"]');
@@ -28,6 +52,7 @@ if(JSON.stringify(fixed)!=='[360,480,600]')throw new Error(`aircraft fixed durat
 await page.locator('[data-scene-mode="simple"]').click();await page.locator('[data-fx="warmth"]').evaluate(el=>{el.value='72';el.dispatchEvent(new Event('input',{bubbles:true}))});if((await page.locator('[data-fx-output="warmth"]').textContent())!=='72%')throw new Error('Simple Scene FX control failed');
 await page.locator('.language-toggle').click();if((await page.locator('[data-scene-mode="simple"]').textContent())?.trim()!=='Simple Scenes')throw new Error('language toggle failed');
 if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ Pause')throw new Error('Simple Scene transport did not localize');
+if((await page.locator('[data-visitor-today-label]').textContent())?.trim()!=='Today')throw new Error('visitor counter did not localize');
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log('web interaction smoke test passed');
