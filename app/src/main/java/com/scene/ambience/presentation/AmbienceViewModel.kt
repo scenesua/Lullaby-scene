@@ -44,6 +44,7 @@ data class AmbienceUiState(
     val timerDefaultMinutes: Int = 30,
     val timerFadeSeconds: Int = 60,
     val restoreLastMix: Boolean = true,
+    val includePrereleaseUpdates: Boolean = false,
     val expandedCategories: Set<String> = emptySet(),
     val notificationPermissionAsked: Boolean = false,
     val userPresets: List<AmbiencePreset> = emptyList(),
@@ -62,7 +63,7 @@ private data class CoreUiState(
     val library: SoundLibraryState,
     val snapshot: EngineSnapshot?,
     val connected: Boolean,
-    val settings: com.scene.ambience.data.model.AppSettings,
+    val settings: com.scene.ambience.data.AppSettings,
     val scene: SceneRuntimeSnapshot,
 )
 
@@ -103,6 +104,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
             timerDefaultMinutes = settings.timerDefaultMinutes,
             timerFadeSeconds = settings.timerFadeSeconds,
             restoreLastMix = settings.restoreLastMix,
+            includePrereleaseUpdates = settings.includePrereleaseUpdates,
             expandedCategories = settings.expandedCategories,
             notificationPermissionAsked = settings.notificationPermissionAsked,
             userPresets = settings.userPresets,
@@ -230,6 +232,9 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     fun setFocusPolicy(policy: FocusPolicy) { viewModelScope.launch { settingsRepository.setFocusPolicy(policy) } }
     fun setTimerDefaults(minutes: Int, fadeSeconds: Int) { viewModelScope.launch { settingsRepository.setTimerDefaults(minutes, fadeSeconds) } }
     fun setRestoreLastMix(enabled: Boolean) { viewModelScope.launch { settingsRepository.setRestoreLastMix(enabled) } }
+    fun setIncludePrereleaseUpdates(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setIncludePrereleaseUpdates(enabled) }
+    }
 
     fun setEqualizer(enabled: Boolean, presetName: String, bands: List<Int>) {
         controllerRepository.setEqualizer(enabled, presetName, bands)
@@ -262,7 +267,10 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun checkForUpdates(manual: Boolean = false) {
-        viewModelScope.launch { updateCoordinator.check(manual) }
+        viewModelScope.launch {
+            val includePrereleases = settingsRepository.settingsFlow.value.includePrereleaseUpdates
+            updateCoordinator.check(manual, includePrereleases)
+        }
     }
 
     fun downloadUpdate() { viewModelScope.launch { updateCoordinator.downloadAvailable() } }
