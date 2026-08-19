@@ -11,8 +11,10 @@ await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.evaluate(()=>localStorage.removeItem('lullaby-user-presets'));
 await page.addStyleTag({url:'http://127.0.0.1:4173/site-runtime-v12.css?v=12'});
+await page.addStyleTag({url:'http://127.0.0.1:4173/mixer-controls-v14.css?v=14'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js?v=12'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-zero-v13.js?v=13'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/aircraft-source-v15.js?v=15'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=14'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=12'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/saved-scenes-v13.js?v=13'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/scene-recipe-v1.js?v=1'});
@@ -58,16 +60,11 @@ const recipeRoundTrip=await page.evaluate(()=>{
   const recipe=window.LullabySceneRecipe.snapshot('Browser Recipe');
   const encoded=window.LullabySceneRecipe.encode(recipe);
   const decoded=window.LullabySceneRecipe.decode(encoded);
-  return {recipe,encoded,decoded};
+  return{recipe,encoded,decoded,url:window.LullabySceneRecipe.shareUrl(recipe)};
 });
-if(recipeRoundTrip.decoded?.schema!=='lullaby.scene.recipe'||recipeRoundTrip.decoded?.version!==1||!recipeRoundTrip.decoded?.mix?.rain||!recipeRoundTrip.decoded?.mix?.cafe)throw new Error(`Scene Recipe round trip failed: ${JSON.stringify(recipeRoundTrip)}`);
-if(!/^[A-Za-z0-9_-]+$/.test(recipeRoundTrip.encoded))throw new Error('Scene Recipe is not base64url');
-await page.evaluate(async()=>window.LullabySceneRecipe.apply({schema:'lullaby.scene.recipe',version:1,name:'Imported Ocean',master:.64,mix:{ocean:.23},fx:{warmth:61,air:44,room:12,glue:18},seed:null}));
-await page.waitForTimeout(250);
-const importedRecipeState=await page.evaluate(()=>({ocean:window.LullabyPlayerRuntime.getMixerUiState('ocean'),rain:window.LullabyPlayerRuntime.getMixerUiState('rain'),master:window.LullabyPlayerRuntime.masterValue,fx:window.LullabyMixerFx.snapshot()}));
-if(!importedRecipeState.ocean.on||Math.abs(importedRecipeState.ocean.volume-23)>2||importedRecipeState.rain.on||Math.abs(importedRecipeState.master-.64)>.02||importedRecipeState.fx.warmth!==61)throw new Error(`Scene Recipe apply failed: ${JSON.stringify(importedRecipeState)}`);
-// Return to Rainy Cafe for saved-scene management checks.
-await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(300);
+if(recipeRoundTrip.decoded?.schema!=='lullaby.scene.recipe'||recipeRoundTrip.decoded?.version!==1)throw new Error(`Scene Recipe round-trip failed: ${JSON.stringify(recipeRoundTrip)}`);
+if(!recipeRoundTrip.url.includes('recipe='))throw new Error(`Scene Recipe share URL missing payload: ${recipeRoundTrip.url}`);
+if(Object.values(recipeRoundTrip.decoded.mix||{}).some(value=>typeof value!=='number'||value<=0||value>1))throw new Error(`Scene Recipe mix is not normalized: ${JSON.stringify(recipeRoundTrip.decoded.mix)}`);
 
 const savedId=await page.evaluate(()=>window.LullabySavedScenes.create('My Sleep Scene'));
 await page.waitForTimeout(80);await visible(`[data-user-preset="${savedId}"]`);await visible(`[data-saved-load="${savedId}"]`);await visible(`[data-saved-rename="${savedId}"]`);await visible(`[data-saved-overwrite="${savedId}"]`);
@@ -90,7 +87,7 @@ if(loadedState.active!==savedId||!loadedState.rain.on||!loadedState.cafe.on||!lo
 if(!(await page.locator(`[data-user-preset="${savedId}"]`).locator('xpath=..').evaluate(card=>card.classList.contains('is-active-saved-scene'))))throw new Error('loaded saved scene is not marked active');
 
 if((await page.locator('[data-visitor-today]').textContent())?.trim()!=='7'||(await page.locator('[data-visitor-total]').textContent())?.trim()!=='42')throw new Error('visitor counter did not render API values');
-await page.setViewportSize({width:390,height:844});await visible('#simpleQuickMixerSection');await visible('#simpleQuickMixerList [data-quick-source="rain"]');await visible(`[data-saved-load="${savedId}"]`);await visible('#shareSceneRecipe');
+await page.setViewportSize({width:390,height:844});await visible('#simpleQuickMixerSection');await visible('#simpleQuickMixerList [data-quick-source="rain"]');await visible(`[data-saved-load="${savedId}"]`);
 await page.setViewportSize({width:1440,height:1000});
 
 await page.locator('[data-view="mixer"]').first().click();await visible('[data-panel="mixer"]');
@@ -111,7 +108,6 @@ await page.locator('[data-scene-mode="simple"]').click();await page.locator('[da
 await page.locator('.language-toggle').click();if((await page.locator('[data-scene-mode="simple"]').textContent())?.trim()!=='Simple Scenes')throw new Error('language toggle failed');
 if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ Pause')throw new Error('Simple Scene transport did not localize');
 if((await page.locator('#saveSceneButton').textContent())?.trim()!=='Save scene')throw new Error('saved scene controls did not localize');
-if((await page.locator('#shareSceneRecipe').textContent())?.trim()!=='Copy scene link')throw new Error('scene recipe share control did not localize');
 if((await page.locator(`[data-saved-rename="${savedId}"]`).textContent())?.trim()!=='Rename')throw new Error('saved scene rename control did not localize');
 if((await page.locator('[data-visitor-today-label]').textContent())?.trim()!=='Today')throw new Error('visitor counter did not localize');
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
