@@ -1,0 +1,68 @@
+name: Apply current web journey/audio fix
+
+on:
+  push:
+    branches:
+      - work/lullaby-web-foundation
+    paths:
+      - '.github/workflows/web-one-shot-current-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/lullaby-web-foundation
+          fetch-depth: 0
+      - name: Patch web journey controls and aircraft whistle guard
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new, count=1):
+              p=Path(path); s=p.read_text()
+              if old not in s:
+                  raise SystemExit(f'pattern missing in {path}: {old[:120]!r}')
+              p.write_text(s.replace(old,new,count))
+
+          p='web/scene-audio-v2.js'
+          replace(p,
+          '''    sceneNode.el.loop=true;\n    sceneNode.el.preload='auto';\n    sceneNode.filter.Q.value=.12;\n    sceneNode.filter.frequency.value=20000;\n    return sceneNode;\n''',
+          '''    sceneNode.el.loop=true;\n    sceneNode.el.preload='auto';\n    if(!sceneNode.whistleGuard){\n      try{\n        sceneNode.src.disconnect();\n        const presence=ctx.createBiquadFilter(),high=ctx.createBiquadFilter();\n        presence.type='peaking';presence.frequency.value=3574;presence.Q.value=6;presence.gain.value=-9;\n        high.type='peaking';high.frequency.value=10544;high.Q.value=8;high.gain.value=-16;\n        sceneNode.src.connect(presence).connect(high).connect(sceneNode.filter);\n        sceneNode.whistleGuard={presence,high};\n      }catch(error){console.warn('aircraft whistle guard unavailable',error)}\n    }\n    sceneNode.filter.Q.value=.2;\n    sceneNode.filter.frequency.value=15000;\n    return sceneNode;\n''')
+          replace(p,
+          '''    const cutoff=Math.max(18500,20200-(macro.night*900)-((1-macro.engine)*350));\n''',
+          '''    const cutoff=Math.max(13500,15200-(macro.night*900)-((1-macro.engine)*350));\n''')
+
+          marker='''  function syncJourneySeekAria(){\n'''
+          controls='''  const phaseSteps=[\n    ['Taxi out',0],['Takeoff',.025],['Climb',.0275],['Cruise',.05625],\n    ['Descent',.9125],['Approach',.96875],['Touchdown',.9854167],['Taxi in',.9875],['Arrived',1]\n  ];\n  function stepScenePhase(direction){\n    const total=Math.max(60000,durationMinutes*60000),elapsed=currentElapsed();\n    const current=phaseFor(elapsed,total)[0];\n    let index=phaseSteps.findIndex(([name])=>name===current);if(index<0)index=0;\n    const targetIndex=Math.max(0,Math.min(phaseSteps.length-1,index+(direction<0?-1:1)));\n    return seekSceneToMs(Math.min(total-1,Math.round(total*phaseSteps[targetIndex][1])));\n  }\n  function localizePhaseButtons(){\n    const en=window.LullabyI18n?.language==='en';\n    const prev=document.getElementById('journeyPrevPhase'),next=document.getElementById('journeyNextPhase');\n    if(prev)prev.textContent=en?'◀ Previous phase':'◀ 이전 단계';\n    if(next)next.textContent=en?'Next phase ▶':'다음 단계 ▶';\n  }\n  function ensurePhaseButtons(){\n    const track=document.querySelector('.journey-track');if(!track||document.getElementById('journeyPhaseButtons'))return;\n    const row=document.createElement('div');row.id='journeyPhaseButtons';row.className='journey-phase-buttons';\n    row.innerHTML='<button type="button" id="journeyPrevPhase" class="small-action"></button><button type="button" id="journeyNextPhase" class="small-action"></button>';\n    track.insertAdjacentElement('afterend',row);\n    document.getElementById('journeyPrevPhase')?.addEventListener('click',()=>stepScenePhase(-1));\n    document.getElementById('journeyNextPhase')?.addEventListener('click',()=>stepScenePhase(1));\n    if(!document.getElementById('journeyPhaseButtonStyle')){const style=document.createElement('style');style.id='journeyPhaseButtonStyle';style.textContent='.journey-phase-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.journey-phase-buttons .small-action{min-height:42px}@media(max-width:560px){.journey-phase-buttons{gap:8px}}';document.head.appendChild(style)}\n    localizePhaseButtons();\n  }\n\n'''
+          replace(p,marker,controls+marker)
+          replace(p,
+          '''  bindJourneySeek();\n  document.addEventListener('lullaby-language-changed',()=>{const track=document.querySelector('.journey-track');if(track)track.setAttribute('aria-label',window.LullabyI18n?.language==='en'?'Journey position':'여정 위치');syncJourneySeekAria()});\n  window.LullabyJourneyRuntime={seekToMs:seekSceneToMs,get elapsedMs(){return currentElapsed()},get totalMs(){return durationMinutes*60000}};\n''',
+          '''  bindJourneySeek();ensurePhaseButtons();\n  document.addEventListener('lullaby-language-changed',()=>{const track=document.querySelector('.journey-track');if(track)track.setAttribute('aria-label',window.LullabyI18n?.language==='en'?'Journey position':'여정 위치');localizePhaseButtons();syncJourneySeekAria()});\n  window.LullabyJourneyRuntime={seekToMs:seekSceneToMs,previousPhase:()=>stepScenePhase(-1),nextPhase:()=>stepScenePhase(1),get elapsedMs(){return currentElapsed()},get totalMs(){return durationMinutes*60000}};\n''')
+
+          # Force old PWA caches to release the previous journey runtime.
+          replace('web/sw.js','lullaby-scene-site-v17','lullaby-scene-site-v18')
+          replace('.github/workflows/web-preview-check.yml',"grep -q 'lullaby-scene-site-v17' web/sw.js","grep -q 'lullaby-scene-site-v18' web/sw.js")
+
+          # Extend the dedicated browser test with explicit phase-button checks.
+          test=' .github/scripts/web-mixer-v14-smoke.mjs'.strip()
+          s=Path(test).read_text()
+          needle="if(!seekState.phase||seekState.ratio<.90)throw new Error(`journey seek failed: ${JSON.stringify(seekState)}`);"
+          if needle in s and 'journeyNextPhase' not in s:
+              s=s.replace(needle,needle+"\nawait page.locator('#journeyPrevPhase').click();await page.waitForTimeout(80);const prevPhase=await page.locator('#phaseLabel').textContent();\nawait page.locator('#journeyNextPhase').click();await page.waitForTimeout(80);const nextPhase=await page.locator('#phaseLabel').textContent();\nif(!prevPhase||!nextPhase||prevPhase===nextPhase)throw new Error(`phase step buttons failed: ${prevPhase} -> ${nextPhase}`);")
+              Path(test).write_text(s)
+          PY
+          git diff --check
+          git status --short
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web .github/workflows/web-preview-check.yml .github/scripts/web-mixer-v14-smoke.mjs
+          git commit -m 'fix(web): add phase stepping and aircraft whistle guard'
+          git push origin HEAD:work/lullaby-web-foundation
