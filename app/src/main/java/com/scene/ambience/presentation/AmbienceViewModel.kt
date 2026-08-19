@@ -146,16 +146,16 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
 
     fun stop() = controllerRepository.stop()
 
-    fun startPassengerAircraftScene(arcMinutes: Int) {
+    fun startPassengerAircraftScene(totalDurationMinutes: Int) {
         if (uiState.value.library.manifestFor(SceneOrchestrator.SOURCE_AIRCRAFT) == null) {
             _events.tryEmit(AmbienceUiEvent.ShowMessage("scene_aircraft_unavailable"))
             return
         }
-        controllerRepository.startScene(SceneOrchestrator.PASSENGER_AIRCRAFT, arcMinutes)
+        controllerRepository.startScene(SceneOrchestrator.PASSENGER_AIRCRAFT, totalDurationMinutes)
     }
 
     fun stopScene() = controllerRepository.stopScene()
-    fun setSceneArc(minutes: Int) = controllerRepository.setSceneArc(minutes)
+    fun setSceneDuration(minutes: Int) = controllerRepository.setSceneDuration(minutes)
     fun setSceneMacro(key: String, value: Float) = controllerRepository.setSceneMacro(key, value)
 
     fun setMasterVolume(volume: Float) = controllerRepository.setMasterVolume(volume)
