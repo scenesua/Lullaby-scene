@@ -1,137 +1,20 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#11131a">
-  <meta name="color-scheme" content="dark light">
-  <meta name="description" content="Lullaby Scene은 잠드는 동안 천천히 변화하는 살아있는 사운드스케이프를 만드는 수면 환경 앱입니다.">
-  <meta name="robots" content="index,follow,max-image-preview:large">
-  <link rel="canonical" href="https://lullabyscene.com/">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/assets/icon-192.png">
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/player-v2.css">
-  <meta property="og:type" content="website"><meta property="og:site_name" content="Lullaby Scene"><meta property="og:title" content="Lullaby Scene — Living soundscapes for sleep"><meta property="og:description" content="브라우저에서 바로 재생하는 살아있는 수면 사운드스케이프."><meta property="og:url" content="https://lullabyscene.com/"><meta property="og:image" content="https://lullabyscene.com/assets/og-card.svg"><meta name="twitter:card" content="summary_large_image">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11131a"><meta name="color-scheme" content="dark light">
+  <meta name="description" content="Lullaby Scene — 시간과 장면에 따라 천천히 변화하는 수면 사운드스케이프."><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="https://lullabyscene.com/">
+  <link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/assets/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/assets/icon-192.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/site-shell.css">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="Lullaby Scene"><meta property="og:title" content="Lullaby Scene — Living soundscapes for sleep"><meta property="og:description" content="시간과 상태에 따라 천천히 변화하는 수면 사운드스케이프."><meta property="og:url" content="https://lullabyscene.com/"><meta property="og:image" content="https://lullabyscene.com/assets/og-card.svg"><meta name="twitter:card" content="summary_large_image">
   <title>Lullaby Scene — Living soundscapes for sleep</title>
 </head>
 <body>
-  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="Lullaby Scene 홈"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span><span>Lullaby Scene</span></a>
-    <nav class="nav" aria-label="주요 메뉴"><a href="#player">Player</a><a href="#scenes">Scenes</a><a href="https://github.com/scenesua/Lullaby-scene/releases" rel="noopener">Android</a></nav>
-  </header>
-
-  <main id="main">
-    <section class="hero">
-      <div class="hero-copy"><p class="eyebrow">A living place to fall asleep in</p><h1>잠드는 동안<br>장면은 계속 살아있습니다.</h1><p class="hero-lead">브라우저에서도 앱처럼 씬을 재생하고, 환경음을 섞고, 프리셋과 취침 타이머를 사용할 수 있습니다.</p><div class="hero-actions"><a class="button primary" href="#player">Web Player 열기</a><a class="button ghost" href="https://github.com/scenesua/Lullaby-scene/releases" rel="noopener">Android 테스트 빌드</a></div><p class="microcopy">Web Audio · PWA · 모바일/데스크톱 전용 레이아웃</p></div>
-      <div class="scene-orb" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="wave wave-a"></div><div class="wave wave-b"></div><div class="orb-label">PASSENGER<br>AIRCRAFT<br>CABIN</div></div>
-    </section>
-
-    <section id="player" class="section player-section" aria-labelledby="player-title">
-      <div class="section-heading"><p class="eyebrow">Web Player</p><h2 id="player-title">브라우저에서 바로 재생.</h2><p>모바일은 Android 앱처럼 Scene-first 흐름으로, PC는 모든 상태와 컨트롤을 한 화면에서 확인할 수 있게 구성했습니다.</p></div>
-      <div class="web-player" id="webPlayer">
-        <aside class="desktop-rail" aria-label="Player navigation">
-          <div class="rail-title">Lullaby Scene</div>
-          <button class="rail-item active" data-view="scene" type="button">Scenes</button>
-          <button class="rail-item" data-view="mixer" type="button">Mixer</button>
-          <button class="rail-item" data-view="presets" type="button">Presets</button>
-          <button class="rail-item" data-view="timer" type="button">Timer</button>
-          <button class="rail-item" data-view="settings" type="button">Settings</button>
-          <div class="rail-spacer"></div>
-          <div class="rail-now"><span class="status-dot"></span><div><small>NOW PLAYING</small><strong id="railNowPlaying">Stopped</strong></div></div>
-        </aside>
-
-        <section class="workspace-main">
-          <div class="mobile-player-top"><strong id="mobileTitle">Scenes</strong><button id="mobileTimerShortcut" type="button" aria-label="취침 타이머">☾</button></div>
-
-          <div class="view-panel active" data-panel="scene">
-            <div class="mobile-scene-heading"><h3>어디에서 잠들고 싶나요?</h3><p>전체 수면 시간을 정하면 장면의 출발부터 도착까지 그 안에 배치됩니다.</p></div>
-            <article class="aircraft-card">
-              <div class="scene-card-top"><span class="status-dot"></span><span>AVAILABLE NOW</span></div>
-              <div class="aircraft-title-row"><div><h3>Passenger Aircraft Cabin</h3><p>야간 여객기의 지상 이동, 이륙, 긴 순항, 하강과 도착.</p></div><span class="aircraft-icon" aria-hidden="true">✈</span></div>
-              <div class="journey-status">
-                <div><small>FLIGHT PHASE</small><strong id="phaseLabel">Ready</strong></div>
-                <div><small>ELAPSED</small><strong id="elapsedLabel">00:00</strong></div>
-                <div><small>REMAINING</small><strong id="remainingLabel">08:00:00</strong></div>
-                <div><small>SEATBELT</small><strong id="seatbeltLabel">—</strong></div>
-              </div>
-              <div class="journey-track" aria-hidden="true"><div id="journeyProgress" class="journey-progress"></div><span class="phase-dot phase-takeoff"></span><span class="phase-dot phase-landing"></span></div>
-              <div class="duration-control">
-                <div class="control-heading"><div><strong>전체 수면 / 여정 시간</strong><span>출발·도착 구간은 유지되고 가운데 순항이 늘어납니다.</span></div><output id="durationOutput">8h</output></div>
-                <div class="duration-chips"><button data-duration="360" type="button">6h</button><button class="active" data-duration="480" type="button">8h</button><button data-duration="600" type="button">10h</button></div>
-                <input id="durationSlider" type="range" min="240" max="720" step="30" value="480" aria-label="전체 여정 시간"><div class="range-labels"><span>4h</span><span>12h</span></div>
-              </div>
-              <div class="mobile-macros">
-                <h4>Semantic Macro Control</h4>
-                <label>엔진 존재감 <output data-output="engine">55%</output><input data-macro="engine" type="range" min="0" max="100" value="55"></label>
-                <label>기내 활동감 <output data-output="activity">22%</output><input data-macro="activity" type="range" min="0" max="100" value="22"></label>
-                <label>난기류 <output data-output="turbulence">12%</output><input data-macro="turbulence" type="range" min="0" max="100" value="12"></label>
-                <label>밤의 깊이 <output data-output="night">68%</output><input data-macro="night" type="range" min="0" max="100" value="68"></label>
-              </div>
-              <div class="transport"><button id="scenePlay" class="button primary transport-main" type="button">▶ 장면 시작</button><button id="sceneStop" class="button ghost" type="button">정지</button><label class="master-inline">Master <input class="master-volume" type="range" min="0" max="100" value="70"></label></div>
-              <p id="playerStatus" class="player-status" role="status">재생 버튼을 누르면 브라우저 오디오가 활성화됩니다.</p>
-            </article>
-          </div>
-
-          <div class="view-panel" data-panel="mixer">
-            <div class="panel-header"><div><h3>Mixer</h3><p>Android 앱의 전체 소스를 같은 카탈로그 순서로 제공합니다.</p></div><div class="panel-actions"><button id="stopAllMixer" class="small-action" type="button">모두 끄기</button></div></div>
-            <div id="mixerFilters" class="mixer-filters" aria-label="Mixer categories"></div>
-            <div id="mixerGrid" class="mixer-grid"><p class="muted-copy">소스 목록을 불러오는 중…</p></div>
-          </div>
-
-          <div class="view-panel" data-panel="presets">
-            <div class="panel-header"><div><h3>Presets</h3><p>Android 기본 프리셋을 웹에서도 그대로 적용할 수 있습니다.</p></div><button id="savePreset" class="small-action" type="button">현재 믹스 저장</button></div>
-            <h4 class="subsection-title">기본 프리셋</h4><div id="builtInPresets" class="preset-grid"></div>
-            <h4 class="subsection-title">내 프리셋</h4><div id="userPresets" class="preset-grid"></div>
-          </div>
-
-          <div class="view-panel" data-panel="timer">
-            <div class="panel-header"><div><h3>취침 타이머</h3><p>시간이 끝나면 짧게 페이드한 뒤 웹 플레이어의 모든 소리를 정지합니다.</p></div></div>
-            <div class="timer-card"><div class="timer-moon">☾</div><strong id="timerRemaining">꺼짐</strong><span id="timerState">실행 중인 타이머가 없습니다.</span><button id="cancelTimer" class="small-action" type="button" hidden>타이머 취소</button></div>
-            <div id="timerChips" class="timer-chips"><button data-timer-minutes="15">15분</button><button data-timer-minutes="30">30분</button><button data-timer-minutes="45">45분</button><button data-timer-minutes="60">60분</button><button data-timer-minutes="90">90분</button><button data-timer-minutes="120">120분</button></div>
-            <div class="custom-timer"><label for="customTimer">직접 입력 (1~1440분)</label><div><input id="customTimer" type="number" min="1" max="1440" inputmode="numeric" placeholder="예: 480"><button id="startCustomTimer" class="small-action" type="button">시작</button></div></div>
-          </div>
-
-          <div class="view-panel" data-panel="settings">
-            <div class="panel-header"><div><h3>Settings</h3><p>웹 전용 설정은 이 브라우저에 저장됩니다.</p></div></div>
-            <div class="settings-list">
-              <div class="setting-row"><div><strong>테마</strong><span>시스템 설정 또는 직접 지정</span></div><select id="themeSelect"><option value="system">시스템</option><option value="dark">다크</option><option value="light">라이트</option></select></div>
-              <div class="setting-row"><div><strong>Master volume</strong><span>씬과 믹서 전체 음량</span></div><input class="master-volume" type="range" min="0" max="100" value="70"></div>
-              <div class="setting-row"><div><strong>웹 앱 설치</strong><span>지원되는 브라우저에서는 PWA로 설치할 수 있습니다.</span></div><button id="installPwa" class="small-action" type="button">설치</button></div>
-              <div class="setting-row"><div><strong>오디오 캐시 초기화</strong><span>저장된 웹 오디오와 서비스 워커 캐시를 삭제합니다.</span></div><button id="clearCache" class="small-action" type="button">초기화</button></div>
-            </div>
-          </div>
-
-          <nav class="mobile-tabs" aria-label="앱 메뉴">
-            <button class="mobile-tab active" data-view="scene" type="button"><span>✦</span>Scenes</button>
-            <button class="mobile-tab" data-view="mixer" type="button"><span>≋</span>Mixer</button>
-            <button class="mobile-tab" data-view="presets" type="button"><span>▣</span>Presets</button>
-            <button class="mobile-tab" data-view="settings" type="button"><span>⚙</span>Settings</button>
-          </nav>
-        </section>
-
-        <aside class="desktop-inspector">
-          <div class="inspector-section"><p class="eyebrow">Scene controls</p><h3>Passenger Aircraft Cabin</h3><p class="muted-copy">재생 상태를 보면서 매크로를 동시에 조절합니다.</p></div>
-          <div class="inspector-section desktop-macros">
-            <label>엔진 존재감 <output data-output="engine">55%</output><input data-macro="engine" type="range" min="0" max="100" value="55"></label>
-            <label>기내 활동감 <output data-output="activity">22%</output><input data-macro="activity" type="range" min="0" max="100" value="22"></label>
-            <label>난기류 <output data-output="turbulence">12%</output><input data-macro="turbulence" type="range" min="0" max="100" value="12"></label>
-            <label>밤의 깊이 <output data-output="night">68%</output><input data-macro="night" type="range" min="0" max="100" value="68"></label>
-          </div>
-          <div class="inspector-section"><small>ACTIVE RANDOM EVENT</small><strong id="eventLabel">None</strong><p class="muted-copy">수면 방해 가능성이 높은 이벤트는 초기 수면 보호 구간에서 억제됩니다.</p></div>
-          <div class="inspector-section"><small>GLOBAL MASTER</small><input class="master-volume" type="range" min="0" max="100" value="70"></div>
-        </aside>
-      </div>
-    </section>
-
-    <section id="scenes" class="section"><div class="section-heading"><p class="eyebrow">Living scenes</p><h2>다음 장면도 같은 엔진으로.</h2><p>고정 이벤트는 씬마다 따로 관리하고, 공통 수면 보호 정책만 공유합니다.</p></div><div class="scene-grid"><article class="scene-card featured"><div class="scene-card-top"><span class="status-dot"></span><span>WEB + ANDROID</span></div><h3>Passenger Aircraft Cabin</h3><p>현재 실제 재생 가능.</p><div class="scene-tags"><span>4–12h</span><span>Journey</span><span>Spatial DSP</span></div></article><article class="scene-card muted"><div class="scene-card-top">PLANNED</div><h3>Rainy Night Train</h3><p>야간열차 타임라인과 수면 친화 이벤트.</p></article><article class="scene-card muted"><div class="scene-card-top">PLANNED</div><h3>Cabin in a Storm</h3><p>실내·실외 거리감을 중심으로 한 폭풍 장면.</p></article></div></section>
-  </main>
-
-  <footer class="site-footer"><div><strong>Lullaby Scene</strong><p>Living soundscapes for sleep.</p></div><div class="footer-links"><a href="/privacy/">개인정보 처리방침</a><a href="/terms/">이용약관</a><a href="https://github.com/scenesua/Lullaby-scene" rel="noopener">GitHub</a></div><p class="copyright">© <span id="year"></span> Lullaby Scene</p></footer>
-  <noscript><div class="noscript">Web Player는 JavaScript가 필요합니다.</div></noscript>
-  <script src="/player-v2.js" defer></script>
-  <script src="/duration-input.js" defer></script>
-</body>
-</html>
+<a class="skip-link" href="#main">본문으로 건너뛰기</a>
+<header class="site-header wide"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span><span>Lullaby Scene</span></a><div class="header-actions"><nav class="nav"><a href="/player/" data-i18n="navPlayer">웹 플레이어</a><a href="/download/" data-i18n="navDownload">다운로드</a></nav><button class="language-toggle top-language" type="button">EN</button></div></header>
+<main id="main">
+  <section class="hero"><div class="hero-copy"><p class="eyebrow" data-i18n="heroEyebrow">A living place to fall asleep in</p><h1 data-i18n="heroTitle">잠드는 동안, 장면은 계속 살아있습니다.</h1><p class="hero-lead" data-i18n="heroLead">짧은 루프를 반복하는 대신 시간과 상태, 공간감이 천천히 변하는 수면 사운드스케이프.</p><div class="hero-actions"><a class="button primary" href="/player/" data-i18n="openPlayer">웹 플레이어 열기</a><a class="button ghost" href="/download/" data-i18n="download">다운로드</a></div><p class="microcopy" data-i18n="heroNote">Web Audio · PWA · Android</p></div><div class="scene-orb" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="wave wave-a"></div><div class="wave wave-b"></div><div class="orb-label">LULLABY<br>SCENE</div></div></section>
+  <section class="section"><div class="landing-split"><article class="landing-card"><p class="eyebrow" data-i18n="journeyEyebrow">Sleep Journeys</p><h3 data-i18n="journeyTitle">잠을 하나의 여정처럼.</h3><p data-i18n="journeyBody">이륙과 순항, 하강처럼 시간에 의미가 있는 장면은 사용자가 정한 전체 수면 시간 안에서 실제 순서대로 진행됩니다.</p><a class="button primary" href="/player/?scene=journey" data-i18n="openPlayer">웹 플레이어 열기</a></article><article class="landing-card"><p class="eyebrow" data-i18n="simpleEyebrow">Simple Scenes</p><h3 data-i18n="simpleTitle">고르고 바로 잠드는 심플 씬.</h3><p data-i18n="simpleBody">Rainy Cafe, Forest Night처럼 여러 환경음을 미리 조합한 장면은 복잡한 시간표 없이 바로 재생할 수 있습니다.</p><a class="button ghost" href="/player/?scene=simple" data-i18n="openPlayer">웹 플레이어 열기</a></article></div></section>
+  <section class="section platform"><div><p class="eyebrow" data-i18n="playerEyebrow">Web Player</p><h2 data-i18n="playerTitle">브라우저에서도 바로 재생.</h2><p data-i18n="playerBody">모바일은 Android 앱의 흐름을 따르고, PC는 씬·타임라인·믹서를 한 화면에서 보기 쉽게 배치했습니다.</p></div><div class="platform-actions"><a class="button primary" href="/player/" data-i18n="openPlayer">웹 플레이어 열기</a><a class="button ghost" href="/download/" data-i18n="navDownload">다운로드</a></div></section>
+</main>
+<footer class="site-footer compact-footer"><div><strong>Lullaby Scene</strong><p data-i18n="footer">Living soundscapes for sleep.</p></div><div class="footer-links"><a href="/privacy/" data-i18n="privacy">개인정보 처리방침</a><a href="/terms/" data-i18n="terms">이용약관</a><a href="https://github.com/scenesua/Lullaby-scene" rel="noopener">GitHub</a></div><p class="copyright">© <span data-year></span> Lullaby Scene</p></footer>
+<script src="/site.js" defer></script>
+</body></html>
