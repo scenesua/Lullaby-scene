@@ -9,6 +9,9 @@ on:
       - 'web/visitor-count-v1.js'
       - 'web/sw.js'
       - '.github/workflows/production-web-smoke.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/production-web-smoke.yml'
 
 permissions:
   contents: read
@@ -18,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Wait for Cloudflare production and verify visitor v5
+      - name: Verify live production serves visitor v5
         shell: bash
         run: |
           set -euo pipefail
@@ -43,4 +46,4 @@ jobs:
             head -n 20 /tmp/visitor.js 2>/dev/null >&2 || true
             exit 1
           fi
-          echo 'Production is serving visitor counter v5.'
+          echo 'Production lullabyscene.com is serving visitor counter v5.'
