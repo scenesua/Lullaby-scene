@@ -42,6 +42,7 @@ object Commands {
     const val EXTRA_FX_WARMTH = "fx_warmth"
     const val EXTRA_FX_AIR = "fx_air"
     const val EXTRA_FX_BODY = "fx_body"
+    const val EXTRA_FX_SPACE = "fx_space"
     const val EXTRA_FX_GLUE = "fx_glue"
     const val EXTRA_FX_LOUDNESS = "fx_loudness"
     const val EXTRA_SCENE_ID = "scene_id"
@@ -99,6 +100,7 @@ object Commands {
             putFloat(EXTRA_FX_WARMTH, fx.warmth)
             putFloat(EXTRA_FX_AIR, fx.air)
             putFloat(EXTRA_FX_BODY, fx.body)
+            putFloat(EXTRA_FX_SPACE, fx.space)
             putFloat(EXTRA_FX_GLUE, fx.glue)
             putFloat(EXTRA_FX_LOUDNESS, fx.loudness)
         })
@@ -109,6 +111,7 @@ object Commands {
         warmth = args.getFloat(EXTRA_FX_WARMTH, 0f),
         air = args.getFloat(EXTRA_FX_AIR, 0f),
         body = args.getFloat(EXTRA_FX_BODY, 0f),
+        space = args.getFloat(EXTRA_FX_SPACE, 0f),
         glue = args.getFloat(EXTRA_FX_GLUE, 0f),
         loudness = args.getFloat(EXTRA_FX_LOUDNESS, 0f),
     ).normalized()
