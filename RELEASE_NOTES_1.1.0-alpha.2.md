@@ -10,7 +10,8 @@
 - 수면을 방해할 수 있는 랜덤 이벤트는 잠들기 직전과 초기 수면에 몰리지 않도록 보호 구간과 긴 재발 간격을 적용하고, 작은 기내 움직임도 강한 이벤트 주변에 겹치지 않도록 조정했습니다.
 - 엔진 존재감, 기내 활동감, 난기류, 밤의 깊이를 조절하는 Semantic Macro Control을 추가했습니다.
 - 엔진의 거리감이 음량과 고역 감쇠에 함께 반영되고, 비행 단계와 랜덤 이벤트가 내부 공간·톤 처리에 자연스럽게 반영됩니다.
-- 앱 실행 후 GitHub Releases의 새 안정 버전을 자동으로 확인하고, 설정 화면에서도 직접 업데이트를 확인할 수 있도록 했습니다.
+- 앱 실행 후 GitHub Releases에서 업데이트를 자동 확인하고, 설정 화면에서도 직접 업데이트를 확인할 수 있도록 했습니다.
+- 업데이트 설정에 `프리릴리즈도 확인` 토글을 추가했습니다. 기본값은 꺼짐이며, 켜면 정식 버전뿐 아니라 alpha·beta·RC 빌드도 새 버전으로 확인합니다.
 - 새 버전이 있으면 릴리즈 노트를 확인한 뒤 APK를 내려받아 검증하고 Android 설치 화면으로 이어갈 수 있으며, 알림을 24시간 숨길 수도 있습니다.
 
 ## 참고
@@ -18,7 +19,7 @@
 - 현재 포함된 실제 항공기 음원은 사용자가 제공한 기내 녹음을 가공한 베드입니다. 전용 이륙·착륙·좌석벨트 차임·기장/승무원 안내 녹음은 아직 포함하지 않았으며, 해당 단계는 현재 상태 변화와 내부 DSP로 표현됩니다.
 - 기존 믹서, 프리셋, 백그라운드 재생, 취침 타이머, EQ 및 음원별 볼륨 조절은 계속 사용할 수 있습니다.
 - 현재 내부 공간 처리는 거리·음량·고역 감쇠 중심의 첫 구현이며, 완전한 HRTF/바이노럴 공간 렌더러는 아닙니다.
-- 업데이트 확인은 안정 릴리즈 채널을 기준으로 하므로 프리릴리즈끼리는 자동 업데이트 대상으로 표시되지 않습니다.
+- `프리릴리즈도 확인`을 끄면 기존처럼 안정 릴리즈만 확인합니다.
 - 이번 APK는 테스트용 서명으로 빌드된 프리릴리즈입니다.
 
 ---
@@ -33,15 +34,16 @@
 - Random events that may disturb sleep now use protected sleep-onset windows and long recurrence gaps, while smaller cabin events are prevented from clustering around disruptive events.
 - Added semantic controls for engine presence, cabin activity, turbulence, and night depth.
 - Added internal spatial/tone processing so engine distance changes both level and high-frequency detail, with flight phases and random events temporarily shaping the same acoustic model.
-- Added an automatic stable-release check through GitHub Releases after launch, plus a manual update check in Settings.
-- When a newer stable version is available, the app can show release notes, download and verify the APK, hand it to Android's installer, and suppress the prompt for 24 hours.
+- Added automatic GitHub Releases update checks plus a manual check in Settings.
+- Added a `Check prereleases too` toggle. It is off by default; when enabled, alpha, beta, and release-candidate builds are included alongside stable releases.
+- When a newer selected-channel version is available, the app can show release notes, download and verify the APK, hand it to Android's installer, and suppress the prompt for 24 hours.
 
 ## Notes
 
 - The currently packaged aircraft audio is a processed bed made from the user-provided cabin recording. Dedicated takeoff, landing, seat-belt chime, and captain/cabin-crew recordings are not packaged yet; those phases currently use state and DSP changes.
 - The existing mixer, presets, background playback, sleep timer, EQ, and per-source volume controls remain available.
 - The current internal spatial processing is the first distance/tone implementation and is not yet a full HRTF/binaural renderer.
-- Update checks follow the stable release channel, so prereleases do not automatically update one another.
+- With `Check prereleases too` disabled, update checks remain stable-only.
 - This APK is a prerelease build signed with the current test signing configuration.
 
 ---
@@ -56,13 +58,14 @@
 - 睡眠を妨げる可能性のあるランダムイベントは入眠前後と初期睡眠に集中しないよう保護時間と長い再発間隔を設け、小さな機内イベントも強いイベントの前後に重ならないようにしました。
 - エンジンの存在感、機内の活動感、揺れ、夜の深さを調整する Semantic Macro Control を追加しました。
 - エンジンの距離が音量と高域の減衰の両方に反映され、飛行段階やランダムイベントも内部空間・トーン処理へ一時的に反映されます。
-- 起動後に GitHub Releases の新しい安定版を自動確認し、設定画面から手動でも更新を確認できるようにしました。
-- 新しい安定版がある場合はリリースノートを確認し、APK をダウンロード・検証して Android のインストール画面へ進めます。通知は24時間非表示にもできます。
+- GitHub Releases の自動更新確認と、設定画面からの手動確認を追加しました。
+- `プレリリースも確認` トグルを追加しました。初期状態はオフで、オンにすると安定版に加えて alpha・beta・RC ビルドも更新対象として確認します。
+- 新しい対象バージョンがある場合はリリースノートを確認し、APK をダウンロード・検証して Android のインストール画面へ進めます。通知は24時間非表示にもできます。
 
 ## 備考
 
 - 現在収録されている航空機音源は、ユーザー提供の機内録音を加工したベッドです。離陸・着陸・シートベルトチャイム・機長／客室乗務員アナウンス専用の録音はまだ収録しておらず、現段階では状態変化と内部 DSP で表現します。
 - 従来のミキサー、プリセット、バックグラウンド再生、スリープタイマー、EQ、音源ごとのボリューム調整は引き続き利用できます。
 - 現在の内部空間処理は距離・音量・高域減衰を中心とした最初の実装で、完全な HRTF／バイノーラルレンダラーではありません。
-- 更新確認は安定版リリースチャンネルを対象とするため、プレリリース同士は自動更新対象として表示されません。
+- `プレリリースも確認` がオフの場合は、従来どおり安定版のみを確認します。
 - この APK は現在のテスト用署名設定でビルドされたプレリリースです。
