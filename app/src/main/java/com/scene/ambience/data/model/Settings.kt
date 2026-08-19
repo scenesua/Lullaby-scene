@@ -22,6 +22,7 @@ data class FxSettings(
     val warmth: Float = 0f,
     val air: Float = 0f,
     val body: Float = 0f,
+    val space: Float = 0f,
     val glue: Float = 0f,
     val loudness: Float = 0f,
 ) {
@@ -29,6 +30,7 @@ data class FxSettings(
         warmth = warmth.coerceIn(0f, 1f),
         air = air.coerceIn(0f, 1f),
         body = body.coerceIn(0f, 1f),
+        space = space.coerceIn(0f, 1f),
         glue = glue.coerceIn(0f, 1f),
         loudness = loudness.coerceIn(0f, 1f),
     )
