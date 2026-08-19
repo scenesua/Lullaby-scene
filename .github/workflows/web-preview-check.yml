@@ -21,17 +21,19 @@ jobs:
         with:
           node-version: '22'
       - name: Check JavaScript syntax
-        run: node --check web/player-v2.js && node --check web/sw.js
+        run: node --check web/player-v2.js && node --check web/duration-input.js && node --check web/sw.js
       - name: Check required web files
         run: |
           test -s web/index.html
           test -s web/styles.css
           test -s web/player-v2.css
           test -s web/player-v2.js
+          test -s web/duration-input.js
           test -s web/mixer-sources.json
           test -s web/manifest.webmanifest
           test -s web/_headers
           grep -q 'player-v2.js' web/index.html
+          grep -q 'duration-input.js' web/index.html
           grep -q "media-src 'self' blob:" web/_headers
       - name: Validate full mixer catalog
         run: |
@@ -47,6 +49,11 @@ jobs:
           const ids=new Set(data.sources.map(s=>s.id));
           for(const id of required) if(!ids.has(id)) throw new Error(`catalog missing ${id}`);
           NODE
+      - name: Validate direct duration limits
+        run: |
+          grep -q 'MIN_MINUTES=240' web/duration-input.js
+          grep -q 'MAX_MINUTES=720' web/duration-input.js
+          grep -q '04:00~12:00' web/duration-input.js
       - name: Validate aircraft payload
         run: |
           test -s web/audio/aircraft.part00
