@@ -31,10 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.scene.ambience.R
+import com.scene.ambience.media.AircraftJourneyTimelineBuilder
 import com.scene.ambience.media.SceneOrchestrator
 import com.scene.ambience.presentation.AmbienceUiState
 import com.scene.ambience.presentation.AmbienceViewModel
 import com.scene.ambience.ui.AmbienceStrings
+import kotlin.math.roundToInt
 
 @Composable
 fun ScenesScreen(
@@ -46,10 +48,14 @@ fun ScenesScreen(
     val scene = state.scene
     val active = scene.sceneId == SceneOrchestrator.PASSENGER_AIRCRAFT
     val available = state.library.manifestFor(SceneOrchestrator.SOURCE_AIRCRAFT) != null
-    var selectedArc by remember { mutableIntStateOf(if (scene.arcMinutes in listOf(0, 30, 60, 120)) scene.arcMinutes else 60) }
+    var selectedDuration by remember {
+        mutableIntStateOf(
+            if (active) scene.totalDurationMinutes else 480
+        )
+    }
 
-    LaunchedEffect(scene.arcMinutes, active) {
-        if (active) selectedArc = scene.arcMinutes
+    LaunchedEffect(scene.totalDurationMinutes, active) {
+        if (active) selectedDuration = scene.totalDurationMinutes
     }
 
     LazyColumn(
@@ -99,10 +105,15 @@ fun ScenesScreen(
                             color = MaterialTheme.colorScheme.error,
                         )
                     } else if (!active) {
-                        Text(context.getString(R.string.scene_arc_title), style = MaterialTheme.typography.titleSmall)
-                        ArcSelector(selectedArc) { selectedArc = it }
+                        Text(context.getString(R.string.scene_duration_title), style = MaterialTheme.typography.titleSmall)
+                        DurationSelector(selectedDuration) { selectedDuration = it }
+                        Text(
+                            context.getString(R.string.scene_duration_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                         Button(
-                            onClick = { viewModel.startPassengerAircraftScene(selectedArc) },
+                            onClick = { viewModel.startPassengerAircraftScene(selectedDuration) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(context.getString(R.string.scene_start))
@@ -126,17 +137,49 @@ fun ScenesScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
+                                Text(
+                                    text = context.getString(
+                                        R.string.scene_remaining,
+                                        AmbienceStrings.formatCountdown(scene.remainingMs),
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
                             }
                             OutlinedButton(onClick = viewModel::stopScene) {
                                 Text(context.getString(R.string.scene_end))
                             }
                         }
 
-                        Text(context.getString(R.string.scene_arc_title), style = MaterialTheme.typography.titleSmall)
-                        ArcSelector(selectedArc) { minutes ->
-                            selectedArc = minutes
-                            viewModel.setSceneArc(minutes)
+                        Text(
+                            text = context.getString(
+                                if (scene.seatbeltSignOn) R.string.scene_seatbelt_on else R.string.scene_seatbelt_off
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (scene.seatbeltSignOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        scene.activeEventId?.let { eventId ->
+                            Text(
+                                text = when (eventId) {
+                                    AircraftJourneyTimelineBuilder.EVENT_TURBULENCE -> context.getString(R.string.scene_event_turbulence)
+                                    AircraftJourneyTimelineBuilder.EVENT_CABIN_ACTIVITY -> context.getString(R.string.scene_event_cabin)
+                                    else -> eventId
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.tertiary,
+                            )
                         }
+
+                        Text(context.getString(R.string.scene_duration_title), style = MaterialTheme.typography.titleSmall)
+                        DurationSelector(selectedDuration) { minutes ->
+                            selectedDuration = minutes
+                            viewModel.setSceneDuration(minutes)
+                        }
+                        Text(
+                            context.getString(R.string.scene_duration_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
 
                         Spacer(Modifier.height(2.dp))
                         Text(context.getString(R.string.scene_macros_title), style = MaterialTheme.typography.titleMedium)
@@ -177,16 +220,45 @@ fun ScenesScreen(
 }
 
 @Composable
-private fun ArcSelector(selected: Int, onSelect: (Int) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf(0, 30, 60, 120).forEach { minutes ->
-            FilterChip(
-                selected = selected == minutes,
-                onClick = { onSelect(minutes) },
-                label = { Text(if (minutes == 0) "∞" else "${minutes}m") },
-            )
+private fun DurationSelector(selectedMinutes: Int, onSelect: (Int) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(360, 480, 600).forEach { minutes ->
+                FilterChip(
+                    selected = selectedMinutes == minutes,
+                    onClick = { onSelect(minutes) },
+                    label = { Text(formatDuration(minutes)) },
+                )
+            }
         }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text("4h", style = MaterialTheme.typography.labelSmall)
+            Text(formatDuration(selectedMinutes), style = MaterialTheme.typography.titleSmall)
+            Text("12h", style = MaterialTheme.typography.labelSmall)
+        }
+        Slider(
+            value = selectedMinutes.toFloat(),
+            onValueChange = { raw ->
+                val rounded = ((raw / 30f).roundToInt() * 30)
+                    .coerceIn(
+                        AircraftJourneyTimelineBuilder.MIN_DURATION_MINUTES,
+                        AircraftJourneyTimelineBuilder.MAX_DURATION_MINUTES,
+                    )
+                onSelect(rounded)
+            },
+            valueRange = AircraftJourneyTimelineBuilder.MIN_DURATION_MINUTES.toFloat()..AircraftJourneyTimelineBuilder.MAX_DURATION_MINUTES.toFloat(),
+            steps = 15,
+        )
     }
+}
+
+private fun formatDuration(minutes: Int): String {
+    val hours = minutes / 60
+    val remainder = minutes % 60
+    return if (remainder == 0) "${hours}h" else "${hours}h ${remainder}m"
 }
 
 @Composable
@@ -211,9 +283,13 @@ private fun MacroSlider(
 }
 
 private fun sceneStateLabel(id: String?, context: android.content.Context): String = when (id) {
-    SceneOrchestrator.STATE_SETTLING -> context.getString(R.string.scene_state_settling)
+    SceneOrchestrator.STATE_TAXI_OUT -> context.getString(R.string.scene_state_taxi_out)
+    SceneOrchestrator.STATE_TAKEOFF -> context.getString(R.string.scene_state_takeoff)
+    SceneOrchestrator.STATE_CLIMB -> context.getString(R.string.scene_state_climb)
     SceneOrchestrator.STATE_CRUISE -> context.getString(R.string.scene_state_cruise)
-    SceneOrchestrator.STATE_DROWSY -> context.getString(R.string.scene_state_drowsy)
-    SceneOrchestrator.STATE_DEEP_NIGHT -> context.getString(R.string.scene_state_deep_night)
+    SceneOrchestrator.STATE_DESCENT -> context.getString(R.string.scene_state_descent)
+    SceneOrchestrator.STATE_APPROACH -> context.getString(R.string.scene_state_approach)
+    SceneOrchestrator.STATE_TAXI_IN -> context.getString(R.string.scene_state_taxi_in)
+    SceneOrchestrator.STATE_ARRIVED -> context.getString(R.string.scene_state_arrived)
     else -> context.getString(R.string.scene_state_cruise)
 }
