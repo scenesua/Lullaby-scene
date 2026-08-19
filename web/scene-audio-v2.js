@@ -4,11 +4,14 @@
   const playButton=document.getElementById('scenePlay');
   if(playButton&&originalStartScene)playButton.removeEventListener('click',originalStartScene);
 
+  let taxiNode=null;
+  let audiblePhase='Ready';
+
   /**
-   * Passenger Aircraft Cabin deliberately uses only the verified stereo field
-   * recording as its audible bed. The previous short-delay stereo return and
-   * extra ventilation layer could create comb-filter/whistling artefacts on a
-   * broadband aircraft recording, so both are removed from the journey path.
+   * Cruise/flight keeps the current 853735-derived bed for now. Taxi out/in use
+   * the separate 627056 field recording. This keeps the old 105 s processed loop
+   * completely silent during taxi and avoids using its long overlap as a fake
+   * "event". 627056 receives no aircraft whistle-notch bank or widening.
    */
   const baseEnsureSceneNode=ensureSceneNode;
   ensureSceneNode=async function(){
@@ -33,11 +36,32 @@
     return sceneNode;
   };
 
+  async function ensureTaxiNode(){
+    if(taxiNode)return taxiNode;
+    if(typeof getAircraftTaxiUrl!=='function')throw new Error('Aircraft taxi source unavailable');
+    await ensureContext();
+    taxiNode=makeMediaNode(await getAircraftTaxiUrl());
+    taxiNode.el.loop=true;
+    taxiNode.el.preload='auto';
+    taxiNode.filter.Q.value=.08;
+    taxiNode.filter.frequency.value=20000;
+    taxiNode.gain.gain.value=0;
+    return taxiNode;
+  }
+
+  async function ensureJourneyNodes(){
+    await Promise.all([ensureSceneNode(),ensureTaxiNode()]);
+    return{cruise:sceneNode,taxi:taxiNode};
+  }
+
+  function isTaxiPhase(phase){return phase==='Taxi out'||phase==='Taxi in'}
+
   updateSceneAudio=function(ms){
-    if(!sceneNode||!ctx)return;
+    if(!sceneNode||!taxiNode||!ctx)return;
     const total=Math.max(60000,durationMinutes*60000);
     const [phase]=phaseFor(ms,total);
     const event=activeSceneEvent(ms);
+    audiblePhase=phase;
     const phaseDirect={
       'Taxi out':.50,
       Takeoff:.61,
@@ -53,18 +77,23 @@
     const cabinLift=event?.type==='cabin'?.006*macro.activity:0;
     const presence=.88+macro.engine*.18;
     const direct=Math.max(0,phaseDirect*presence+turbulenceLift+cabinLift);
-    sceneNode.gain.gain.setTargetAtTime(direct,ctx.currentTime,.9);
+    const taxi=isTaxiPhase(phase);
 
-    // The narrow guards remove the stable tonal ridges, so keep the remaining
-    // top end substantially more open than the earlier emergency low-pass.
+    // Only phase transitions overlap the two beds. A 250 ms WebAudio time
+    // constant settles in roughly one second; there is no repeating long
+    // two-copy blend inside Taxi itself.
+    sceneNode.gain.gain.setTargetAtTime(taxi?0:direct,ctx.currentTime,.25);
+    taxiNode.gain.gain.setTargetAtTime(taxi?Math.max(0,phaseDirect*(.90+macro.engine*.10)):0,ctx.currentTime,.25);
+
     const cutoff=Math.max(16500,18800-(macro.night*1100)-((1-macro.engine)*450));
     sceneNode.filter.frequency.setTargetAtTime(cutoff,ctx.currentTime,1.5);
+    taxiNode.filter.frequency.setTargetAtTime(Math.max(18000,20000-(macro.night*450)),ctx.currentTime,1.5);
   };
 
   pauseScene=function(){
     if(!scenePlaying)return;
     pausedAt=currentElapsed();scenePlaying=false;
-    sceneNode?.el.pause();
+    sceneNode?.el.pause();taxiNode?.el.pause();
     clearInterval(sceneTimer);
     if(playButton)playButton.textContent=window.LullabyI18n?.language==='en'?'▶ Resume':'▶ 계속 재생';
     setStatus(window.LullabyI18n?.language==='en'?'Paused':'일시정지됨');updateNowPlaying();
@@ -72,7 +101,8 @@
 
   stopScene=function(arrived=false){
     scenePlaying=false;pausedAt=0;clearInterval(sceneTimer);
-    if(sceneNode){sceneNode.el.pause();try{sceneNode.el.currentTime=0}catch{};sceneNode.gain.gain.value=.5}
+    for(const node of [sceneNode,taxiNode])if(node){node.el.pause();try{node.el.currentTime=0}catch{};node.gain.gain.value=0}
+    audiblePhase=arrived?'Arrived':'Ready';
     if(playButton)playButton.textContent=window.LullabyI18n?.language==='en'?'▶ Start journey':'▶ 장면 시작';
     const phase=document.getElementById('phaseLabel'),elapsed=document.getElementById('elapsedLabel'),remaining=document.getElementById('remainingLabel'),belt=document.getElementById('seatbeltLabel'),progress=document.getElementById('journeyProgress'),event=document.getElementById('eventLabel');
     if(phase)phase.textContent=arrived?'Arrived':'Ready';if(elapsed)elapsed.textContent='00:00';if(remaining)remaining.textContent=fmt(durationMinutes*60000);if(belt)belt.textContent='—';if(progress)progress.style.width='0';if(event)event.textContent='None';
@@ -82,21 +112,23 @@
 
   startScene=async function(){
     try{
-      await ensureSceneNode();
+      await ensureJourneyNodes();
       if(scenePlaying){pauseScene();return}
       sceneStartedAt=performance.now();scenePlaying=true;
-      await sceneNode.el.play();
+      // Both elements start under the same user gesture. Routing is done only
+      // with gain nodes, so seeking across a phase does not incur a new load.
+      await Promise.all([sceneNode.el.play(),taxiNode.el.play()]);
       updateSceneAudio(currentElapsed());
       if(playButton)playButton.textContent=window.LullabyI18n?.language==='en'?'Ⅱ Pause':'Ⅱ 일시정지';
       setStatus(window.LullabyI18n?.language==='en'?'Passenger Aircraft Cabin playing':'Passenger Aircraft Cabin 재생 중');
       clearInterval(sceneTimer);sceneTimer=setInterval(updateSceneUi,1000);updateSceneUi();
-    }catch(err){console.error(err);scenePlaying=false;setStatus(window.LullabyI18n?.language==='en'?'Could not start Aircraft audio. Reload and try again.':'Aircraft 오디오를 시작하지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.')}
+    }catch(err){console.error(err);scenePlaying=false;sceneNode?.el.pause();taxiNode?.el.pause();setStatus(window.LullabyI18n?.language==='en'?'Could not start Aircraft audio. Reload and try again.':'Aircraft 오디오를 시작하지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.')}
   };
   if(playButton)playButton.addEventListener('click',startScene);
 
   function seekSceneToMs(value){
     const total=Math.max(60000,durationMinutes*60000);
-    const target=Math.max(0,Math.min(total-1,Math.round(Number(value)||0)));
+    const target=Math.max(0,Math.min(total-1,Math.round(Number(value)||0));
     pausedAt=target;
     if(scenePlaying)sceneStartedAt=performance.now();
     updateSceneUi();
@@ -177,4 +209,12 @@
   bindJourneySeek();ensurePhaseButtons();
   document.addEventListener('lullaby-language-changed',()=>{const track=document.querySelector('.journey-track');if(track)track.setAttribute('aria-label',window.LullabyI18n?.language==='en'?'Journey position':'여정 위치');localizePhaseButtons();syncJourneySeekAria()});
   window.LullabyJourneyRuntime={seekToMs:seekSceneToMs,previousPhase:()=>stepScenePhase(-1),nextPhase:()=>stepScenePhase(1),get elapsedMs(){return currentElapsed()},get totalMs(){return durationMinutes*60000}};
+  window.LullabyJourneyAudio={
+    get phase(){return audiblePhase},
+    get taxiReady(){return!!taxiNode},
+    get taxiUrl(){return taxiNode?.url||window.LullabyAircraftTaxiSource?.url||null},
+    get cruiseUrl(){return sceneNode?.url||window.LullabyAircraftSource?.url||null},
+    get taxiGain(){return taxiNode?.gain?.gain?.value??0},
+    get cruiseGain(){return sceneNode?.gain?.gain?.value??0},
+  };
 })();
