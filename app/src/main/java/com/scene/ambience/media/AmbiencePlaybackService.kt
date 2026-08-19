@@ -179,6 +179,7 @@ class AmbiencePlaybackService : MediaSessionService() {
                 sceneOrchestrator.setMacro(key, args.getFloat(Commands.EXTRA_MACRO_VALUE, 0.5f))
             }
             Commands.SET_SCENE_ARC -> sceneOrchestrator.setDurationMinutes(args.getInt(Commands.EXTRA_ARC_MINUTES, 480))
+            Commands.SEEK_SCENE -> sceneOrchestrator.seekToElapsedMs(args.getLong(Commands.EXTRA_ELAPSED_MS, 0L))
             else -> return SessionResult(SessionResult.RESULT_ERROR_UNKNOWN)
         }
         return SessionResult(SessionResult.RESULT_SUCCESS)
