@@ -1,7 +1,9 @@
 package com.scene.ambience.data.model
 
-import android.net.Uri
-import android.util.Base64
+import java.net.URI
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -97,29 +99,32 @@ object SceneRecipeCodec {
     fun encode(recipe: SceneRecipeV1): String {
         require(recipe.schema == SCENE_RECIPE_SCHEMA && recipe.version == SCENE_RECIPE_VERSION)
         val raw = json.encodeToString(SceneRecipeV1.serializer(), sanitize(recipe))
-        return Base64.encodeToString(raw.toByteArray(Charsets.UTF_8), Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.toByteArray(Charsets.UTF_8))
     }
 
     fun decode(encoded: String): SceneRecipeV1? = runCatching {
-        val raw = String(
-            Base64.decode(encoded, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING),
-            Charsets.UTF_8,
-        )
+        val raw = String(Base64.getUrlDecoder().decode(encoded), Charsets.UTF_8)
         val recipe = json.decodeFromString(SceneRecipeV1.serializer(), raw)
         require(recipe.schema == SCENE_RECIPE_SCHEMA && recipe.version == SCENE_RECIPE_VERSION)
         sanitize(recipe)
     }.getOrNull()
 
-    fun toShareUrl(recipe: SceneRecipeV1): String = Uri.parse(SCENE_RECIPE_BASE_URL)
-        .buildUpon()
-        .appendQueryParameter("scene", "simple")
-        .appendQueryParameter("recipe", encode(recipe))
-        .build()
-        .toString()
+    fun toShareUrl(recipe: SceneRecipeV1): String =
+        "$SCENE_RECIPE_BASE_URL?scene=simple&recipe=${encode(recipe)}"
 
     fun fromUrl(url: String?): SceneRecipeV1? {
         if (url.isNullOrBlank()) return null
-        val encoded = runCatching { Uri.parse(url).getQueryParameter("recipe") }.getOrNull() ?: return null
+        val query = runCatching { URI(url).rawQuery }.getOrNull() ?: return null
+        val encoded = query.split('&')
+            .asSequence()
+            .mapNotNull { part ->
+                val split = part.split('=', limit = 2)
+                if (split.size != 2) null else split[0] to split[1]
+            }
+            .firstOrNull { (key, _) -> key == "recipe" }
+            ?.second
+            ?.let { URLDecoder.decode(it, StandardCharsets.UTF_8.name()) }
+            ?: return null
         return decode(encoded)
     }
 
