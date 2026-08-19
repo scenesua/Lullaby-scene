@@ -16,6 +16,8 @@ import com.scene.ambience.data.model.EqSettings
 import com.scene.ambience.data.model.FocusPolicy
 import com.scene.ambience.data.model.FxSettings
 import com.scene.ambience.data.model.MixState
+import com.scene.ambience.data.model.SceneRecipeCodec
+import com.scene.ambience.data.model.SceneRecipeV1
 import com.scene.ambience.data.model.SceneRuntimeSnapshot
 import com.scene.ambience.data.model.SoundLibraryState
 import com.scene.ambience.data.model.ThemeMode
@@ -30,6 +32,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -210,6 +214,29 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
             )
             _events.tryEmit(AmbienceUiEvent.ShowMessage("preset_saved:${preset.id}"))
         }
+    }
+
+    fun currentSceneShareUrl(name: String = "Shared Scene"): String? {
+        val snapshot = uiState.value.snapshot ?: return null
+        val recipe = SceneRecipeCodec.fromSnapshot(snapshot, uiState.value.fxSettings, name)
+        return SceneRecipeCodec.toShareUrl(recipe)
+    }
+
+    fun importSceneRecipeUrl(url: String?) {
+        val recipe = SceneRecipeCodec.fromUrl(url) ?: return
+        viewModelScope.launch {
+            controllerRepository.connected.filter { it }.first()
+            applySceneRecipe(recipe)
+        }
+    }
+
+    private fun applySceneRecipe(recipe: SceneRecipeV1) {
+        if (uiState.value.scene.active) controllerRepository.stopScene()
+        val mix = SceneRecipeCodec.toMixState(recipe)
+        controllerRepository.applyMix(json.encodeToString(MixState.serializer(), mix), null)
+        setFxSettings(SceneRecipeCodec.toFxSettings(recipe, uiState.value.fxSettings))
+        controllerRepository.play()
+        _events.tryEmit(AmbienceUiEvent.ShowMessage("scene_recipe_imported"))
     }
 
     fun renamePreset(id: String, newName: String) {
