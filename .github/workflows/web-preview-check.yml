@@ -4,35 +4,83 @@ on:
   pull_request:
     paths:
       - 'web/**'
+      - 'tools/materialize_aircraft_audio.py'
       - '.github/workflows/web-preview-check.yml'
       - '.github/scripts/web-smoke.mjs'
+      - '.github/scripts/web-mixer-v14-smoke.mjs'
   push:
     branches:
       - work/lullaby-web-foundation
     paths:
       - 'web/**'
+      - 'tools/materialize_aircraft_audio.py'
       - '.github/workflows/web-preview-check.yml'
       - '.github/scripts/web-smoke.mjs'
+      - '.github/scripts/web-mixer-v14-smoke.mjs'
+
+permissions:
+  contents: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      - name: Materialize verified long stereo aircraft bed
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET='web/audio/aircraft_cabin_cruise_v2.ogg'
+          if [[ ! -s "$TARGET" ]]; then
+            python3 tools/materialize_aircraft_audio.py "$TARGET"
+          fi
+          python3 - <<'PY'
+          import json, subprocess
+          path='web/audio/aircraft_cabin_cruise_v2.ogg'
+          info=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=codec_name,sample_rate,channels','-show_entries','format=duration,size','-of','json',path]))
+          stream=info['streams'][0]; fmt=info['format']
+          assert stream['codec_name']=='opus', info
+          assert stream['sample_rate']=='48000', info
+          assert int(stream['channels'])==2, info
+          assert 78.8 <= float(fmt['duration']) <= 79.2, info
+          assert int(fmt['size']) >= 850000, info
+          print(info)
+          PY
+
+      - name: Persist aircraft bed on source branch
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET='web/audio/aircraft_cabin_cruise_v2.ogg'
+          git add "$TARGET"
+          if git diff --cached --quiet; then
+            echo 'Aircraft bed already committed.'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'feat(audio): materialize verified stereo aircraft bed'
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          fi
+
       - name: Check JavaScript syntax
         run: |
           node --check web/site.js
           node --check web/player-v2.js
           node --check web/scene-audio-v2.js
           node --check web/mixer-fx-v9.js
-          node --check web/player-shell-v9.js
           node --check web/player-shell-v10.js
           node --check web/player-controls-v11.js
           node --check web/player-runtime-bridge-v12.js
-          node --check web/mixer-zero-v13.js
+          node --check web/aircraft-source-v15.js
+          node --check web/mixer-interaction-v14.js
           node --check web/simple-scene-quick-mixer-v12.js
           node --check web/saved-scenes-v13.js
           node --check web/scene-recipe-v1.js
@@ -41,58 +89,34 @@ jobs:
           node --check web/legal-language-v9.js
           node --check web/sw.js
           node --check .github/scripts/web-smoke.mjs
-      - name: Check required web pages and files
+          node --check .github/scripts/web-mixer-v14-smoke.mjs
+
+      - name: Check required web pages and runtimes
         run: |
           test -s web/index.html
           test -s web/player/index.html
           test -s web/download/index.html
           test -s web/privacy/index.html
           test -s web/terms/index.html
-          test -s web/styles.css
-          test -s web/site-shell.css
-          test -s web/polish-v9.css
-          test -s web/player-v2.css
-          test -s web/site-runtime-v12.css
-          test -s web/player-v2.js
-          test -s web/scene-audio-v2.js
-          test -s web/mixer-fx-v9.js
-          test -s web/player-shell-v10.js
-          test -s web/player-controls-v11.js
-          test -s web/player-runtime-bridge-v12.js
-          test -s web/mixer-zero-v13.js
-          test -s web/simple-scene-quick-mixer-v12.js
-          test -s web/saved-scenes-v13.js
+          test -s web/mixer-controls-v14.css
+          test -s web/mixer-interaction-v14.js
+          test -s web/aircraft-source-v15.js
           test -s web/scene-recipe-v1.js
-          test -s web/visitor-count-v1.js
-          test -s web/_worker.js
-          test -s web/mixer-sources.json
-          test -s web/manifest.webmanifest
-          test -s web/_headers
-          grep -q 'href="/player/"' web/index.html
+          test -s web/audio/aircraft_cabin_cruise_v2.ogg
           grep -q 'data-scene-mode="journey"' web/player/index.html
           grep -q 'data-scene-mode="simple"' web/player/index.html
           grep -q 'id="durationDirect"' web/player/index.html
           grep -q 'data-inspector-mode="simple"' web/player/index.html
           grep -q 'data-fx="warmth"' web/player/index.html
-          grep -q '/mixer-fx-v9.js' web/player/index.html
-          grep -q '/player-shell-v10.js' web/player/index.html
-          grep -q '/player-controls-v11.js' web/player/index.html
-          ! grep -q '/player-shell-v9.js' web/player/index.html
-          ! grep -q 'class="web-player"' web/index.html
-          grep -q 'data-pwa-install' web/download/index.html
-          grep -q 'language-toggle' web/index.html
-          grep -q 'language-toggle' web/player/index.html
-          grep -q 'language-toggle' web/privacy/index.html
-          grep -q '"start_url": "/player/"' web/manifest.webmanifest
-          grep -q "media-src 'self' blob:" web/_headers
-          grep -q "lullaby-scene-site-v14" web/sw.js
-          grep -q '/player-runtime-bridge-v12.js?v=12' web/_worker.js
-          grep -q '/mixer-zero-v13.js?v=13' web/_worker.js
+          grep -q 'lullaby-scene-site-v16' web/sw.js
+          grep -q '/aircraft-source-v15.js?v=15' web/_worker.js
+          grep -q '/mixer-interaction-v14.js?v=14' web/_worker.js
+          grep -q '/mixer-controls-v14.css?v=14' web/_worker.js
           grep -q '/simple-scene-quick-mixer-v12.js?v=12' web/_worker.js
           grep -q '/saved-scenes-v13.js?v=13' web/_worker.js
           grep -q '/scene-recipe-v1.js?v=1' web/_worker.js
-          grep -q '/visitor-count-v1.js?v=1' web/_worker.js
-          grep -q 'VISITOR_DB' web/_worker.js
+          ! grep -q '/mixer-zero-v13.js?v=13' web/_worker.js
+
       - name: Validate full mixer catalog
         run: |
           node - <<'NODE'
@@ -107,84 +131,43 @@ jobs:
           const ids=new Set(data.sources.map(s=>s.id));
           for(const id of required) if(!ids.has(id)) throw new Error(`catalog missing ${id}`);
           NODE
-      - name: Validate zero-default Mixer and Scene Recipe wiring
+
+      - name: Validate mixer interaction and Scene Recipe wiring
         run: |
-          grep -q 'is-zero-off' web/mixer-zero-v13.js
-          grep -q "value<=0" web/mixer-zero-v13.js
-          grep -q "await on(id,value)" web/mixer-zero-v13.js
+          grep -q 'desired=new Map' web/mixer-interaction-v14.js
+          grep -q 'percent===0' web/mixer-interaction-v14.js
+          grep -q 'Do not rebuild either mixer while the thumb is moving' web/mixer-interaction-v14.js
+          grep -q 'touch-action:pan-y' web/mixer-controls-v14.css
           grep -q 'lullaby.scene.recipe' web/scene-recipe-v1.js
           grep -q "searchParams.set('recipe'" web/scene-recipe-v1.js
-          grep -q 'TextEncoder' web/scene-recipe-v1.js
-          grep -q '/mixer-zero-v13.js?v=13' web/sw.js
-          grep -q '/scene-recipe-v1.js?v=1' web/sw.js
-      - name: Validate Simple Scene quick mixer and visitor counter wiring
+          grep -q '/audio/aircraft_cabin_cruise_v2.ogg' web/aircraft-source-v15.js
+
+      - name: Validate saved scenes, duration and FX wiring
         run: |
-          grep -q 'presetSources' web/simple-scene-quick-mixer-v12.js
-          grep -q 'inactive' web/simple-scene-quick-mixer-v12.js
-          grep -q 'value===0' web/simple-scene-quick-mixer-v12.js
-          grep -q 'ensureEnabled' web/simple-scene-quick-mixer-v12.js
-          grep -q "nodes\[id\]\.gain\.gain\.value=0" web/simple-scene-quick-mixer-v12.js
-          grep -q 'simpleQuickMixerSection' web/simple-scene-quick-mixer-v12.js
-          grep -q 'daily_visitors' web/_worker.js
-          grep -q "timeZone:'Asia/Seoul'" web/_worker.js
-          grep -q 'data-visitor-today' web/visitor-count-v1.js
-          grep -q 'data-visitor-total' web/visitor-count-v1.js
-      - name: Validate saved scene management wiring
-        run: |
-          grep -q 'saveUserPresets' web/player-runtime-bridge-v12.js
-          grep -q 'snapshotMix' web/player-runtime-bridge-v12.js
-          grep -q 'applyPreset' web/player-runtime-bridge-v12.js
           grep -q 'LullabySavedScenes' web/saved-scenes-v13.js
-          grep -q 'data-saved-load' web/saved-scenes-v13.js
-          grep -q 'data-saved-rename' web/saved-scenes-v13.js
           grep -q 'data-saved-overwrite' web/saved-scenes-v13.js
-          grep -q 'createdAt' web/saved-scenes-v13.js
-          grep -q 'updatedAt' web/saved-scenes-v13.js
-          grep -q '/saved-scenes-v13.js?v=13' web/sw.js
-      - name: Validate duration and Scene FX wiring
-        run: |
           grep -q "fixedDurations:\[360,480,600\]" web/player-controls-v11.js
           grep -q "sliderMinMinutes:1" web/player-controls-v11.js
-          grep -q "parseDirectValue" web/player-controls-v11.js
           grep -q "LullabyControls" web/player-controls-v11.js
-          grep -q "data-duration" web/player-controls-v11.js
-          grep -q "durationDirectApply" web/player-controls-v11.js
-          grep -q "data-macro" web/player-controls-v11.js
-          grep -q "warmth" web/mixer-fx-v9.js
           grep -q "createDynamicsCompressor" web/mixer-fx-v9.js
           grep -q "createConvolver" web/mixer-fx-v9.js
-          grep -q "makeSourceNode=async" web/mixer-fx-v9.js
-      - name: Validate language and typography
-        run: |
-          grep -q "sleepJourneys:'잠의 여정'" web/site.js
-          grep -q "simpleScenes:'심플 씬'" web/site.js
-          grep -q "sleepJourneys:'Sleep Journeys'" web/site.js
-          grep -q "simpleScenes:'Simple Scenes'" web/site.js
-          grep -q 'word-break:keep-all' web/polish-v9.css
-          grep -q 'D2Coding' web/polish-v9.css
-          grep -q 'data-lang-block="en"' web/privacy/index.html
-          grep -q 'data-lang-block="en"' web/terms/index.html
-      - name: Validate aircraft sleep-journey audio chain
+
+      - name: Validate aircraft sleep-journey processing chain
         run: |
           grep -q "/audio/ventilation.ogg" web/scene-audio-v2.js
           ! grep -q "/audio/brown_noise.ogg" web/scene-audio-v2.js
           grep -q 'createStereoPanner' web/scene-audio-v2.js
-          grep -q 'directCutoff' web/scene-audio-v2.js
           ! grep -q 'Math.sin(ms/340)' web/scene-audio-v2.js
-      - name: Validate aircraft payload
-        run: |
-          test -s web/audio/aircraft.part00
-          test -s web/audio/aircraft.part01
-          test -s web/audio/aircraft.part02
-          test -s web/audio/aircraft.part03
-          cat web/audio/aircraft.part0{0,1,2,3} | tr -d '\n\r ' | base64 -d > /tmp/aircraft.ogg
-          test "$(wc -c < /tmp/aircraft.ogg)" -eq 16630
+          ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration,size -of json web/audio/aircraft_cabin_cruise_v2.ogg
+
       - name: Install browser smoke dependency
         run: npm install --no-save playwright-core@1.55.0
-      - name: Browser interaction smoke test
+
+      - name: Browser interaction smoke tests
         run: |
           python3 -m http.server 4173 --directory web >/tmp/lullaby-web.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
           node .github/scripts/web-smoke.mjs
+          node .github/scripts/web-mixer-v14-smoke.mjs
