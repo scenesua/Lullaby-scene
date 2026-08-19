@@ -32,8 +32,10 @@ jobs:
           node --check web/player-shell-v10.js
           node --check web/player-controls-v11.js
           node --check web/player-runtime-bridge-v12.js
+          node --check web/mixer-zero-v13.js
           node --check web/simple-scene-quick-mixer-v12.js
           node --check web/saved-scenes-v13.js
+          node --check web/scene-recipe-v1.js
           node --check web/visitor-count-v1.js
           node --check web/_worker.js
           node --check web/legal-language-v9.js
@@ -57,8 +59,10 @@ jobs:
           test -s web/player-shell-v10.js
           test -s web/player-controls-v11.js
           test -s web/player-runtime-bridge-v12.js
+          test -s web/mixer-zero-v13.js
           test -s web/simple-scene-quick-mixer-v12.js
           test -s web/saved-scenes-v13.js
+          test -s web/scene-recipe-v1.js
           test -s web/visitor-count-v1.js
           test -s web/_worker.js
           test -s web/mixer-sources.json
@@ -81,10 +85,12 @@ jobs:
           grep -q 'language-toggle' web/privacy/index.html
           grep -q '"start_url": "/player/"' web/manifest.webmanifest
           grep -q "media-src 'self' blob:" web/_headers
-          grep -q "lullaby-scene-site-v13" web/sw.js
+          grep -q "lullaby-scene-site-v14" web/sw.js
           grep -q '/player-runtime-bridge-v12.js?v=12' web/_worker.js
+          grep -q '/mixer-zero-v13.js?v=13' web/_worker.js
           grep -q '/simple-scene-quick-mixer-v12.js?v=12' web/_worker.js
           grep -q '/saved-scenes-v13.js?v=13' web/_worker.js
+          grep -q '/scene-recipe-v1.js?v=1' web/_worker.js
           grep -q '/visitor-count-v1.js?v=1' web/_worker.js
           grep -q 'VISITOR_DB' web/_worker.js
       - name: Validate full mixer catalog
@@ -101,6 +107,16 @@ jobs:
           const ids=new Set(data.sources.map(s=>s.id));
           for(const id of required) if(!ids.has(id)) throw new Error(`catalog missing ${id}`);
           NODE
+      - name: Validate zero-default Mixer and Scene Recipe wiring
+        run: |
+          grep -q 'is-zero-off' web/mixer-zero-v13.js
+          grep -q "value<=0" web/mixer-zero-v13.js
+          grep -q "await on(id,value)" web/mixer-zero-v13.js
+          grep -q 'lullaby.scene.recipe' web/scene-recipe-v1.js
+          grep -q "searchParams.set('recipe'" web/scene-recipe-v1.js
+          grep -q 'TextEncoder' web/scene-recipe-v1.js
+          grep -q '/mixer-zero-v13.js?v=13' web/sw.js
+          grep -q '/scene-recipe-v1.js?v=1' web/sw.js
       - name: Validate Simple Scene quick mixer and visitor counter wiring
         run: |
           grep -q 'presetSources' web/simple-scene-quick-mixer-v12.js
