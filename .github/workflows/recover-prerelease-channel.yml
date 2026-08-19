@@ -1,0 +1,40 @@
+name: Recover prerelease channel
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.ref == 'work/lullaby-2.0-audio-foundation'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore v1.1.0 as prerelease-only line
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view v1.1.0 --repo "$REPO" >/dev/null 2>&1; then
+            gh release delete v1.1.0 --repo "$REPO" --cleanup-tag --yes
+          else
+            git ls-remote --tags "https://github.com/$REPO.git" refs/tags/v1.1.0 | grep -q . && \
+              gh api --method DELETE "repos/$REPO/git/refs/tags/v1.1.0" || true
+          fi
+
+          if gh release view v1.1.0 --repo "$REPO" >/dev/null 2>&1; then
+            echo "Stable v1.1.0 still exists" >&2
+            exit 1
+          fi
+
+          echo "Stable v1.1.0 release/tag removed. v1.1.0 remains prerelease-only."
