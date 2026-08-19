@@ -342,27 +342,27 @@ class AmbienceEngine(
     }
 
     private fun spaceSensitivity(sourceId: String?): Float = when (sourceId) {
-        "forest" -> 0.96f
-        "bamboo_forest" -> 0.94f
-        "cafe" -> 0.92f
-        "birds" -> 0.90f
-        "aircraft_cabin" -> 0.88f
-        "train" -> 0.86f
-        "crickets" -> 0.84f
-        "ocean" -> 0.82f
-        "wind" -> 0.80f
-        "city" -> 0.80f
-        "stream", "water" -> 0.78f
-        "singing_bowl" -> 0.76f
-        "thunder" -> 0.72f
-        "rain" -> 0.68f
-        "fire" -> 0.62f
+        "forest" -> 1.25f
+        "bamboo_forest" -> 1.22f
+        "cafe" -> 1.18f
+        "birds" -> 1.16f
+        "aircraft_cabin" -> 1.12f
+        "train" -> 1.12f
+        "crickets" -> 1.10f
+        "ocean" -> 1.10f
+        "wind" -> 1.06f
+        "city" -> 1.06f
+        "stream", "water" -> 1.04f
+        "singing_bowl" -> 1.00f
+        "thunder" -> 0.94f
+        "rain" -> 0.90f
+        "fire" -> 0.76f
         "ventilation" -> 0.32f
         "fan" -> 0.24f
         "white_noise" -> 0.14f
         "pink_noise" -> 0.12f
         "brown_noise" -> 0.10f
-        else -> 0.55f
+        else -> 0.58f
     }
 
     private fun applyLoudnessTo(effect: LoudnessEnhancer) {

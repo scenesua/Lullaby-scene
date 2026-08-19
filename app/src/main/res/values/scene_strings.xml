@@ -58,4 +58,6 @@
     <string name="update_downloading">Downloading… %1$d%%</string>
     <string name="update_allow_install_permission">Allow Lullaby Scene to install unknown apps, then run Update now again.</string>
     <string name="update_install_failed">Could not open the Android package installer</string>
+    <string name="scene_previous_phase">◀ Previous phase</string>
+    <string name="scene_next_phase">Next phase ▶</string>
 </resources>

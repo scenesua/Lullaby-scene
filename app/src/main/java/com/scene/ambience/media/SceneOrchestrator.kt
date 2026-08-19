@@ -103,6 +103,26 @@ class SceneOrchestrator(
         if (target >= plan.journeyEndMs) engine.stop()
     }
 
+    fun stepPhase(direction: Int) {
+        val current = _state.value
+        val plan = timeline ?: return
+        if (!current.active) return
+        val phases = listOf(
+            STATE_TAXI_OUT to 0L,
+            STATE_TAKEOFF to plan.taxiOutEndMs,
+            STATE_CLIMB to plan.takeoffEndMs,
+            STATE_CRUISE to plan.climbEndMs,
+            STATE_DESCENT to plan.descentStartMs,
+            STATE_APPROACH to plan.approachStartMs,
+            STATE_TAXI_IN to plan.touchdownMs,
+            STATE_ARRIVED to plan.journeyEndMs,
+        )
+        val phase = plan.phaseAt(current.elapsedMs)
+        val index = phases.indexOfFirst { it.first == phase }.coerceAtLeast(0)
+        val targetIndex = (index + if (direction < 0) -1 else 1).coerceIn(0, phases.lastIndex)
+        seekToElapsedMs(phases[targetIndex].second)
+    }
+
     fun setMacro(key: String, value: Float) {
         val current = _state.value
         if (!current.active) return
@@ -185,10 +205,15 @@ class SceneOrchestrator(
         }
         val turbulence = if (event?.kind == AircraftJourneyTimelineBuilder.EVENT_TURBULENCE) event.intensity else 0f
         val lowBody = (28f * phasePresence + 16f * turbulence * macros.turbulence).toInt()
-        val highSoftening = (16f * macros.nightDepth + 8f * (1f - macros.enginePresence)).toInt()
+        val highSoftening = (80f * macros.nightDepth + 35f * (1f - macros.enginePresence)).toInt()
+        // Taxi has no journey event audio, yet the whistle is audible there. Keep a
+        // source-specific safety cut on the two upper EQ regions for the entire
+        // aircraft scene instead of trying to hide it with broadband denoise.
+        val whistleGuardPresenceMb = 420
+        val whistleGuardUpperMb = 650
         bands[0] = (bands[0] + lowBody).coerceIn(-1500, 1500)
-        if (count >= 2) bands[count - 2] = (bands[count - 2] - highSoftening / 2).coerceIn(-1500, 1500)
-        bands[count - 1] = (bands[count - 1] - highSoftening).coerceIn(-1500, 1500)
+        if (count >= 2) bands[count - 2] = (bands[count - 2] - whistleGuardPresenceMb - highSoftening / 2).coerceIn(-1500, 1500)
+        bands[count - 1] = (bands[count - 1] - whistleGuardUpperMb - highSoftening).coerceIn(-1500, 1500)
         engine.applyEqualizer(user.enabled || lowBody != 0 || highSoftening != 0, "scene_aircraft_tone", bands)
     }
 

@@ -139,7 +139,20 @@ fun ScenesScreen(
                         LaunchedEffect(scene.elapsedMs, journeySeekMax, seekDragging) {
                             if (!seekDragging) seekPreviewMs = scene.elapsedMs.coerceIn(0L, journeySeekMax).toFloat()
                         }
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                OutlinedButton(
+                                    onClick = viewModel::previousScenePhase,
+                                    modifier = Modifier.weight(1f),
+                                ) { Text(context.getString(R.string.scene_previous_phase)) }
+                                Button(
+                                    onClick = viewModel::nextScenePhase,
+                                    modifier = Modifier.weight(1f),
+                                ) { Text(context.getString(R.string.scene_next_phase)) }
+                            }
                             Slider(
                                 value = seekPreviewMs.coerceIn(0f, journeySeekMax.toFloat().coerceAtLeast(1f)),
                                 onValueChange = {
