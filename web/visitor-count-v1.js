@@ -1,3 +1,4 @@
+// Visitor counter v3 uses only the same-origin Worker endpoint from the browser.
 (()=>{
   const footer=document.querySelector('.site-footer');if(!footer)return;
   let root=footer.querySelector('[data-visitor-stats]');
