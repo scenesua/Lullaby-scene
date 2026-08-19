@@ -1,5 +1,6 @@
 // Legacy cache assertion history: /visitor-count-v1.js?v=2
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
 function seoulDay(){
   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
@@ -52,13 +53,34 @@ async function visitorsD1(request,env){
 }
 
 const PUBLIC_COUNTER_BASE='https://counterapi.com/api/lullabyscene.com/visitor';
-async function publicCounter(name,increment){
-  const url=`${PUBLIC_COUNTER_BASE}/${encodeURIComponent(name)}?readOnly=${increment?'false':'true'}&noFormatting=true`;
+async function counterFetch(name,readOnly){
+  const url=`${PUBLIC_COUNTER_BASE}/${encodeURIComponent(name)}?readOnly=${readOnly?'true':'false'}&noFormatting=true`;
   const response=await fetch(url,{method:'GET',headers:{Accept:'application/json'}});
   if(!response.ok)throw new Error(`counterapi.com ${response.status}`);
   const data=await response.json(),value=Number(data?.value);
   if(!Number.isFinite(value))throw new Error('counterapi.com returned no numeric value');
   return value;
+}
+async function publicCounter(name,increment){
+  if(increment){
+    try{return{value:await counterFetch(name,false),counted:true}}
+    catch(incrementError){
+      // Never retry an increment: the upstream may have applied it before the
+      // response failed. Fall back to safe reads so a transient error does not
+      // leave the UI as an em dash or accidentally double-count the visitor.
+      for(const delay of [120,320]){
+        await sleep(delay);
+        try{return{value:await counterFetch(name,true),counted:false}}catch{}
+      }
+      throw incrementError;
+    }
+  }
+  let lastError;
+  for(const delay of [0,120,320]){
+    if(delay)await sleep(delay);
+    try{return{value:await counterFetch(name,true),counted:false}}catch(error){lastError=error}
+  }
+  throw lastError||new Error('counterapi.com unavailable');
 }
 
 async function visitorsPublic(request){
@@ -69,11 +91,19 @@ async function visitorsPublic(request){
   }
   const day=seoulDay();
   try{
-    const [today,total]=await Promise.all([
+    const [todayResult,totalResult]=await Promise.all([
       publicCounter(`day-${day}`,countDay),
       publicCounter('total-v2',countTotal),
     ]);
-    return json({available:true,backend:'counterapi.com',day,today,total});
+    return json({
+      available:true,
+      backend:'counterapi.com',
+      day,
+      today:todayResult.value,
+      total:totalResult.value,
+      countedDay:!countDay||todayResult.counted,
+      countedTotal:!countTotal||totalResult.counted,
+    });
   }catch(error){
     return json({available:false,error:'Visitor counter backend unavailable',detail:String(error?.message||error)},503);
   }
@@ -86,7 +116,7 @@ async function visitors(request,env){
 }
 
 class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12"><link rel="stylesheet" href="/mixer-controls-v14.css?v=14">',{html:true})}}
-class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=3"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
+class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=4"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
 
 export default {
   async fetch(request,env){
