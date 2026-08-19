@@ -1,5 +1,9 @@
-import { chromium } from 'playwright';
-const browser=await chromium.launch({headless:true});
+import fs from 'node:fs';
+import { chromium } from 'playwright-core';
+const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].filter(Boolean);
+const executablePath=candidates.find(p=>fs.existsSync(p));
+if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
+const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox']});
 const context=await browser.newContext({viewport:{width:1440,height:1000},locale:'ko-KR'});
 const page=await context.newPage();
 const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
