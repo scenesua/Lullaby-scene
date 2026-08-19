@@ -77,6 +77,7 @@ class SettingsRepository(private val context: Context) {
         val fxWarmth = floatPreferencesKey("fx_warmth")
         val fxAir = floatPreferencesKey("fx_air")
         val fxBody = floatPreferencesKey("fx_body")
+        val fxSpace = floatPreferencesKey("fx_space")
         val fxGlue = floatPreferencesKey("fx_glue")
         val fxLoudness = floatPreferencesKey("fx_loudness")
     }
@@ -112,6 +113,7 @@ class SettingsRepository(private val context: Context) {
                 warmth = p[Keys.fxWarmth] ?: 0f,
                 air = p[Keys.fxAir] ?: 0f,
                 body = p[Keys.fxBody] ?: 0f,
+                space = p[Keys.fxSpace] ?: 0f,
                 glue = p[Keys.fxGlue] ?: 0f,
                 loudness = p[Keys.fxLoudness] ?: 0f,
             ).normalized(),
@@ -202,6 +204,7 @@ class SettingsRepository(private val context: Context) {
             it[Keys.fxWarmth] = value.warmth
             it[Keys.fxAir] = value.air
             it[Keys.fxBody] = value.body
+            it[Keys.fxSpace] = value.space
             it[Keys.fxGlue] = value.glue
             it[Keys.fxLoudness] = value.loudness
         }
