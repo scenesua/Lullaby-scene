@@ -1,4 +1,3 @@
-import java.util.Base64
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -8,29 +7,10 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-val generatedSceneAudioDir = layout.buildDirectory.dir("generated/sceneAudioAssets")
-val decodeSceneAudio by tasks.registering {
-    val sourceDir = file("src/main/sceneAudioBase64")
-    inputs.dir(sourceDir)
-    outputs.dir(generatedSceneAudioDir)
-    doLast {
-        val outDir = generatedSceneAudioDir.get().asFile
-        outDir.deleteRecursively()
-        outDir.mkdirs()
-        val parts = listOf(
-            "aircraft_cabin_cruise_001.part00",
-            "aircraft_cabin_cruise_001.part01",
-            "aircraft_cabin_cruise_001.part02",
-            "aircraft_cabin_cruise_001.part03",
-        )
-        val encoded = parts.joinToString("") { sourceDir.resolve(it).readText().trim() }
-        val decoded = Base64.getDecoder().decode(encoded)
-        check(decoded.size == 16630) { "aircraft scene asset size mismatch: ${decoded.size}" }
-        val output = outDir.resolve("ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg")
-        output.parentFile.mkdirs()
-        output.writeBytes(decoded)
-    }
-}
+val releaseKeystorePath = providers.environmentVariable("LULLABY_ANDROID_KEYSTORE_PATH").orNull
+val releaseStorePassword = providers.environmentVariable("LULLABY_ANDROID_STORE_PASSWORD").orNull
+val releaseKeyAlias = providers.environmentVariable("LULLABY_ANDROID_KEY_ALIAS").orNull
+val releaseKeyPassword = providers.environmentVariable("LULLABY_ANDROID_KEY_PASSWORD").orNull
 
 android {
     namespace = "com.scene.ambience"
@@ -40,13 +20,25 @@ android {
         applicationId = "com.scene.ambience"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
+        versionCode = 8
         versionName = "1.1.0-alpha.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    sourceSets {
-        getByName("main").assets.srcDir(generatedSceneAudioDir)
+    signingConfigs {
+        if (
+            !releaseKeystorePath.isNullOrBlank() &&
+            !releaseStorePassword.isNullOrBlank() &&
+            !releaseKeyAlias.isNullOrBlank() &&
+            !releaseKeyPassword.isNullOrBlank()
+        ) {
+            create("stableRelease") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
@@ -56,7 +48,9 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
+            // Never fall back to the per-machine/per-runner debug key for the
+            // production package. CI supplies a persistent private release key.
+            signingConfigs.findByName("stableRelease")?.let { signingConfig = it }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -80,8 +74,6 @@ android {
         }
     }
 }
-
-tasks.named("preBuild").configure { dependsOn(decodeSceneAudio) }
 
 kotlin {
     compilerOptions {
