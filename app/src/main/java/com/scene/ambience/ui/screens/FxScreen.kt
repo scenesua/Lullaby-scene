@@ -123,6 +123,22 @@ fun FxScreen(
 
         item {
             FxRackSection(
+                title = context.getString(R.string.fx_space),
+                subtitle = context.getString(R.string.fx_space_desc),
+                initiallyExpanded = true,
+            ) {
+                FxSlider(
+                    title = context.getString(R.string.fx_space_amount),
+                    subtitle = context.getString(R.string.fx_space_amount_desc),
+                    value = fx.space,
+                    enabled = fx.enabled,
+                    onValueChange = { push(fx.copy(space = it)) },
+                )
+            }
+        }
+
+        item {
+            FxRackSection(
                 title = context.getString(R.string.fx_dynamics),
                 subtitle = context.getString(R.string.fx_dynamics_desc),
             ) {
