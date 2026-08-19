@@ -2,8 +2,8 @@
   "name": "Lullaby Scene",
   "short_name": "Lullaby",
   "description": "Living soundscapes for sleep.",
-  "id": "/",
-  "start_url": "/",
+  "id": "/player/",
+  "start_url": "/player/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0b0d12",
@@ -17,6 +17,7 @@
     {"src": "/assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
   ],
   "shortcuts": [
-    {"name": "Android releases", "short_name": "Releases", "url": "https://github.com/scenesua/Lullaby-scene/releases"}
+    {"name": "Web Player", "short_name": "Player", "url": "/player/"},
+    {"name": "Downloads", "short_name": "Download", "url": "/download/"}
   ]
 }
