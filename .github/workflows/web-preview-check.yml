@@ -21,19 +21,29 @@ jobs:
         with:
           node-version: '22'
       - name: Check JavaScript syntax
-        run: node --check web/player-v2.js && node --check web/duration-input.js && node --check web/sw.js
-      - name: Check required web files
+        run: node --check web/site.js && node --check web/player-v2.js && node --check web/player-ui.js && node --check web/duration-input.js && node --check web/sw.js
+      - name: Check required web pages and files
         run: |
           test -s web/index.html
+          test -s web/player/index.html
+          test -s web/download/index.html
           test -s web/styles.css
+          test -s web/site-shell.css
           test -s web/player-v2.css
           test -s web/player-v2.js
+          test -s web/player-ui.js
           test -s web/duration-input.js
           test -s web/mixer-sources.json
           test -s web/manifest.webmanifest
           test -s web/_headers
-          grep -q 'player-v2.js' web/index.html
-          grep -q 'duration-input.js' web/index.html
+          grep -q 'href="/player/"' web/index.html
+          grep -q 'data-scene-mode="journey"' web/player/index.html
+          grep -q 'data-scene-mode="simple"' web/player/index.html
+          ! grep -q 'class="web-player"' web/index.html
+          grep -q 'data-pwa-install' web/download/index.html
+          grep -q 'language-toggle' web/index.html
+          grep -q 'language-toggle' web/player/index.html
+          grep -q '"start_url": "/player/"' web/manifest.webmanifest
           grep -q "media-src 'self' blob:" web/_headers
       - name: Validate full mixer catalog
         run: |
@@ -54,6 +64,12 @@ jobs:
           grep -q 'MIN_MINUTES=240' web/duration-input.js
           grep -q 'MAX_MINUTES=720' web/duration-input.js
           grep -q '04:00~12:00' web/duration-input.js
+      - name: Validate language dictionaries
+        run: |
+          grep -q "sleepJourneys:'잠의 여정'" web/site.js
+          grep -q "simpleScenes:'심플 씬'" web/site.js
+          grep -q "sleepJourneys:'Sleep Journeys'" web/site.js
+          grep -q "simpleScenes:'Simple Scenes'" web/site.js
       - name: Validate aircraft payload
         run: |
           test -s web/audio/aircraft.part00
