@@ -1,21 +1,21 @@
 {
-  "version": 5,
+  "version": 6,
   "sources": [
     {
       "id": "aircraft_cabin",
       "category": "travel",
       "display_name_key": "source_aircraft_cabin",
       "default_volume": 0.68,
-      "loop_mode": "crossfade",
+      "loop_mode": "seamless",
       "continuous": [
         {
           "asset_id": "aircraft_cabin_cruise_001",
           "path": "ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg",
-          "duration_ms": 20007,
-          "crossfade_ms": 5000,
+          "duration_ms": 79000,
+          "crossfade_ms": 0,
           "role": "bed",
-          "tags": ["aircraft", "cabin", "interior", "field_recording", "cruise"],
-          "provenance_id": "freesound_jasonm911_853742"
+          "tags": ["aircraft", "cabin", "interior", "field_recording", "cruise", "stereo", "long_loop"],
+          "provenance_id": "freesound_jasonm911_853736"
         }
       ],
       "events": []
