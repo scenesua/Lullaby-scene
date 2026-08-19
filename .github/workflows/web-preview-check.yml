@@ -181,11 +181,20 @@ jobs:
           ! grep -q 'loudnorm' tools/materialize_aircraft_audio.py
           ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration,size -of json web/audio/aircraft_cabin_cruise_v2.ogg
 
-      - name: Browser interaction smoke tests
+      - name: Start static test server
         run: |
           python3 -m http.server 4173 --directory web >/tmp/lullaby-web.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
+          echo $! > /tmp/lullaby-web.pid
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
-          node .github/scripts/web-smoke.mjs
-          node .github/scripts/web-mixer-v14-smoke.mjs
+
+      - name: Browser primary smoke
+        timeout-minutes: 2
+        run: timeout 90s node .github/scripts/web-smoke.mjs
+
+      - name: Browser Mixer and journey seek smoke
+        timeout-minutes: 2
+        run: timeout 90s node .github/scripts/web-mixer-v14-smoke.mjs
+
+      - name: Stop static test server
+        if: always()
+        run: kill "$(cat /tmp/lullaby-web.pid)" || true
