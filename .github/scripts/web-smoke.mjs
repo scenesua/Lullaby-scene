@@ -9,7 +9,8 @@ const page=await context.newPage();
 const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 const visible=async sel=>{if(!(await page.locator(sel).isVisible()))throw new Error(`${sel} not visible`)};
-await page.locator('[data-scene-mode="simple"]').click();await visible('[data-scene-content="simple"]');await visible('[data-inspector-mode="simple"]');
+await page.locator('[data-scene-mode="simple"]').click();await visible('[data-scene-content="simple"]');await visible('[data-inspector-mode="simple"]');await visible('#simpleScenePlayPause');await visible('#simpleSceneStop');
+if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ 일시정지')throw new Error('Simple Scene pause control missing');
 await page.locator('[data-view="mixer"]').first().click();await visible('[data-panel="mixer"]');
 await page.locator('[data-view="timer"]').first().click();await visible('[data-panel="timer"]');
 await page.locator('[data-view="settings"]').first().click();await visible('[data-panel="settings"]');
@@ -26,6 +27,7 @@ const fixed=await page.evaluate(()=>window.LullabyJourneyDurationProfiles?.aircr
 if(JSON.stringify(fixed)!=='[360,480,600]')throw new Error(`aircraft fixed duration profile changed: ${JSON.stringify(fixed)}`);
 await page.locator('[data-scene-mode="simple"]').click();await page.locator('[data-fx="warmth"]').evaluate(el=>{el.value='72';el.dispatchEvent(new Event('input',{bubbles:true}))});if((await page.locator('[data-fx-output="warmth"]').textContent())!=='72%')throw new Error('Simple Scene FX control failed');
 await page.locator('.language-toggle').click();if((await page.locator('[data-scene-mode="simple"]').textContent())?.trim()!=='Simple Scenes')throw new Error('language toggle failed');
+if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ Pause')throw new Error('Simple Scene transport did not localize');
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log('web interaction smoke test passed');
