@@ -10,6 +10,12 @@ const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console'
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,today:7,total:42,day:'2026-08-19'})}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.addStyleTag({url:'http://127.0.0.1:4173/site-runtime-v12.css?v=12'});
+await page.evaluate(()=>{
+  window.LullabyPlayerRuntime={
+    get catalog(){return catalog},get sourceById(){return sourceById},get nodes(){return nodes},get eventState(){return eventState},get presets(){return builtinPresets},
+    getMixerUiState,loadUserPresets,startEventLayer,stopEventLayer,ensureContext,makeSourceNode,renderMixer,updateNowPlaying
+  };
+});
 await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=12'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=1'});
 const visible=async sel=>{if(!(await page.locator(sel).isVisible()))throw new Error(`${sel} not visible`)};
