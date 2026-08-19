@@ -5,12 +5,14 @@ on:
     paths:
       - 'web/**'
       - '.github/workflows/web-preview-check.yml'
+      - '.github/scripts/web-smoke.mjs'
   push:
     branches:
       - work/lullaby-web-foundation
     paths:
       - 'web/**'
       - '.github/workflows/web-preview-check.yml'
+      - '.github/scripts/web-smoke.mjs'
 
 jobs:
   validate:
@@ -21,32 +23,51 @@ jobs:
         with:
           node-version: '22'
       - name: Check JavaScript syntax
-        run: node --check web/site.js && node --check web/player-v2.js && node --check web/scene-audio-v2.js && node --check web/player-ui.js && node --check web/duration-input.js && node --check web/sw.js
+        run: |
+          node --check web/site.js
+          node --check web/player-v2.js
+          node --check web/scene-audio-v2.js
+          node --check web/mixer-fx-v9.js
+          node --check web/player-shell-v9.js
+          node --check web/player-shell-v10.js
+          node --check web/legal-language-v9.js
+          node --check web/sw.js
+          node --check .github/scripts/web-smoke.mjs
       - name: Check required web pages and files
         run: |
           test -s web/index.html
           test -s web/player/index.html
           test -s web/download/index.html
+          test -s web/privacy/index.html
+          test -s web/terms/index.html
           test -s web/styles.css
           test -s web/site-shell.css
+          test -s web/polish-v9.css
           test -s web/player-v2.css
           test -s web/player-v2.js
           test -s web/scene-audio-v2.js
-          test -s web/player-ui.js
-          test -s web/duration-input.js
+          test -s web/mixer-fx-v9.js
+          test -s web/player-shell-v9.js
+          test -s web/player-shell-v10.js
           test -s web/mixer-sources.json
           test -s web/manifest.webmanifest
           test -s web/_headers
           grep -q 'href="/player/"' web/index.html
           grep -q 'data-scene-mode="journey"' web/player/index.html
           grep -q 'data-scene-mode="simple"' web/player/index.html
-          grep -q '/scene-audio-v2.js' web/player/index.html
+          grep -q 'id="durationDirect"' web/player/index.html
+          grep -q 'data-inspector-mode="simple"' web/player/index.html
+          grep -q 'data-fx="warmth"' web/player/index.html
+          grep -q '/mixer-fx-v9.js' web/player/index.html
+          grep -q '/player-shell-v9.js' web/player/index.html
           ! grep -q 'class="web-player"' web/index.html
           grep -q 'data-pwa-install' web/download/index.html
           grep -q 'language-toggle' web/index.html
           grep -q 'language-toggle' web/player/index.html
+          grep -q 'language-toggle' web/privacy/index.html
           grep -q '"start_url": "/player/"' web/manifest.webmanifest
           grep -q "media-src 'self' blob:" web/_headers
+          grep -q "lullaby-scene-site-v10" web/sw.js
       - name: Validate full mixer catalog
         run: |
           node - <<'NODE'
@@ -61,19 +82,23 @@ jobs:
           const ids=new Set(data.sources.map(s=>s.id));
           for(const id of required) if(!ids.has(id)) throw new Error(`catalog missing ${id}`);
           NODE
-      - name: Validate direct duration limits
+      - name: Validate duration and Scene FX wiring
         run: |
-          grep -q 'MIN_MINUTES=240' web/duration-input.js
-          grep -q 'MAX_MINUTES=720' web/duration-input.js
-          grep -q '04:00~12:00' web/duration-input.js
-      - name: Validate language dictionaries and scene tabs
+          grep -q "n>=240&&n<=720" web/player-shell-v10.js
+          grep -q "warmth" web/mixer-fx-v9.js
+          grep -q "createDynamicsCompressor" web/mixer-fx-v9.js
+          grep -q "createConvolver" web/mixer-fx-v9.js
+          grep -q "makeSourceNode=async" web/mixer-fx-v9.js
+      - name: Validate language and typography
         run: |
           grep -q "sleepJourneys:'잠의 여정'" web/site.js
           grep -q "simpleScenes:'심플 씬'" web/site.js
           grep -q "sleepJourneys:'Sleep Journeys'" web/site.js
           grep -q "simpleScenes:'Simple Scenes'" web/site.js
-          grep -q 'MutationObserver(queueRuntimeText)' web/player-ui.js
-          grep -q 'translateQueued' web/player-ui.js
+          grep -q 'word-break:keep-all' web/polish-v9.css
+          grep -q 'D2Coding' web/polish-v9.css
+          grep -q 'data-lang-block="en"' web/privacy/index.html
+          grep -q 'data-lang-block="en"' web/terms/index.html
       - name: Validate aircraft sleep-journey layers
         run: |
           grep -q "/audio/ventilation.ogg" web/scene-audio-v2.js
@@ -88,3 +113,14 @@ jobs:
           test -s web/audio/aircraft.part03
           cat web/audio/aircraft.part0{0,1,2,3} | tr -d '\n\r ' | base64 -d > /tmp/aircraft.ogg
           test "$(wc -c < /tmp/aircraft.ogg)" -eq 16630
+      - name: Install browser smoke dependencies
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Browser interaction smoke test
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-web.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
+          node .github/scripts/web-smoke.mjs
