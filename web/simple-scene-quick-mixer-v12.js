@@ -39,8 +39,7 @@
   function render(){
     if(interactionActive){renderPending=true;return}
     renderPending=false;const list=orderedSources();if(!list.length){setTimeout(render,150);return}
-    const html=list.map(rowMarkup).join('');roots().forEach(root=>root.innerHTML=html);localize();
-    queueMicrotask(()=>window.LullabyMixerInteraction?.normalize?.());
+    const html=list.map(rowMarkup).join('');roots().forEach(root=>{if(root.innerHTML!==html)root.innerHTML=html});localize();
   }
   function requestRender(){if(interactionActive){renderPending=true;return}queueMicrotask(render)}
 
@@ -71,11 +70,13 @@
   function updateRowDuringInput(id,percent){
     const value=Math.max(0,Math.min(100,Number(percent)||0));
     $$(`[data-quick-source="${id}"]`).forEach(row=>{
-      const on=value>0;row.classList.toggle('is-on',on);row.classList.toggle('is-off',!on);
-      const output=row.querySelector(`[data-quick-output="${id}"]`);if(output)output.textContent=`${Math.round(value)}%`;
-      const button=row.querySelector(`[data-quick-toggle="${id}"]`);if(button){button.textContent=on?(isEnglish()?'Off':'끔'):(isEnglish()?'On':'켬');button.setAttribute('aria-pressed',String(on))}
-      const status=row.querySelector('.quick-mixer-copy span');if(status&&!row.classList.contains('is-preset-source'))status.textContent=on?(isEnglish()?'On':'켜짐'):(isEnglish()?'Off':'꺼짐');
-      row.querySelectorAll(`[data-quick-volume="${id}"]`).forEach(input=>{if(document.activeElement!==input)input.value=String(Math.round(value))});
+      const on=value>0;
+      if(row.classList.contains('is-on')!==on)row.classList.toggle('is-on',on);
+      if(row.classList.contains('is-off')===on)row.classList.toggle('is-off',!on);
+      const output=row.querySelector(`[data-quick-output="${id}"]`);if(output&&output.textContent!==`${Math.round(value)}%`)output.textContent=`${Math.round(value)}%`;
+      const button=row.querySelector(`[data-quick-toggle="${id}"]`);if(button){const text=on?(isEnglish()?'Off':'끔'):(isEnglish()?'On':'켬');if(button.textContent!==text)button.textContent=text;if(button.getAttribute('aria-pressed')!==String(on))button.setAttribute('aria-pressed',String(on))}
+      const status=row.querySelector('.quick-mixer-copy span');if(status&&!row.classList.contains('is-preset-source')){const text=on?(isEnglish()?'On':'켜짐'):(isEnglish()?'Off':'꺼짐');if(status.textContent!==text)status.textContent=text}
+      row.querySelectorAll(`[data-quick-volume="${id}"]`).forEach(input=>{const text=String(Math.round(value));if(document.activeElement!==input&&input.value!==text)input.value=text});
     });
   }
 
@@ -95,7 +96,7 @@
   function localize(){
     const title=isEnglish()?'Quick Mixer':'퀵 믹서';
     const help=isEnglish()?'0% is Off. Moving above 0% turns the sound On; current-scene sounds stay at the top.':'0%는 꺼짐, 1% 이상은 켜짐입니다. 현재 씬 소리는 위에 고정됩니다.';
-    $$('[data-quick-title]').forEach(el=>el.textContent=title);$$('[data-quick-help]').forEach(el=>el.textContent=help);$$('[data-quick-all-off]').forEach(el=>el.textContent=isEnglish()?'Turn all off':'전체 끄기')
+    $$('[data-quick-title]').forEach(el=>{if(el.textContent!==title)el.textContent=title});$$('[data-quick-help]').forEach(el=>{if(el.textContent!==help)el.textContent=help});$$('[data-quick-all-off]').forEach(el=>{const text=isEnglish()?'Turn all off':'전체 끄기';if(el.textContent!==text)el.textContent=text})
   }
 
   window.addEventListener('click',event=>{
@@ -117,7 +118,10 @@
     interactionActive=false;R.renderMixer();R.updateNowPlaying();if(renderPending)render();else requestRender();
   },true);
   document.addEventListener('lullaby-language-changed',requestRender);document.addEventListener('lullaby-scene-mode-changed',event=>{if(event.detail?.mode==='simple')requestRender()});
-  const mixer=$('#mixerGrid');if(mixer)new MutationObserver(requestRender).observe(mixer,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  // Only watch direct Mixer row replacement. Watching class mutations caused a
+  // render -> normalize -> class mutation -> render feedback loop that locked
+  // the browser main thread while dragging.
+  const mixer=$('#mixerGrid');if(mixer)new MutationObserver(requestRender).observe(mixer,{childList:true});
   const inspector=$('#inspectorMixerList');if(inspector)new MutationObserver(()=>{if(!inspector.querySelector('[data-quick-source]'))requestRender()}).observe(inspector,{childList:true});
   ensureMainQuickMixer();setTimeout(render,100);setTimeout(render,500);window.LullabyQuickMixer={render,turnAllOff,get activePreset(){return activePreset}};
 })();
