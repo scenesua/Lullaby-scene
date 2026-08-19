@@ -4,7 +4,7 @@
   if(!R){console.error('LullabyPlayerRuntime is unavailable');return}
   const isEnglish=()=>window.LullabyI18n?.language==='en';
   let activePreset=null,interactionActive=false,renderPending=false;
-  const starting=new Map();
+  const starting=new Map(),volumeTasks=new Map();
   const sourceDef=id=>R.sourceById[id]||R.catalog.find(source=>source.id===id)||null;
   const stateFor=id=>R.getMixerUiState(id)||{on:false,volume:0};
   const presetById=id=>R.presets.find(item=>item.id===id)||(R.loadUserPresets()||[]).find(item=>item.id===id)||null;
@@ -82,8 +82,19 @@
     const toggleButton=event.target.closest?.('[data-quick-toggle]');if(toggleButton){event.preventDefault();event.stopImmediatePropagation();toggle(toggleButton.dataset.quickToggle);return}
     if(event.target.closest?.('[data-quick-all-off]')){event.preventDefault();event.stopImmediatePropagation();turnAllOff()}
   },true);
-  window.addEventListener('input',event=>{const input=event.target.closest?.('[data-quick-volume]');if(!input)return;event.stopImmediatePropagation();interactionActive=true;setQuickVolume(input.dataset.quickVolume,input.value)},true);
-  window.addEventListener('change',event=>{const input=event.target.closest?.('[data-quick-volume]');if(!input)return;event.stopImmediatePropagation();interactionActive=false;R.renderMixer();if(renderPending)render();else requestRender()},true);
+  window.addEventListener('input',event=>{
+    const input=event.target.closest?.('[data-quick-volume]');if(!input)return;
+    event.stopImmediatePropagation();interactionActive=true;
+    const id=input.dataset.quickVolume;
+    const task=setQuickVolume(id,input.value).catch(error=>console.error(error)).finally(()=>{if(volumeTasks.get(id)===task)volumeTasks.delete(id)});
+    volumeTasks.set(id,task);
+  },true);
+  window.addEventListener('change',async event=>{
+    const input=event.target.closest?.('[data-quick-volume]');if(!input)return;
+    event.stopImmediatePropagation();const id=input.dataset.quickVolume;
+    const pending=volumeTasks.get(id);if(pending)await pending;
+    interactionActive=false;R.renderMixer();R.updateNowPlaying();if(renderPending)render();else requestRender();
+  },true);
   document.addEventListener('lullaby-language-changed',requestRender);document.addEventListener('lullaby-scene-mode-changed',event=>{if(event.detail?.mode==='simple')requestRender()});
   const mixer=$('#mixerGrid');if(mixer)new MutationObserver(requestRender).observe(mixer,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
   ensureMainQuickMixer();setTimeout(render,100);setTimeout(render,500);window.LullabyQuickMixer={render,turnAllOff,get activePreset(){return activePreset}};
