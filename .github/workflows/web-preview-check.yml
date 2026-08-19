@@ -69,7 +69,7 @@ jobs:
           grep -q 'airPlugin' web/player-runtime.js
           grep -q 'compPlugin' web/player-runtime.js
           grep -q 'durationDirectApply' web/player-runtime.js
-          grep -q 'data-timer-minutes' web/player-runtime.js
+          grep -q 'dataset.timerMinutes' web/player-runtime.js
           grep -q 'themeSelect' web/player-settings-fix.js
           grep -q 'master-volume' web/player-settings-fix.js
       - name: Validate aircraft payload
