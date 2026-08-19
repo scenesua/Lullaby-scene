@@ -20,7 +20,6 @@
     refreshInspectorMixer();
     document.dispatchEvent(new CustomEvent('lullaby-scene-mode-changed',{detail:{mode:activeSceneMode}}));
   }
-
   window.switchView=switchPanel;window.setLullabySceneMode=setSceneMode;
 
   function ensureDirectDuration(){
@@ -52,6 +51,18 @@
     }).join('');
   }
 
+  function localizeRuntimeMixer(){
+    const filters={all:['전체','All'],nature:['자연','Nature'],indoor:['실내','Indoor'],travel:['이동','Travel'],other:['기타','Other']};
+    $$('[data-filter]').forEach(b=>{const p=filters[b.dataset.filter];if(p)b.textContent=p[ko()?0:1]});
+    $$('#mixerGrid .mixer-source').forEach(card=>{
+      const on=card.classList.contains('on'),button=card.querySelector('[data-source-toggle]'),meta=card.querySelector('div span');
+      if(button)button.textContent=on?(ko()?'켬':'On'):(ko()?'끔':'Off');
+      if(meta){const raw=meta.textContent.toLowerCase();const cat=raw.includes('nature')||raw.includes('자연')?(ko()?'자연':'Nature'):raw.includes('indoor')||raw.includes('실내')?(ko()?'실내':'Indoor'):raw.includes('travel')||raw.includes('이동')?(ko()?'이동':'Travel'):raw.includes('other')||raw.includes('기타')?(ko()?'기타':'Other'):meta.textContent.split('·')[0].trim();const kind=raw.includes('event')||raw.includes('이벤트')?(ko()?'이벤트 레이어':'event layer'):(ko()?'연속 재생':'continuous');meta.textContent=`${cat} · ${kind}`}
+    });
+    $$('.preset-card span').forEach(span=>{const m=span.textContent.match(/(\d+)\s*(sources|개 소스)/i);if(m)span.textContent=ko()?`${m[1]}개 소스`:`${m[1]} sources`});
+    const empty=$('#userPresets .muted-copy');if(empty)empty.textContent=ko()?'저장한 심플 씬이 없습니다.':'No saved Simple Scenes.';
+  }
+
   function localizeShell(){
     const directTitle=$('[data-direct-title]'),directApply=$('#durationDirectApply');if(directTitle)directTitle.textContent=ko()?'직접 입력':'Direct input';if(directApply)directApply.textContent=ko()?'적용':'Apply';
     const fxLabels={warmth:['따뜻함','Warmth'],air:['공기감','Air'],room:['공간감','Room'],glue:['글루 컴프','Glue']};
@@ -59,7 +70,7 @@
     const quick=$('[data-quick-mixer-title]');if(quick)quick.textContent=ko()?'퀵 믹서':'Quick Mixer';
     const fxTitle=$('[data-scene-fx-title]');if(fxTitle)fxTitle.textContent=ko()?'씬 FX':'Scene FX';
     const fxHelp=$('[data-scene-fx-help]');if(fxHelp)fxHelp.textContent=ko()?'심플 씬과 Mixer에만 적용되는 Web Audio 내부 플러그인입니다. 잠의 여정 오디오는 이 체인을 우회합니다.':'These Web Audio effects apply only to Simple Scenes and Mixer audio. Sleep Journey audio bypasses this chain.';
-    refreshInspectorMixer();
+    localizeRuntimeMixer();refreshInspectorMixer();
   }
 
   async function applySimpleScene(id){
@@ -67,7 +78,7 @@
     const fn=window.applyPreset||applyPreset;await fn(id);
     let preset=null;try{if(typeof builtinPresets!=='undefined')preset=builtinPresets.find(p=>p.id===id)||null;if(!preset&&typeof window.loadUserPresets==='function')preset=window.loadUserPresets().find(p=>p.id===id)||null;else if(!preset&&typeof loadUserPresets==='function')preset=loadUserPresets().find(p=>p.id===id)||null}catch{}
     if(window.LullabyMixerFx){if(preset?.fx)window.LullabyMixerFx.apply(preset.fx);else window.LullabyMixerFx.reset()}
-    switchPanel('scene');setSceneMode('simple');setTimeout(refreshInspectorMixer,0);
+    switchPanel('scene');setSceneMode('simple');setTimeout(()=>{localizeRuntimeMixer();refreshInspectorMixer()},0);
     if(typeof window.setStatus==='function')window.setStatus(ko()?'심플 씬을 적용했습니다.':'Simple Scene applied.');
   }
 
@@ -77,26 +88,27 @@
     const save=typeof window.saveUserPresets==='function'?window.saveUserPresets:typeof saveUserPresets==='function'?saveUserPresets:null;
     if(!snap||!load||!save)return;
     const name=prompt(ko()?'심플 씬 이름을 입력하세요.':'Name this Simple Scene.');if(!name?.trim())return;
-    const list=load();list.push({id:`user_${Date.now()}`,name:name.trim(),master:Number(localStorage.getItem('lullaby-master')||70)/100,mix:snap,fx:window.LullabyMixerFx?.snapshot?.()||null});save(list);setTimeout(refreshInspectorMixer,0);
+    const list=load();list.push({id:`user_${Date.now()}`,name:name.trim(),master:Number(localStorage.getItem('lullaby-master')||70)/100,mix:snap,fx:window.LullabyMixerFx?.snapshot?.()||null});save(list);setTimeout(()=>{localizeRuntimeMixer();refreshInspectorMixer()},0);
     if(typeof window.setStatus==='function')window.setStatus(ko()?'현재 믹스와 FX를 심플 씬으로 저장했습니다.':'Current mix and FX saved as a Simple Scene.');
   }
 
   document.addEventListener('click',async e=>{
     const view=e.target.closest?.('[data-view]');if(view){e.preventDefault();switchPanel(view.dataset.view);return}
     const mode=e.target.closest?.('[data-scene-mode]');if(mode){e.preventDefault();setSceneMode(mode.dataset.sceneMode);return}
-    const toggle=e.target.closest?.('[data-inspector-toggle]');if(toggle){e.preventDefault();const fn=typeof window.toggleMixer==='function'?window.toggleMixer:typeof toggleMixer==='function'?toggleMixer:null;if(fn){await fn(toggle.dataset.inspectorToggle);setTimeout(refreshInspectorMixer,0)}return}
+    const toggle=e.target.closest?.('[data-inspector-toggle]');if(toggle){e.preventDefault();const fn=typeof window.toggleMixer==='function'?window.toggleMixer:typeof toggleMixer==='function'?toggleMixer:null;if(fn){await fn(toggle.dataset.inspectorToggle);setTimeout(()=>{localizeRuntimeMixer();refreshInspectorMixer()},0)}return}
     const preset=e.target.closest?.('[data-preset],[data-user-preset]');if(preset){e.preventDefault();e.stopImmediatePropagation();await applySimpleScene(preset.dataset.preset||preset.dataset.userPreset);return}
     if(e.target.closest?.('#savePreset')){e.preventDefault();e.stopImmediatePropagation();saveSimpleScene()}
   },true);
 
   document.addEventListener('input',e=>{
-    const range=e.target.closest?.('[data-inspector-volume]');if(!range)return;const id=range.dataset.inspectorVolume,value=+range.value/100;
-    const fn=typeof window.setSourceVolume==='function'?window.setSourceVolume:typeof setSourceVolume==='function'?setSourceVolume:null;if(fn)fn(id,value);
-    const main=document.querySelector(`[data-source-volume="${id}"]`);if(main)main.value=range.value;
+    const inspector=e.target.closest?.('[data-inspector-volume]');if(inspector){const id=inspector.dataset.inspectorVolume,value=+inspector.value/100;const fn=typeof window.setSourceVolume==='function'?window.setSourceVolume:typeof setSourceVolume==='function'?setSourceVolume:null;if(fn)fn(id,value);const main=document.querySelector(`[data-source-volume="${id}"]`);if(main)main.value=inspector.value;return}
+    const main=e.target.closest?.('[data-source-volume]');if(main){const mirror=document.querySelector(`[data-inspector-volume="${main.dataset.sourceVolume}"]`);if(mirror)mirror.value=main.value}
   });
 
-  const mixer=$('#mixerGrid');if(mixer)new MutationObserver(()=>{if(activeSceneMode==='simple')refreshInspectorMixer()}).observe(mixer,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  const mixer=$('#mixerGrid');if(mixer)new MutationObserver(()=>{localizeRuntimeMixer();if(activeSceneMode==='simple')refreshInspectorMixer()}).observe(mixer,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  const presets=$('#builtInPresets');if(presets)new MutationObserver(()=>localizeRuntimeMixer()).observe(presets,{childList:true,subtree:true});
+  const users=$('#userPresets');if(users)new MutationObserver(()=>localizeRuntimeMixer()).observe(users,{childList:true,subtree:true});
   document.addEventListener('lullaby-language-changed',localizeShell);
   ensureDirectDuration();
-  const initial=new URL(location.href).searchParams.get('scene');setSceneMode(initial==='simple'?'simple':'journey');switchPanel('scene');localizeShell();setTimeout(()=>{ensureDirectDuration();refreshInspectorMixer();window.LullabyMixerFx?.syncUi?.()},250);
+  const initial=new URL(location.href).searchParams.get('scene');setSceneMode(initial==='simple'?'simple':'journey');switchPanel('scene');localizeShell();setTimeout(()=>{ensureDirectDuration();localizeShell();window.LullabyMixerFx?.syncUi?.()},250);
 })();
