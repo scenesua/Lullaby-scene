@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material3.Button
@@ -18,17 +19,20 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.scene.ambience.R
 import com.scene.ambience.media.AircraftJourneyTimelineBuilder
@@ -48,11 +52,7 @@ fun ScenesScreen(
     val scene = state.scene
     val active = scene.sceneId == SceneOrchestrator.PASSENGER_AIRCRAFT
     val available = state.library.manifestFor(SceneOrchestrator.SOURCE_AIRCRAFT) != null
-    var selectedDuration by remember {
-        mutableIntStateOf(
-            if (active) scene.totalDurationMinutes else 480
-        )
-    }
+    var selectedDuration by remember { mutableIntStateOf(if (active) scene.totalDurationMinutes else 480) }
 
     LaunchedEffect(scene.totalDurationMinutes, active) {
         if (active) selectedDuration = scene.totalDurationMinutes
@@ -64,10 +64,7 @@ fun ScenesScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            Text(
-                text = context.getString(R.string.scenes_question),
-                style = MaterialTheme.typography.headlineMedium,
-            )
+            Text(text = context.getString(R.string.scenes_question), style = MaterialTheme.typography.headlineMedium)
             Text(
                 text = context.getString(R.string.scenes_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
@@ -100,10 +97,7 @@ fun ScenesScreen(
                     }
 
                     if (!available) {
-                        Text(
-                            context.getString(R.string.scene_asset_unavailable),
-                            color = MaterialTheme.colorScheme.error,
-                        )
+                        Text(context.getString(R.string.scene_asset_unavailable), color = MaterialTheme.colorScheme.error)
                     } else if (!active) {
                         Text(context.getString(R.string.scene_duration_title), style = MaterialTheme.typography.titleSmall)
                         DurationSelector(selectedDuration) { selectedDuration = it }
@@ -115,9 +109,7 @@ fun ScenesScreen(
                         Button(
                             onClick = { viewModel.startPassengerAircraftScene(selectedDuration) },
                             modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(context.getString(R.string.scene_start))
-                        }
+                        ) { Text(context.getString(R.string.scene_start)) }
                     } else {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -125,36 +117,23 @@ fun ScenesScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column {
+                                Text(sceneStateLabel(scene.stateId, context), style = MaterialTheme.typography.titleMedium)
                                 Text(
-                                    text = sceneStateLabel(scene.stateId, context),
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
-                                Text(
-                                    text = context.getString(
-                                        R.string.scene_elapsed,
-                                        AmbienceStrings.formatCountdown(scene.elapsedMs),
-                                    ),
+                                    text = context.getString(R.string.scene_elapsed, AmbienceStrings.formatCountdown(scene.elapsedMs)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
-                                    text = context.getString(
-                                        R.string.scene_remaining,
-                                        AmbienceStrings.formatCountdown(scene.remainingMs),
-                                    ),
+                                    text = context.getString(R.string.scene_remaining, AmbienceStrings.formatCountdown(scene.remainingMs)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
-                            OutlinedButton(onClick = viewModel::stopScene) {
-                                Text(context.getString(R.string.scene_end))
-                            }
+                            OutlinedButton(onClick = viewModel::stopScene) { Text(context.getString(R.string.scene_end)) }
                         }
 
                         Text(
-                            text = context.getString(
-                                if (scene.seatbeltSignOn) R.string.scene_seatbelt_on else R.string.scene_seatbelt_off
-                            ),
+                            text = context.getString(if (scene.seatbeltSignOn) R.string.scene_seatbelt_on else R.string.scene_seatbelt_off),
                             style = MaterialTheme.typography.labelLarge,
                             color = if (scene.seatbeltSignOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -221,9 +200,18 @@ fun ScenesScreen(
 
 @Composable
 private fun DurationSelector(selectedMinutes: Int, onSelect: (Int) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val context = LocalContext.current
+    var directText by remember { mutableStateOf(formatHHMM(selectedMinutes)) }
+    var directError by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedMinutes) {
+        directText = formatHHMM(selectedMinutes)
+        directError = false
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(360, 480, 600).forEach { minutes ->
+            AircraftJourneyTimelineBuilder.FIXED_DURATION_MINUTES.forEach { minutes ->
                 FilterChip(
                     selected = selectedMinutes == minutes,
                     onClick = { onSelect(minutes) },
@@ -231,34 +219,89 @@ private fun DurationSelector(selectedMinutes: Int, onSelect: (Int) -> Unit) {
                 )
             }
         }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("4h", style = MaterialTheme.typography.labelSmall)
+            Text("1m", style = MaterialTheme.typography.labelSmall)
             Text(formatDuration(selectedMinutes), style = MaterialTheme.typography.titleSmall)
             Text("12h", style = MaterialTheme.typography.labelSmall)
         }
         Slider(
-            value = selectedMinutes.toFloat(),
-            onValueChange = { raw ->
-                val rounded = ((raw / 30f).roundToInt() * 30)
-                    .coerceIn(
-                        AircraftJourneyTimelineBuilder.MIN_DURATION_MINUTES,
-                        AircraftJourneyTimelineBuilder.MAX_DURATION_MINUTES,
-                    )
-                onSelect(rounded)
-            },
-            valueRange = AircraftJourneyTimelineBuilder.MIN_DURATION_MINUTES.toFloat()..AircraftJourneyTimelineBuilder.MAX_DURATION_MINUTES.toFloat(),
-            steps = 15,
+            value = selectedMinutes.coerceIn(
+                AircraftJourneyTimelineBuilder.FREE_INPUT_MINUTES,
+                AircraftJourneyTimelineBuilder.SLIDER_MAX_MINUTES,
+            ).toFloat(),
+            onValueChange = { raw -> onSelect(raw.roundToInt().coerceAtLeast(1)) },
+            valueRange = AircraftJourneyTimelineBuilder.FREE_INPUT_MINUTES.toFloat()..AircraftJourneyTimelineBuilder.SLIDER_MAX_MINUTES.toFloat(),
         )
+        Text(
+            context.getString(R.string.scene_duration_slider_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Text(context.getString(R.string.scene_duration_direct), style = MaterialTheme.typography.titleSmall)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = directText,
+                onValueChange = { raw ->
+                    val digits = raw.filter(Char::isDigit)
+                    directText = when {
+                        digits.length >= 3 -> digits.dropLast(2) + ":" + digits.takeLast(2)
+                        else -> digits
+                    }
+                    directError = false
+                },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                isError = directError,
+                label = { Text("HH:MM") },
+                supportingText = {
+                    Text(
+                        if (directError) context.getString(R.string.scene_duration_direct_error)
+                        else context.getString(R.string.scene_duration_direct_hint)
+                    )
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
+            Button(onClick = {
+                val parsed = parseHHMM(directText)
+                if (parsed == null) directError = true else onSelect(parsed)
+            }) {
+                Text(context.getString(R.string.scene_duration_apply))
+            }
+        }
     }
 }
 
+private fun parseHHMM(value: String): Int? {
+    val match = Regex("^(\\d+):([0-5]\\d)$").matchEntire(value.trim()) ?: return null
+    val hours = match.groupValues[1].toLongOrNull() ?: return null
+    val minutes = match.groupValues[2].toIntOrNull() ?: return null
+    val total = hours * 60L + minutes
+    return total.takeIf { it in 1..Int.MAX_VALUE.toLong() }?.toInt()
+}
+
+private fun formatHHMM(minutes: Int): String {
+    val safe = minutes.coerceAtLeast(1)
+    return "%02d:%02d".format(safe / 60, safe % 60)
+}
+
 private fun formatDuration(minutes: Int): String {
-    val hours = minutes / 60
-    val remainder = minutes % 60
-    return if (remainder == 0) "${hours}h" else "${hours}h ${remainder}m"
+    val safe = minutes.coerceAtLeast(1)
+    val hours = safe / 60
+    val remainder = safe % 60
+    return when {
+        hours == 0 -> "${remainder}m"
+        remainder == 0 -> "${hours}h"
+        else -> "${hours}h ${remainder}m"
+    }
 }
 
 @Composable

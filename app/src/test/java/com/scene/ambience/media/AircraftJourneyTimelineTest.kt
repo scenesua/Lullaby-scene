@@ -35,7 +35,6 @@ class AircraftJourneyTimelineTest {
     @Test
     fun `random cruise events stay inside cruise safe window`() {
         val plan = AircraftJourneyTimelineBuilder.build(600, 99L)
-
         plan.events.forEach { event ->
             assertTrue(event.startMs > plan.climbEndMs)
             assertTrue(event.endMs < plan.descentStartMs)
@@ -48,7 +47,6 @@ class AircraftJourneyTimelineTest {
         val plan = AircraftJourneyTimelineBuilder.build(600, 99L)
         val disruptive = plan.events.filter { it.arousal == SleepEventArousal.DISRUPTIVE }
         val guardEnd = plan.seatbeltOffMs + SleepEventPolicy.EARLY_SLEEP_DISRUPTIVE_GUARD_MS
-
         disruptive.forEach { event ->
             assertTrue(event.startMs >= guardEnd)
             assertTrue(event.intensity <= 0.32f)
@@ -64,7 +62,6 @@ class AircraftJourneyTimelineTest {
         val neutral = plan.events.filter { it.arousal == SleepEventArousal.NEUTRAL }
         val disruptive = plan.events.filter { it.arousal == SleepEventArousal.DISRUPTIVE }
         val guardEnd = plan.seatbeltOffMs + SleepEventPolicy.NEUTRAL_SETTLING_GUARD_MS
-
         neutral.forEach { event ->
             assertTrue(event.startMs >= guardEnd)
             disruptive.forEach { loud ->
@@ -74,10 +71,29 @@ class AircraftJourneyTimelineTest {
     }
 
     @Test
-    fun `duration is bounded and quantized to thirty minutes`() {
-        assertEquals(240, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(60))
-        assertEquals(480, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(475))
-        assertEquals(510, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(500))
-        assertEquals(720, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(1000))
+    fun `direct duration keeps exact positive minutes`() {
+        assertEquals(1, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(0))
+        assertEquals(5, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(5))
+        assertEquals(475, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(475))
+        assertEquals(1000, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(1000))
+    }
+
+    @Test
+    fun `short journey compresses all aircraft phases in order`() {
+        val plan = AircraftJourneyTimelineBuilder.build(5, 42L)
+        assertEquals(5L * 60_000L, plan.journeyEndMs)
+        assertTrue(plan.taxiOutEndMs <= plan.takeoffEndMs)
+        assertTrue(plan.takeoffEndMs <= plan.climbEndMs)
+        assertTrue(plan.climbEndMs <= plan.descentStartMs)
+        assertTrue(plan.descentStartMs <= plan.seatbeltOnMs)
+        assertTrue(plan.seatbeltOnMs <= plan.approachStartMs)
+        assertTrue(plan.approachStartMs <= plan.touchdownMs)
+        assertTrue(plan.touchdownMs <= plan.journeyEndMs)
+        assertEquals(SceneOrchestrator.STATE_ARRIVED, plan.phaseAt(plan.journeyEndMs))
+    }
+
+    @Test
+    fun `aircraft recommended buttons stay scene specific`() {
+        assertEquals(listOf(360, 480, 600), AircraftJourneyTimelineBuilder.FIXED_DURATION_MINUTES)
     }
 }

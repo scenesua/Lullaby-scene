@@ -4,12 +4,12 @@ import kotlin.math.abs
 import kotlin.random.Random
 
 /**
- * Absolute-time journey plan for Passenger Aircraft Cabin.
+ * Journey plan for Passenger Aircraft Cabin.
  *
- * The user's selected duration is the whole simulated journey/sleep window.
- * Ground/takeoff/climb/descent/approach/taxi phases are Aircraft-specific fixed
- * timeline rules; only the long cruise section stretches to fill the requested
- * total. Random events live inside cruise and are filtered through SleepEventPolicy.
+ * User-entered duration is never clamped to the recommended buttons. For long
+ * journeys the aircraft keeps realistic absolute departure/arrival windows and
+ * cruise absorbs the remaining time. Very short user-entered journeys compress
+ * the same phase order proportionally so every positive duration is valid.
  */
 data class AircraftJourneyTimeline(
     val totalDurationMs: Long,
@@ -51,24 +51,22 @@ data class AircraftJourneyEvent(
 )
 
 object AircraftJourneyTimelineBuilder {
-    const val MIN_DURATION_MINUTES = 240
-    const val MAX_DURATION_MINUTES = 720
-    const val STEP_MINUTES = 30
+    const val FREE_INPUT_MINUTES = 1
+    const val SLIDER_MAX_MINUTES = 720
+    val FIXED_DURATION_MINUTES = listOf(360, 480, 600)
 
+    private const val COMPACT_TIMELINE_BELOW_MINUTES = 240
     private const val EVENT_CLUSTER_GUARD_MS = 15L * 60_000L
     private const val PRE_ARRIVAL_RANDOM_GUARD_MS = 20L * 60_000L
 
-    fun normalizeDurationMinutes(minutes: Int): Int {
-        val clamped = minutes.coerceIn(MIN_DURATION_MINUTES, MAX_DURATION_MINUTES)
-        return ((clamped + STEP_MINUTES / 2) / STEP_MINUTES) * STEP_MINUTES
-    }
+    fun normalizeDurationMinutes(minutes: Int): Int = minutes.coerceAtLeast(FREE_INPUT_MINUTES)
 
     fun build(totalDurationMinutes: Int, seed: Long): AircraftJourneyTimeline {
         val totalMinutes = normalizeDurationMinutes(totalDurationMinutes)
         val totalMs = totalMinutes * MINUTE_MS
-        val random = Random(seed)
+        if (totalMinutes < COMPACT_TIMELINE_BELOW_MINUTES) return buildCompact(totalMs)
 
-        // Aircraft-specific absolute phase lengths. They never scale with 8 h vs 10 h.
+        val random = Random(seed)
         val taxiOutMs = randomMinutes(random, 8, 18)
         val takeoffRollMs = randomSeconds(random, 45, 75)
         val climbMs = randomMinutes(random, 10, 16)
@@ -84,8 +82,6 @@ object AircraftJourneyTimelineBuilder {
         val approachStart = (touchdown - approachLeadMs).coerceAtLeast(climbEnd + 60 * MINUTE_MS)
         val descentStart = (touchdown - descentLeadMs).coerceAtLeast(climbEnd + 30 * MINUTE_MS)
 
-        // The sign is always on for taxi/takeoff/climb. There is no universal legal
-        // "X minutes after takeoff" switch-off time, so use a plausible operational window.
         val seatbeltOff = (takeoffEnd + randomMinutes(random, 8, 18)).coerceAtLeast(climbEnd)
         val seatbeltOn = (touchdown - randomMinutes(random, 20, 30))
             .coerceIn(descentStart, approachStart)
@@ -109,6 +105,31 @@ object AircraftJourneyTimelineBuilder {
             touchdownMs = touchdown,
             journeyEndMs = journeyEnd,
             events = events,
+        )
+    }
+
+    private fun buildCompact(totalMs: Long): AircraftJourneyTimeline {
+        fun at(ratio: Double): Long = (totalMs * ratio).toLong().coerceIn(0L, totalMs)
+        val taxiOutEnd = at(0.025)
+        val takeoffEnd = at(0.0275).coerceAtLeast(taxiOutEnd + 1L).coerceAtMost(totalMs)
+        val climbEnd = at(0.05625).coerceAtLeast(takeoffEnd).coerceAtMost(totalMs)
+        val seatbeltOff = at(0.075).coerceAtLeast(climbEnd).coerceAtMost(totalMs)
+        val descentStart = at(0.9125).coerceAtLeast(seatbeltOff).coerceAtMost(totalMs)
+        val seatbeltOn = at(0.925).coerceIn(descentStart, totalMs)
+        val approachStart = at(0.96875).coerceAtLeast(seatbeltOn).coerceAtMost(totalMs)
+        val touchdown = at(0.9875).coerceAtLeast(approachStart).coerceAtMost(totalMs)
+        return AircraftJourneyTimeline(
+            totalDurationMs = totalMs,
+            taxiOutEndMs = taxiOutEnd,
+            takeoffEndMs = takeoffEnd,
+            climbEndMs = climbEnd,
+            seatbeltOffMs = seatbeltOff,
+            descentStartMs = descentStart,
+            seatbeltOnMs = seatbeltOn,
+            approachStartMs = approachStart,
+            touchdownMs = touchdown,
+            journeyEndMs = totalMs,
+            events = emptyList(),
         )
     }
 
