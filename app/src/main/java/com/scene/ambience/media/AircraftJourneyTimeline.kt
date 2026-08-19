@@ -1,15 +1,15 @@
 package com.scene.ambience.media
 
+import kotlin.math.abs
 import kotlin.random.Random
 
 /**
  * Absolute-time journey plan for Passenger Aircraft Cabin.
  *
  * The user's selected duration is the whole simulated journey/sleep window.
- * Ground/takeoff/climb/descent/approach/taxi phases use bounded real-world-like
- * durations; only the long cruise section stretches to fill the requested total.
- * Random events are generated only inside cruise and never by percentage of the
- * whole journey.
+ * Ground/takeoff/climb/descent/approach/taxi phases are Aircraft-specific fixed
+ * timeline rules; only the long cruise section stretches to fill the requested
+ * total. Random events live inside cruise and are filtered through SleepEventPolicy.
  */
 data class AircraftJourneyTimeline(
     val totalDurationMs: Long,
@@ -47,12 +47,16 @@ data class AircraftJourneyEvent(
     val startMs: Long,
     val endMs: Long,
     val intensity: Float,
+    val arousal: SleepEventArousal,
 )
 
 object AircraftJourneyTimelineBuilder {
     const val MIN_DURATION_MINUTES = 240
     const val MAX_DURATION_MINUTES = 720
     const val STEP_MINUTES = 30
+
+    private const val EVENT_CLUSTER_GUARD_MS = 15L * 60_000L
+    private const val PRE_ARRIVAL_RANDOM_GUARD_MS = 20L * 60_000L
 
     fun normalizeDurationMinutes(minutes: Int): Int {
         val clamped = minutes.coerceIn(MIN_DURATION_MINUTES, MAX_DURATION_MINUTES)
@@ -64,7 +68,7 @@ object AircraftJourneyTimelineBuilder {
         val totalMs = totalMinutes * MINUTE_MS
         val random = Random(seed)
 
-        // Absolute phase lengths. They intentionally do not scale with an 8 h vs 10 h sleep.
+        // Aircraft-specific absolute phase lengths. They never scale with 8 h vs 10 h.
         val taxiOutMs = randomMinutes(random, 8, 18)
         val takeoffRollMs = randomSeconds(random, 45, 75)
         val climbMs = randomMinutes(random, 10, 16)
@@ -88,8 +92,9 @@ object AircraftJourneyTimelineBuilder {
 
         val events = buildCruiseEvents(
             random = random,
+            sleepReadyMs = seatbeltOff,
             cruiseStartMs = maxOf(climbEnd, seatbeltOff) + 15 * MINUTE_MS,
-            cruiseEndMs = descentStart - 10 * MINUTE_MS,
+            cruiseEndMs = descentStart - PRE_ARRIVAL_RANDOM_GUARD_MS,
         )
 
         return AircraftJourneyTimeline(
@@ -109,33 +114,60 @@ object AircraftJourneyTimelineBuilder {
 
     private fun buildCruiseEvents(
         random: Random,
+        sleepReadyMs: Long,
         cruiseStartMs: Long,
         cruiseEndMs: Long,
     ): List<AircraftJourneyEvent> {
         if (cruiseEndMs <= cruiseStartMs) return emptyList()
-        val events = mutableListOf<AircraftJourneyEvent>()
-        var cursor = cruiseStartMs + randomMinutes(random, 20, 50)
-        var index = 0
-        while (cursor < cruiseEndMs) {
-            val kind = if (index % 3 == 2) EVENT_CABIN_ACTIVITY else EVENT_TURBULENCE
-            val duration = if (kind == EVENT_TURBULENCE) {
-                randomSeconds(random, 45, 150)
-            } else {
-                randomSeconds(random, 25, 90)
-            }
-            val end = (cursor + duration).coerceAtMost(cruiseEndMs)
-            if (end > cursor) {
-                events += AircraftJourneyEvent(
-                    kind = kind,
-                    startMs = cursor,
+
+        val disruptive = mutableListOf<AircraftJourneyEvent>()
+        val disruptiveStart = maxOf(
+            cruiseStartMs,
+            sleepReadyMs + SleepEventPolicy.EARLY_SLEEP_DISRUPTIVE_GUARD_MS,
+        )
+        var disruptiveCursor = disruptiveStart + randomMinutes(random, 20, 60)
+        while (disruptiveCursor < cruiseEndMs) {
+            val duration = randomSeconds(random, 30, 90)
+            val end = (disruptiveCursor + duration).coerceAtMost(cruiseEndMs)
+            if (end > disruptiveCursor) {
+                disruptive += AircraftJourneyEvent(
+                    kind = EVENT_TURBULENCE,
+                    startMs = disruptiveCursor,
                     endMs = end,
-                    intensity = random.nextDouble(0.18, 0.58).toFloat(),
+                    intensity = SleepEventPolicy.intensity(random, SleepEventArousal.DISRUPTIVE),
+                    arousal = SleepEventArousal.DISRUPTIVE,
                 )
             }
-            cursor += randomMinutes(random, 35, 90)
-            index++
+            disruptiveCursor += SleepEventPolicy.nextGapMs(SleepEventArousal.DISRUPTIVE, random)
         }
-        return events
+
+        val neutral = mutableListOf<AircraftJourneyEvent>()
+        val neutralStart = maxOf(
+            cruiseStartMs,
+            sleepReadyMs + SleepEventPolicy.NEUTRAL_SETTLING_GUARD_MS,
+        )
+        var neutralCursor = neutralStart + randomMinutes(random, 15, 45)
+        while (neutralCursor < cruiseEndMs) {
+            val tooCloseToDisruptive = disruptive.any {
+                abs(it.startMs - neutralCursor) < EVENT_CLUSTER_GUARD_MS
+            }
+            if (!tooCloseToDisruptive) {
+                val duration = randomSeconds(random, 20, 60)
+                val end = (neutralCursor + duration).coerceAtMost(cruiseEndMs)
+                if (end > neutralCursor) {
+                    neutral += AircraftJourneyEvent(
+                        kind = EVENT_CABIN_ACTIVITY,
+                        startMs = neutralCursor,
+                        endMs = end,
+                        intensity = SleepEventPolicy.intensity(random, SleepEventArousal.NEUTRAL),
+                        arousal = SleepEventArousal.NEUTRAL,
+                    )
+                }
+            }
+            neutralCursor += SleepEventPolicy.nextGapMs(SleepEventArousal.NEUTRAL, random)
+        }
+
+        return (neutral + disruptive).sortedBy { it.startMs }
     }
 
     private fun randomMinutes(random: Random, min: Int, max: Int): Long =
