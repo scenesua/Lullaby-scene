@@ -18,15 +18,18 @@
     if(!sceneNode.whistleGuard){
       try{
         sceneNode.src.disconnect();
-        const presence=ctx.createBiquadFilter(),high=ctx.createBiquadFilter();
-        presence.type='peaking';presence.frequency.value=3574;presence.Q.value=6;presence.gain.value=-9;
-        high.type='peaking';high.frequency.value=10544;high.Q.value=8;high.gain.value=-16;
-        sceneNode.src.connect(presence).connect(high).connect(sceneNode.filter);
-        sceneNode.whistleGuard={presence,high};
+        const tone685=ctx.createBiquadFilter(),tone1191=ctx.createBiquadFilter(),tone2383=ctx.createBiquadFilter(),tone3574=ctx.createBiquadFilter(),tone10544=ctx.createBiquadFilter();
+        tone685.type='peaking';tone685.frequency.value=685;tone685.Q.value=5;tone685.gain.value=-6;
+        tone1191.type='peaking';tone1191.frequency.value=1191;tone1191.Q.value=6;tone1191.gain.value=-10;
+        tone2383.type='peaking';tone2383.frequency.value=2383;tone2383.Q.value=8;tone2383.gain.value=-6;
+        tone3574.type='peaking';tone3574.frequency.value=3574;tone3574.Q.value=8;tone3574.gain.value=-10;
+        tone10544.type='peaking';tone10544.frequency.value=10544;tone10544.Q.value=7;tone10544.gain.value=-18;
+        sceneNode.src.connect(tone685).connect(tone1191).connect(tone2383).connect(tone3574).connect(tone10544).connect(sceneNode.filter);
+        sceneNode.whistleGuard={tone685,tone1191,tone2383,tone3574,tone10544};
       }catch(error){console.warn('aircraft whistle guard unavailable',error)}
     }
-    sceneNode.filter.Q.value=.2;
-    sceneNode.filter.frequency.value=15000;
+    sceneNode.filter.Q.value=.15;
+    sceneNode.filter.frequency.value=18500;
     return sceneNode;
   };
 
@@ -52,9 +55,9 @@
     const direct=Math.max(0,phaseDirect*presence+turbulenceLift+cabinLift);
     sceneNode.gain.gain.setTargetAtTime(direct,ctx.currentTime,.9);
 
-    // Keep the field recording natural, but hold the very top end low enough
-    // that residual narrow whistling does not dominate long listening sessions.
-    const cutoff=Math.max(13500,15200-(macro.night*900)-((1-macro.engine)*350));
+    // The narrow guards remove the stable tonal ridges, so keep the remaining
+    // top end substantially more open than the earlier emergency low-pass.
+    const cutoff=Math.max(16500,18800-(macro.night*1100)-((1-macro.engine)*450));
     sceneNode.filter.frequency.setTargetAtTime(cutoff,ctx.currentTime,1.5);
   };
 
