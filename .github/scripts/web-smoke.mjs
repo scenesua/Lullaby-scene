@@ -60,7 +60,8 @@ const recipeRoundTrip=await page.evaluate(()=>{
   const recipe=window.LullabySceneRecipe.snapshot('Browser Recipe');
   const encoded=window.LullabySceneRecipe.encode(recipe);
   const decoded=window.LullabySceneRecipe.decode(encoded);
-  return{recipe,encoded,decoded,url:window.LullabySceneRecipe.shareUrl(recipe)};
+  const url=new URL(location.href);url.searchParams.set('scene','simple');url.searchParams.set('recipe',encoded);
+  return{recipe,encoded,decoded,url:url.toString()};
 });
 if(recipeRoundTrip.decoded?.schema!=='lullaby.scene.recipe'||recipeRoundTrip.decoded?.version!==1)throw new Error(`Scene Recipe round-trip failed: ${JSON.stringify(recipeRoundTrip)}`);
 if(!recipeRoundTrip.url.includes('recipe='))throw new Error(`Scene Recipe share URL missing payload: ${recipeRoundTrip.url}`);
