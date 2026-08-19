@@ -1,11 +1,31 @@
 (()=>{
   if(!document.getElementById('webPlayer'))return;
-  const AIRCRAFT_URL='/audio/aircraft_cabin_cruise_v2.ogg';
-  // The same long stereo bed is used by the full Mixer and Passenger Aircraft
-  // Cabin. It is materialized from Freesound 853735 with the processing profile
-  // derived from the WAV supplied to this project: no loudness boost, only two
-  // narrow whistle notches, and a circular 5-second loop bridge.
-  getAircraftUrl=async function(){return AIRCRAFT_URL};
+  const CRUISE_URL='/audio/aircraft_cabin_cruise_v2.ogg';
+  const TAXI_URL='/audio/aircraft_cabin_taxi_627056_v1.ogg';
+
+  // Cruise stays on the existing 853735-derived bed for now. Taxi uses the
+  // separately supplied Freesound 627056 field recording so the old long-loop
+  // overlap cannot surface during taxi-out/taxi-in.
+  getAircraftUrl=async function(){return CRUISE_URL};
+  getAircraftTaxiUrl=async function(){return TAXI_URL};
   try{aircraftObjectUrl=null}catch{}
-  window.LullabyAircraftSource={url:AIRCRAFT_URL,sourceId:'freesound_jasonm911_853735',durationSeconds:105,channels:2,sampleRate:48000,loop:'circular-crossfade'};
+  window.LullabyAircraftSource={
+    url:CRUISE_URL,
+    sourceId:'freesound_jasonm911_853735',
+    durationSeconds:105,
+    channels:2,
+    sampleRate:48000,
+    loop:'circular-crossfade'
+  };
+  window.LullabyAircraftTaxiSource={
+    url:TAXI_URL,
+    sourceId:'freesound_mar_sounds_627056',
+    sourceTitle:'Airplane_Cabine ambiance (during flight).wav',
+    durationSeconds:180,
+    channels:2,
+    sampleRate:48000,
+    license:'CC0-1.0',
+    loop:'short-circular-bridge',
+    bridgeMs:180
+  };
 })();
