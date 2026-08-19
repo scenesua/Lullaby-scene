@@ -133,6 +133,7 @@ class AmbienceControllerRepository(
     fun stopScene() = dispatch(Commands.stopScene)
     fun setSceneMacro(key: String, value: Float) = dispatch(Commands.setSceneMacro(key, value))
     fun setSceneDuration(minutes: Int) = dispatch(Commands.setSceneDuration(minutes))
+    fun seekScene(elapsedMs: Long) = dispatch(Commands.seekScene(elapsedMs))
 
     fun dispatchQuietly(command: SessionCommand) {
         val future = dispatch(command) ?: return
