@@ -79,8 +79,22 @@ await page.waitForTimeout(60);
 const nextState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
 if(nextState.phase!=='Descent'||nextState.ratio<.90||nextState.ratio>.93)throw new Error(`next phase button failed: ${JSON.stringify(nextState)}`);
 
+// Build the real aircraft WebAudio graph without playing it and verify every
+// source-only tonal guard is present. This catches wiring regressions, not just text.
+const guard=await page.evaluate(async()=>{
+  await ensureSceneNode();
+  const g=sceneNode?.whistleGuard;
+  return {
+    frequencies:g?[g.tone685.frequency.value,g.tone1191.frequency.value,g.tone2383.frequency.value,g.tone3574.frequency.value,g.tone10544.frequency.value]:[],
+    gains:g?[g.tone685.gain.value,g.tone1191.gain.value,g.tone2383.gain.value,g.tone3574.gain.value,g.tone10544.gain.value]:[],
+    lowpass:sceneNode?.filter?.frequency?.value,
+  };
+});
+if(JSON.stringify(guard.frequencies)!=='[685,1191,2383,3574,10544]')throw new Error(`aircraft tonal guard frequencies missing: ${JSON.stringify(guard)}`);
+if(guard.gains.some(value=>value>=0)||guard.lowpass!==18500)throw new Error(`aircraft tonal guard gains/ceiling invalid: ${JSON.stringify(guard)}`);
+
 const aircraft=await page.evaluate(async()=>({url:await getAircraftUrl(),meta:window.LullabyAircraftSource}));
 if(aircraft.url!=='/audio/aircraft_cabin_cruise_v2.ogg'||aircraft.meta?.channels!==2||aircraft.meta?.durationSeconds!==105||aircraft.meta?.sourceId!=='freesound_jasonm911_853735')throw new Error(`clean long aircraft source override missing: ${JSON.stringify(aircraft)}`);
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log('web Mixer v14 + journey seek/phase-step smoke test passed');
+console.log('web Mixer v14 + journey seek/phase-step/whistle-guard smoke test passed');
