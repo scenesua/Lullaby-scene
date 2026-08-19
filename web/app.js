@@ -1,42 +1,38 @@
-const translations={ko:{navScenes:'Scenes',navHow:'작동 방식',navDownload:'다운로드',eyebrow:'A living place to fall asleep in',heroTitle:'잠드는 동안<br>장면은 계속 살아있습니다.',heroLead:'짧은 루프를 반복하는 대신, Lullaby Scene은 당신이 정한 수면 시간 안에서 소리와 사건을 천천히 변화시킵니다.',downloadAndroid:'Android 테스트 빌드',exploreScenes:'씬 둘러보기',heroNote:'Android 프리릴리즈 제공 중 · Web Player는 개발 중',sceneEyebrow:'Living scenes',sceneTitle:'어디에서 잠들고 싶나요?',sceneLead:'각 씬은 자신만의 시간표와 랜덤 이벤트, 공간감을 가집니다. 수면을 방해할 수 있는 이벤트는 입면기와 초기 수면에서 자동으로 억제됩니다.',availableNow:'AVAILABLE IN PREVIEW',planned:'PLANNED',aircraftDesc:'출발, 이륙, 긴 순항, 하강과 도착이 당신의 전체 수면 시간에 맞춰 이어지는 야간 여객기 장면.',trainDesc:'장거리 야간열차의 레일 소리와 빗소리, 드문 정차 이벤트가 이어지는 수면 여정.',cabinDesc:'창밖의 폭풍은 멀고, 실내의 작은 소리와 벽난로는 가까운 공간 중심의 장면.',howEyebrow:'Not a playlist',howTitle:'시간을 재생하는 사운드스케이프.',feature1Title:'전체 수면 시간을 먼저',feature1Body:'8시간이면 8시간짜리 장면을 만듭니다. 고정 구간은 그대로 두고 긴 중간 구간이 자연스럽게 늘어납니다.',feature2Title:'씬마다 다른 사건',feature2Body:'비행기의 이륙과 착륙, 열차의 정차처럼 고정 이벤트는 각 씬 전용 타임라인이 관리합니다.',feature3Title:'수면을 보호하는 랜덤',feature3Body:'각성도 높은 이벤트는 잠들기 직전과 초기 수면에 몰리지 않도록 빈도와 강도를 제한합니다.',feature4Title:'공간까지 하나의 장면으로',feature4Body:'거리, 고역 감쇠, 톤과 움직임이 씬 상태와 매크로 컨트롤에 따라 함께 변합니다.',platformEyebrow:'Local first',platformTitle:'잠은 네트워크 상태를 기다리지 않습니다.',platformBody:'Android 앱은 백그라운드 재생을 중심으로 개발되고 있으며, 웹은 설치 가능한 PWA와 Web Audio 기반 플레이어로 확장할 예정입니다.',viewReleases:'GitHub Releases',installSite:'웹 앱 설치',footerTagline:'Living soundscapes for sleep.',privacy:'개인정보 처리방침',terms:'이용약관'},en:{navScenes:'Scenes',navHow:'How it works',navDownload:'Download',eyebrow:'A living place to fall asleep in',heroTitle:'The scene keeps living<br>while you fall asleep.',heroLead:'Instead of repeating a short loop, Lullaby Scene slowly changes sound and events across the sleep duration you choose.',downloadAndroid:'Android preview build',exploreScenes:'Explore scenes',heroNote:'Android prerelease available · Web Player in development',sceneEyebrow:'Living scenes',sceneTitle:'Where do you want to fall asleep?',sceneLead:'Every scene owns its own timeline, random events and sense of space. Potentially disruptive events are automatically suppressed around sleep onset and early sleep.',availableNow:'AVAILABLE IN PREVIEW',planned:'PLANNED',aircraftDesc:'An overnight passenger-aircraft scene whose departure, long cruise, descent and arrival fit your total sleep duration.',trainDesc:'A long overnight rail journey with track texture, rain and occasional station events.',cabinDesc:'A space-focused scene with a distant storm outside and smaller fireplace and cabin details close by.',howEyebrow:'Not a playlist',howTitle:'A soundscape that plays time.',feature1Title:'Start with the whole sleep window',feature1Body:'Choose eight hours and the scene becomes an eight-hour journey. Fixed phases stay bounded while the long middle stretches naturally.',feature2Title:'Events belong to their scene',feature2Body:'Takeoff and landing belong to Aircraft. Station stops belong to Train. Each scene owns its fixed timeline.',feature3Title:'Randomness that protects sleep',feature3Body:'Events likely to wake you are kept sparse and away from sleep onset and early-sleep protection windows.',feature4Title:'Space is part of the scene',feature4Body:'Distance, high-frequency roll-off, tone and movement change together with scene state and semantic controls.',platformEyebrow:'Local first',platformTitle:'Sleep should not wait for the network.',platformBody:'The Android app is built around reliable background playback. The web will grow into an installable PWA and Web Audio player.',viewReleases:'GitHub Releases',installSite:'Install web app',footerTagline:'Living soundscapes for sleep.',privacy:'Privacy',terms:'Terms'}};
-
 const languageToggle=document.getElementById('languageToggle');
-const stored=localStorage.getItem('lullaby-language');
-let language=stored||((navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en');
-
-function applyLanguage(){
-  document.documentElement.lang=language;
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const value=translations[language][el.dataset.i18n];
-    if(value!==undefined) el.innerHTML=value;
-  });
-  languageToggle.textContent=language==='ko'?'EN':'KO';
-  languageToggle.setAttribute('aria-label',language==='ko'?'Switch to English':'한국어로 전환');
-}
-
-languageToggle?.addEventListener('click',()=>{
-  language=language==='ko'?'en':'ko';
-  localStorage.setItem('lullaby-language',language);
-  applyLanguage();
-});
-applyLanguage();
-
+let language=localStorage.getItem('lullaby-language')||((navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en');
+function applyLanguage(){document.documentElement.lang=language;languageToggle.textContent=language==='ko'?'EN':'KO';languageToggle.setAttribute('aria-label',language==='ko'?'Switch to English':'한국어로 전환')}
+languageToggle?.addEventListener('click',()=>{language=language==='ko'?'en':'ko';localStorage.setItem('lullaby-language',language);applyLanguage()});applyLanguage();
 document.getElementById('year').textContent=new Date().getFullYear();
+let deferredInstall;const installButton=document.getElementById('installPwa');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;installButton.hidden=false});installButton?.addEventListener('click',async()=>{if(!deferredInstall)return;deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;installButton.hidden=true});window.addEventListener('appinstalled',()=>{installButton.hidden=true});
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 
-let deferredInstall;
-const installButton=document.getElementById('installPwa');
-window.addEventListener('beforeinstallprompt',event=>{
-  event.preventDefault();
-  deferredInstall=event;
-  installButton.hidden=false;
-});
-installButton?.addEventListener('click',async()=>{
-  if(!deferredInstall)return;
-  deferredInstall.prompt();
-  await deferredInstall.userChoice;
-  deferredInstall=null;
-  installButton.hidden=true;
-});
-window.addEventListener('appinstalled',()=>{installButton.hidden=true;deferredInstall=null});
+const AudioCtx=window.AudioContext||window.webkitAudioContext;
+let ctx,master,aircraft=null,sceneTimer=null,sceneStartedAt=0,pausedAt=0,scenePlaying=false,durationMinutes=480;
+const macro={engine:.55,activity:.22,turbulence:.12,night:.68};
+const sourceDefs={rain:'/audio/rain.ogg',fire:'/audio/fire.ogg',ocean:'/audio/ocean.ogg',train:'/audio/train.ogg'};
+const mixer={};
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function setStatus(t){$('#playerStatus').textContent=t}
+async function ensureContext(){if(!ctx){ctx=new AudioCtx();master=ctx.createGain();master.gain.value=.7;master.connect(ctx.destination)}if(ctx.state==='suspended')await ctx.resume()}
+function makeMediaNode(url){const el=new Audio(url);el.loop=true;el.preload='auto';const src=ctx.createMediaElementSource(el),filter=ctx.createBiquadFilter(),gain=ctx.createGain();filter.type='lowpass';filter.frequency.value=18000;src.connect(filter).connect(gain).connect(master);return{el,src,filter,gain}}
+async function getAircraftUrl(){const parts=await Promise.all([0,1,2,3].map(i=>fetch(`/audio/aircraft.part0${i}`).then(r=>{if(!r.ok)throw new Error('aircraft asset');return r.text()})));const b64=parts.join('').replace(/\s/g,'');const bin=atob(b64);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return URL.createObjectURL(new Blob([bytes],{type:'audio/ogg'}))}
+async function ensureAircraft(){await ensureContext();if(aircraft)return aircraft;setStatus('Passenger Aircraft Cabin 오디오를 준비하는 중…');const url=await getAircraftUrl();aircraft=makeMediaNode(url);aircraft.gain.gain.value=.55;return aircraft}
 
-if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));}
+function phaseFor(ms,total){const m=ms/60000,t=total/60000;if(m<12)return['Taxi out',true];if(m<13.2)return['Takeoff',true];if(m<27)return['Climb',true];if(m<t-42)return['Cruise',false];if(m<t-15)return['Descent',true];if(m<t-7)return['Approach',true];if(m<t-6)return['Touchdown',true];if(m<t)return['Taxi in',true];return['Arrived',false]}
+function fmt(ms,compact=false){ms=Math.max(0,ms);const sec=Math.floor(ms/1000),h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;if(compact&&h===0)return`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
+function currentElapsed(){return scenePlaying?pausedAt+(performance.now()-sceneStartedAt):pausedAt}
+function updateSceneAudio(ms){if(!aircraft)return;const total=durationMinutes*60000;const [phase]=phaseFor(ms,total);let phaseGain={"Taxi out":.58,Takeoff:.82,Climb:.72,Cruise:.6,Descent:.64,Approach:.7,Touchdown:.76,"Taxi in":.54,Arrived:0}[phase]??.6;const turbulence=Math.sin(ms/2200)*macro.turbulence*.05;const gain=Math.max(0,phaseGain*(.45+macro.engine*.7)+turbulence);aircraft.gain.gain.setTargetAtTime(gain,ctx.currentTime,.8);const cutoff=Math.max(1800,17000-(macro.night*8500)-((1-macro.engine)*2600));aircraft.filter.frequency.setTargetAtTime(cutoff,ctx.currentTime,1.2)}
+function updateSceneUi(){const elapsed=currentElapsed(),total=durationMinutes*60000,remaining=Math.max(0,total-elapsed),[phase,belt]=phaseFor(elapsed,total);$('#phaseLabel').textContent=phase;$('#elapsedLabel').textContent=fmt(elapsed,true);$('#remainingLabel').textContent=fmt(remaining);$('#seatbeltLabel').textContent=belt?'ON':'OFF';$('#journeyProgress').style.width=`${Math.min(100,elapsed/total*100)}%`;$('#railNowPlaying').textContent=scenePlaying?'Passenger Aircraft Cabin':'Paused';let event='None';if(phase==='Cruise'&&elapsed>90*60000){const cycle=Math.floor(elapsed/(105*60000));const within=elapsed%(105*60000);if(within<70000&&macro.turbulence>.05)event='Light turbulence';else if(within>45*60000&&within<46*60000&&macro.activity>.05)event='Quiet cabin movement'}$('#eventLabel').textContent=event;updateSceneAudio(elapsed);if(elapsed>=total){stopScene(true)}}
+async function startScene(){try{await ensureAircraft();if(!scenePlaying){sceneStartedAt=performance.now();scenePlaying=true;await aircraft.el.play();$('#scenePlay').textContent='Ⅱ 일시정지';setStatus('Passenger Aircraft Cabin 재생 중');sceneTimer=setInterval(updateSceneUi,1000);updateSceneUi()}else{pauseScene()}}catch(e){console.error(e);setStatus('오디오를 시작하지 못했습니다. 브라우저의 자동재생/오디오 권한을 확인해 주세요.') }}
+function pauseScene(){if(!scenePlaying)return;pausedAt=currentElapsed();scenePlaying=false;aircraft?.el.pause();clearInterval(sceneTimer);$('#scenePlay').textContent='▶ 계속 재생';$('#railNowPlaying').textContent='Paused';setStatus('일시정지됨')}
+function stopScene(arrived=false){scenePlaying=false;pausedAt=0;clearInterval(sceneTimer);if(aircraft){aircraft.el.pause();aircraft.el.currentTime=0;aircraft.gain.gain.value=.55}$('#scenePlay').textContent='▶ 장면 시작';$('#phaseLabel').textContent=arrived?'Arrived':'Ready';$('#elapsedLabel').textContent='00:00';$('#remainingLabel').textContent=fmt(durationMinutes*60000);$('#seatbeltLabel').textContent='—';$('#journeyProgress').style.width='0';$('#railNowPlaying').textContent='Stopped';$('#eventLabel').textContent='None';setStatus(arrived?'여정이 종료되었습니다.':'정지됨')}
+$('#scenePlay')?.addEventListener('click',startScene);$('#sceneStop')?.addEventListener('click',()=>stopScene(false));
+$('#masterVolume')?.addEventListener('input',e=>{if(master)master.gain.setTargetAtTime(+e.target.value/100,ctx.currentTime,.05)});
+function setDuration(v){durationMinutes=+v;$('#durationSlider').value=v;$('#durationOutput').textContent=(v%60?`${Math.floor(v/60)}h ${v%60}m`:`${v/60}h`);$$('[data-duration]').forEach(b=>b.classList.toggle('active',+b.dataset.duration===+v));if(!scenePlaying&&pausedAt===0)$('#remainingLabel').textContent=fmt(durationMinutes*60000);updateSceneUi()}
+$('#durationSlider')?.addEventListener('input',e=>setDuration(e.target.value));$$('[data-duration]').forEach(b=>b.addEventListener('click',()=>setDuration(b.dataset.duration)));
+$$('[data-macro]').forEach(input=>input.addEventListener('input',e=>{const k=e.target.dataset.macro,v=+e.target.value/100;macro[k]=v;$$(`[data-output="${k}"]`).forEach(o=>o.textContent=`${Math.round(v*100)}%`);$$(`[data-macro="${k}"]`).forEach(other=>{if(other!==e.target)other.value=e.target.value});updateSceneAudio(currentElapsed())}));
+
+async function toggleMixer(id){await ensureContext();if(!mixer[id])mixer[id]=makeMediaNode(sourceDefs[id]);const node=mixer[id],card=$(`.mixer-source[data-source="${id}"]`),btn=$(`[data-source-toggle="${id}"]`);if(node.el.paused){node.gain.gain.value=+($(`[data-source-volume="${id}"]`).value)/100;await node.el.play();card.classList.add('on');btn.textContent='On'}else{node.el.pause();card.classList.remove('on');btn.textContent='Off'}}
+$$('[data-source-toggle]').forEach(b=>b.addEventListener('click',()=>toggleMixer(b.dataset.sourceToggle).catch(e=>{console.error(e);setStatus('Mixer 오디오를 시작하지 못했습니다.')})));$$('[data-source-volume]').forEach(r=>r.addEventListener('input',e=>{const n=mixer[e.target.dataset.sourceVolume];if(n&&ctx)n.gain.gain.setTargetAtTime(+e.target.value/100,ctx.currentTime,.05)}));
+function switchView(view){$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));$$('[data-panel]').forEach(p=>p.classList.toggle('active',p.dataset.panel===view))}$$('[data-view]').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
+setDuration(480);
