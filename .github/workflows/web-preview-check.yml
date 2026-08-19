@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Materialize verified long stereo aircraft bed
+      - name: Materialize cleaned long stereo aircraft bed
         shell: bash
         run: |
           set -euo pipefail
@@ -49,8 +49,8 @@ jobs:
           assert stream['codec_name']=='opus', info
           assert stream['sample_rate']=='48000', info
           assert int(stream['channels'])==2, info
-          assert 78.8 <= float(fmt['duration']) <= 79.2, info
-          assert int(fmt['size']) >= 850000, info
+          assert 104.8 <= float(fmt['duration']) <= 105.2, info
+          assert int(fmt['size']) >= 900000, info
           print(info)
           PY
 
@@ -66,7 +66,7 @@ jobs:
           else
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'feat(audio): materialize verified stereo aircraft bed'
+            git commit -m 'feat(audio): materialize cleaned 853735 stereo aircraft loop'
             git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
           fi
 
@@ -135,12 +135,13 @@ jobs:
       - name: Validate mixer interaction and Scene Recipe wiring
         run: |
           grep -q 'desired=new Map' web/mixer-interaction-v14.js
-          grep -q 'percent===0' web/mixer-interaction-v14.js
-          grep -q 'Do not rebuild either mixer while the thumb is moving' web/mixer-interaction-v14.js
+          grep -q 'requestAnimationFrame' web/mixer-interaction-v14.js
+          grep -q 'value===0' web/mixer-interaction-v14.js
           grep -q 'touch-action:pan-y' web/mixer-controls-v14.css
           grep -q 'lullaby.scene.recipe' web/scene-recipe-v1.js
           grep -q "searchParams.set('recipe'" web/scene-recipe-v1.js
-          grep -q '/audio/aircraft_cabin_cruise_v2.ogg' web/aircraft-source-v15.js
+          grep -q 'freesound_jasonm911_853735' web/aircraft-source-v15.js
+          grep -q 'durationSeconds:105' web/aircraft-source-v15.js
 
       - name: Validate saved scenes, duration and FX wiring
         run: |
@@ -154,10 +155,14 @@ jobs:
 
       - name: Validate aircraft sleep-journey processing chain
         run: |
-          grep -q "/audio/ventilation.ogg" web/scene-audio-v2.js
-          ! grep -q "/audio/brown_noise.ogg" web/scene-audio-v2.js
-          grep -q 'createStereoPanner' web/scene-audio-v2.js
-          ! grep -q 'Math.sin(ms/340)' web/scene-audio-v2.js
+          ! grep -q 'createStereoPanner' web/scene-audio-v2.js
+          ! grep -q '/audio/ventilation.ogg' web/scene-audio-v2.js
+          ! grep -q '/audio/brown_noise.ogg' web/scene-audio-v2.js
+          grep -q 'LullabyJourneyRuntime' web/scene-audio-v2.js
+          grep -q 'setPointerCapture' web/scene-audio-v2.js
+          grep -q 'equalizer=f=10544' tools/materialize_aircraft_audio.py
+          grep -q 'equalizer=f=3574' tools/materialize_aircraft_audio.py
+          ! grep -q 'loudnorm' tools/materialize_aircraft_audio.py
           ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration,size -of json web/audio/aircraft_cabin_cruise_v2.ogg
 
       - name: Install browser smoke dependency
