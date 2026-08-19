@@ -97,5 +97,6 @@
   },true);
   document.addEventListener('lullaby-language-changed',requestRender);document.addEventListener('lullaby-scene-mode-changed',event=>{if(event.detail?.mode==='simple')requestRender()});
   const mixer=$('#mixerGrid');if(mixer)new MutationObserver(requestRender).observe(mixer,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  const inspector=$('#inspectorMixerList');if(inspector)new MutationObserver(()=>{if(!inspector.querySelector('[data-quick-source]'))requestRender()}).observe(inspector,{childList:true});
   ensureMainQuickMixer();setTimeout(render,100);setTimeout(render,500);window.LullabyQuickMixer={render,turnAllOff,get activePreset(){return activePreset}};
 })();
