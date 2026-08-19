@@ -2,7 +2,10 @@
   const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];
   const lang=()=>window.LullabyI18n?.language||'ko';
   const isKo=()=>lang()==='ko';
+  const setText=(el,text)=>{if(el&&el.textContent!==text)el.textContent=text};
   let activeSceneMode='journey';
+  let translating=false,translateQueued=false;
+
   function setSceneMode(mode){
     activeSceneMode=mode==='simple'?'simple':'journey';
     $$('[data-scene-mode]').forEach(b=>b.classList.toggle('active',b.dataset.sceneMode===activeSceneMode));
@@ -13,27 +16,49 @@
   const initial=new URL(location.href).searchParams.get('scene');setSceneMode(initial==='simple'?'simple':'journey');
   window.setLullabySceneMode=setSceneMode;
 
-  function runtimeText(){
-    const activeView=$('[data-panel].active')?.dataset.panel||'scene';
-    const titles={scene:isKo()?'Scenes':'Scenes',mixer:'Mixer',timer:isKo()?'취침 타이머':'Sleep Timer',settings:'Settings'};
-    if($('#mobileTitle'))$('#mobileTitle').textContent=titles[activeView]||activeView;
-    const direct=$('.duration-direct');
-    if(direct){
-      const strong=direct.querySelector('.duration-direct-copy strong');const hint=direct.querySelector('.duration-direct-copy span');const button=direct.querySelector('.duration-direct-entry button');
-      if(strong)strong.textContent=isKo()?'직접 입력':'Direct input';if(hint)hint.textContent='HH:MM · 04:00–12:00';if(button)button.textContent=isKo()?'적용':'Apply';
-    }
-    $$('[data-filter]').forEach(b=>{const m={all:['전체','All'],nature:['자연','Nature'],indoor:['실내','Indoor'],travel:['이동','Travel'],other:['기타','Other']};const pair=m[b.dataset.filter];if(pair)b.textContent=pair[isKo()?0:1]});
-    $$('.mixer-source').forEach(card=>{
-      const btn=card.querySelector('[data-source-toggle]');if(btn)btn.textContent=card.classList.contains('on')?(isKo()?'켬':'On'):(isKo()?'끔':'Off');
-      const meta=card.querySelector('div span');if(meta){let text=meta.textContent;text=text.replace('nature',isKo()?'자연':'Nature').replace('indoor',isKo()?'실내':'Indoor').replace('travel',isKo()?'이동':'Travel').replace('other',isKo()?'기타':'Other').replace('event layer',isKo()?'이벤트 레이어':'event layer').replace('continuous',isKo()?'연속 재생':'continuous');meta.textContent=text}
-    });
-    $$('.preset-card span').forEach(span=>{const m=span.textContent.match(/(\d+) sources/);if(m)span.textContent=isKo()?`${m[1]}개 소스`:`${m[1]} sources`});
-    const empty=$('#userPresets .muted-copy');if(empty&&/프리셋|preset/i.test(empty.textContent))empty.textContent=isKo()?'저장한 심플 씬이 없습니다.':'No saved Simple Scenes.';
+  function translateMeta(raw){
+    const categoryMap={nature:['nature','Nature','자연'],indoor:['indoor','Indoor','실내'],travel:['travel','Travel','이동'],other:['other','Other','기타']};
+    let category=null;
+    for(const [id,variants] of Object.entries(categoryMap)){if(variants.some(v=>raw.includes(v))){category=id;break}}
+    const event=/event layer|이벤트 레이어/i.test(raw);
+    const type=event?(isKo()?'이벤트 레이어':'event layer'):(isKo()?'연속 재생':'continuous');
+    const labels={nature:isKo()?'자연':'Nature',indoor:isKo()?'실내':'Indoor',travel:isKo()?'이동':'Travel',other:isKo()?'기타':'Other'};
+    return category?`${labels[category]} · ${type}`:raw;
   }
-  document.addEventListener('lullaby-language-changed',()=>{runtimeText();setTimeout(runtimeText,0)});
-  const observer=new MutationObserver(()=>runtimeText());
+
+  function runtimeText(){
+    if(translating)return;
+    translating=true;
+    try{
+      const activeView=$('[data-panel].active')?.dataset.panel||'scene';
+      const titles={scene:'Scenes',mixer:'Mixer',timer:isKo()?'취침 타이머':'Sleep Timer',settings:'Settings'};
+      setText($('#mobileTitle'),titles[activeView]||activeView);
+      const direct=$('.duration-direct');
+      if(direct){
+        setText(direct.querySelector('.duration-direct-copy strong'),isKo()?'직접 입력':'Direct input');
+        setText(direct.querySelector('.duration-direct-copy span'),'HH:MM · 04:00–12:00');
+        setText(direct.querySelector('.duration-direct-entry button'),isKo()?'적용':'Apply');
+      }
+      const filterLabels={all:['전체','All'],nature:['자연','Nature'],indoor:['실내','Indoor'],travel:['이동','Travel'],other:['기타','Other']};
+      $$('[data-filter]').forEach(b=>{const pair=filterLabels[b.dataset.filter];if(pair)setText(b,pair[isKo()?0:1])});
+      $$('.mixer-source').forEach(card=>{
+        const btn=card.querySelector('[data-source-toggle]');
+        setText(btn,card.classList.contains('on')?(isKo()?'켬':'On'):(isKo()?'끔':'Off'));
+        const meta=card.querySelector('div span');if(meta)setText(meta,translateMeta(meta.textContent));
+      });
+      $$('.preset-card span').forEach(span=>{const m=span.textContent.match(/(\d+)\s*(?:sources|개\s*소스)/i);if(m)setText(span,isKo()?`${m[1]}개 소스`:`${m[1]} sources`)});
+      const empty=$('#userPresets .muted-copy');if(empty)setText(empty,isKo()?'저장한 심플 씬이 없습니다.':'No saved Simple Scenes.');
+    }finally{translating=false}
+  }
+
+  function queueRuntimeText(){
+    if(translateQueued)return;translateQueued=true;
+    requestAnimationFrame(()=>{translateQueued=false;runtimeText()});
+  }
+  document.addEventListener('lullaby-language-changed',queueRuntimeText);
+  const observer=new MutationObserver(queueRuntimeText);
   ['#mixerFilters','#mixerGrid','#builtInPresets','#userPresets','.duration-control'].forEach(sel=>{const el=$(sel);if(el)observer.observe(el,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})});
-  setTimeout(runtimeText,0);
+  queueRuntimeText();
 
   document.addEventListener('click',async e=>{
     const preset=e.target.closest('[data-preset],[data-user-preset]');
@@ -44,6 +69,7 @@
       if(typeof window.switchView==='function')window.switchView('scene');
       setSceneMode('simple');
       if(typeof window.setStatus==='function')window.setStatus(isKo()?'심플 씬을 적용했습니다.':'Simple Scene applied.');
+      queueRuntimeText();
       return;
     }
     const save=e.target.closest('#savePreset');
@@ -54,6 +80,7 @@
       const master=Number(localStorage.getItem('lullaby-master')||70)/100;
       list.push({id:`user_${Date.now()}`,name:name.trim(),master,mix:window.snapshotMix()});window.saveUserPresets(list);
       if(typeof window.setStatus==='function')window.setStatus(isKo()?'현재 믹스를 심플 씬으로 저장했습니다.':'Current mix saved as a Simple Scene.');
+      queueRuntimeText();
     }
   },true);
 })();
