@@ -1,4 +1,5 @@
-// Visitor counter v4 uses only the same-origin Worker endpoint from the browser.
+// Visitor counter v5 uses only the same-origin Worker endpoint from the browser.
+// Server fallback: https://api.counterapi.dev/v1
 (()=>{
   const footer=document.querySelector('.site-footer');if(!footer)return;
   let root=footer.querySelector('[data-visitor-stats]');
@@ -13,11 +14,11 @@
     get(key){try{return localStorage.getItem(key)}catch{return null}},
     set(key,value){try{localStorage.setItem(key,value);return true}catch{return false}},
   };
-  const TOTAL_MARKER='lullaby-visitor-total-counted-v2';
-  const DAY_MARKER='lullaby-visitor-day-counted-v2';
-  const TOTAL_LAST='lullaby-visitor-total-last-v2';
-  const DAY_LAST='lullaby-visitor-day-last-v2';
-  // Removed legacy browser backend: https://api.counterapi.dev/v1
+  // v3 marker keys deliberately invalidate the broken v2 0/0 counted state.
+  const TOTAL_MARKER='lullaby-visitor-total-counted-v3';
+  const DAY_MARKER='lullaby-visitor-day-counted-v3';
+  const TOTAL_LAST='lullaby-visitor-total-last-v3';
+  const DAY_LAST='lullaby-visitor-day-last-v3';
 
   function localize(){
     const today=root.querySelector('[data-visitor-today-label]'),total=root.querySelector('[data-visitor-total-label]');
@@ -36,8 +37,8 @@
   }
   function render(today,total,backend){
     const todayNode=root.querySelector('[data-visitor-today]'),totalNode=root.querySelector('[data-visitor-total]');
-    if(todayNode)todayNode.textContent=Number(today||0).toLocaleString();
-    if(totalNode)totalNode.textContent=Number(total||0).toLocaleString();
+    if(todayNode)todayNode.textContent=Number(today).toLocaleString();
+    if(totalNode)totalNode.textContent=Number(total).toLocaleString();
     root.dataset.unavailable='false';root.dataset.backend=backend||'unknown';root.removeAttribute('title');
   }
   function lastNumber(key){const value=Number(storage.get(key));return Number.isFinite(value)&&value>=0?value:0}
@@ -55,13 +56,21 @@
       });
       if(!response.ok)throw new Error(`visitor api ${response.status}`);
       const data=await response.json();if(!data.available)throw new Error('visitor counter unavailable');
-      let today=Number(data.today||0),total=Number(data.total||0);
-      if(data.backend==='counterapi.com'){
+      let today=Number(data.today),total=Number(data.total);
+      if(!Number.isFinite(today)||today<0||!Number.isFinite(total)||total<0)throw new Error('visitor counter returned invalid counts');
+
+      // A first-time increment that comes back as zero is not success. Never
+      // persist the counted markers in that state, otherwise the browser can
+      // get stuck at 0/0 forever.
+      if(countDay&&today<1)throw new Error('today visitor increment was not confirmed');
+      if(countTotal&&total<1)throw new Error('total visitor increment was not confirmed');
+
+      if(data.backend==='counterapi.dev-v1'){
         today=Math.max(today,lastNumber(DAY_LAST));
         total=Math.max(total,lastNumber(TOTAL_LAST));
         storage.set(DAY_LAST,String(today));storage.set(TOTAL_LAST,String(total));
-        if(countTotal&&data.countedTotal===true)storage.set(TOTAL_MARKER,'1');
-        if(countDay&&data.countedDay===true)storage.set(DAY_MARKER,day);
+        if(countTotal&&data.countedTotal===true&&total>0)storage.set(TOTAL_MARKER,'1');
+        if(countDay&&data.countedDay===true&&today>0)storage.set(DAY_MARKER,day);
       }
       render(today,total,data.backend);
     }catch(error){
