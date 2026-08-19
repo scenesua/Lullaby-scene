@@ -115,7 +115,7 @@ def build(output: Path) -> None:
         "channels": 2,
         "sample_rate": 48000,
         "codec": "opus",
-        "processing": "20 Hz HPF; stable 50..230 s body; 180 ms circular equal-power bridge; no loudnorm/denoise/EQ/widening",
+        "processing": "20 Hz HPF; stable 50..230 s body; 180 ms circular equal-power bridge; no loudness-normalization/denoise/EQ/widening",
     }, indent=2))
 
 
