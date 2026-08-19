@@ -58,9 +58,11 @@
 
   async function load(id){
     const scene=find(id);if(!scene)return false;
-    const sourceButton=document.querySelector(`[data-user-preset="${CSS.escape(id)}"]`);
-    if(sourceButton){sourceButton.click()}else{await R.applyPreset(id);if(scene.fx&&window.LullabyMixerFx)window.LullabyMixerFx.apply(scene.fx)}
-    activeId=id;markActive();setTimeout(()=>setStatus(copy().loaded),0);return true;
+    await R.applyPreset(id);
+    if(scene.fx&&window.LullabyMixerFx)window.LullabyMixerFx.apply(scene.fx);else window.LullabyMixerFx?.reset?.();
+    window.switchView?.('scene');
+    window.setLullabySceneMode?.('simple');
+    activeId=id;markActive();setStatus(copy().loaded);return true;
   }
 
   function markActive(){
