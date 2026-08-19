@@ -25,7 +25,7 @@ const wind='#mixerGrid [data-source="wind"]';
 const initial=await page.locator(wind).evaluate(row=>({on:row.classList.contains('on'),value:row.querySelector('[data-source-volume]')?.value}));
 if(initial.on||initial.value!=='0')throw new Error(`full Mixer inactive source not 0/off: ${JSON.stringify(initial)}`);
 
-// A series of input events must not replace the range element while dragging.
+// A burst of input events must not replace the range element while dragging.
 await page.locator(`${wind} [data-source-volume]`).evaluate(input=>{
   window.__mixerRangeIdentity=input;
   for(const value of ['5','11','18','27']){
@@ -57,8 +57,20 @@ await page.waitForTimeout(120);
 quickState=await page.locator(quick).evaluate(row=>({off:row.classList.contains('is-off'),value:row.querySelector('[data-quick-volume]')?.value,output:row.querySelector('[data-quick-output]')?.textContent}));
 if(!quickState.off||quickState.value!=='0'||quickState.output!=='0%')throw new Error(`Quick Mixer 0% did not switch off: ${JSON.stringify(quickState)}`);
 
+// Journey progress rail is seekable without requiring audio playback.
+await page.locator('[data-scene-mode="journey"]').click();
+await page.waitForTimeout(80);
+const track=page.locator('.journey-track');
+if((await track.getAttribute('role'))!=='slider')throw new Error('journey track is not a seek slider');
+const box=await track.boundingBox();if(!box)throw new Error('journey track has no layout box');
+await page.mouse.click(box.x+box.width*.95,box.y+box.height/2);
+await page.waitForTimeout(60);
+const seekState=await page.evaluate(()=>({elapsed:window.LullabyJourneyRuntime?.elapsedMs,total:window.LullabyJourneyRuntime?.totalMs,phase:document.querySelector('#phaseLabel')?.textContent,aria:document.querySelector('.journey-track')?.getAttribute('aria-valuenow')}));
+if(!seekState.elapsed||!seekState.total||seekState.elapsed/seekState.total<.93||seekState.elapsed/seekState.total>.97)throw new Error(`journey click seek failed: ${JSON.stringify(seekState)}`);
+if(!['Descent','Approach'].includes(seekState.phase))throw new Error(`journey seek did not advance phase: ${JSON.stringify(seekState)}`);
+
 const aircraft=await page.evaluate(async()=>({url:await getAircraftUrl(),meta:window.LullabyAircraftSource}));
-if(aircraft.url!=='/audio/aircraft_cabin_cruise_v2.ogg'||aircraft.meta?.channels!==2||aircraft.meta?.durationSeconds!==79)throw new Error(`long aircraft source override missing: ${JSON.stringify(aircraft)}`);
+if(aircraft.url!=='/audio/aircraft_cabin_cruise_v2.ogg'||aircraft.meta?.channels!==2||aircraft.meta?.durationSeconds!==105||aircraft.meta?.sourceId!=='freesound_jasonm911_853735')throw new Error(`clean long aircraft source override missing: ${JSON.stringify(aircraft)}`);
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log('web Mixer v14 smoke test passed');
+console.log('web Mixer v14 + journey seek smoke test passed');
