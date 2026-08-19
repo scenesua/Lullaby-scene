@@ -20,9 +20,14 @@ data class SceneMacroState(
 data class SceneRuntimeSnapshot(
     val sceneId: String? = null,
     val stateId: String? = null,
-    val arcMinutes: Int = 60,
+    /** Entire user-selected sleep/journey window, not a proportional state-transition arc. */
+    val totalDurationMinutes: Int = 480,
     val elapsedMs: Long = 0L,
+    val seatbeltSignOn: Boolean = true,
+    val activeEventId: String? = null,
     val macros: SceneMacroState = SceneMacroState(),
 ) {
     val active: Boolean get() = sceneId != null
+    val remainingMs: Long
+        get() = (totalDurationMinutes * 60_000L - elapsedMs).coerceAtLeast(0L)
 }
