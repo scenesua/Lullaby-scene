@@ -1,0 +1,10 @@
+(()=>{
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  const call=(name,...args)=>{const fn=window[name];if(typeof fn==='function')return fn(...args);try{const fallback=eval(`typeof ${name}==='function'?${name}:null`);if(fallback)return fallback(...args)}catch{}return undefined};
+  function duration(minutes){minutes=Math.max(240,Math.min(720,Number(minutes)||480));call('setDuration',minutes);const slider=$('#durationSlider'),out=$('#durationOutput');if(slider&&document.activeElement!==slider)slider.value=minutes;if(out){const h=Math.floor(minutes/60),m=Math.round(minutes%60);out.textContent=m?`${h}h ${m}m`:`${h}h`}$$('[data-duration]').forEach(b=>b.classList.toggle('active',Number(b.dataset.duration)===minutes));const direct=$('#durationDirect');if(direct&&document.activeElement!==direct){const h=Math.floor(minutes/60),m=Math.round(minutes%60);direct.value=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`}}
+  document.addEventListener('click',e=>{const chip=e.target.closest?.('[data-duration]');if(chip){duration(chip.dataset.duration);return}const timer=e.target.closest?.('[data-timer-minutes]');if(timer){call('startSleepTimer',timer.dataset.timerMinutes);return}if(e.target.closest?.('#startCustomTimer')){const v=Number($('#customTimer')?.value);if(v>=1&&v<=1440)call('startSleepTimer',v);return}if(e.target.closest?.('#cancelTimer')){call('cancelSleepTimer');return}},true);
+  document.addEventListener('input',e=>{const el=e.target;if(el?.id==='durationSlider'){duration(el.value);return}if(el?.matches?.('[data-macro]')){const key=el.dataset.macro,value=Number(el.value)/100;try{macro[key]=value}catch{};$$(`[data-output="${key}"]`).forEach(o=>o.textContent=`${Math.round(value*100)}%`);call('updateSceneAudio',call('currentElapsed')||0);return}if(el?.matches?.('.master-volume')){call('setMaster',Number(el.value)/100);return}},true);
+  document.addEventListener('change',e=>{if(e.target?.id==='themeSelect')call('applyTheme',e.target.value)},true);
+  setTimeout(()=>{const slider=$('#durationSlider');if(slider)duration(slider.value)},0);
+  window.LullabyControls={setDuration:duration};
+})();
