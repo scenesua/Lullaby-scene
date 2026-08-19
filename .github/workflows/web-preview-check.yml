@@ -1,0 +1,42 @@
+name: Validate web player
+
+on:
+  pull_request:
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-preview-check.yml'
+  push:
+    branches:
+      - work/lullaby-web-foundation
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-preview-check.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: node --check web/app.js && node --check web/sw.js
+      - name: Check required web files and audio
+        run: |
+          test -s web/index.html
+          test -s web/styles.css
+          test -s web/manifest.webmanifest
+          test -s web/_headers
+          test -s web/audio/rain.ogg
+          test -s web/audio/fire.ogg
+          test -s web/audio/ocean.ogg
+          test -s web/audio/train.ogg
+          test -s web/audio/aircraft.part00
+          test -s web/audio/aircraft.part01
+          test -s web/audio/aircraft.part02
+          test -s web/audio/aircraft.part03
+      - name: Validate aircraft payload
+        run: |
+          cat web/audio/aircraft.part0{0,1,2,3} | tr -d '\n\r ' | base64 -d > /tmp/aircraft.ogg
+          test "$(wc -c < /tmp/aircraft.ogg)" -eq 16630
