@@ -1,5 +1,7 @@
 ﻿package com.scene.ambience.ui.screens
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,15 +12,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -27,6 +28,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,7 +47,6 @@ import com.scene.ambience.R
 import com.scene.ambience.data.model.AmbiencePreset
 import com.scene.ambience.presentation.AmbienceUiState
 import com.scene.ambience.presentation.AmbienceViewModel
-import com.scene.ambience.ui.AmbienceStrings
 
 @Composable
 fun PresetsScreen(
@@ -66,6 +67,43 @@ fun PresetsScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(context.getString(R.string.scene_recipe_share_title), style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                context.getString(R.string.scene_recipe_share_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                val hasAudibleSource = state.snapshot?.sources?.values?.any { it.audible } == true
+                                val url = if (hasAudibleSource) viewModel.currentSceneShareUrl() else null
+                                if (url == null) {
+                                    Toast.makeText(context, R.string.scene_recipe_share_unavailable, Toast.LENGTH_SHORT).show()
+                                } else {
+                                    val share = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_TEXT, url)
+                                    }
+                                    context.startActivity(Intent.createChooser(share, context.getString(R.string.scene_recipe_share_chooser)))
+                                }
+                            },
+                        ) {
+                            Icon(Icons.Filled.Share, contentDescription = null)
+                            Text(context.getString(R.string.scene_recipe_share), modifier = Modifier.padding(start = 6.dp))
+                        }
+                    }
+                }
+            }
+
             item(span = { GridItemSpan(maxLineSpan) }) {
                 SectionHeader(
                     title = context.getString(R.string.preset_section_default),
@@ -166,11 +204,7 @@ private fun SectionHeader(
             color = MaterialTheme.colorScheme.outline,
         )
         Icon(
-            imageVector = if (expanded) {
-                Icons.Filled.KeyboardArrowDown
-            } else {
-                Icons.AutoMirrored.Filled.KeyboardArrowRight
-            },
+            imageVector = if (expanded) Icons.Filled.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
         )
     }
@@ -189,10 +223,7 @@ private fun PresetCard(
     var showRenameDialog by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
 
-    Card(
-        onClick = onApply,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Card(onClick = onApply, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -204,26 +235,16 @@ private fun PresetCard(
                 )
                 if (isUser) {
                     IconButton(onClick = { menuOpen = true }) {
-                        Icon(
-                            imageVector = if (active) Icons.Filled.Edit else Icons.Filled.Edit,
-                            contentDescription = null,
-                            modifier = Modifier.padding(0.dp),
-                        )
+                        Icon(Icons.Filled.Edit, contentDescription = null)
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         DropdownMenuItem(
                             text = { Text(context.getString(R.string.rename)) },
-                            onClick = {
-                                menuOpen = false
-                                showRenameDialog = true
-                            },
+                            onClick = { menuOpen = false; showRenameDialog = true },
                         )
                         DropdownMenuItem(
                             text = { Text(context.getString(R.string.delete)) },
-                            onClick = {
-                                menuOpen = false
-                                onDelete()
-                            },
+                            onClick = { menuOpen = false; onDelete() },
                         )
                     }
                 }
@@ -241,10 +262,7 @@ private fun PresetCard(
             title = context.getString(R.string.rename),
             initial = if (isUser) preset.name else "",
             onDismiss = { showRenameDialog = false },
-            onConfirm = {
-                showRenameDialog = false
-                onRename(it)
-            },
+            onConfirm = { showRenameDialog = false; onRename(it) },
         )
     }
 }
@@ -270,60 +288,27 @@ private fun stringResFor(id: String): Int = when (id) {
 }
 
 @Composable
-fun SavePresetDialog(
-    onDismiss: () -> Unit,
-    onSave: (String) -> Unit,
-) {
+fun SavePresetDialog(onDismiss: () -> Unit, onSave: (String) -> Unit) {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(context.getString(R.string.save_current_mix)) },
-        text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text(context.getString(R.string.preset_name_hint)) },
-                singleLine = true,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(name) }, enabled = name.isNotBlank()) {
-                Text(context.getString(R.string.save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(context.getString(R.string.cancel)) }
-        },
+        text = { OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(context.getString(R.string.preset_name_hint)) }, singleLine = true) },
+        confirmButton = { TextButton(onClick = { onSave(name) }, enabled = name.isNotBlank()) { Text(context.getString(R.string.save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(context.getString(R.string.cancel)) } },
     )
 }
 
 @Composable
-fun NameDialog(
-    title: String,
-    initial: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
+fun NameDialog(title: String, initial: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     val context = LocalContext.current
     var name by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                singleLine = true,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) {
-                Text(context.getString(R.string.save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(context.getString(R.string.cancel)) }
-        },
+        text = { OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true) },
+        confirmButton = { TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) { Text(context.getString(R.string.save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(context.getString(R.string.cancel)) } },
     )
 }
