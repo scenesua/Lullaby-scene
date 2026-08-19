@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#11131a">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Lullaby Scene은 잠드는 동안 천천히 변화하는 살아있는 사운드스케이프를 만드는 수면 환경 앱입니다.">
+  <meta name="keywords" content="Lullaby Scene, sleep sounds, ambience, soundscape, 수면음, 백색소음, 환경음">
+  <meta name="author" content="Lullaby Scene">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://lullabyscene.com/">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <link rel="preload" href="/styles.css" as="style">
+  <link rel="stylesheet" href="/styles.css">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Lullaby Scene">
+  <meta property="og:title" content="Lullaby Scene — Living soundscapes for sleep">
+  <meta property="og:description" content="반복되는 소리 대신, 시간과 장면에 따라 천천히 변화하는 수면용 사운드스케이프.">
+  <meta property="og:url" content="https://lullabyscene.com/">
+  <meta property="og:image" content="https://lullabyscene.com/assets/og-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Lullaby Scene — Living soundscapes for sleep">
+  <meta name="twitter:description" content="Slowly evolving scenes designed for long, quiet listening.">
+
+  <title>Lullaby Scene — Living soundscapes for sleep</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Lullaby Scene",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "Android, Web",
+    "url": "https://lullabyscene.com/",
+    "downloadUrl": "https://github.com/scenesua/Lullaby-scene/releases",
+    "description": "Living ambient scenes that evolve over a sleep session instead of repeating a fixed mix.",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Lullaby Scene 홈">
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span>Lullaby Scene</span>
+    </a>
+    <nav class="nav" aria-label="주요 메뉴">
+      <a href="#scenes" data-i18n="navScenes">Scenes</a>
+      <a href="#how" data-i18n="navHow">How it works</a>
+      <a href="https://github.com/scenesua/Lullaby-scene/releases" rel="noopener" data-i18n="navDownload">Download</a>
+      <button id="languageToggle" class="language-toggle" type="button" aria-label="Switch language">EN</button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow" data-i18n="eyebrow">A living place to fall asleep in</p>
+        <h1 id="hero-title" data-i18n="heroTitle">잠드는 동안<br>장면은 계속 살아있습니다.</h1>
+        <p class="hero-lead" data-i18n="heroLead">짧은 루프를 반복하는 대신, Lullaby Scene은 당신이 정한 수면 시간 안에서 소리와 사건을 천천히 변화시킵니다.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="https://github.com/scenesua/Lullaby-scene/releases" rel="noopener" data-i18n="downloadAndroid">Android 테스트 빌드</a>
+          <a class="button ghost" href="#scenes" data-i18n="exploreScenes">씬 둘러보기</a>
+        </div>
+        <p class="microcopy" data-i18n="heroNote">Android 프리릴리즈 제공 중 · Web Player는 개발 중</p>
+      </div>
+
+      <div class="scene-orb" aria-hidden="true">
+        <div class="orbit orbit-a"></div>
+        <div class="orbit orbit-b"></div>
+        <div class="wave wave-a"></div>
+        <div class="wave wave-b"></div>
+        <div class="orb-label">PASSENGER<br>AIRCRAFT<br>CABIN</div>
+      </div>
+    </section>
+
+    <section id="scenes" class="section" aria-labelledby="scenes-title">
+      <div class="section-heading">
+        <p class="eyebrow" data-i18n="sceneEyebrow">Living scenes</p>
+        <h2 id="scenes-title" data-i18n="sceneTitle">어디에서 잠들고 싶나요?</h2>
+        <p data-i18n="sceneLead">각 씬은 자신만의 시간표와 랜덤 이벤트, 공간감을 가집니다. 수면을 방해할 수 있는 이벤트는 입면기와 초기 수면에서 자동으로 억제됩니다.</p>
+      </div>
+
+      <div class="scene-grid">
+        <article class="scene-card featured">
+          <div class="scene-card-top">
+            <span class="status-dot"></span>
+            <span data-i18n="availableNow">AVAILABLE IN PREVIEW</span>
+          </div>
+          <h3>Passenger Aircraft Cabin</h3>
+          <p data-i18n="aircraftDesc">출발, 이륙, 긴 순항, 하강과 도착이 당신의 전체 수면 시간에 맞춰 이어지는 야간 여객기 장면.</p>
+          <div class="scene-tags"><span>4–12h</span><span>Scene Arc</span><span>Spatial DSP</span></div>
+        </article>
+
+        <article class="scene-card muted">
+          <div class="scene-card-top"><span data-i18n="planned">PLANNED</span></div>
+          <h3>Rainy Night Train</h3>
+          <p data-i18n="trainDesc">장거리 야간열차의 레일 소리와 빗소리, 드문 정차 이벤트가 이어지는 수면 여정.</p>
+          <div class="scene-tags"><span>Journey</span><span>Rain</span><span>Rail</span></div>
+        </article>
+
+        <article class="scene-card muted">
+          <div class="scene-card-top"><span data-i18n="planned">PLANNED</span></div>
+          <h3>Cabin in a Storm</h3>
+          <p data-i18n="cabinDesc">창밖의 폭풍은 멀고, 실내의 작은 소리와 벽난로는 가까운 공간 중심의 장면.</p>
+          <div class="scene-tags"><span>Storm</span><span>Cabin</span><span>Fire</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="how" class="section how" aria-labelledby="how-title">
+      <div class="section-heading">
+        <p class="eyebrow" data-i18n="howEyebrow">Not a playlist</p>
+        <h2 id="how-title" data-i18n="howTitle">시간을 재생하는 사운드스케이프.</h2>
+      </div>
+      <div class="feature-grid">
+        <article><span class="feature-index">01</span><h3 data-i18n="feature1Title">전체 수면 시간을 먼저</h3><p data-i18n="feature1Body">8시간이면 8시간짜리 장면을 만듭니다. 고정 구간은 그대로 두고 긴 중간 구간이 자연스럽게 늘어납니다.</p></article>
+        <article><span class="feature-index">02</span><h3 data-i18n="feature2Title">씬마다 다른 사건</h3><p data-i18n="feature2Body">비행기의 이륙과 착륙, 열차의 정차처럼 고정 이벤트는 각 씬 전용 타임라인이 관리합니다.</p></article>
+        <article><span class="feature-index">03</span><h3 data-i18n="feature3Title">수면을 보호하는 랜덤</h3><p data-i18n="feature3Body">각성도 높은 이벤트는 잠들기 직전과 초기 수면에 몰리지 않도록 빈도와 강도를 제한합니다.</p></article>
+        <article><span class="feature-index">04</span><h3 data-i18n="feature4Title">공간까지 하나의 장면으로</h3><p data-i18n="feature4Body">거리, 고역 감쇠, 톤과 움직임이 씬 상태와 매크로 컨트롤에 따라 함께 변합니다.</p></article>
+      </div>
+    </section>
+
+    <section class="section platform" aria-labelledby="platform-title">
+      <div>
+        <p class="eyebrow" data-i18n="platformEyebrow">Local first</p>
+        <h2 id="platform-title" data-i18n="platformTitle">잠은 네트워크 상태를 기다리지 않습니다.</h2>
+        <p data-i18n="platformBody">Android 앱은 백그라운드 재생을 중심으로 개발되고 있으며, 웹은 설치 가능한 PWA와 Web Audio 기반 플레이어로 확장할 예정입니다.</p>
+      </div>
+      <div class="platform-actions">
+        <a class="button primary" href="https://github.com/scenesua/Lullaby-scene/releases" rel="noopener" data-i18n="viewReleases">GitHub Releases</a>
+        <button id="installPwa" class="button ghost" type="button" hidden data-i18n="installSite">웹 앱 설치</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div><strong>Lullaby Scene</strong><p data-i18n="footerTagline">Living soundscapes for sleep.</p></div>
+    <div class="footer-links">
+      <a href="/privacy/" data-i18n="privacy">개인정보 처리방침</a>
+      <a href="/terms/" data-i18n="terms">이용약관</a>
+      <a href="https://github.com/scenesua/Lullaby-scene" rel="noopener">GitHub</a>
+    </div>
+    <p class="copyright">© <span id="year"></span> Lullaby Scene</p>
+  </footer>
+
+  <noscript><div class="noscript">이 사이트의 일부 기능은 JavaScript가 필요합니다.</div></noscript>
+  <script src="/app.js" defer></script>
+</body>
+</html>
