@@ -1,5 +1,5 @@
-const CACHE='lullaby-scene-site-v12';
-const APP_SHELL=['/','/player/','/download/','/styles.css?v=9','/player-v2.css?v=9','/site-shell.css?v=9','/polish-v9.css?v=9','/site-runtime-v12.css?v=12','/site.js?v=9','/player-v2.js?v=9','/mixer-fx-v9.js?v=9','/scene-audio-v2.js?v=9','/player-shell-v10.js?v=10','/player-controls-v11.js?v=11','/player-runtime-bridge-v12.js?v=12','/simple-scene-quick-mixer-v12.js?v=12','/visitor-count-v1.js?v=1','/legal-language-v9.js?v=9','/mixer-sources.json','/manifest.webmanifest','/assets/icon.svg','/privacy/','/terms/'];
+const CACHE='lullaby-scene-site-v13';
+const APP_SHELL=['/','/player/','/download/','/styles.css?v=9','/player-v2.css?v=9','/site-shell.css?v=9','/polish-v9.css?v=9','/site-runtime-v12.css?v=12','/site.js?v=9','/player-v2.js?v=9','/mixer-fx-v9.js?v=9','/scene-audio-v2.js?v=9','/player-shell-v10.js?v=10','/player-controls-v11.js?v=11','/player-runtime-bridge-v12.js?v=12','/simple-scene-quick-mixer-v12.js?v=12','/saved-scenes-v13.js?v=13','/visitor-count-v1.js?v=1','/legal-language-v9.js?v=9','/mixer-sources.json','/manifest.webmanifest','/assets/icon.svg','/privacy/','/terms/'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',event=>{
