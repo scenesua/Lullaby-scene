@@ -73,7 +73,7 @@
     </div>`;
   }
 
-  function escapeText(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
+  function escapeText(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[char]))}
 
   function render(){
     if(interactionActive){renderPending=true;return}
@@ -121,8 +121,12 @@
       const current=runtimeEvents()[id];if(current)current.volume=0;
       return;
     }
-    const node=runtimeNodes()[id];
-    if(node){node.el.pause();node.el.currentTime=0;node.gain.gain.value=0}
+    const nodes=runtimeNodes();
+    if(nodes[id]){
+      nodes[id].el.pause();
+      nodes[id].el.currentTime=0;
+      nodes[id].gain.gain.value=0;
+    }
   }
 
   function preferredVolume(id){
