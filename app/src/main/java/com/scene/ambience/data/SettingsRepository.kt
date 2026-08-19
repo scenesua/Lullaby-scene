@@ -36,6 +36,7 @@ data class AppSettings(
     val timerDefaultMinutes: Int = 30,
     val timerFadeSeconds: Int = 60,
     val restoreLastMix: Boolean = true,
+    val includePrereleaseUpdates: Boolean = false,
     val notificationPermissionAsked: Boolean = false,
     val libraryVersion: Int? = null,
     val expandedCategories: Set<String> = emptySet(),
@@ -60,6 +61,7 @@ class SettingsRepository(private val context: Context) {
         val timerMinutes = intPreferencesKey("timer_default_minutes")
         val timerFadeSeconds = intPreferencesKey("timer_fade_seconds")
         val restoreMix = booleanPreferencesKey("restore_last_mix")
+        val includePrereleaseUpdates = booleanPreferencesKey("include_prerelease_updates")
         val notifAsked = booleanPreferencesKey("notification_permission_asked")
         val libVersion = intPreferencesKey("library_version")
         val expanded = stringSetPreferencesKey("expanded_categories")
@@ -81,6 +83,7 @@ class SettingsRepository(private val context: Context) {
             timerDefaultMinutes = p[Keys.timerMinutes] ?: 30,
             timerFadeSeconds = p[Keys.timerFadeSeconds] ?: 60,
             restoreLastMix = p[Keys.restoreMix] ?: true,
+            includePrereleaseUpdates = p[Keys.includePrereleaseUpdates] ?: false,
             notificationPermissionAsked = p[Keys.notifAsked] ?: false,
             libraryVersion = p[Keys.libVersion],
             expandedCategories = p[Keys.expanded] ?: emptySet(),
@@ -126,6 +129,10 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setRestoreLastMix(enabled: Boolean) {
         context.dataStore.edit { it[Keys.restoreMix] = enabled }
+    }
+
+    suspend fun setIncludePrereleaseUpdates(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.includePrereleaseUpdates] = enabled }
     }
 
     suspend fun setNotificationPermissionAsked(asked: Boolean) {
