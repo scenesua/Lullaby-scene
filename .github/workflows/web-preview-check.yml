@@ -113,10 +113,8 @@ jobs:
           test -s web/audio/aircraft.part03
           cat web/audio/aircraft.part0{0,1,2,3} | tr -d '\n\r ' | base64 -d > /tmp/aircraft.ogg
           test "$(wc -c < /tmp/aircraft.ogg)" -eq 16630
-      - name: Install browser smoke dependencies
-        run: |
-          npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
+      - name: Install browser smoke dependency
+        run: npm install --no-save playwright-core@1.55.0
       - name: Browser interaction smoke test
         run: |
           python3 -m http.server 4173 --directory web >/tmp/lullaby-web.log 2>&1 &
