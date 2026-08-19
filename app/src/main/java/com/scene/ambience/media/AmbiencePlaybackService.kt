@@ -166,7 +166,7 @@ class AmbiencePlaybackService : MediaSessionService() {
             )
             Commands.START_SCENE -> {
                 val id = args.getString(Commands.EXTRA_SCENE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
-                val started = sceneOrchestrator.start(id, args.getInt(Commands.EXTRA_ARC_MINUTES, 60))
+                val started = sceneOrchestrator.start(id, args.getInt(Commands.EXTRA_ARC_MINUTES, 480))
                 if (!started) return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
             }
             Commands.STOP_SCENE -> sceneOrchestrator.stopScene()
@@ -174,7 +174,7 @@ class AmbiencePlaybackService : MediaSessionService() {
                 val key = args.getString(Commands.EXTRA_MACRO_KEY) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
                 sceneOrchestrator.setMacro(key, args.getFloat(Commands.EXTRA_MACRO_VALUE, 0.5f))
             }
-            Commands.SET_SCENE_ARC -> sceneOrchestrator.setArcMinutes(args.getInt(Commands.EXTRA_ARC_MINUTES, 60))
+            Commands.SET_SCENE_ARC -> sceneOrchestrator.setDurationMinutes(args.getInt(Commands.EXTRA_ARC_MINUTES, 480))
             else -> return SessionResult(SessionResult.RESULT_ERROR_UNKNOWN)
         }
         return SessionResult(SessionResult.RESULT_SUCCESS)
