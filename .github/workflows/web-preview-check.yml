@@ -108,12 +108,13 @@ jobs:
           grep -q 'D2Coding' web/polish-v9.css
           grep -q 'data-lang-block="en"' web/privacy/index.html
           grep -q 'data-lang-block="en"' web/terms/index.html
-      - name: Validate aircraft sleep-journey layers
+      - name: Validate aircraft sleep-journey audio chain
         run: |
           grep -q "/audio/ventilation.ogg" web/scene-audio-v2.js
-          grep -q "/audio/brown_noise.ogg" web/scene-audio-v2.js
-          grep -q 'phaseVent' web/scene-audio-v2.js
-          grep -q 'phaseRumble' web/scene-audio-v2.js
+          ! grep -q "/audio/brown_noise.ogg" web/scene-audio-v2.js
+          grep -q 'createStereoPanner' web/scene-audio-v2.js
+          grep -q 'directCutoff' web/scene-audio-v2.js
+          ! grep -q 'Math.sin(ms/340)' web/scene-audio-v2.js
       - name: Validate aircraft payload
         run: |
           test -s web/audio/aircraft.part00
