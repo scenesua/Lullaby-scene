@@ -1,4 +1,4 @@
-// Visitor counter v3 uses only the same-origin Worker endpoint from the browser.
+// Visitor counter v4 uses only the same-origin Worker endpoint from the browser.
 (()=>{
   const footer=document.querySelector('.site-footer');if(!footer)return;
   let root=footer.querySelector('[data-visitor-stats]');
@@ -60,8 +60,8 @@
         today=Math.max(today,lastNumber(DAY_LAST));
         total=Math.max(total,lastNumber(TOTAL_LAST));
         storage.set(DAY_LAST,String(today));storage.set(TOTAL_LAST,String(total));
-        if(countTotal)storage.set(TOTAL_MARKER,'1');
-        if(countDay)storage.set(DAY_MARKER,day);
+        if(countTotal&&data.countedTotal===true)storage.set(TOTAL_MARKER,'1');
+        if(countDay&&data.countedDay===true)storage.set(DAY_MARKER,day);
       }
       render(today,total,data.backend);
     }catch(error){
