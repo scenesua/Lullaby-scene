@@ -1,5 +1,6 @@
 // Visitor counter v5 uses only the same-origin Worker endpoint from the browser.
-// Server fallback: https://api.counterapi.dev/v1
+// Verified server fallback: https://countapi.mileshilliard.com/api/v1
+// Legacy endpoint https://api.counterapi.dev/v1 returned HTTP 410 in CI and is not used.
 (()=>{
   const footer=document.querySelector('.site-footer');if(!footer)return;
   let root=footer.querySelector('[data-visitor-stats]');
@@ -65,7 +66,7 @@
       if(countDay&&today<1)throw new Error('today visitor increment was not confirmed');
       if(countTotal&&total<1)throw new Error('total visitor increment was not confirmed');
 
-      if(data.backend==='counterapi.dev-v1'){
+      if(data.backend==='countapi.mileshilliard-v1'){
         today=Math.max(today,lastNumber(DAY_LAST));
         total=Math.max(total,lastNumber(TOTAL_LAST));
         storage.set(DAY_LAST,String(today));storage.set(TOTAL_LAST,String(total));
