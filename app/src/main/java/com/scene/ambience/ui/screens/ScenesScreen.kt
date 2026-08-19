@@ -132,6 +132,44 @@ fun ScenesScreen(
                             OutlinedButton(onClick = viewModel::stopScene) { Text(context.getString(R.string.scene_end)) }
                         }
 
+                        val journeyTotalMs = (scene.totalDurationMinutes * 60_000L).coerceAtLeast(1L)
+                        val journeySeekMax = (journeyTotalMs - 1L).coerceAtLeast(0L)
+                        var seekDragging by remember(active) { mutableStateOf(false) }
+                        var seekPreviewMs by remember(active) { mutableStateOf(scene.elapsedMs.coerceIn(0L, journeySeekMax).toFloat()) }
+                        LaunchedEffect(scene.elapsedMs, journeySeekMax, seekDragging) {
+                            if (!seekDragging) seekPreviewMs = scene.elapsedMs.coerceIn(0L, journeySeekMax).toFloat()
+                        }
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Slider(
+                                value = seekPreviewMs.coerceIn(0f, journeySeekMax.toFloat().coerceAtLeast(1f)),
+                                onValueChange = {
+                                    seekDragging = true
+                                    seekPreviewMs = it
+                                },
+                                onValueChangeFinished = {
+                                    seekDragging = false
+                                    viewModel.seekScene(seekPreviewMs.toLong().coerceIn(0L, journeySeekMax))
+                                },
+                                valueRange = 0f..journeySeekMax.toFloat().coerceAtLeast(1f),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Text(
+                                    AmbienceStrings.formatCountdown(seekPreviewMs.toLong()),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    AmbienceStrings.formatCountdown(journeyTotalMs),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+
                         Text(
                             text = context.getString(if (scene.seatbeltSignOn) R.string.scene_seatbelt_on else R.string.scene_seatbelt_off),
                             style = MaterialTheme.typography.labelLarge,
