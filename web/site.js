@@ -57,9 +57,9 @@ applyLanguage();
 document.querySelectorAll('[data-year]').forEach(el=>el.textContent=new Date().getFullYear());
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(console.error));
 
-let deferredInstall=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e});
-window.addEventListener('appinstalled',()=>{deferredInstall=null;setPwaStatus(language==='ko'?'PWA 설치가 완료되었습니다.':'PWA installed.')});
+let siteDeferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();siteDeferredInstall=e});
+window.addEventListener('appinstalled',()=>{siteDeferredInstall=null;setPwaStatus(language==='ko'?'PWA 설치가 완료되었습니다.':'PWA installed.')});
 function setPwaStatus(text){document.querySelectorAll('[data-pwa-status]').forEach(el=>{el.hidden=false;el.textContent=text})}
 function fallbackInstallText(){
   const ua=navigator.userAgent||'';const ios=/iPad|iPhone|iPod/.test(ua);
@@ -69,7 +69,7 @@ function fallbackInstallText(){
 }
 document.addEventListener('click',async e=>{
   const btn=e.target.closest('[data-pwa-install]');if(!btn)return;
-  if(deferredInstall){deferredInstall.prompt();const choice=await deferredInstall.userChoice;deferredInstall=null;if(choice.outcome!=='accepted')setPwaStatus(fallbackInstallText());return}
+  if(siteDeferredInstall){siteDeferredInstall.prompt();const choice=await siteDeferredInstall.userChoice;siteDeferredInstall=null;if(choice.outcome!=='accepted')setPwaStatus(fallbackInstallText());return}
   setPwaStatus(fallbackInstallText());
 });
 
