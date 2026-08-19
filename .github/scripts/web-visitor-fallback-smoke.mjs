@@ -10,7 +10,15 @@ const context=await browser.newContext({viewport:{width:1280,height:900},locale:
 const page=await context.newPage();
 const errors=[];let increments=0;
 page.on('pageerror',error=>errors.push(String(error)));
-page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
+page.on('console',message=>{
+  if(message.type()!=='error')return;
+  const text=message.text();
+  // The fallback test intentionally makes the primary D1 endpoint return 503.
+  // Chromium reports that failed resource as a console error even though the
+  // application catches it and successfully falls back.
+  if(text.includes('Failed to load resource')&&text.includes('503'))return;
+  errors.push(text);
+});
 
 await page.route('**/api/visitors',route=>route.fulfill({status:503,contentType:'application/json',body:'{"available":false,"error":"VISITOR_DB binding missing"}'}));
 await page.route('https://api.counterapi.dev/v1/lullaby-scene-site/**',route=>{
