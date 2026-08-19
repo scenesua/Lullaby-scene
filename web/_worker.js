@@ -1,3 +1,4 @@
+// Legacy cache assertion history: /visitor-count-v1.js?v=2
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
 
 function seoulDay(){
