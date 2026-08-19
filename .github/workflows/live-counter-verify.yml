@@ -19,10 +19,11 @@ jobs:
         run: |
           set -euo pipefail
           curl -fsS --max-time 20 https://lullabyscene.com/ -o /tmp/home.html
-          grep -q 'visitor-count-v1.js?v=3' /tmp/home.html
+          grep -q 'visitor-count-v1.js?v=4' /tmp/home.html
 
-          curl -fsS --max-time 20 'https://lullabyscene.com/visitor-count-v1.js?v=3' -o /tmp/visitor.js
+          curl -fsS --max-time 20 'https://lullabyscene.com/visitor-count-v1.js?v=4' -o /tmp/visitor.js
           grep -q "fetch('/api/visitors'" /tmp/visitor.js
+          grep -q 'data.countedTotal===true' /tmp/visitor.js
           ! grep -q 'FALLBACK_BASE' /tmp/visitor.js
 
           GET_STATUS=$(curl -sS --max-time 20 -o /tmp/get.json -w '%{http_code}' https://lullabyscene.com/api/visitors)
@@ -42,5 +43,8 @@ jobs:
               assert d.get('backend') in ('counterapi.com','d1'), (path,d)
               assert isinstance(d.get('today'), (int,float)), (path,d)
               assert isinstance(d.get('total'), (int,float)), (path,d)
-          print('production visitor counter returns numeric values')
+              if d.get('backend') == 'counterapi.com':
+                  assert d.get('countedDay') is True, (path,d)
+                  assert d.get('countedTotal') is True, (path,d)
+          print('production visitor counter v4 returns resilient numeric values')
           PY
