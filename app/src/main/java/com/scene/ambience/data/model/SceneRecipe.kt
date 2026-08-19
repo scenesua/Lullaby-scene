@@ -15,6 +15,7 @@ private const val SCENE_RECIPE_BASE_URL = "https://lullabyscene.com/player/"
 data class SceneRecipeFx(
     val warmth: Int? = null,
     val air: Int? = null,
+    /** Cross-platform room/space macro. Web calls this Room; Android calls it Space. */
     val room: Int? = null,
     val body: Int? = null,
     val glue: Int? = null,
@@ -54,6 +55,7 @@ object SceneRecipeCodec {
             fx = SceneRecipeFx(
                 warmth = (fxSettings.warmth.coerceIn(0f, 1f) * 100).toInt(),
                 air = (fxSettings.air.coerceIn(0f, 1f) * 100).toInt(),
+                room = (fxSettings.space.coerceIn(0f, 1f) * 100).toInt(),
                 body = (fxSettings.body.coerceIn(0f, 1f) * 100).toInt(),
                 glue = (fxSettings.glue.coerceIn(0f, 1f) * 100).toInt(),
                 loudness = (fxSettings.loudness.coerceIn(0f, 1f) * 100).toInt(),
@@ -91,6 +93,7 @@ object SceneRecipeCodec {
             warmth = normalized(fx.warmth, current.warmth),
             air = normalized(fx.air, current.air),
             body = normalized(fx.body, current.body),
+            space = normalized(fx.room, current.space),
             glue = normalized(fx.glue, current.glue),
             loudness = normalized(fx.loudness, current.loudness),
         ).normalized()
