@@ -47,20 +47,10 @@ const track=page.locator('.journey-track');
 if((await track.getAttribute('role'))!=='slider')throw new Error('journey track is not a seek slider');
 if(!(await page.locator('#journeyPrevPhase').isVisible())||!(await page.locator('#journeyNextPhase').isVisible()))throw new Error('explicit phase step buttons are not visible');
 
-// Start at Taxi out and verify the 627056 bed is the audible journey source.
-await page.locator('#scenePlay').click();await page.waitForTimeout(1300);
-let audioState=await page.evaluate(()=>({phase:window.LullabyJourneyAudio?.phase,taxiReady:window.LullabyJourneyAudio?.taxiReady,taxiUrl:window.LullabyJourneyAudio?.taxiUrl,taxiGain:window.LullabyJourneyAudio?.taxiGain,cruiseGain:window.LullabyJourneyAudio?.cruiseGain}));
-if(audioState.phase!=='Taxi out'||!audioState.taxiReady||audioState.taxiUrl!=='/audio/aircraft_cabin_taxi_627056_v1.ogg'||audioState.taxiGain<.25||audioState.cruiseGain>.08)throw new Error(`Taxi out did not route to 627056: ${JSON.stringify(audioState)}`);
-
-// A phase step to Takeoff must fade Taxi out and restore the flight bed.
-await page.locator('#journeyNextPhase').click();await page.waitForTimeout(1300);
-audioState=await page.evaluate(()=>({phase:window.LullabyJourneyAudio?.phase,taxiGain:window.LullabyJourneyAudio?.taxiGain,cruiseGain:window.LullabyJourneyAudio?.cruiseGain}));
-if(audioState.phase!=='Takeoff'||audioState.taxiGain>.08||audioState.cruiseGain<.25)throw new Error(`Takeoff did not leave taxi bed: ${JSON.stringify(audioState)}`);
-await page.locator('#scenePlay').click();await page.waitForTimeout(80);
-
+// Verify the physical progress rail before audio playback changes transport state.
 const box=await track.boundingBox();if(!box)throw new Error('journey track has no layout box');
-await page.mouse.click(box.x+box.width*.95,box.y+box.height/2);await page.waitForTimeout(60);
-const seekState=await page.evaluate(()=>({elapsed:window.LullabyJourneyRuntime?.elapsedMs,total:window.LullabyJourneyRuntime?.totalMs,phase:document.querySelector('#phaseLabel')?.textContent,aria:document.querySelector('.journey-track')?.getAttribute('aria-valuenow')}));
+await page.mouse.click(box.x+box.width*.95,box.y+box.height/2);await page.waitForTimeout(80);
+let seekState=await page.evaluate(()=>({elapsed:window.LullabyJourneyRuntime?.elapsedMs,total:window.LullabyJourneyRuntime?.totalMs,phase:document.querySelector('#phaseLabel')?.textContent,aria:document.querySelector('.journey-track')?.getAttribute('aria-valuenow')}));
 if(!seekState.elapsed||!seekState.total||seekState.elapsed/seekState.total<.93||seekState.elapsed/seekState.total>.97)throw new Error(`journey click seek failed: ${JSON.stringify(seekState)}`);
 if(!['Descent','Approach'].includes(seekState.phase))throw new Error(`journey seek did not advance phase: ${JSON.stringify(seekState)}`);
 await page.locator('#journeyPrevPhase').click();await page.waitForTimeout(60);
@@ -69,11 +59,20 @@ if(prevState.phase!=='Cruise'||prevState.ratio<.05||prevState.ratio>.07)throw ne
 await page.locator('#journeyNextPhase').click();await page.waitForTimeout(60);
 const nextState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
 if(nextState.phase!=='Descent'||nextState.ratio<.90||nextState.ratio>.93)throw new Error(`next phase button failed: ${JSON.stringify(nextState)}`);
+await page.evaluate(()=>window.LullabyJourneyRuntime.seekToMs(0));await page.waitForTimeout(80);
 
-const guard=await page.evaluate(async()=>{await ensureSceneNode();const filters=sceneNode?.whistleGuard?.filters||[];return{frequencies:filters.map(n=>n.frequency.value),gains:filters.map(n=>n.gain.value),lowpass:sceneNode?.filter?.frequency?.value}});
+// Start at Taxi out and verify the 627056 bed is the audible journey source.
+await page.locator('#scenePlay').click();await page.waitForTimeout(1300);
+let audioState=await page.evaluate(()=>({phase:window.LullabyJourneyAudio?.phase,taxiReady:window.LullabyJourneyAudio?.taxiReady,taxiUrl:window.LullabyJourneyAudio?.taxiUrl,taxiGain:window.LullabyJourneyAudio?.taxiGain,cruiseGain:window.LullabyJourneyAudio?.cruiseGain}));
+if(audioState.phase!=='Taxi out'||!audioState.taxiReady||audioState.taxiUrl!=='/audio/aircraft_cabin_taxi_627056_v1.ogg'||audioState.taxiGain<.25||audioState.cruiseGain>.08)throw new Error(`Taxi out did not route to 627056: ${JSON.stringify(audioState)}`);
+await page.locator('#journeyNextPhase').click();await page.waitForTimeout(1300);
+audioState=await page.evaluate(()=>({phase:window.LullabyJourneyAudio?.phase,taxiGain:window.LullabyJourneyAudio?.taxiGain,cruiseGain:window.LullabyJourneyAudio?.cruiseGain}));
+if(audioState.phase!=='Takeoff'||audioState.taxiGain>.08||audioState.cruiseGain<.25)throw new Error(`Takeoff did not leave taxi bed: ${JSON.stringify(audioState)}`);
+await page.locator('#scenePlay').click();await page.waitForTimeout(80);
+
+const guard=await page.evaluate(async()=>{await ensureSceneNode();const filters=sceneNode?.whistleGuard?.filters||[];return{frequencies:filters.map(n=>n.frequency.value),gains:filters.map(n=>n.gain.value)}});
 if(JSON.stringify(guard.frequencies)!=='[685,1191,2383,3574,10544]')throw new Error(`aircraft tonal guard frequencies missing: ${JSON.stringify(guard)}`);
 if(guard.gains.some(value=>value>=0))throw new Error(`aircraft tonal guard gains invalid: ${JSON.stringify(guard)}`);
-
 const aircraft=await page.evaluate(async()=>({cruiseUrl:await getAircraftUrl(),taxiUrl:await getAircraftTaxiUrl(),cruise:window.LullabyAircraftSource,taxi:window.LullabyAircraftTaxiSource}));
 if(aircraft.cruiseUrl!=='/audio/aircraft_cabin_cruise_v2.ogg'||aircraft.cruise?.sourceId!=='freesound_jasonm911_853735')throw new Error(`cruise source override missing: ${JSON.stringify(aircraft)}`);
 if(aircraft.taxiUrl!=='/audio/aircraft_cabin_taxi_627056_v1.ogg'||aircraft.taxi?.sourceId!=='freesound_mar_sounds_627056'||aircraft.taxi?.bridgeMs!==180||aircraft.taxi?.channels!==2)throw new Error(`627056 taxi source metadata missing: ${JSON.stringify(aircraft)}`);
