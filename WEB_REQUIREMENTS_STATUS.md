@@ -15,6 +15,13 @@ This document tracks the web implementation against the requested product behavi
 - Direct HH:MM journey duration with any positive duration and proportional phase compression.
 - Simple Scene Play/Pause/Stop controls without opening the full Mixer.
 - Built-in and browser-saved Simple Scenes.
+- Saved Scene management:
+  - save the current master level, active source mix, source volumes, and Scene FX;
+  - explicitly load a saved scene;
+  - rename a saved scene without changing its ID or stored mix;
+  - overwrite an existing saved scene with the current mix and FX while keeping its name;
+  - keep existing browser-saved scenes compatible;
+  - mark the currently loaded saved scene in the UI.
 - Simple Scene FX: Warmth, Air, Room, and Glue.
 - Full 21-source catalog in the standard Mixer.
 - Quick Mixer rewrite:
@@ -65,8 +72,8 @@ Still missing from the requested Advanced Mixer:
 
 ### Saved scenes
 
-- A current mix and FX snapshot can be saved locally as a Simple Scene.
-- Favorites, rename/edit workflow, recipe import/export, and URL sharing are not complete.
+- Local save/load, rename, and overwrite are implemented.
+- Favorites, recipe import/export, and URL sharing are not complete.
 
 ### Attribution and diagnostics
 
@@ -89,4 +96,4 @@ The packaged Passenger Aircraft Cabin web bed is still the legacy short mono pay
 
 ## Validation policy
 
-The web branch remains a draft. It must not be described as complete or stable while required items above remain partial or missing. Quick Mixer behavior is covered by Chromium interaction tests for ordering, 0% inactive state, slider-to-enable, Turn off-to-0%, mobile visibility, language switching, and visitor-count rendering with a mocked API.
+The web branch remains a draft. It must not be described as complete or stable while required items above remain partial or missing. Quick Mixer behavior is covered by Chromium interaction tests for ordering, 0% inactive state, slider-to-enable, Turn off-to-0%, mobile visibility, language switching, and visitor-count rendering with a mocked API. Saved Scene validation covers save, rename, overwrite, load, active-state marking, mobile visibility, and Korean/English labels.
