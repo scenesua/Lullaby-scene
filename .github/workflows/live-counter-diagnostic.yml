@@ -23,12 +23,6 @@ jobs:
           cat /tmp/home.headers || true
           grep -o 'visitor-count-v1.js[^"<]*' /tmp/home.body || true
 
-          echo '=== deployed visitor JS ==='
-          curl -sS -D /tmp/js.headers -o /tmp/js.body --max-time 20 'https://lullabyscene.com/visitor-count-v1.js?v=2' || true
-          cat /tmp/js.headers || true
-          head -c 800 /tmp/js.body || true
-          echo
-
           echo '=== same-origin visitor API GET ==='
           curl -sS -D /tmp/api.headers -o /tmp/api.body --max-time 20 https://lullabyscene.com/api/visitors || true
           cat /tmp/api.headers || true
@@ -36,25 +30,25 @@ jobs:
           echo
 
           echo '=== old CounterAPI v1 ==='
-          curl -sS -D /tmp/counter.headers -o /tmp/counter.body --max-time 20 -H 'Origin: https://lullabyscene.com' 'https://api.counterapi.dev/v1/lullaby-scene-site/visitors-total-v1' || true
+          curl -sS -D /tmp/counter.headers -o /tmp/counter.body --max-time 20 'https://api.counterapi.dev/v1/lullaby-scene-site/visitors-total-v1' || true
           cat /tmp/counter.headers || true
           cat /tmp/counter.body || true
           echo
 
-          echo '=== replacement counterapi.com track/read ==='
+          echo '=== replacement counterapi.com immediate increment/read ==='
           NS='lullaby-scene-ci-diagnostic'
-          KEY='visitor-probe'
-          VISITOR_UID="ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          curl -fsS --max-time 20 "https://counterapi.com/api/${NS}/visitor/${KEY}?userId=${VISITOR_UID}&trackOnly=true" | tee /tmp/new-track.json
+          KEY="visitor-probe-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          curl -fsS --max-time 20 "https://counterapi.com/api/${NS}/visitor/${KEY}?noFormatting=true" | tee /tmp/new-inc.json
           echo
-          curl -fsS --max-time 20 "https://counterapi.com/api/${NS}/visitor/${KEY}?readOnly=true&unique=true" | tee /tmp/new-total.json
-          echo
-          curl -fsS --max-time 20 "https://counterapi.com/api/${NS}/visitor/${KEY}?readOnly=true&unique=true&timeline=1d" | tee /tmp/new-day.json
+          curl -fsS --max-time 20 "https://counterapi.com/api/${NS}/visitor/${KEY}?readOnly=true&noFormatting=true" | tee /tmp/new-read.json
           echo
           python3 - <<'PY'
           import json
-          for p in ('/tmp/new-total.json','/tmp/new-day.json'):
-              data=json.load(open(p))
-              assert isinstance(data.get('value'), (int,float)), (p,data)
-          print('replacement counter backend returned numeric unique counts')
+          inc=json.load(open('/tmp/new-inc.json'))
+          read=json.load(open('/tmp/new-read.json'))
+          assert isinstance(inc.get('value'), (int,float)), inc
+          assert isinstance(read.get('value'), (int,float)), read
+          assert inc['value'] >= 1, inc
+          assert read['value'] == inc['value'], (inc,read)
+          print('replacement counter backend increments immediately and readOnly returns the same numeric value')
           PY
