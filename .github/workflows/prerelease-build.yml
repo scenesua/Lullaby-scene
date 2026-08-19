@@ -37,7 +37,7 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Materialize verified long stereo aircraft bed
+      - name: Materialize cleaned long stereo aircraft bed
         shell: bash
         run: |
           set -euo pipefail
@@ -45,7 +45,6 @@ jobs:
           if [[ ! -s "$TARGET" ]]; then
             python3 tools/materialize_aircraft_audio.py "$TARGET"
           fi
-          ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration,size -of json "$TARGET"
           python3 - <<'PY'
           import json, subprocess
           path='app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
@@ -54,9 +53,17 @@ jobs:
           assert stream['codec_name']=='opus', info
           assert stream['sample_rate']=='48000', info
           assert int(stream['channels'])==2, info
-          assert 78.8 <= float(fmt['duration']) <= 79.2, info
-          assert int(fmt['size']) >= 850000, info
+          assert 104.8 <= float(fmt['duration']) <= 105.2, info
+          assert int(fmt['size']) >= 900000, info
+          print(info)
           PY
+          grep -q 'freesound_jasonm911_853735' app/src/main/assets/ambience/manifest/scene_sources.json
+          grep -q '"loop_mode": "crossfade"' app/src/main/assets/ambience/manifest/scene_sources.json
+          grep -q '"crossfade_ms": 3500' app/src/main/assets/ambience/manifest/scene_sources.json
+          ! grep -q 'freesound_jasonm911_853736' app/src/main/assets/ambience/manifest/scene_sources.json
+          grep -q 'SEEK_SCENE' app/src/main/java/com/scene/ambience/media/Commands.kt
+          grep -q 'seekToElapsedMs' app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt
+          grep -q 'viewModel.seekScene' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
 
       - name: Persist aircraft bed on source branch
         if: github.event_name == 'pull_request'
@@ -70,17 +77,17 @@ jobs:
           else
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'feat(audio): materialize verified stereo aircraft bed'
+            git commit -m 'feat(audio): materialize cleaned 853735 stereo aircraft loop'
             git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
           fi
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Run unit tests and compile unsigned release
+      - name: Run unit tests and compile prerelease
         run: ./gradlew --no-daemon testDebugUnitTest assembleRelease --stacktrace
 
-      - name: Require persistent release signing key
+      - name: Require persistent prerelease signing key
         env:
           KEYSTORE_B64: ${{ secrets.LULLABY_ANDROID_KEYSTORE_B64 }}
           STORE_PASSWORD: ${{ secrets.LULLABY_ANDROID_STORE_PASSWORD }}
@@ -92,7 +99,7 @@ jobs:
           missing=0
           for pair in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
             if [[ -z "${!pair:-}" ]]; then
-              echo "::error::$pair is required for a stable updatable Android release"
+              echo "::error::$pair is required for an updatable Android prerelease"
               missing=1
             fi
           done
@@ -105,10 +112,10 @@ jobs:
           echo "LULLABY_ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
           echo "LULLABY_ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
 
-      - name: Build stable-signed release APK
+      - name: Build prerelease-signed APK
         run: ./gradlew --no-daemon assembleRelease --stacktrace
 
-      - name: Verify release APK signer
+      - name: Verify prerelease APK signer
         shell: bash
         run: |
           set -euo pipefail
@@ -119,7 +126,7 @@ jobs:
           "$APKSIGNER" verify --verbose --print-certs "$APK"
           "$APKSIGNER" verify "$APK"
 
-      - name: Prepare release files
+      - name: Prepare prerelease files
         shell: bash
         run: |
           set -euo pipefail
