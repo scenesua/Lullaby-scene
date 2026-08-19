@@ -22,12 +22,14 @@ await page.route('**/api/visitors',async route=>{
     day:'2026-08-19',
     today:first?13:0,
     total:first?101:0,
+    countedDay:true,
+    countedTotal:true,
   })});
 });
 
 async function loadCounter(){
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
-  await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=3'});
+  await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=4'});
   await page.waitForFunction(()=>document.querySelector('[data-visitor-total]')?.textContent!=='—');
   return page.evaluate(()=>({
     today:document.querySelector('[data-visitor-today]')?.textContent?.trim(),
