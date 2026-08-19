@@ -1,0 +1,55 @@
+name: Verify production visitor counter repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-counter-verify.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify live production
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 20 https://lullabyscene.com/ -o /tmp/home.html
+          grep -q 'visitor-count-v1.js?v=3' /tmp/home.html
+
+          curl -fsS --max-time 20 'https://lullabyscene.com/visitor-count-v1.js?v=3' -o /tmp/visitor.js
+          grep -q "fetch('/api/visitors'" /tmp/visitor.js
+          ! grep -q 'FALLBACK_BASE' /tmp/visitor.js
+
+          curl -fsS --max-time 20 https://lullabyscene.com/api/visitors -o /tmp/get.json
+          cat /tmp/get.json
+          echo
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/get.json'))
+          assert d.get('available') is True, d
+          assert d.get('backend') in ('counterapi.com','d1'), d
+          assert isinstance(d.get('today'), (int,float)), d
+          assert isinstance(d.get('total'), (int,float)), d
+          PY
+
+          VERIFY_ID="ci-live-verify-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          curl -fsS --max-time 20 -X POST https://lullabyscene.com/api/visitors \
+            -H 'Content-Type: application/json' \
+            --data "{\"visitorId\":\"${VERIFY_ID}\",\"countTotal\":false,\"countDay\":false}" \
+            -o /tmp/post.json
+          cat /tmp/post.json
+          echo
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/post.json'))
+          assert d.get('available') is True, d
+          assert d.get('backend') in ('counterapi.com','d1'), d
+          assert isinstance(d.get('today'), (int,float)), d
+          assert isinstance(d.get('total'), (int,float)), d
+          print('production visitor counter returns numeric values')
+          PY
