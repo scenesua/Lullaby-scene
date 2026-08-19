@@ -59,7 +59,7 @@ data class UpdateUiState(
     val messageKey: String? = null,
 )
 
-/** GitHub-distribution updater. Stable releases only; failure never blocks app startup/playback. */
+/** GitHub-distribution updater. Stable-only by default; prereleases are opt-in. */
 class UpdateCoordinator(context: Context) {
     private val appContext = context.applicationContext
     private val json = Json { ignoreUnknownKeys = true }
@@ -67,14 +67,11 @@ class UpdateCoordinator(context: Context) {
     private val _state = MutableStateFlow(UpdateUiState())
     val state: StateFlow<UpdateUiState> = _state.asStateFlow()
 
-    suspend fun check(manual: Boolean) = withContext(Dispatchers.IO) {
+    suspend fun check(manual: Boolean, includePrereleases: Boolean) = withContext(Dispatchers.IO) {
         _state.value = _state.value.copy(checking = true, messageKey = null)
         try {
-            val release = fetchLatestStable()
-            val apk = release.assets.firstOrNull { asset ->
-                asset.name.startsWith("Lullaby-Scene-", ignoreCase = true) &&
-                    asset.name.endsWith(".apk", ignoreCase = true)
-            }
+            val release = fetchLatestRelease(includePrereleases)
+            val apk = release.assets.firstOrNull(::isAppApk)
             val remoteVersion = release.tagName.removePrefix("v")
             if (apk == null || compareVersions(BuildConfig.VERSION_NAME, remoteVersion) >= 0) {
                 _state.value = UpdateUiState(
@@ -107,7 +104,7 @@ class UpdateCoordinator(context: Context) {
                 checking = false,
                 available = info,
                 showPrompt = !suppressed,
-                messageKey = if (manual && suppressed) null else null,
+                messageKey = null,
             )
         } catch (_: Exception) {
             _state.value = _state.value.copy(
@@ -189,6 +186,21 @@ class UpdateCoordinator(context: Context) {
         return suppressedVersion == version && System.currentTimeMillis() < until
     }
 
+    private fun fetchLatestRelease(includePrereleases: Boolean): GithubRelease {
+        if (!includePrereleases) return fetchLatestStable()
+
+        val conn = open(LIST_RELEASES)
+        return conn.useConnection { connection ->
+            if (connection.responseCode !in 200..299) throw IllegalStateException("HTTP ${connection.responseCode}")
+            val text = connection.inputStream.bufferedReader().use { it.readText() }
+            val releases = json.decodeFromString<List<GithubRelease>>(text)
+                .filterNot { it.draft }
+                .filter { release -> release.assets.any(::isAppApk) }
+            releases.maxWithOrNull { a, b -> compareVersions(a.tagName, b.tagName) }
+                ?: throw IllegalStateException("no published release")
+        }
+    }
+
     private fun fetchLatestStable(): GithubRelease {
         val conn = open(GET_LATEST_RELEASE)
         return conn.useConnection { connection ->
@@ -199,6 +211,10 @@ class UpdateCoordinator(context: Context) {
             release
         }
     }
+
+    private fun isAppApk(asset: GithubAsset): Boolean =
+        asset.name.startsWith("Lullaby-Scene-", ignoreCase = true) &&
+            asset.name.endsWith(".apk", ignoreCase = true)
 
     private fun fetchChecksum(url: String): String? {
         val conn = open(url)
@@ -277,7 +293,30 @@ class UpdateCoordinator(context: Context) {
         }
         if (a.preRelease == null && b.preRelease != null) return 1
         if (a.preRelease != null && b.preRelease == null) return -1
-        return (a.preRelease ?: "").compareTo(b.preRelease ?: "")
+        return comparePreRelease(a.preRelease, b.preRelease)
+    }
+
+    private fun comparePreRelease(a: String?, b: String?): Int {
+        if (a == null && b == null) return 0
+        if (a == null) return 1
+        if (b == null) return -1
+        val left = a.split('.', '-')
+        val right = b.split('.', '-')
+        val size = maxOf(left.size, right.size)
+        for (i in 0 until size) {
+            val x = left.getOrNull(i) ?: return -1
+            val y = right.getOrNull(i) ?: return 1
+            val xn = x.toIntOrNull()
+            val yn = y.toIntOrNull()
+            val cmp = when {
+                xn != null && yn != null -> xn.compareTo(yn)
+                xn != null -> -1
+                yn != null -> 1
+                else -> x.compareTo(y, ignoreCase = true)
+            }
+            if (cmp != 0) return cmp
+        }
+        return 0
     }
 
     private data class ParsedVersion(val numbers: List<Int>, val preRelease: String?) {
@@ -295,6 +334,7 @@ class UpdateCoordinator(context: Context) {
 
     companion object {
         private const val GET_LATEST_RELEASE = "https://api.github.com/repos/scenesua/Lullaby-scene/releases/latest"
+        private const val LIST_RELEASES = "https://api.github.com/repos/scenesua/Lullaby-scene/releases?per_page=30"
         private const val PREFS = "lullaby_updates"
         private const val KEY_SUPPRESSED_VERSION = "suppressed_version"
         private const val KEY_SUPPRESS_UNTIL = "suppress_until"
