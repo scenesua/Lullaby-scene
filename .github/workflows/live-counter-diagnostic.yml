@@ -44,8 +44,8 @@ jobs:
           echo '=== replacement counterapi.com track/read ==='
           NS='lullaby-scene-ci-diagnostic'
           KEY='visitor-probe'
-          UID="ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          curl -fsS --max-time 20 "https://counterapi.com/api/${NS}/visitor/${KEY}?userId=${UID}&trackOnly=true" | tee /tmp/new-track.json
+          VISITOR_UID="ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          curl -fsS --max-time 20 "https://counterapi.com/api/${NS}/visitor/${KEY}?userId=${VISITOR_UID}&trackOnly=true" | tee /tmp/new-track.json
           echo
           curl -fsS --max-time 20 "https://counterapi.com/api/${NS}/visitor/${KEY}?readOnly=true&unique=true" | tee /tmp/new-total.json
           echo
