@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import html
 import json
+import os
 import re
 import subprocess
 import tempfile
@@ -22,11 +23,17 @@ from pathlib import Path
 
 SOURCE_ID = "853735"
 SOURCE_PAGE = f"https://freesound.org/people/jasonm911/sounds/{SOURCE_ID}/"
-USER_AGENT = "Lullaby-Scene-audio-materializer/3.0"
+USER_AGENT = "Lullaby-Scene-audio-materializer/3.1"
 EXPECTED_DURATION_SECONDS = 105.0
 
 
 def resolve_hq_ogg() -> str:
+    browser_url = os.environ.get("AIRCRAFT_SOURCE_URL", "").strip()
+    if browser_url:
+        if SOURCE_ID not in browser_url or not re.search(r"\.(?:ogg|mp3)(?:\?|$)", browser_url, re.I):
+            raise RuntimeError(f"Resolved preview does not belong to Freesound {SOURCE_ID}: {browser_url}")
+        return browser_url
+
     request = urllib.request.Request(SOURCE_PAGE, headers={"User-Agent": USER_AGENT})
     page = urllib.request.urlopen(request, timeout=45).read().decode("utf-8", "replace")
     page = (
@@ -35,7 +42,7 @@ def resolve_hq_ogg() -> str:
         .replace("\\u002F", "/")
         .replace("\\u003A", ":")
     )
-    candidates = re.findall(r"[^\"'<>\\s]*853735[^\"'<>\\s]*\.ogg(?:\?[^\"'<>\\s]*)?", page)
+    candidates = re.findall(r"[^\"'<>\s]*853735[^\"'<>\s]*\.ogg(?:\?[^\"'<>\s]*)?", page)
     for candidate in candidates:
         candidate = candidate.rstrip("\\,]")
         if "hq" not in candidate.lower():
@@ -46,7 +53,10 @@ def resolve_hq_ogg() -> str:
             candidate = urllib.parse.urljoin(SOURCE_PAGE, candidate)
         if candidate.startswith("http://") or candidate.startswith("https://"):
             return candidate
-    raise RuntimeError(f"Could not resolve Freesound {SOURCE_ID} HQ OGG preview")
+    raise RuntimeError(
+        f"Could not resolve Freesound {SOURCE_ID} preview from static HTML. "
+        "Set AIRCRAFT_SOURCE_URL using tools/resolve_freesound_preview.mjs."
+    )
 
 
 def run(*args: str) -> None:
