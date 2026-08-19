@@ -21,6 +21,7 @@ object Commands {
     const val START_SCENE = "com.scene.ambience.cmd.start_scene"
     const val STOP_SCENE = "com.scene.ambience.cmd.stop_scene"
     const val SET_SCENE_MACRO = "com.scene.ambience.cmd.set_scene_macro"
+    // Kept for protocol compatibility with alpha.2; value now means whole journey duration.
     const val SET_SCENE_ARC = "com.scene.ambience.cmd.set_scene_arc"
 
     const val EXTRA_SNAPSHOT = "ambience.snapshot"
@@ -83,10 +84,10 @@ object Commands {
             putIntegerArrayList(EXTRA_EQ_BANDS, ArrayList(bands))
         })
 
-    fun startScene(sceneId: String, arcMinutes: Int): SessionCommand =
+    fun startScene(sceneId: String, totalDurationMinutes: Int): SessionCommand =
         SessionCommand(START_SCENE, Bundle().apply {
             putString(EXTRA_SCENE_ID, sceneId)
-            putInt(EXTRA_ARC_MINUTES, arcMinutes)
+            putInt(EXTRA_ARC_MINUTES, totalDurationMinutes)
         })
 
     val stopScene: SessionCommand = SessionCommand(STOP_SCENE, Bundle())
@@ -97,7 +98,7 @@ object Commands {
             putFloat(EXTRA_MACRO_VALUE, value)
         })
 
-    fun setSceneArc(minutes: Int): SessionCommand =
+    fun setSceneDuration(minutes: Int): SessionCommand =
         SessionCommand(SET_SCENE_ARC, Bundle().apply { putInt(EXTRA_ARC_MINUTES, minutes) })
 
     val sessionCommands: List<SessionCommand> = listOf(
