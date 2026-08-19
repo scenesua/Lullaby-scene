@@ -10,6 +10,7 @@ on:
       - '.github/workflows/web-preview-check.yml'
       - '.github/scripts/web-smoke.mjs'
       - '.github/scripts/web-mixer-v14-smoke.mjs'
+      - '.github/scripts/web-visitor-fallback-smoke.mjs'
   push:
     branches:
       - work/lullaby-web-foundation
@@ -21,6 +22,7 @@ on:
       - '.github/workflows/web-preview-check.yml'
       - '.github/scripts/web-smoke.mjs'
       - '.github/scripts/web-mixer-v14-smoke.mjs'
+      - '.github/scripts/web-visitor-fallback-smoke.mjs'
 
 jobs:
   validate:
@@ -64,6 +66,7 @@ jobs:
           node --check tools/resolve_freesound_preview.mjs
           node --check .github/scripts/web-smoke.mjs
           node --check .github/scripts/web-mixer-v14-smoke.mjs
+          node --check .github/scripts/web-visitor-fallback-smoke.mjs
 
       - name: Check required web pages and runtimes
         run: |
@@ -82,7 +85,10 @@ jobs:
           grep -q 'id="durationDirect"' web/player/index.html
           grep -q 'data-inspector-mode="simple"' web/player/index.html
           grep -q 'data-fx="warmth"' web/player/index.html
-          grep -q 'lullaby-scene-site-v18' web/sw.js
+          grep -q 'lullaby-scene-site-v19' web/sw.js
+          grep -q '/visitor-count-v1.js?v=2' web/sw.js
+          grep -q '/visitor-count-v1.js?v=2' web/_worker.js
+          grep -q 'api.counterapi.dev/v1' web/visitor-count-v1.js
           grep -q '/audio/aircraft_cabin_cruise_v2.ogg' web/sw.js
           grep -q '/aircraft-source-v15.js?v=15' web/_worker.js
           grep -q '/mixer-interaction-v14.js?v=14' web/_worker.js
@@ -166,3 +172,12 @@ jobs:
           trap 'kill $SERVER_PID || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
           timeout 90s node .github/scripts/web-mixer-v14-smoke.mjs
+
+      - name: Browser static visitor fallback smoke
+        timeout-minutes: 2
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-web-visitors.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 0.5; done
+          timeout 90s node .github/scripts/web-visitor-fallback-smoke.mjs
