@@ -1,5 +1,5 @@
-const CACHE='lullaby-scene-site-v2';
-const APP_SHELL=['/','/styles.css','/app.js','/manifest.webmanifest','/assets/icon.svg','/privacy/','/terms/'];
+const CACHE='lullaby-scene-site-v3';
+const APP_SHELL=['/','/styles.css','/player-v2.css','/player-v2.js','/mixer-sources.json','/manifest.webmanifest','/assets/icon.svg','/privacy/','/terms/'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{
