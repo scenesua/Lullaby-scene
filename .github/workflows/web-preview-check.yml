@@ -1,0 +1,209 @@
+name: Validate web player
+
+on:
+  pull_request:
+    paths:
+      - 'web/**'
+      - 'tools/materialize_aircraft_audio.py'
+      - 'tools/materialize_aircraft_taxi.py'
+      - 'tools/resolve_freesound_preview.mjs'
+      - 'WEB_REQUIREMENTS_STATUS.md'
+      - '.github/workflows/web-preview-check.yml'
+      - '.github/scripts/web-smoke.mjs'
+      - '.github/scripts/web-mixer-v14-smoke.mjs'
+      - '.github/scripts/web-visitor-fallback-smoke.mjs'
+  push:
+    branches:
+      - work/lullaby-web-foundation
+    paths:
+      - 'web/**'
+      - 'tools/materialize_aircraft_audio.py'
+      - 'tools/materialize_aircraft_taxi.py'
+      - 'tools/resolve_freesound_preview.mjs'
+      - 'WEB_REQUIREMENTS_STATUS.md'
+      - '.github/workflows/web-preview-check.yml'
+      - '.github/scripts/web-smoke.mjs'
+      - '.github/scripts/web-mixer-v14-smoke.mjs'
+      - '.github/scripts/web-visitor-fallback-smoke.mjs'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install browser dependency
+        run: npm install --no-save playwright-core@1.55.0
+
+      - name: Verify committed aircraft beds
+        shell: bash
+        run: |
+          set -euo pipefail
+          CRUISE='web/audio/aircraft_cabin_cruise_v2.ogg'
+          test -s "$CRUISE"
+          test "$(wc -c < "$CRUISE")" -eq 1166883
+          echo 'd6b065bd63b2ba586bff79841f23b150aea96bcd84d7c9649ef9713cd9b6d29c  web/audio/aircraft_cabin_cruise_v2.ogg' | sha256sum -c -
+          if [[ -f web/audio/aircraft_cabin_taxi_627056_v1.ogg ]]; then
+            TAXI='web/audio/aircraft_cabin_taxi_627056_v1.ogg'
+            test "$(wc -c < "$TAXI")" -eq 2246931
+            echo '3d9fe5fb05e4b197b88a11754a107095a4779b321f8afeb6760f4ac3a79b5b2a  web/audio/aircraft_cabin_taxi_627056_v1.ogg' | sha256sum -c -
+          fi
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check web/site.js
+          node --check web/player-v2.js
+          node --check web/scene-audio-v2.js
+          node --check web/mixer-fx-v9.js
+          node --check web/player-shell-v10.js
+          node --check web/player-controls-v11.js
+          node --check web/player-runtime-bridge-v12.js
+          node --check web/aircraft-source-v15.js
+          node --check web/mixer-interaction-v14.js
+          node --check web/simple-scene-quick-mixer-v12.js
+          node --check web/saved-scenes-v13.js
+          node --check web/scene-recipe-v1.js
+          node --check web/visitor-count-v1.js
+          node --check web/_worker.js
+          node --check web/legal-language-v9.js
+          node --check web/sw.js
+          node --check tools/resolve_freesound_preview.mjs
+          node --check .github/scripts/web-smoke.mjs
+          node --check .github/scripts/web-mixer-v14-smoke.mjs
+          node --check .github/scripts/web-visitor-fallback-smoke.mjs
+
+      - name: Check required web pages and runtimes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s web/index.html
+          test -s web/player/index.html
+          test -s web/download/index.html
+          test -s web/privacy/index.html
+          test -s web/terms/index.html
+          test -s web/mixer-controls-v14.css
+          test -s web/mixer-interaction-v14.js
+          test -s web/aircraft-source-v15.js
+          test -s web/scene-recipe-v1.js
+          test -s web/audio/aircraft_cabin_cruise_v2.ogg
+          grep -q 'data-scene-mode="journey"' web/player/index.html
+          grep -q 'data-scene-mode="simple"' web/player/index.html
+          grep -q 'id="durationDirect"' web/player/index.html
+          grep -q 'data-inspector-mode="simple"' web/player/index.html
+          grep -q 'data-fx="warmth"' web/player/index.html
+          grep -q '/visitor-count-v1.js?v=2' web/sw.js
+          grep -q '/visitor-count-v1.js?v=2' web/_worker.js
+          grep -q 'api.counterapi.dev/v1' web/visitor-count-v1.js
+          grep -q '/audio/aircraft_cabin_cruise_v2.ogg' web/sw.js
+          grep -q '/aircraft-source-v15.js?v=15' web/_worker.js
+          grep -q '/mixer-interaction-v14.js?v=14' web/_worker.js
+          grep -q '/mixer-controls-v14.css?v=14' web/_worker.js
+          grep -q '/simple-scene-quick-mixer-v12.js?v=12' web/_worker.js
+          grep -q '/saved-scenes-v13.js?v=13' web/_worker.js
+          grep -q '/scene-recipe-v1.js?v=1' web/_worker.js
+          ! grep -q '/mixer-zero-v13.js?v=13' web/_worker.js
+          if [[ -f web/audio/aircraft_cabin_taxi_627056_v1.ogg ]]; then
+            grep -q 'lullaby-scene-site-v20' web/sw.js
+            grep -q '/audio/aircraft_cabin_taxi_627056_v1.ogg' web/sw.js
+            grep -q 'freesound_mar_sounds_627056' web/aircraft-source-v15.js
+          else
+            grep -q 'lullaby-scene-site-v19' web/sw.js
+          fi
+
+      - name: Validate full mixer catalog
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const data=JSON.parse(fs.readFileSync('web/mixer-sources.json','utf8'));
+          if(data.sources.length!==21) throw new Error(`expected 21 mixer sources, got ${data.sources.length}`);
+          for(const s of data.sources){
+            if(s.kind==='continuous' && !fs.existsSync('web'+s.url)) throw new Error(`missing ${s.id}: web${s.url}`);
+            if(s.kind==='event' && !fs.existsSync('web'+s.url)) throw new Error(`missing event ${s.id}: web${s.url}`);
+          }
+          const required=['rain','thunder','wind','ocean','stream','fire','forest','birds','crickets','cafe','city','train','aircraft_cabin','fan','ventilation','water','singing_bowl','bamboo_forest','white_noise','pink_noise','brown_noise'];
+          const ids=new Set(data.sources.map(s=>s.id));
+          for(const id of required) if(!ids.has(id)) throw new Error(`catalog missing ${id}`);
+          NODE
+
+      - name: Validate mixer interaction and Scene Recipe wiring
+        run: |
+          grep -q 'desired=new Map' web/mixer-interaction-v14.js
+          grep -q 'requestAnimationFrame' web/mixer-interaction-v14.js
+          grep -q 'value===0' web/mixer-interaction-v14.js
+          grep -q 'touch-action:pan-y' web/mixer-controls-v14.css
+          grep -q '0% is Off' web/simple-scene-quick-mixer-v12.js
+          grep -q 'LullabyMixerInteraction.setVolume' web/simple-scene-quick-mixer-v12.js
+          grep -q 'lullaby.scene.recipe' web/scene-recipe-v1.js
+          grep -q "searchParams.set('recipe'" web/scene-recipe-v1.js
+          grep -q 'freesound_jasonm911_853735' web/aircraft-source-v15.js
+          grep -q 'durationSeconds:105' web/aircraft-source-v15.js
+
+      - name: Validate saved scenes, duration and FX wiring
+        run: |
+          grep -q 'LullabySavedScenes' web/saved-scenes-v13.js
+          grep -q 'data-saved-overwrite' web/saved-scenes-v13.js
+          grep -q "fixedDurations:\[360,480,600\]" web/player-controls-v11.js
+          grep -q "sliderMinMinutes:1" web/player-controls-v11.js
+          grep -q "LullabyControls" web/player-controls-v11.js
+          grep -q "createDynamicsCompressor" web/mixer-fx-v9.js
+          grep -q "createConvolver" web/mixer-fx-v9.js
+
+      - name: Validate aircraft sleep-journey processing chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -q 'createStereoPanner' web/scene-audio-v2.js
+          ! grep -q '/audio/ventilation.ogg' web/scene-audio-v2.js
+          ! grep -q '/audio/brown_noise.ogg' web/scene-audio-v2.js
+          grep -q 'LullabyJourneyRuntime' web/scene-audio-v2.js
+          grep -q 'setPointerCapture' web/scene-audio-v2.js
+          grep -q 'journeyPrevPhase' web/scene-audio-v2.js
+          grep -q 'journeyNextPhase' web/scene-audio-v2.js
+          grep -q 'equalizer=f=10544' tools/materialize_aircraft_audio.py
+          grep -q 'equalizer=f=3574' tools/materialize_aircraft_audio.py
+          ! grep -q 'loudnorm=' tools/materialize_aircraft_audio.py
+          if [[ -f web/audio/aircraft_cabin_taxi_627056_v1.ogg ]]; then
+            grep -q 'const specs=\[\[685,5,-6\]' web/scene-audio-v2.js
+            grep -q 'ensureTaxiNode' web/scene-audio-v2.js
+            grep -q 'getAircraftTaxiUrl' web/scene-audio-v2.js
+            grep -q 'LullabyJourneyAudio' web/scene-audio-v2.js
+            grep -q 'bridgeMs:180' web/aircraft-source-v15.js
+            grep -q 'stable 50..230 s body' tools/materialize_aircraft_taxi.py
+            ! grep -q 'loudnorm' tools/materialize_aircraft_taxi.py
+          else
+            grep -q 'tone685.frequency.value=685' web/scene-audio-v2.js
+            grep -q 'tone1191.frequency.value=1191' web/scene-audio-v2.js
+            grep -q 'tone2383.frequency.value=2383' web/scene-audio-v2.js
+            grep -q 'tone3574.frequency.value=3574' web/scene-audio-v2.js
+            grep -q 'tone10544.frequency.value=10544' web/scene-audio-v2.js
+          fi
+
+      - name: Browser primary smoke
+        timeout-minutes: 2
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-web-primary.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
+          timeout 90s node .github/scripts/web-smoke.mjs
+
+      - name: Browser Mixer and journey seek smoke
+        timeout-minutes: 2
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-web-mixer.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
+          timeout 90s node .github/scripts/web-mixer-v14-smoke.mjs
+
+      - name: Browser static visitor fallback smoke
+        timeout-minutes: 2
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-web-visitors.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 0.5; done
+          timeout 90s node .github/scripts/web-visitor-fallback-smoke.mjs

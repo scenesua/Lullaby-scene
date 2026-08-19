@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "sources": [
+    {"id":"rain","name":"Rain","category":"nature","kind":"continuous","url":"/audio/rain.ogg","defaultVolume":35},
+    {"id":"thunder","name":"Thunder","category":"nature","kind":"continuous","url":"/audio/thunder.ogg","defaultVolume":30},
+    {"id":"wind","name":"Wind","category":"nature","kind":"continuous","url":"/audio/wind.ogg","defaultVolume":30},
+    {"id":"ocean","name":"Ocean","category":"nature","kind":"continuous","url":"/audio/ocean.ogg","defaultVolume":35},
+    {"id":"stream","name":"Stream","category":"nature","kind":"continuous","url":"/audio/stream.ogg","defaultVolume":30},
+    {"id":"forest","name":"Forest","category":"nature","kind":"continuous","url":"/audio/forest.ogg","defaultVolume":30},
+    {"id":"bamboo_forest","name":"Bamboo Forest","category":"nature","kind":"continuous","url":"/audio/bamboo_forest.ogg","defaultVolume":30},
+    {"id":"birds","name":"Birds","category":"nature","kind":"continuous","url":"/audio/birds.ogg","defaultVolume":30},
+    {"id":"crickets","name":"Crickets","category":"nature","kind":"continuous","url":"/audio/crickets.ogg","defaultVolume":30},
+    {"id":"fire","name":"Fireplace","category":"indoor","kind":"continuous","url":"/audio/fire.ogg","defaultVolume":35},
+    {"id":"cafe","name":"Cafe","category":"indoor","kind":"continuous","url":"/audio/cafe.ogg","defaultVolume":30},
+    {"id":"fan","name":"Fan","category":"indoor","kind":"continuous","url":"/audio/fan.ogg","defaultVolume":40},
+    {"id":"ventilation","name":"Ventilation","category":"indoor","kind":"continuous","url":"/audio/ventilation.ogg","defaultVolume":40},
+    {"id":"city","name":"City","category":"travel","kind":"continuous","url":"/audio/city.ogg","defaultVolume":30},
+    {"id":"train","name":"Train","category":"travel","kind":"continuous","url":"/audio/train.ogg","defaultVolume":35},
+    {"id":"aircraft_cabin","name":"Aircraft Cabin","category":"travel","kind":"aircraft","defaultVolume":55},
+    {"id":"water","name":"Water","category":"other","kind":"event","url":"/audio/water-event.ogg","defaultVolume":35,"eventMinSeconds":2,"eventMaxSeconds":12},
+    {"id":"singing_bowl","name":"Singing Bowl","category":"other","kind":"continuous","url":"/audio/singing_bowl.ogg","defaultVolume":30},
+    {"id":"white_noise","name":"White Noise","category":"other","kind":"continuous","url":"/audio/white_noise.ogg","defaultVolume":30},
+    {"id":"pink_noise","name":"Pink Noise","category":"other","kind":"continuous","url":"/audio/pink_noise.ogg","defaultVolume":30},
+    {"id":"brown_noise","name":"Brown Noise","category":"other","kind":"continuous","url":"/audio/brown_noise.ogg","defaultVolume":30}
+  ]
+}

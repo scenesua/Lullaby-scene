@@ -1,0 +1,2 @@
+Web mixer audio reuses the exact verified Git blobs from app/src/main/assets/ambience on work/lullaby-2.0-audio-foundation.
+The files are copied into web/audio only for same-origin browser playback and Cloudflare Pages caching.
