@@ -1,22 +1,19 @@
 {
-  "version": 1,
+  "version": 2,
   "entries": [
     {
       "asset_id": "aircraft_cabin_cruise_001",
-      "source_name": "Airplane Cabin (near ground)",
+      "source_name": "Airplane Cabin (after take-off) - 2",
       "creator": "jasonm911",
-      "source_page": "https://freesound.org/people/jasonm911/sounds/853742/",
+      "source_page": "https://freesound.org/people/jasonm911/sounds/853736/",
       "license": "CC0-1.0",
       "license_status": "verified",
       "attribution_required": false,
-      "original_filename": "853742__jasonm911__airplane-cabin-near-ground.wav",
-      "provenance_id": "freesound_jasonm911_853742",
-      "original_sha256": "f56a15e93c1b0e3e5d53c2e2669625e9f2558371030bd1639b40ad381f2839a7",
-      "sha256": "f6ef856a803944cd01b221c2b1a0a57f76194fa301d6af71f4a90f99d2d2f120",
+      "original_filename": "853736__jasonm911__airplane-cabin-after-take-off-2.wav",
+      "provenance_id": "freesound_jasonm911_853736",
       "sample_rate": 48000,
-      "channels": 1,
-      "bytes": 16630,
-      "transformation": "20-second excerpt; mono mix; high-pass/low-pass; conservative loudness normalization; short fades; 48 kHz Ogg Opus"
+      "channels": 2,
+      "transformation": "Calm 10s-95s region from the verified CC0 stereo recording; excludes the late engine-dwindle area; 6-second equal-power cyclic seam; stereo preserved; no broadband denoise, mono fold-down, aggressive EQ, or synthetic noise; 48 kHz Ogg Opus 128 kbps VBR"
     }
   ]
 }
