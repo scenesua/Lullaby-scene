@@ -52,27 +52,22 @@ async function visitorsD1(request,env){
   return json({available:true,backend:'d1',day,today:Number(today.results?.[0]?.count||0),total:Number(total.results?.[0]?.count||0)});
 }
 
-// Auth-free V1 is intentionally used only as the temporary no-D1 fallback.
-// Its documented increment endpoint is /v1/:namespace/:name/up; reads omit /up.
-const PUBLIC_COUNTER_BASE='https://api.counterapi.dev/v1/lullaby-scene-public-v3';
-function counterValue(data){
-  const candidates=[data?.count,data?.value,data?.data?.count,data?.data?.value,data?.result?.count,data?.result?.value];
-  for(const candidate of candidates){const value=Number(candidate);if(Number.isFinite(value)&&value>=0)return value}
-  throw new Error('counterapi.dev returned no numeric count');
-}
+// Temporary public fallback while VISITOR_DB is not bound. This service's
+// /hit -> /get behavior is verified by a real CI request before merge.
+const PUBLIC_COUNTER_BASE='https://countapi.mileshilliard.com/api/v1';
 async function counterFetch(name,increment){
-  const suffix=increment?'/up':'';
-  const url=`${PUBLIC_COUNTER_BASE}/${encodeURIComponent(name)}${suffix}?ts=${Date.now()}`;
+  const action=increment?'hit':'get';
+  const url=`${PUBLIC_COUNTER_BASE}/${action}/${encodeURIComponent(name)}?ts=${Date.now()}`;
   const response=await fetch(url,{method:'GET',headers:{Accept:'application/json','Cache-Control':'no-cache'}});
-  if(!response.ok)throw new Error(`counterapi.dev ${response.status}`);
-  return counterValue(await response.json());
+  if(!response.ok)throw new Error(`replacement CountAPI ${response.status}`);
+  const data=await response.json(),value=Number(data?.value);
+  if(!Number.isFinite(value)||value<0)throw new Error('replacement CountAPI returned no numeric value');
+  return value;
 }
 async function publicCounter(name,increment){
   if(increment){
-    // Do not accept 0 as a successful first count. The previous fallback did,
-    // which could permanently mark a browser as counted while displaying 0/0.
     const value=await counterFetch(name,true);
-    if(value<1)throw new Error('counterapi.dev increment returned a non-positive count');
+    if(value<1)throw new Error('replacement CountAPI hit returned a non-positive count');
     return{value,counted:true};
   }
   let lastError;
@@ -80,7 +75,7 @@ async function publicCounter(name,increment){
     if(delay)await sleep(delay);
     try{return{value:await counterFetch(name,false),counted:false}}catch(error){lastError=error}
   }
-  throw lastError||new Error('counterapi.dev unavailable');
+  throw lastError||new Error('replacement CountAPI unavailable');
 }
 
 async function visitorsPublic(request){
@@ -92,12 +87,12 @@ async function visitorsPublic(request){
   const day=seoulDay();
   try{
     const [todayResult,totalResult]=await Promise.all([
-      publicCounter(`day-${day}`,countDay),
-      publicCounter('total',countTotal),
+      publicCounter(`lullaby-scene-day-${day}-v3`,countDay),
+      publicCounter('lullaby-scene-total-v3',countTotal),
     ]);
     return json({
       available:true,
-      backend:'counterapi.dev-v1',
+      backend:'countapi.mileshilliard-v1',
       day,
       today:todayResult.value,
       total:totalResult.value,
