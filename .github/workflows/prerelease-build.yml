@@ -37,42 +37,14 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Set up Node 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install Freesound resolver dependency
-        run: npm install --no-save playwright-core@1.55.0
-
-      - name: Install FFmpeg
-        timeout-minutes: 3
-        run: |
-          sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg
-
-      - name: Materialize cleaned long stereo aircraft bed
+      - name: Verify shared cleaned aircraft bed
         shell: bash
         run: |
           set -euo pipefail
           TARGET='app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
-          if [[ ! -s "$TARGET" ]]; then
-            SOURCE_URL="$(node tools/resolve_freesound_preview.mjs 853735)"
-            echo "Resolved Freesound 853735 preview host: $(python3 -c 'import sys,urllib.parse;print(urllib.parse.urlparse(sys.argv[1]).netloc)' "$SOURCE_URL")"
-            AIRCRAFT_SOURCE_URL="$SOURCE_URL" python3 tools/materialize_aircraft_audio.py "$TARGET"
-          fi
-          python3 - <<'PY'
-          import json, subprocess
-          path='app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
-          info=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=codec_name,sample_rate,channels','-show_entries','format=duration,size','-of','json',path]))
-          stream=info['streams'][0]; fmt=info['format']
-          assert stream['codec_name']=='opus', info
-          assert stream['sample_rate']=='48000', info
-          assert int(stream['channels'])==2, info
-          assert 104.8 <= float(fmt['duration']) <= 105.2, info
-          assert int(fmt['size']) >= 900000, info
-          print(info)
-          PY
+          test -s "$TARGET"
+          test "$(wc -c < "$TARGET")" -eq 1166883
+          echo 'd6b065bd63b2ba586bff79841f23b150aea96bcd84d7c9649ef9713cd9b6d29c  app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg' | sha256sum -c -
           grep -q 'freesound_jasonm911_853735' app/src/main/assets/ambience/manifest/scene_sources.json
           grep -q '"loop_mode": "crossfade"' app/src/main/assets/ambience/manifest/scene_sources.json
           grep -q '"crossfade_ms": 3500' app/src/main/assets/ambience/manifest/scene_sources.json
@@ -80,22 +52,6 @@ jobs:
           grep -q 'SEEK_SCENE' app/src/main/java/com/scene/ambience/media/Commands.kt
           grep -q 'seekToElapsedMs' app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt
           grep -q 'viewModel.seekScene' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
-
-      - name: Persist aircraft bed on source branch
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          set -euo pipefail
-          TARGET='app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
-          git add "$TARGET"
-          if git diff --cached --quiet; then
-            echo 'Aircraft bed already committed.'
-          else
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'feat(audio): materialize cleaned 853735 stereo aircraft loop'
-            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
-          fi
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
