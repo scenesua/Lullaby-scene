@@ -18,17 +18,23 @@
   try{getMixerUiState=stateFor}catch{}
   R.getMixerUiState=stateFor;
 
+  function setClass(row,name,enabled){
+    if(row.classList.contains(name)!==enabled)row.classList.toggle(name,enabled);
+  }
+  function setText(node,value){if(node&&node.textContent!==value)node.textContent=value}
+  function setAttr(node,name,value){if(node&&node.getAttribute(name)!==value)node.setAttribute(name,value)}
+
   function updateDom(id,state=stateFor(id)){
     document.querySelectorAll(`#mixerGrid [data-source="${CSS.escape(id)}"]`).forEach(row=>{
-      row.classList.toggle('on',state.on);row.classList.toggle('is-zero-off',!state.on);
-      const range=row.querySelector(`[data-source-volume="${CSS.escape(id)}"]`);if(range&&document.activeElement!==range)range.value=String(state.volume);
-      const button=row.querySelector(`[data-source-toggle="${CSS.escape(id)}"]`);if(button){button.textContent=state.on?'On':'Off';button.setAttribute('aria-pressed',String(state.on))}
+      setClass(row,'on',state.on);setClass(row,'is-zero-off',!state.on);
+      const range=row.querySelector(`[data-source-volume="${CSS.escape(id)}"]`);if(range&&document.activeElement!==range&&range.value!==String(state.volume))range.value=String(state.volume);
+      const button=row.querySelector(`[data-source-toggle="${CSS.escape(id)}"]`);if(button){setText(button,state.on?'On':'Off');setAttr(button,'aria-pressed',String(state.on))}
     });
     document.querySelectorAll(`[data-quick-source="${CSS.escape(id)}"]`).forEach(row=>{
-      row.classList.toggle('is-on',state.on);row.classList.toggle('is-off',!state.on);
-      const range=row.querySelector(`[data-quick-volume="${CSS.escape(id)}"]`);if(range&&document.activeElement!==range)range.value=String(state.volume);
-      const output=row.querySelector(`[data-quick-output="${CSS.escape(id)}"]`);if(output)output.textContent=`${state.volume}%`;
-      const button=row.querySelector(`[data-quick-toggle="${CSS.escape(id)}"]`);if(button){button.textContent=state.on?(window.LullabyI18n?.language==='en'?'Off':'끔'):(window.LullabyI18n?.language==='en'?'On':'켬');button.setAttribute('aria-pressed',String(state.on))}
+      setClass(row,'is-on',state.on);setClass(row,'is-off',!state.on);
+      const range=row.querySelector(`[data-quick-volume="${CSS.escape(id)}"]`);if(range&&document.activeElement!==range&&range.value!==String(state.volume))range.value=String(state.volume);
+      const output=row.querySelector(`[data-quick-output="${CSS.escape(id)}"]`);setText(output,`${state.volume}%`);
+      const button=row.querySelector(`[data-quick-toggle="${CSS.escape(id)}"]`);if(button){setText(button,state.on?(window.LullabyI18n?.language==='en'?'Off':'끔'):(window.LullabyI18n?.language==='en'?'On':'켬'));setAttr(button,'aria-pressed',String(state.on))}
     });
   }
 
@@ -110,8 +116,6 @@
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
     event.stopImmediatePropagation();
     const id=input.dataset.sourceVolume||input.dataset.quickVolume;
-    // The thumb is updated synchronously. Audio creation happens at most once;
-    // gain changes are coalesced to one write per animation frame.
     setVolume(id,input.value);
   },true);
   window.addEventListener('change',event=>{
@@ -130,7 +134,7 @@
     const baseApply=R.applyPreset.bind(R);
     R.applyPreset=async(...args)=>{desired.clear();const result=await baseApply(...args);setTimeout(normalize,80);return result};
   }
-  const mixer=document.getElementById('mixerGrid');if(mixer)new MutationObserver(()=>queueMicrotask(normalize)).observe(mixer,{childList:true,subtree:true});
+  const mixer=document.getElementById('mixerGrid');if(mixer)new MutationObserver(()=>queueMicrotask(normalize)).observe(mixer,{childList:true});
   document.addEventListener('lullaby-language-changed',()=>queueMicrotask(normalize));
   setTimeout(normalize,120);
   window.LullabyMixerInteraction={stateFor,setVolume,disable,normalize,toggle};
