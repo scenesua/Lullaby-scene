@@ -52,35 +52,30 @@ async function visitorsD1(request,env){
   return json({available:true,backend:'d1',day,today:Number(today.results?.[0]?.count||0),total:Number(total.results?.[0]?.count||0)});
 }
 
-const PUBLIC_COUNTER_BASE='https://counterapi.com/api/lullabyscene.com/visitor';
-async function counterFetch(name,readOnly){
-  const url=`${PUBLIC_COUNTER_BASE}/${encodeURIComponent(name)}?readOnly=${readOnly?'true':'false'}&noFormatting=true`;
-  const response=await fetch(url,{method:'GET',headers:{Accept:'application/json'}});
-  if(!response.ok)throw new Error(`counterapi.com ${response.status}`);
+// Temporary public fallback while VISITOR_DB is not bound. This service's
+// /hit -> /get behavior is verified by a real CI request before merge.
+const PUBLIC_COUNTER_BASE='https://countapi.mileshilliard.com/api/v1';
+async function counterFetch(name,increment){
+  const action=increment?'hit':'get';
+  const url=`${PUBLIC_COUNTER_BASE}/${action}/${encodeURIComponent(name)}?ts=${Date.now()}`;
+  const response=await fetch(url,{method:'GET',headers:{Accept:'application/json','Cache-Control':'no-cache'}});
+  if(!response.ok)throw new Error(`replacement CountAPI ${response.status}`);
   const data=await response.json(),value=Number(data?.value);
-  if(!Number.isFinite(value))throw new Error('counterapi.com returned no numeric value');
+  if(!Number.isFinite(value)||value<0)throw new Error('replacement CountAPI returned no numeric value');
   return value;
 }
 async function publicCounter(name,increment){
   if(increment){
-    try{return{value:await counterFetch(name,false),counted:true}}
-    catch(incrementError){
-      // Never retry an increment: the upstream may have applied it before the
-      // response failed. Fall back to safe reads so a transient error does not
-      // leave the UI as an em dash or accidentally double-count the visitor.
-      for(const delay of [120,320]){
-        await sleep(delay);
-        try{return{value:await counterFetch(name,true),counted:false}}catch{}
-      }
-      throw incrementError;
-    }
+    const value=await counterFetch(name,true);
+    if(value<1)throw new Error('replacement CountAPI hit returned a non-positive count');
+    return{value,counted:true};
   }
   let lastError;
-  for(const delay of [0,120,320]){
+  for(const delay of [0,150,400]){
     if(delay)await sleep(delay);
-    try{return{value:await counterFetch(name,true),counted:false}}catch(error){lastError=error}
+    try{return{value:await counterFetch(name,false),counted:false}}catch(error){lastError=error}
   }
-  throw lastError||new Error('counterapi.com unavailable');
+  throw lastError||new Error('replacement CountAPI unavailable');
 }
 
 async function visitorsPublic(request){
@@ -92,12 +87,12 @@ async function visitorsPublic(request){
   const day=seoulDay();
   try{
     const [todayResult,totalResult]=await Promise.all([
-      publicCounter(`day-${day}`,countDay),
-      publicCounter('total-v2',countTotal),
+      publicCounter(`lullaby-scene-day-${day}-v3`,countDay),
+      publicCounter('lullaby-scene-total-v3',countTotal),
     ]);
     return json({
       available:true,
-      backend:'counterapi.com',
+      backend:'countapi.mileshilliard-v1',
       day,
       today:todayResult.value,
       total:totalResult.value,
@@ -116,7 +111,7 @@ async function visitors(request,env){
 }
 
 class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12"><link rel="stylesheet" href="/mixer-controls-v14.css?v=14">',{html:true})}}
-class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=4"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
+class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=5"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
 
 export default {
   async fetch(request,env){
