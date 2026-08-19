@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_fx">FX</string>
+    <string name="fx_master">Internal FX rack</string>
+    <string name="fx_master_desc">Global effects applied to continuous ambience and scene playback.</string>
+    <string name="fx_tone">Tone</string>
+    <string name="fx_tone_desc">Shape warmth and high-frequency air without replacing the equalizer.</string>
+    <string name="fx_warmth">Warmth</string>
+    <string name="fx_warmth_desc">Adds gentle low-mid body while keeping deep bass controlled.</string>
+    <string name="fx_air">Air</string>
+    <string name="fx_air_desc">Restores a small amount of upper-frequency openness and detail.</string>
+    <string name="fx_body">Body</string>
+    <string name="fx_body_desc">Adds restrained low-end weight using the device audio session.</string>
+    <string name="fx_body_amount">Bass body</string>
+    <string name="fx_body_amount_desc">A conservative bass enhancement; 0% is fully bypassed.</string>
+    <string name="fx_dynamics">Dynamics</string>
+    <string name="fx_dynamics_desc">Smooth peaks and bind multiple ambience layers together.</string>
+    <string name="fx_glue">Glue</string>
+    <string name="fx_glue_desc">Progressively engages gentle dynamics/limiting instead of hard compression.</string>
+    <string name="fx_output">Output</string>
+    <string name="fx_output_desc">Final output gain after the tone and dynamics stages.</string>
+    <string name="fx_loudness">Loudness</string>
+    <string name="fx_loudness_desc">Adds limited makeup gain, capped for comfortable long listening.</string>
+    <string name="fx_eq_on">Equalizer enabled</string>
+    <string name="fx_eq_off">Equalizer bypassed</string>
+    <string name="fx_eq_editor_desc">The existing graphic 10-band EQ now lives inside the FX rack.</string>
+    <string name="fx_open_eq">Open 10-band EQ</string>
+    <string name="fx_reset">Reset internal FX</string>
+</resources>

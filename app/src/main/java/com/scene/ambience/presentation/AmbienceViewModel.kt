@@ -14,6 +14,7 @@ import com.scene.ambience.data.model.AmbiencePreset
 import com.scene.ambience.data.model.EngineSnapshot
 import com.scene.ambience.data.model.EqSettings
 import com.scene.ambience.data.model.FocusPolicy
+import com.scene.ambience.data.model.FxSettings
 import com.scene.ambience.data.model.MixState
 import com.scene.ambience.data.model.SceneRuntimeSnapshot
 import com.scene.ambience.data.model.SoundLibraryState
@@ -49,6 +50,7 @@ data class AmbienceUiState(
     val notificationPermissionAsked: Boolean = false,
     val userPresets: List<AmbiencePreset> = emptyList(),
     val eqSettings: EqSettings = EqSettings(),
+    val fxSettings: FxSettings = FxSettings(),
 ) {
     val builtInPresets: List<AmbiencePreset> = BuiltInPresets.createAll()
     val allPresets: List<AmbiencePreset> get() = builtInPresets + userPresets
@@ -109,6 +111,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
             notificationPermissionAsked = settings.notificationPermissionAsked,
             userPresets = settings.userPresets,
             eqSettings = settings.eqSettings,
+            fxSettings = settings.fxSettings,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, AmbienceUiState())
 
@@ -242,6 +245,14 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
             settingsRepository.setEqSettings(EqSettings(enabled = enabled, presetName = presetName, bands = bands))
         }
     }
+
+    fun setFxSettings(settings: FxSettings) {
+        val normalized = settings.normalized()
+        controllerRepository.setFx(normalized)
+        viewModelScope.launch { settingsRepository.setFxSettings(normalized) }
+    }
+
+    fun resetFxRack() = setFxSettings(FxSettings())
 
     fun toggleCategoryExpanded(categoryId: String) {
         val current = uiState.value.expandedCategories

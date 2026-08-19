@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -38,7 +37,6 @@ import com.scene.ambience.presentation.AmbienceViewModel
 fun SettingsScreen(
     state: AmbienceUiState,
     viewModel: AmbienceViewModel,
-    onOpenEq: () -> Unit,
     onOpenLicenses: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -115,34 +113,6 @@ fun SettingsScreen(
                         text = context.getString(R.string.timer_fade_hint, state.timerFadeSeconds),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.outline,
-                    )
-                }
-            }
-        }
-
-        item {
-            HorizontalDivider()
-            SectionTitle(context.getString(R.string.settings_eq))
-            Card(onClick = onOpenEq, modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(context.getString(R.string.settings_eq), style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            text = context.getString(R.string.settings_eq_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline,
-                        )
-                    }
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
-                    Spacer(Modifier.width(4.dp))
-                    Switch(
-                        checked = state.eqSettings.enabled,
-                        onCheckedChange = { enabled ->
-                            viewModel.setEqualizer(enabled, state.eqSettings.presetName, state.eqSettings.bands)
-                        },
                     )
                 }
             }

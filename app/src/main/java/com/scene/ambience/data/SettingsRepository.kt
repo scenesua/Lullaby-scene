@@ -9,14 +9,14 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.scene.ambience.data.model.FocusPolicy
+import com.scene.ambience.data.model.AmbiencePreset
 import com.scene.ambience.data.model.EqSettings
+import com.scene.ambience.data.model.FocusPolicy
+import com.scene.ambience.data.model.FxSettings
 import com.scene.ambience.data.model.MixState
 import com.scene.ambience.data.model.NoisyPolicy
-import com.scene.ambience.data.model.SourceState
 import com.scene.ambience.data.model.ThemeMode
 import com.scene.ambience.data.model.UserPresetsFile
-import com.scene.ambience.data.model.AmbiencePreset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -46,12 +46,12 @@ data class AppSettings(
     val sleepTimerFadeMs: Long? = null,
     val userPresets: List<AmbiencePreset> = emptyList(),
     val eqSettings: EqSettings = EqSettings(),
+    val fxSettings: FxSettings = FxSettings(),
 )
 
 class SettingsRepository(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true }
-
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private object Keys {
@@ -73,6 +73,12 @@ class SettingsRepository(private val context: Context) {
         val eqEnabled = booleanPreferencesKey("eq_enabled")
         val eqPreset = stringPreferencesKey("eq_preset")
         val eqBands = stringPreferencesKey("eq_bands")
+        val fxEnabled = booleanPreferencesKey("fx_enabled")
+        val fxWarmth = floatPreferencesKey("fx_warmth")
+        val fxAir = floatPreferencesKey("fx_air")
+        val fxBody = floatPreferencesKey("fx_body")
+        val fxGlue = floatPreferencesKey("fx_glue")
+        val fxLoudness = floatPreferencesKey("fx_loudness")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -101,10 +107,17 @@ class SettingsRepository(private val context: Context) {
                     runCatching { csv.split(',').mapNotNull { it.trim().toIntOrNull() } }.getOrDefault(emptyList())
                 } ?: emptyList(),
             ),
+            fxSettings = FxSettings(
+                enabled = p[Keys.fxEnabled] ?: true,
+                warmth = p[Keys.fxWarmth] ?: 0f,
+                air = p[Keys.fxAir] ?: 0f,
+                body = p[Keys.fxBody] ?: 0f,
+                glue = p[Keys.fxGlue] ?: 0f,
+                loudness = p[Keys.fxLoudness] ?: 0f,
+            ).normalized(),
         )
     }
 
-    /** Synchronously readable cached snapshot, e.g. for service onCreate. */
     val settingsFlow: StateFlow<AppSettings> =
         settings.stateIn(scope, SharingStarted.Eagerly, AppSettings())
 
@@ -179,6 +192,18 @@ class SettingsRepository(private val context: Context) {
             it[Keys.eqEnabled] = eq.enabled
             it[Keys.eqPreset] = eq.presetName
             it[Keys.eqBands] = eq.bands.joinToString(",")
+        }
+    }
+
+    suspend fun setFxSettings(fx: FxSettings) {
+        val value = fx.normalized()
+        context.dataStore.edit {
+            it[Keys.fxEnabled] = value.enabled
+            it[Keys.fxWarmth] = value.warmth
+            it[Keys.fxAir] = value.air
+            it[Keys.fxBody] = value.body
+            it[Keys.fxGlue] = value.glue
+            it[Keys.fxLoudness] = value.loudness
         }
     }
 }

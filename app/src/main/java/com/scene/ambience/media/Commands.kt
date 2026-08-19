@@ -3,6 +3,7 @@ package com.scene.ambience.media
 import android.os.Bundle
 import androidx.media3.session.SessionCommand
 import com.scene.ambience.data.model.EngineSnapshot
+import com.scene.ambience.data.model.FxSettings
 import com.scene.ambience.data.model.SceneRuntimeSnapshot
 import kotlinx.serialization.json.Json
 
@@ -18,6 +19,7 @@ object Commands {
     const val CANCEL_SLEEP_TIMER = "com.scene.ambience.cmd.cancel_sleep_timer"
     const val CLEAR_MESSAGE = "com.scene.ambience.cmd.clear_message"
     const val SET_EQ = "com.scene.ambience.cmd.set_eq"
+    const val SET_FX = "com.scene.ambience.cmd.set_fx"
     const val START_SCENE = "com.scene.ambience.cmd.start_scene"
     const val STOP_SCENE = "com.scene.ambience.cmd.stop_scene"
     const val SET_SCENE_MACRO = "com.scene.ambience.cmd.set_scene_macro"
@@ -36,6 +38,12 @@ object Commands {
     const val EXTRA_EQ_ENABLED = "eq_enabled"
     const val EXTRA_EQ_PRESET = "eq_preset"
     const val EXTRA_EQ_BANDS = "eq_bands"
+    const val EXTRA_FX_ENABLED = "fx_enabled"
+    const val EXTRA_FX_WARMTH = "fx_warmth"
+    const val EXTRA_FX_AIR = "fx_air"
+    const val EXTRA_FX_BODY = "fx_body"
+    const val EXTRA_FX_GLUE = "fx_glue"
+    const val EXTRA_FX_LOUDNESS = "fx_loudness"
     const val EXTRA_SCENE_ID = "scene_id"
     const val EXTRA_ARC_MINUTES = "arc_minutes"
     const val EXTRA_MACRO_KEY = "macro_key"
@@ -84,6 +92,27 @@ object Commands {
             putIntegerArrayList(EXTRA_EQ_BANDS, ArrayList(bands))
         })
 
+    fun setFx(settings: FxSettings): SessionCommand {
+        val fx = settings.normalized()
+        return SessionCommand(SET_FX, Bundle().apply {
+            putBoolean(EXTRA_FX_ENABLED, fx.enabled)
+            putFloat(EXTRA_FX_WARMTH, fx.warmth)
+            putFloat(EXTRA_FX_AIR, fx.air)
+            putFloat(EXTRA_FX_BODY, fx.body)
+            putFloat(EXTRA_FX_GLUE, fx.glue)
+            putFloat(EXTRA_FX_LOUDNESS, fx.loudness)
+        })
+    }
+
+    fun fxFrom(args: Bundle): FxSettings = FxSettings(
+        enabled = args.getBoolean(EXTRA_FX_ENABLED, true),
+        warmth = args.getFloat(EXTRA_FX_WARMTH, 0f),
+        air = args.getFloat(EXTRA_FX_AIR, 0f),
+        body = args.getFloat(EXTRA_FX_BODY, 0f),
+        glue = args.getFloat(EXTRA_FX_GLUE, 0f),
+        loudness = args.getFloat(EXTRA_FX_LOUDNESS, 0f),
+    ).normalized()
+
     fun startScene(sceneId: String, totalDurationMinutes: Int): SessionCommand =
         SessionCommand(START_SCENE, Bundle().apply {
             putString(EXTRA_SCENE_ID, sceneId)
@@ -112,6 +141,7 @@ object Commands {
         cancelSleepTimer,
         clearMessage,
         SessionCommand(SET_EQ, Bundle()),
+        SessionCommand(SET_FX, Bundle()),
         SessionCommand(START_SCENE, Bundle()),
         stopScene,
         SessionCommand(SET_SCENE_MACRO, Bundle()),

@@ -12,6 +12,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.scene.ambience.data.model.EngineSnapshot
+import com.scene.ambience.data.model.FxSettings
 import com.scene.ambience.data.model.SceneRuntimeSnapshot
 import com.scene.ambience.media.AmbiencePlaybackService
 import com.scene.ambience.media.Commands
@@ -126,6 +127,7 @@ class AmbienceControllerRepository(
     fun cancelSleepTimer() = dispatch(Commands.cancelSleepTimer)
     fun clearMessage() = dispatch(Commands.clearMessage)
     fun setEqualizer(enabled: Boolean, presetName: String, bands: List<Int>) = dispatch(Commands.setEqualizer(enabled, presetName, bands))
+    fun setFx(settings: FxSettings) = dispatch(Commands.setFx(settings))
 
     fun startScene(sceneId: String, totalDurationMinutes: Int) = dispatch(Commands.startScene(sceneId, totalDurationMinutes))
     fun stopScene() = dispatch(Commands.stopScene)

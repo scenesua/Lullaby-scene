@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,6 +54,7 @@ import com.scene.ambience.data.model.PlaybackState
 import com.scene.ambience.presentation.AmbienceUiEvent
 import com.scene.ambience.presentation.AmbienceViewModel
 import com.scene.ambience.ui.screens.EqScreen
+import com.scene.ambience.ui.screens.FxScreen
 import com.scene.ambience.ui.screens.LicensesScreen
 import com.scene.ambience.ui.screens.MixerScreen
 import com.scene.ambience.ui.screens.PresetsScreen
@@ -64,6 +66,7 @@ import kotlinx.coroutines.delay
 const val ROUTE_SCENES = "scenes"
 const val ROUTE_MIXER = "mixer"
 const val ROUTE_PRESETS = "presets"
+const val ROUTE_FX = "fx"
 const val ROUTE_TIMER = "timer"
 const val ROUTE_SETTINGS = "settings"
 const val ROUTE_EQ = "eq"
@@ -84,11 +87,9 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is AmbienceUiEvent.ShowMessage -> {
-                    snackbarHostState.showSnackbar(
-                        AmbienceStrings.messageText(context, event.message) ?: event.message
-                    )
-                }
+                is AmbienceUiEvent.ShowMessage -> snackbarHostState.showSnackbar(
+                    AmbienceStrings.messageText(context, event.message) ?: event.message
+                )
                 AmbienceUiEvent.RequestNotificationPermission -> {
                     if (Build.VERSION.SDK_INT >= 33) {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -98,7 +99,6 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
         }
     }
 
-    // Cold-launch update check happens after the normal UI has rendered.
     LaunchedEffect(Unit) {
         delay(450L)
         viewModel.checkForUpdates(manual = false)
@@ -194,7 +194,7 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                 title = {
                     Column {
                         Text(titleForRoute(context, currentRoute), style = MaterialTheme.typography.titleLarge)
-                        if (currentRoute in setOf(ROUTE_SCENES, ROUTE_MIXER, ROUTE_PRESETS, ROUTE_SETTINGS)) {
+                        if (currentRoute in setOf(ROUTE_SCENES, ROUTE_MIXER, ROUTE_PRESETS, ROUTE_FX, ROUTE_SETTINGS)) {
                             Text(
                                 text = context.getString(R.string.app_name),
                                 style = MaterialTheme.typography.labelSmall,
@@ -258,6 +258,13 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                     colors = navigationColors,
                 )
                 NavigationBarItem(
+                    selected = currentRoute == ROUTE_FX || currentRoute == ROUTE_EQ,
+                    onClick = { navController.navigateTo(ROUTE_FX) },
+                    icon = { Icon(Icons.Filled.Tune, contentDescription = null) },
+                    label = { Text(context.getString(R.string.nav_fx)) },
+                    colors = navigationColors,
+                )
+                NavigationBarItem(
                     selected = currentRoute == ROUTE_SETTINGS,
                     onClick = { navController.navigateTo(ROUTE_SETTINGS) },
                     icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
@@ -276,12 +283,18 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
             composable(ROUTE_SCENES) { ScenesScreen(state, viewModel) }
             composable(ROUTE_MIXER) { MixerScreen(state, viewModel) }
             composable(ROUTE_PRESETS) { PresetsScreen(state, viewModel) }
+            composable(ROUTE_FX) {
+                FxScreen(
+                    state = state,
+                    viewModel = viewModel,
+                    onOpenEq = { navController.navigate(ROUTE_EQ) },
+                )
+            }
             composable(ROUTE_TIMER) { TimerScreen(state, viewModel) }
             composable(ROUTE_SETTINGS) {
                 SettingsScreen(
                     state = state,
                     viewModel = viewModel,
-                    onOpenEq = { navController.navigate(ROUTE_EQ) },
                     onOpenLicenses = { navController.navigate(ROUTE_LICENSES) },
                 )
             }
@@ -308,6 +321,7 @@ private fun titleForRoute(context: android.content.Context, route: String): Stri
     ROUTE_SCENES -> context.getString(R.string.nav_scenes)
     ROUTE_MIXER -> context.getString(R.string.nav_mixer)
     ROUTE_PRESETS -> context.getString(R.string.nav_presets)
+    ROUTE_FX -> context.getString(R.string.nav_fx)
     ROUTE_TIMER -> context.getString(R.string.timer_title)
     ROUTE_SETTINGS -> context.getString(R.string.nav_settings)
     ROUTE_EQ -> context.getString(R.string.settings_eq)

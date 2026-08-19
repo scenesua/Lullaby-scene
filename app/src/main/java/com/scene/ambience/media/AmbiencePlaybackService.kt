@@ -43,6 +43,7 @@ class AmbiencePlaybackService : MediaSessionService() {
             scope = serviceScope,
             focusPolicyProvider = { application.settingsRepository.settingsFlow.value.focusPolicy },
             eqSettingsProvider = { application.settingsRepository.settingsFlow.value.eqSettings },
+            fxSettingsProvider = { application.settingsRepository.settingsFlow.value.fxSettings },
             onStopRequested = { stopSelf() },
         )
         sceneOrchestrator = SceneOrchestrator(
@@ -76,6 +77,8 @@ class AmbiencePlaybackService : MediaSessionService() {
 
     private fun restoreState() {
         val settings = application.settingsRepository.settingsFlow.value
+        engine.applyFx(settings.fxSettings)
+        engine.applyEqualizer(settings.eqSettings.enabled, settings.eqSettings.presetName, settings.eqSettings.bands)
         val mix = settings.lastMix ?: return
         engine.applyMix(mix, settings.lastPresetId)
         val timerEnd = settings.sleepTimerEndEpochMs
@@ -164,6 +167,7 @@ class AmbiencePlaybackService : MediaSessionService() {
                 args.getString(Commands.EXTRA_EQ_PRESET) ?: "",
                 args.getIntegerArrayList(Commands.EXTRA_EQ_BANDS) ?: emptyList(),
             )
+            Commands.SET_FX -> engine.applyFx(Commands.fxFrom(args))
             Commands.START_SCENE -> {
                 val id = args.getString(Commands.EXTRA_SCENE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
                 val started = sceneOrchestrator.start(id, args.getInt(Commands.EXTRA_ARC_MINUTES, 480))
