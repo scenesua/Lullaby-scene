@@ -14,14 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.PI
-import kotlin.math.sin
 
-/**
- * Service-owned living-scene runtime. The selected duration is the entire journey,
- * while aircraft phases use absolute-time windows and cruise stretches to fill the
- * remaining sleep time. Random events are independently scheduled inside cruise.
- */
+/** Service-owned living-scene runtime. */
 class SceneOrchestrator(
     private val engine: AmbienceEngine,
     private val scope: CoroutineScope,
@@ -51,15 +45,19 @@ class SceneOrchestrator(
             macros = SceneMacroState(),
         )
 
+        // The aircraft recording remains the audible bed. Ventilation is only a
+        // very quiet support layer; synthetic brown-noise rumble is intentionally
+        // not used because it masks cabin detail and exaggerates codec noise.
         engine.applyMix(
             MixState(
                 masterVolume = 0.8f,
                 masterMuted = false,
-                sources = mapOf(
-                    SOURCE_AIRCRAFT to SourceState(SOURCE_AIRCRAFT, enabled = true, volume = 0.68f),
-                    SOURCE_VENTILATION to SourceState(SOURCE_VENTILATION, enabled = isSourceAvailable(SOURCE_VENTILATION), volume = if (isSourceAvailable(SOURCE_VENTILATION)) 0.18f else 0f),
-                    SOURCE_BROWN_NOISE to SourceState(SOURCE_BROWN_NOISE, enabled = isSourceAvailable(SOURCE_BROWN_NOISE), volume = if (isSourceAvailable(SOURCE_BROWN_NOISE)) 0.10f else 0f),
-                ),
+                sources = buildMap {
+                    put(SOURCE_AIRCRAFT, SourceState(SOURCE_AIRCRAFT, enabled = true, volume = 0.68f))
+                    if (isSourceAvailable(SOURCE_VENTILATION)) {
+                        put(SOURCE_VENTILATION, SourceState(SOURCE_VENTILATION, enabled = true, volume = 0.06f))
+                    }
+                },
             ),
             presetId = null,
         )
@@ -79,7 +77,6 @@ class SceneOrchestrator(
 
     fun release() = stopScene()
 
-    /** Change the whole journey length without restarting the current journey. */
     fun setDurationMinutes(minutes: Int) {
         val current = _state.value
         if (!current.active) return
@@ -144,7 +141,6 @@ class SceneOrchestrator(
 
         setVolumeIfChanged(SOURCE_AIRCRAFT, frame.aircraftVolume)
         if (isSourceAvailable(SOURCE_VENTILATION)) setVolumeIfChanged(SOURCE_VENTILATION, frame.ventilationVolume)
-        if (isSourceAvailable(SOURCE_BROWN_NOISE)) setVolumeIfChanged(SOURCE_BROWN_NOISE, frame.rumbleVolume)
         applySceneDsp(current.macros, phase, activeEvent)
     }
 
@@ -156,8 +152,9 @@ class SceneOrchestrator(
     }
 
     /**
-     * Spatial/DSP v1. User semantic controls remain the baseline; timed flight
-     * phases and short scheduled events temporarily bias the same acoustic model.
+     * Scene tone shaping stays deliberately subtle. It keeps the user's EQ as
+     * the baseline and adds small phase-dependent biases only; it does not use
+     * the old aggressive low-pass-like high-band cuts or periodic gain wobble.
      */
     private fun applySceneDsp(
         macros: SceneMacroState,
@@ -167,24 +164,20 @@ class SceneOrchestrator(
         val user = eqSettingsProvider()
         val count = maxOf(5, user.bands.size)
         val bands = MutableList(count) { index -> if (user.enabled) user.bands.getOrElse(index) { 0 } else 0 }
-        val phaseEngineBoost = when (phase) {
-            STATE_TAKEOFF -> 0.24f
-            STATE_CLIMB -> 0.14f
-            STATE_DESCENT -> 0.06f
-            STATE_APPROACH -> 0.10f
+        val phasePresence = when (phase) {
+            STATE_TAKEOFF -> 1f
+            STATE_CLIMB -> 0.65f
+            STATE_DESCENT -> 0.25f
+            STATE_APPROACH -> 0.35f
             else -> 0f
         }
-        val eventTurbulence = if (event?.kind == AircraftJourneyTimelineBuilder.EVENT_TURBULENCE) event.intensity else 0f
-        val effectivePresence = (macros.enginePresence + phaseEngineBoost).coerceIn(0f, 1f)
-        val effectiveTurbulence = (macros.turbulence + eventTurbulence).coerceIn(0f, 1f)
-        val distance = 1f - effectivePresence
-        val highCut = (450f + 950f * distance + 650f * macros.nightDepth).toInt()
-        val upperMidCut = (highCut * 0.52f).toInt()
-        val lowBody = (180f * effectiveTurbulence + 130f * phaseEngineBoost).toInt()
+        val turbulence = if (event?.kind == AircraftJourneyTimelineBuilder.EVENT_TURBULENCE) event.intensity else 0f
+        val lowBody = (70f * phasePresence + 45f * turbulence * macros.turbulence).toInt()
+        val highSoftening = (35f * macros.nightDepth + 25f * (1f - macros.enginePresence)).toInt()
         bands[0] = (bands[0] + lowBody).coerceIn(-1500, 1500)
-        if (count >= 2) bands[count - 2] = (bands[count - 2] - upperMidCut).coerceIn(-1500, 1500)
-        bands[count - 1] = (bands[count - 1] - highCut).coerceIn(-1500, 1500)
-        engine.applyEqualizer(true, "scene_aircraft_spatial", bands)
+        if (count >= 2) bands[count - 2] = (bands[count - 2] - highSoftening / 2).coerceIn(-1500, 1500)
+        bands[count - 1] = (bands[count - 1] - highSoftening).coerceIn(-1500, 1500)
+        engine.applyEqualizer(user.enabled || lowBody != 0 || highSoftening != 0, "scene_aircraft_tone", bands)
     }
 
     private fun restoreUserEq() {
@@ -195,7 +188,6 @@ class SceneOrchestrator(
     private data class AircraftFrame(
         val aircraftVolume: Float,
         val ventilationVolume: Float,
-        val rumbleVolume: Float,
     )
 
     private fun passengerAircraftFrame(
@@ -204,46 +196,37 @@ class SceneOrchestrator(
         event: AircraftJourneyEvent?,
     ): AircraftFrame {
         val phaseDetail = when (phase) {
-            STATE_TAXI_OUT -> 0.82f
-            STATE_TAKEOFF -> 1.18f
-            STATE_CLIMB -> 1.10f
+            STATE_TAXI_OUT -> 0.86f
+            STATE_TAKEOFF -> 1.10f
+            STATE_CLIMB -> 1.05f
             STATE_CRUISE -> 1.00f
-            STATE_DESCENT -> 0.96f
+            STATE_DESCENT -> 0.98f
             STATE_APPROACH -> 1.03f
-            STATE_TAXI_IN -> 0.80f
+            STATE_TAXI_IN -> 0.84f
             else -> 0.65f
-        }
-        val phaseVent = when (phase) {
-            STATE_TAKEOFF, STATE_CLIMB -> 0.86f
-            STATE_CRUISE -> 1.00f
-            STATE_DESCENT, STATE_APPROACH -> 0.94f
-            else -> 0.90f
         }
         val m = snapshot.macros
         val eventTurbulence = if (event?.kind == AircraftJourneyTimelineBuilder.EVENT_TURBULENCE) event.intensity else 0f
         val eventCabin = if (event?.kind == AircraftJourneyTimelineBuilder.EVENT_CABIN_ACTIVITY) event.intensity else 0f
-        val effectiveTurbulence = (m.turbulence + eventTurbulence).coerceIn(0f, 1f)
         val effectiveCabin = (m.cabinActivity + eventCabin).coerceIn(0f, 1f)
-        val spatial = 0.78f + 0.22f * m.enginePresence
-        val detail = 0.74f + 0.34f * effectiveCabin
-        val turbulenceWave = 1f + (0.045f * effectiveTurbulence * sin((snapshot.elapsedMs / 2200.0) * 2.0 * PI).toFloat())
-        val aircraft = (0.68f * phaseDetail * spatial * detail * turbulenceWave).coerceIn(0.22f, 0.92f)
-        val ventilation = (0.17f * phaseVent * (0.92f + 0.15f * m.nightDepth)).coerceIn(0.08f, 0.26f)
-        val phaseRumble = when (phase) {
-            STATE_TAKEOFF -> 0.10f
-            STATE_CLIMB -> 0.06f
-            STATE_APPROACH -> 0.03f
-            else -> 0f
+        val presence = 0.86f + 0.14f * m.enginePresence
+        val detail = 0.94f + 0.08f * effectiveCabin
+        val turbulenceLevel = 1f + 0.018f * (m.turbulence + eventTurbulence).coerceIn(0f, 1f)
+        val aircraft = (0.68f * phaseDetail * presence * detail * turbulenceLevel).coerceIn(0.28f, 0.86f)
+        val phaseVent = when (phase) {
+            STATE_TAKEOFF, STATE_CLIMB -> 0.88f
+            STATE_CRUISE -> 1.00f
+            STATE_DESCENT, STATE_APPROACH -> 0.92f
+            else -> 0.84f
         }
-        val rumble = (0.07f + 0.10f * m.enginePresence + 0.035f * effectiveTurbulence + phaseRumble).coerceIn(0.04f, 0.28f)
-        return AircraftFrame(aircraft, ventilation, rumble)
+        val ventilation = (0.055f * phaseVent * (0.94f + 0.08f * m.nightDepth)).coerceIn(0.035f, 0.075f)
+        return AircraftFrame(aircraft, ventilation)
     }
 
     companion object {
         const val PASSENGER_AIRCRAFT = "passenger_aircraft_cabin"
         const val SOURCE_AIRCRAFT = "aircraft_cabin"
         const val SOURCE_VENTILATION = "ventilation"
-        const val SOURCE_BROWN_NOISE = "brown_noise"
 
         const val MACRO_ENGINE_PRESENCE = "engine_presence"
         const val MACRO_CABIN_ACTIVITY = "cabin_activity"

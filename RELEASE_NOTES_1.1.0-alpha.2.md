@@ -3,69 +3,59 @@
 ## 주요 변경 사항
 
 - 앱을 열면 믹서보다 장면을 먼저 고를 수 있도록 새로운 `씬` 화면을 기본 화면으로 추가했습니다.
-- 첫 번째 살아있는 장면으로 `Passenger Aircraft Cabin`을 추가하고 실제 여객기 기내 녹음을 수면용 기내 질감으로 가공해 적용했습니다.
-- 기존 30분·60분·120분 Scene Arc 대신, 사용자가 4시간부터 12시간까지 30분 단위로 전체 수면·여정 시간을 정할 수 있도록 변경했습니다.
-- 여객기 장면은 출발 지상 이동 → 이륙 → 상승 → 장거리 순항 → 하강 → 최종 접근 → 착륙 후 지상 이동 순서로 진행되며, 출발·도착 구간은 수면시간에 비례해 늘어나지 않고 가운데 순항 시간이 전체 시간에 맞춰 조정됩니다.
-- 좌석벨트 사인은 출발·이륙·상승과 도착 전 구간에 맞춰 상태가 바뀌며, 순항 중에는 가벼운 난기류와 작은 기내 활동이 일정한 반복이 아닌 랜덤 간격으로 더해집니다.
-- 수면을 방해할 수 있는 랜덤 이벤트는 잠들기 직전과 초기 수면에 몰리지 않도록 보호 구간과 긴 재발 간격을 적용하고, 작은 기내 움직임도 강한 이벤트 주변에 겹치지 않도록 조정했습니다.
+- 첫 번째 살아있는 장면으로 `Passenger Aircraft Cabin`을 추가하고 실제 여객기 기내 녹음을 장면 베드로 적용했습니다.
+- 여객기 씬의 `6h / 8h / 10h`는 추천 고정 버튼으로 유지하되, 직접 입력은 `HH:MM` 형식으로 1분 이상 원하는 시간을 그대로 사용할 수 있습니다. 4시간보다 짧은 여정은 비행 단계 전체가 같은 순서를 유지한 채 비례 압축됩니다.
+- 장시간 여정은 출발 지상 이동 → 이륙 → 상승 → 장거리 순항 → 하강 → 최종 접근 → 착륙 후 지상 이동 순서로 진행되며, 순항 구간이 전체 시간에 맞춰 늘어납니다.
+- 좌석벨트 사인은 출발·이륙·상승과 도착 전 구간에 맞춰 상태가 바뀌며, 긴 순항 중에는 수면 보호 규칙을 따르는 가벼운 난기류와 작은 기내 활동이 랜덤 간격으로 더해집니다.
 - 엔진 존재감, 기내 활동감, 난기류, 밤의 깊이를 조절하는 Semantic Macro Control을 추가했습니다.
-- 엔진의 거리감이 음량과 고역 감쇠에 함께 반영되고, 비행 단계와 랜덤 이벤트가 내부 공간·톤 처리에 자연스럽게 반영됩니다.
+- 여객기 오디오에서 합성 브라운 노이즈 레이어와 주기적인 볼륨 흔들림을 제거하고, 환풍 보조 레이어와 씬 톤 처리를 훨씬 약하게 조정해 원본 기내 질감을 덜 가리도록 수정했습니다.
+- `프리셋` 옆에 독립 `FX` 탭을 추가했습니다. Tone(Warmth/Air), Body, Dynamics(Glue), Output(Loudness), 기존 10밴드 EQ를 한 곳에서 관리할 수 있으며 각 섹션은 접고 펼칠 수 있습니다.
+- FX 값은 앱에 저장되며 0%에서는 해당 처리가 바이패스됩니다. 기존 EQ는 설정 화면에서 FX 탭으로 이동했습니다.
 - 앱 실행 후 GitHub Releases에서 업데이트를 자동 확인하고, 설정 화면에서도 직접 업데이트를 확인할 수 있도록 했습니다.
 - 업데이트 설정에 `프리릴리즈도 확인` 토글을 추가했습니다. 기본값은 꺼짐이며, 켜면 정식 버전뿐 아니라 alpha·beta·RC 빌드도 새 버전으로 확인합니다.
-- 새 버전이 있으면 릴리즈 노트를 확인한 뒤 APK를 내려받아 검증하고 Android 설치 화면으로 이어갈 수 있으며, 알림을 24시간 숨길 수도 있습니다.
 
 ## 참고
 
-- 현재 포함된 실제 항공기 음원은 사용자가 제공한 기내 녹음을 가공한 베드입니다. 전용 이륙·착륙·좌석벨트 차임·기장/승무원 안내 녹음은 아직 포함하지 않았으며, 해당 단계는 현재 상태 변화와 내부 DSP로 표현됩니다.
-- 기존 믹서, 프리셋, 백그라운드 재생, 취침 타이머, EQ 및 음원별 볼륨 조절은 계속 사용할 수 있습니다.
-- 현재 내부 공간 처리는 거리·음량·고역 감쇠 중심의 첫 구현이며, 완전한 HRTF/바이노럴 공간 렌더러는 아닙니다.
-- `프리릴리즈도 확인`을 끄면 기존처럼 안정 릴리즈만 확인합니다.
+- 현재 포함된 항공기 베드는 아직 짧게 가공된 기존 소스입니다. 더 긴 스테레오 원본으로 교체하면 공간감과 질감을 추가로 개선할 수 있습니다.
+- 전용 이륙·착륙·좌석벨트 차임·기장/승무원 안내 녹음은 아직 포함하지 않았습니다.
+- 기존 믹서, 프리셋, 백그라운드 재생, 취침 타이머 및 음원별 볼륨 조절은 계속 사용할 수 있습니다.
 - 이번 APK는 테스트용 서명으로 빌드된 프리릴리즈입니다.
 
 ---
 
 ## What's Changed
 
-- Added a new scene-first home screen so the app opens with places to enter rather than the mixer alone.
-- Added `Passenger Aircraft Cabin` as the first living scene, using a real passenger-cabin recording processed into a sleep-friendly cabin bed.
-- Replaced the old 30/60/120-minute Scene Arc with a whole sleep/journey duration selectable from 4 to 12 hours in 30-minute steps.
-- The aircraft journey now follows taxi-out → takeoff → climb → long cruise → descent → final approach → post-landing taxi. Departure and arrival phases keep bounded absolute durations while the cruise section expands to fit the selected total time.
-- The seat-belt state follows departure and arrival windows, while light turbulence and small cabin-activity events are distributed at randomized intervals during cruise instead of repeating on a fixed cycle.
-- Random events that may disturb sleep now use protected sleep-onset windows and long recurrence gaps, while smaller cabin events are prevented from clustering around disruptive events.
-- Added semantic controls for engine presence, cabin activity, turbulence, and night depth.
-- Added internal spatial/tone processing so engine distance changes both level and high-frequency detail, with flight phases and random events temporarily shaping the same acoustic model.
-- Added automatic GitHub Releases update checks plus a manual check in Settings.
-- Added a `Check prereleases too` toggle. It is off by default; when enabled, alpha, beta, and release-candidate builds are included alongside stable releases.
-- When a newer selected-channel version is available, the app can show release notes, download and verify the APK, hand it to Android's installer, and suppress the prompt for 24 hours.
+- Added a scene-first home screen and `Passenger Aircraft Cabin` as the first living scene.
+- Aircraft `6h / 8h / 10h` choices are now scene-specific recommendations only. Direct `HH:MM` entry accepts any positive duration from one minute upward; journeys shorter than four hours proportionally compress the full phase order.
+- Long journeys retain taxi-out → takeoff → climb → cruise → descent → approach → post-landing taxi, with cruise expanding to fit the requested total.
+- Removed the synthetic brown-noise rumble and periodic gain wobble from the aircraft scene, and greatly reduced the ventilation support layer and scene tone shaping so the cabin recording remains clearer.
+- Added a dedicated `FX` tab next to Presets. It contains collapsible Tone (Warmth/Air), Body, Dynamics (Glue), Output (Loudness), and the existing graphic 10-band EQ.
+- FX settings persist across launches and each amount is bypassed at 0%. The EQ entry has moved out of Settings into the FX rack.
+- Added semantic controls for engine presence, cabin activity, turbulence, and night depth, plus sleep-safe randomized cruise events for sufficiently long journeys.
+- Added automatic GitHub Releases update checks and an optional prerelease channel toggle.
 
 ## Notes
 
-- The currently packaged aircraft audio is a processed bed made from the user-provided cabin recording. Dedicated takeoff, landing, seat-belt chime, and captain/cabin-crew recordings are not packaged yet; those phases currently use state and DSP changes.
-- The existing mixer, presets, background playback, sleep timer, EQ, and per-source volume controls remain available.
-- The current internal spatial processing is the first distance/tone implementation and is not yet a full HRTF/binaural renderer.
-- With `Check prereleases too` disabled, update checks remain stable-only.
+- The packaged aircraft bed is still the short processed legacy source. Replacing it with a longer stereo recording remains the next major sound-quality improvement.
+- Dedicated takeoff, landing, seat-belt chime, and captain/cabin-crew recordings are not packaged yet.
+- Mixer, Presets, background playback, sleep timer, and per-source volume controls remain available.
 - This APK is a prerelease build signed with the current test signing configuration.
 
 ---
 
 ## 主な変更点
 
-- アプリ起動時にミキサーではなく場所から選べるよう、新しい `シーン` 画面を最初の画面として追加しました。
-- 最初のリビングシーンとして `Passenger Aircraft Cabin` を追加し、実際の旅客機の機内録音を睡眠向けの機内ベッドとして加工して使用しています。
-- 従来の30分・60分・120分の Scene Arc を廃止し、4時間から12時間まで30分単位で睡眠／旅程全体の長さを選べるようにしました。
-- 航空機シーンは地上走行 → 離陸 → 上昇 → 長距離巡航 → 降下 → 最終進入 → 着陸後の地上走行の順に進みます。出発・到着側の区間は睡眠時間に比例して引き伸ばさず、中央の巡航時間が選択した総時間に合わせて変化します。
-- シートベルトサインは出発・到着側の区間に合わせて変化し、巡航中には軽い揺れや小さな機内活動が固定周期ではなくランダムな間隔で加わります。
-- 睡眠を妨げる可能性のあるランダムイベントは入眠前後と初期睡眠に集中しないよう保護時間と長い再発間隔を設け、小さな機内イベントも強いイベントの前後に重ならないようにしました。
-- エンジンの存在感、機内の活動感、揺れ、夜の深さを調整する Semantic Macro Control を追加しました。
-- エンジンの距離が音量と高域の減衰の両方に反映され、飛行段階やランダムイベントも内部空間・トーン処理へ一時的に反映されます。
-- GitHub Releases の自動更新確認と、設定画面からの手動確認を追加しました。
-- `プレリリースも確認` トグルを追加しました。初期状態はオフで、オンにすると安定版に加えて alpha・beta・RC ビルドも更新対象として確認します。
-- 新しい対象バージョンがある場合はリリースノートを確認し、APK をダウンロード・検証して Android のインストール画面へ進めます。通知は24時間非表示にもできます。
+- 起動時に場所から選べるシーン画面を追加し、最初のリビングシーンとして `Passenger Aircraft Cabin` を実装しました。
+- 航空機シーンの `6h / 8h / 10h` はおすすめの固定ボタンとして残し、直接入力は `HH:MM` 形式で1分以上の任意の時間をそのまま使用できます。4時間未満では飛行段階全体を同じ順序のまま比例圧縮します。
+- 長時間の旅程では地上走行 → 離陸 → 上昇 → 巡航 → 降下 → 進入 → 着陸後の地上走行を維持し、巡航区間が総時間に合わせて伸びます。
+- 航空機音声から合成ブラウンノイズのランブルと周期的な音量揺れを削除し、換気音の補助レイヤーとトーン処理も大幅に弱めました。
+- プリセットの隣に独立した `FX` タブを追加しました。Tone（Warmth/Air）、Body、Dynamics（Glue）、Output（Loudness）、既存の10バンドEQを折りたたみ式セクションで管理できます。
+- FX設定は保存され、各量が0%のときはバイパスされます。EQは設定画面からFXタブへ移動しました。
+- エンジンの存在感、機内活動、揺れ、夜の深さのマクロと、長い巡航向けの睡眠保護ランダムイベントを追加しました。
 
 ## 備考
 
-- 現在収録されている航空機音源は、ユーザー提供の機内録音を加工したベッドです。離陸・着陸・シートベルトチャイム・機長／客室乗務員アナウンス専用の録音はまだ収録しておらず、現段階では状態変化と内部 DSP で表現します。
-- 従来のミキサー、プリセット、バックグラウンド再生、スリープタイマー、EQ、音源ごとのボリューム調整は引き続き利用できます。
-- 現在の内部空間処理は距離・音量・高域減衰を中心とした最初の実装で、完全な HRTF／バイノーラルレンダラーではありません。
-- `プレリリースも確認` がオフの場合は、従来どおり安定版のみを確認します。
-- この APK は現在のテスト用署名設定でビルドされたプレリリースです。
+- 現在の航空機ベッドはまだ短く加工された既存ソースです。より長いステレオ録音への交換が次の大きな音質改善点です。
+- 離陸・着陸・シートベルトチャイム・機長／客室乗務員アナウンス専用音源はまだ収録していません。
+- ミキサー、プリセット、バックグラウンド再生、スリープタイマー、音源別ボリュームは引き続き利用できます。
+- このAPKは現在のテスト署名を使用したプレリリースです。
