@@ -47,8 +47,28 @@ async function visitors(request,env){
   return json({available:true,day,today:Number(today.results?.[0]?.count||0),total:Number(total.results?.[0]?.count||0)});
 }
 
+const PLAYER_RUNTIME=`<script>
+if(document.getElementById('webPlayer')){
+  window.LullabyPlayerRuntime={
+    get catalog(){return catalog},
+    get sourceById(){return sourceById},
+    get nodes(){return nodes},
+    get eventState(){return eventState},
+    get presets(){return builtinPresets},
+    getMixerUiState,
+    loadUserPresets,
+    startEventLayer,
+    stopEventLayer,
+    ensureContext,
+    makeSourceNode,
+    renderMixer,
+    updateNowPlaying
+  };
+}
+</script>`;
+
 class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12">',{html:true})}}
-class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=1"></script><script>if(document.getElementById("webPlayer")){const s=document.createElement("script");s.src="/simple-scene-quick-mixer-v12.js?v=12";document.body.appendChild(s)}</script>',{html:true})}}
+class BodyInjector{element(element){element.append(`<script src="/visitor-count-v1.js?v=1"></script>${PLAYER_RUNTIME}<script>if(window.LullabyPlayerRuntime){const s=document.createElement('script');s.src='/simple-scene-quick-mixer-v12.js?v=12';document.body.appendChild(s)}</script>`,{html:true})}}
 
 export default {
   async fetch(request,env){
