@@ -1,0 +1,208 @@
+(()=>{
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  const isEnglish=()=>window.LullabyI18n?.language==='en';
+  let activePreset=null;
+  let interactionActive=false;
+  let renderPending=false;
+  const starting=new Map();
+
+  const catalogList=()=>{try{return Array.isArray(catalog)?catalog:[]}catch{return[]}};
+  const sourceDef=id=>{try{return sourceById?.[id]||catalogList().find(source=>source.id===id)||null}catch{return null}};
+  const stateFor=id=>{try{return getMixerUiState(id)}catch{return{on:false,volume:0}}};
+  const presetById=id=>{
+    try{
+      const builtIn=typeof builtinPresets!=='undefined'?builtinPresets:[];
+      const users=typeof loadUserPresets==='function'?loadUserPresets():[];
+      return builtIn.find(item=>item.id===id)||users.find(item=>item.id===id)||null;
+    }catch{return null}
+  };
+  const presetIds=()=>activePreset?Object.keys(activePreset.mix||{}):[];
+
+  function ensureMainQuickMixer(){
+    const host=$('[data-scene-content="simple"]');
+    if(!host)return null;
+    let section=$('#simpleQuickMixerSection');
+    if(section)return section.querySelector('#simpleQuickMixerList');
+    section=document.createElement('section');
+    section.id='simpleQuickMixerSection';
+    section.className='simple-quick-mixer-main';
+    section.innerHTML=`<div class="quick-mixer-heading"><div><p class="eyebrow" data-quick-title></p><p class="muted-copy" data-quick-help></p></div><button type="button" class="small-action" data-quick-all-off></button></div><div id="simpleQuickMixerList" class="quick-mixer-list"></div>`;
+    const transport=$('#simpleSceneTransport');
+    if(transport)transport.insertAdjacentElement('afterend',section);else host.querySelector('.simple-scene-header')?.insertAdjacentElement('afterend',section);
+    localize();
+    return section.querySelector('#simpleQuickMixerList');
+  }
+
+  function roots(){
+    const main=ensureMainQuickMixer();
+    const inspector=$('#inspectorMixerList');
+    return [main,inspector].filter(Boolean);
+  }
+
+  function orderedSources(){
+    const list=catalogList();
+    const preferred=presetIds();
+    const preferredSet=new Set(preferred);
+    const byId=new Map(list.map(item=>[item.id,item]));
+    const presetSources=preferred.map(id=>byId.get(id)).filter(Boolean);
+    const extras=list.filter(item=>!preferredSet.has(item.id)&&stateFor(item.id).on);
+    const inactive=list.filter(item=>!preferredSet.has(item.id)&&!stateFor(item.id).on);
+    return [...presetSources,...extras,...inactive];
+  }
+
+  function rowMarkup(def){
+    const state=stateFor(def.id);
+    const on=!!state.on;
+    const preferred=presetIds().includes(def.id);
+    const volume=on?Math.max(0,Math.min(100,Number(state.volume)||0)):0;
+    const status=preferred
+      ?(isEnglish()?'Current scene':'현재 씬')
+      :on
+        ?(isEnglish()?'Added':'추가됨')
+        :(isEnglish()?'Available':'추가 가능');
+    const action=on?(isEnglish()?'Turn off':'끔'):(isEnglish()?'Add':'추가');
+    return `<div class="quick-mixer-row ${on?'is-on':'is-off'} ${preferred?'is-preset-source':''}" data-quick-source="${def.id}">
+      <div class="quick-mixer-copy"><strong title="${escapeText(def.name||def.id)}">${escapeText(def.name||def.id)}</strong><span>${status}</span></div>
+      <button type="button" data-quick-toggle="${def.id}" aria-pressed="${on}">${action}</button>
+      <label class="quick-mixer-volume"><output data-quick-output="${def.id}">${volume}%</output><input data-quick-volume="${def.id}" type="range" min="0" max="100" value="${volume}" aria-label="${escapeText(def.name||def.id)} volume"></label>
+    </div>`;
+  }
+
+  function escapeText(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
+
+  function render(){
+    if(interactionActive){renderPending=true;return}
+    renderPending=false;
+    const list=orderedSources();
+    if(!list.length){setTimeout(render,150);return}
+    const html=list.map(rowMarkup).join('');
+    roots().forEach(root=>{root.innerHTML=html});
+    localize();
+  }
+
+  function requestRender(){
+    if(interactionActive){renderPending=true;return}
+    queueMicrotask(render);
+  }
+
+  async function ensureEnabled(id,volume){
+    const def=sourceDef(id);if(!def)return;
+    const value=Math.max(.001,Math.min(1,Number(volume)||0));
+    if(def.kind==='event'){
+      try{
+        if(!eventState[id]?.enabled)startEventLayer(def);
+        eventState[id].enabled=true;
+        eventState[id].volume=value;
+      }catch{}
+      return;
+    }
+    if(starting.has(id)){await starting.get(id);try{nodes[id].gain.gain.value=value}catch{};return}
+    const task=(async()=>{
+      await ensureContext();
+      if(!nodes[id])nodes[id]=await makeSourceNode(def);
+      nodes[id].gain.gain.value=value;
+      if(nodes[id].el.paused)await nodes[id].el.play();
+    })().finally(()=>starting.delete(id));
+    starting.set(id,task);
+    await task;
+  }
+
+  function disable(id){
+    const def=sourceDef(id);if(!def)return;
+    try{
+      if(def.kind==='event'){
+        stopEventLayer(id);
+        if(eventState[id])eventState[id].volume=0;
+      }else if(nodes[id]){
+        nodes[id].el.pause();
+        nodes[id].el.currentTime=0;
+        nodes[id].gain.gain.value=0;
+      }
+    }catch{}
+  }
+
+  function preferredVolume(id){
+    const fromPreset=activePreset?.mix?.[id];
+    if(Number(fromPreset)>0)return Number(fromPreset);
+    const def=sourceDef(id);
+    return Math.max(.01,Math.min(1,Number(def?.defaultVolume||30)/100));
+  }
+
+  function updateRowDuringInput(id,value){
+    $$(`[data-quick-source="${id}"]`).forEach(row=>{
+      const on=value>0;
+      row.classList.toggle('is-on',on);
+      row.classList.toggle('is-off',!on);
+      const output=row.querySelector(`[data-quick-output="${id}"]`);if(output)output.textContent=`${Math.round(value*100)}%`;
+      const button=row.querySelector(`[data-quick-toggle="${id}"]`);if(button){button.textContent=on?(isEnglish()?'Turn off':'끔'):(isEnglish()?'Add':'추가');button.setAttribute('aria-pressed',String(on))}
+      const mirrors=row.querySelectorAll(`[data-quick-volume="${id}"]`);mirrors.forEach(input=>{if(document.activeElement!==input)input.value=String(Math.round(value*100))});
+    });
+  }
+
+  async function setQuickVolume(id,percent){
+    const value=Math.max(0,Math.min(100,Number(percent)||0))/100;
+    updateRowDuringInput(id,value);
+    if(value===0)disable(id);else await ensureEnabled(id,value);
+    try{updateNowPlaying()}catch{}
+  }
+
+  async function toggle(id){
+    const on=!!stateFor(id).on;
+    if(on)disable(id);else await ensureEnabled(id,preferredVolume(id));
+    try{renderMixer();updateNowPlaying()}catch{}
+    requestRender();
+  }
+
+  function turnAllOff(){
+    catalogList().forEach(def=>disable(def.id));
+    try{renderMixer();updateNowPlaying()}catch{}
+    requestRender();
+  }
+
+  function localize(){
+    const title=isEnglish()?'Quick Mixer':'퀵 믹서';
+    const help=isEnglish()?'Scene sounds stay at the top. Move a 0% slider to add another sound.':'현재 씬 소리는 위에 고정됩니다. 0% 슬라이더를 움직이면 다른 소리가 추가됩니다.';
+    $$('[data-quick-title]').forEach(el=>el.textContent=title);
+    $$('[data-quick-help]').forEach(el=>el.textContent=help);
+    $$('[data-quick-all-off]').forEach(el=>el.textContent=isEnglish()?'Turn all off':'전체 끄기');
+  }
+
+  window.addEventListener('click',event=>{
+    const preset=event.target.closest?.('[data-preset],[data-user-preset]');
+    if(preset){
+      activePreset=presetById(preset.dataset.preset||preset.dataset.userPreset);
+      setTimeout(render,180);
+      return;
+    }
+    const toggleButton=event.target.closest?.('[data-quick-toggle]');
+    if(toggleButton){
+      event.preventDefault();event.stopImmediatePropagation();
+      toggle(toggleButton.dataset.quickToggle);
+      return;
+    }
+    if(event.target.closest?.('[data-quick-all-off]')){
+      event.preventDefault();event.stopImmediatePropagation();turnAllOff();
+    }
+  },true);
+
+  window.addEventListener('input',event=>{
+    const input=event.target.closest?.('[data-quick-volume]');if(!input)return;
+    event.stopImmediatePropagation();interactionActive=true;
+    setQuickVolume(input.dataset.quickVolume,input.value);
+  },true);
+
+  window.addEventListener('change',event=>{
+    const input=event.target.closest?.('[data-quick-volume]');if(!input)return;
+    event.stopImmediatePropagation();interactionActive=false;
+    try{renderMixer()}catch{}
+    if(renderPending)render();else requestRender();
+  },true);
+
+  document.addEventListener('lullaby-language-changed',()=>requestRender());
+  document.addEventListener('lullaby-scene-mode-changed',event=>{if(event.detail?.mode==='simple')requestRender()});
+  const mixer=$('#mixerGrid');if(mixer)new MutationObserver(requestRender).observe(mixer,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  ensureMainQuickMixer();
+  setTimeout(render,100);
+  setTimeout(render,500);
+  window.LullabyQuickMixer={render,turnAllOff,get activePreset(){return activePreset}};
+})();
