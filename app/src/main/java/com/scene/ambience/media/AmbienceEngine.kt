@@ -253,7 +253,7 @@ class AmbienceEngine(
         eqEnabled = enabled
         eqPreset = presetName
         eqBands = bands
-        synchronized(fxLock) { equalizers.values.toList() }.forEach { applyEqTo(it) }
+        synchronized(fxLock) { equalizers.toMap() }.forEach { (sessionId, effect) -> applyEqTo(effect, sessionSources[sessionId]) }
     }
 
     fun applyFx(settings: FxSettings) {
@@ -264,7 +264,7 @@ class AmbienceEngine(
 
     private fun applyEffectsToSession(sessionId: Int) {
         val eq = synchronized(fxLock) { equalizers[sessionId] }
-        if (eq != null) applyEqTo(eq)
+        if (eq != null) applyEqTo(eq, synchronized(fxLock) { sessionSources[sessionId] })
         val boost = synchronized(fxLock) { bassBoosts[sessionId] }
         if (boost != null) applyBassTo(boost)
         val loudness = synchronized(fxLock) { loudnessEnhancers[sessionId] }
@@ -277,11 +277,12 @@ class AmbienceEngine(
         }
     }
 
-    private fun applyEqTo(eq: Equalizer) {
+    private fun applyEqTo(eq: Equalizer, sourceId: String? = null) {
         try {
             val fx = fxSettings
             val toneActive = fx.enabled && (fx.warmth > 0.001f || fx.air > 0.001f)
-            val shouldEnable = eqEnabled || toneActive
+            val aircraftGuardActive = sourceId == "aircraft_cabin"
+            val shouldEnable = eqEnabled || toneActive || aircraftGuardActive
             if (!shouldEnable) {
                 eq.enabled = false
                 return
@@ -302,7 +303,19 @@ class AmbienceEngine(
                     hz >= 3500f -> (fx.air * 100f).roundToInt()
                     else -> 0
                 } else 0
-                val level = (base + warmthMb + airMb)
+                // The original aircraft recording has stable narrow tonal ridges
+                // around 0.685, 1.191, 2.383, 3.574 and 10.54 kHz. Android's
+                // platform Equalizer is coarse, so attenuate only the real device
+                // bands whose center frequencies cover those ridges.
+                val aircraftGuardMb = if (aircraftGuardActive) when {
+                    hz in 500f..899f -> -300
+                    hz in 900f..1599f -> -450
+                    hz in 1600f..2999f -> -300
+                    hz in 3000f..4999f -> -600
+                    hz >= 8000f -> -650
+                    else -> 0
+                } else 0
+                val level = (base + warmthMb + airMb + aircraftGuardMb)
                     .coerceIn(range[0].toInt(), range[1].toInt())
                 eq.setBandLevel(band.toShort(), level.toShort())
             }
