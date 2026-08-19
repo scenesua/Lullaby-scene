@@ -165,6 +165,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
 
     fun stopScene() = controllerRepository.stopScene()
     fun setSceneDuration(minutes: Int) = controllerRepository.setSceneDuration(minutes)
+    fun seekScene(elapsedMs: Long) = controllerRepository.seekScene(elapsedMs)
     fun setSceneMacro(key: String, value: Float) = controllerRepository.setSceneMacro(key, value)
 
     fun setMasterVolume(volume: Float) = controllerRepository.setMasterVolume(volume)
