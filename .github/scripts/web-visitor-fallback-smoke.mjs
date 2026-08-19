@@ -18,7 +18,7 @@ await page.route('**/api/visitors',async route=>{
   const first=requests.length===1;
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
     available:true,
-    backend:'counterapi.dev-v1',
+    backend:'countapi.mileshilliard-v1',
     day:'2026-08-20',
     today:first?13:0,
     total:first?101:0,
@@ -45,11 +45,11 @@ async function loadCounter(){
 await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
 await page.evaluate(()=>localStorage.clear());
 let state=await loadCounter();
-if(state.today!=='13'||state.total!=='101'||state.backend!=='counterapi.dev-v1'||state.totalMarker!=='1'||!/^\d{4}-\d{2}-\d{2}$/.test(state.dayMarker||'')||state.totalLast!=='101'||state.dayLast!=='13')throw new Error(`same-origin visitor fallback failed: ${JSON.stringify(state)}`);
+if(state.today!=='13'||state.total!=='101'||state.backend!=='countapi.mileshilliard-v1'||state.totalMarker!=='1'||!/^\d{4}-\d{2}-\d{2}$/.test(state.dayMarker||'')||state.totalLast!=='101'||state.dayLast!=='13')throw new Error(`same-origin visitor fallback failed: ${JSON.stringify(state)}`);
 if(requests.length!==1||requests[0].countTotal!==true||requests[0].countDay!==true)throw new Error(`first visit count flags invalid: ${JSON.stringify(requests)}`);
 
 state=await loadCounter();
-if(state.today!=='13'||state.total!=='101'||state.backend!=='counterapi.dev-v1')throw new Error(`visitor fallback reload failed: ${JSON.stringify(state)}`);
+if(state.today!=='13'||state.total!=='101'||state.backend!=='countapi.mileshilliard-v1')throw new Error(`visitor fallback reload failed: ${JSON.stringify(state)}`);
 if(requests.length!==2||requests[1].countTotal!==false||requests[1].countDay!==false)throw new Error(`reload count flags invalid: ${JSON.stringify(requests)}`);
 
 // Regression: a backend returning 0/0 on a requested increment must never be
@@ -58,7 +58,7 @@ const zeroContext=await browser.newContext({viewport:{width:1280,height:900},loc
 const zeroPage=await zeroContext.newPage();
 await zeroPage.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
   available:true,
-  backend:'counterapi.dev-v1',
+  backend:'countapi.mileshilliard-v1',
   day:'2026-08-20',
   today:0,
   total:0,
