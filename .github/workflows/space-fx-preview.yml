@@ -6,6 +6,12 @@ on:
       - work/lullaby-2.0-audio-foundation
     paths:
       - '.github/workflows/space-fx-preview.yml'
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/space-fx-preview.yml'
   workflow_dispatch:
 
 permissions:
@@ -17,6 +23,10 @@ concurrency:
 
 jobs:
   build-and-publish:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      github.event.pull_request.head.ref == 'work/lullaby-2.0-audio-foundation'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
