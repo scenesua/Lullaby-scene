@@ -18,8 +18,8 @@ await page.route('**/api/visitors',async route=>{
   const first=requests.length===1;
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
     available:true,
-    backend:'counterapi.com',
-    day:'2026-08-19',
+    backend:'counterapi.dev-v1',
+    day:'2026-08-20',
     today:first?13:0,
     total:first?101:0,
     countedDay:true,
@@ -29,28 +29,56 @@ await page.route('**/api/visitors',async route=>{
 
 async function loadCounter(){
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
-  await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=4'});
+  await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=5'});
   await page.waitForFunction(()=>document.querySelector('[data-visitor-total]')?.textContent!=='—');
   return page.evaluate(()=>({
     today:document.querySelector('[data-visitor-today]')?.textContent?.trim(),
     total:document.querySelector('[data-visitor-total]')?.textContent?.trim(),
     backend:document.querySelector('[data-visitor-stats]')?.dataset.backend,
-    totalMarker:localStorage.getItem('lullaby-visitor-total-counted-v2'),
-    dayMarker:localStorage.getItem('lullaby-visitor-day-counted-v2'),
-    totalLast:localStorage.getItem('lullaby-visitor-total-last-v2'),
-    dayLast:localStorage.getItem('lullaby-visitor-day-last-v2'),
+    totalMarker:localStorage.getItem('lullaby-visitor-total-counted-v3'),
+    dayMarker:localStorage.getItem('lullaby-visitor-day-counted-v3'),
+    totalLast:localStorage.getItem('lullaby-visitor-total-last-v3'),
+    dayLast:localStorage.getItem('lullaby-visitor-day-last-v3'),
   }));
 }
 
 await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
 await page.evaluate(()=>localStorage.clear());
 let state=await loadCounter();
-if(state.today!=='13'||state.total!=='101'||state.backend!=='counterapi.com'||state.totalMarker!=='1'||!/^\d{4}-\d{2}-\d{2}$/.test(state.dayMarker||'')||state.totalLast!=='101'||state.dayLast!=='13')throw new Error(`same-origin visitor fallback failed: ${JSON.stringify(state)}`);
+if(state.today!=='13'||state.total!=='101'||state.backend!=='counterapi.dev-v1'||state.totalMarker!=='1'||!/^\d{4}-\d{2}-\d{2}$/.test(state.dayMarker||'')||state.totalLast!=='101'||state.dayLast!=='13')throw new Error(`same-origin visitor fallback failed: ${JSON.stringify(state)}`);
 if(requests.length!==1||requests[0].countTotal!==true||requests[0].countDay!==true)throw new Error(`first visit count flags invalid: ${JSON.stringify(requests)}`);
 
 state=await loadCounter();
-if(state.today!=='13'||state.total!=='101'||state.backend!=='counterapi.com')throw new Error(`visitor fallback reload failed: ${JSON.stringify(state)}`);
+if(state.today!=='13'||state.total!=='101'||state.backend!=='counterapi.dev-v1')throw new Error(`visitor fallback reload failed: ${JSON.stringify(state)}`);
 if(requests.length!==2||requests[1].countTotal!==false||requests[1].countDay!==false)throw new Error(`reload count flags invalid: ${JSON.stringify(requests)}`);
+
+// Regression: a backend returning 0/0 on a requested increment must never be
+// treated as a successful count or persist the counted markers.
+const zeroContext=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
+const zeroPage=await zeroContext.newPage();
+await zeroPage.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+  available:true,
+  backend:'counterapi.dev-v1',
+  day:'2026-08-20',
+  today:0,
+  total:0,
+  countedDay:true,
+  countedTotal:true,
+})}));
+await zeroPage.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
+await zeroPage.evaluate(()=>localStorage.clear());
+await zeroPage.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=5'});
+await zeroPage.waitForTimeout(250);
+const zeroState=await zeroPage.evaluate(()=>({
+  today:document.querySelector('[data-visitor-today]')?.textContent?.trim(),
+  total:document.querySelector('[data-visitor-total]')?.textContent?.trim(),
+  unavailable:document.querySelector('[data-visitor-stats]')?.dataset.unavailable,
+  totalMarker:localStorage.getItem('lullaby-visitor-total-counted-v3'),
+  dayMarker:localStorage.getItem('lullaby-visitor-day-counted-v3'),
+}));
+if(zeroState.today!=='—'||zeroState.total!=='—'||zeroState.unavailable!=='true'||zeroState.totalMarker!==null||zeroState.dayMarker!==null)throw new Error(`false zero count was accepted: ${JSON.stringify(zeroState)}`);
+await zeroContext.close();
+
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log('same-origin visitor counter fallback smoke test passed');
+console.log('same-origin visitor counter v5 smoke test passed');
