@@ -1,18 +1,23 @@
 (()=>{
   const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
   const isEnglish=()=>window.LullabyI18n?.language==='en';
+  const runtime=name=>{try{return eval(name)}catch{return undefined}};
+  const invoke=(name,...args)=>{const fn=window[name]||runtime(name);if(typeof fn==='function')return fn(...args)};
   let activePreset=null;
   let interactionActive=false;
   let renderPending=false;
   const starting=new Map();
 
-  const catalogList=()=>{try{return Array.isArray(catalog)?catalog:[]}catch{return[]}};
-  const sourceDef=id=>{try{return sourceById?.[id]||catalogList().find(source=>source.id===id)||null}catch{return null}};
-  const stateFor=id=>{try{return getMixerUiState(id)}catch{return{on:false,volume:0}}};
+  const catalogList=()=>{const value=runtime('catalog');return Array.isArray(value)?value:[]};
+  const sourceMap=()=>runtime('sourceById')||{};
+  const runtimeNodes=()=>runtime('nodes')||{};
+  const runtimeEvents=()=>runtime('eventState')||{};
+  const sourceDef=id=>sourceMap()[id]||catalogList().find(source=>source.id===id)||null;
+  const stateFor=id=>{try{const value=invoke('getMixerUiState',id);return value||{on:false,volume:0}}catch{return{on:false,volume:0}}};
   const presetById=id=>{
     try{
-      const builtIn=typeof builtinPresets!=='undefined'?builtinPresets:[];
-      const users=typeof loadUserPresets==='function'?loadUserPresets():[];
+      const builtIn=runtime('builtinPresets')||[];
+      const users=invoke('loadUserPresets')||[];
       return builtIn.find(item=>item.id===id)||users.find(item=>item.id===id)||null;
     }catch{return null}
   };
@@ -88,20 +93,22 @@
   async function ensureEnabled(id,volume){
     const def=sourceDef(id);if(!def)return;
     const value=Math.max(.001,Math.min(1,Number(volume)||0));
+    const events=runtimeEvents();
     if(def.kind==='event'){
-      try{
-        if(!eventState[id]?.enabled)startEventLayer(def);
-        eventState[id].enabled=true;
-        eventState[id].volume=value;
-      }catch{}
+      if(!events[id]?.enabled)invoke('startEventLayer',def);
+      const current=runtimeEvents()[id];
+      if(current){current.enabled=true;current.volume=value}
       return;
     }
-    if(starting.has(id)){await starting.get(id);try{nodes[id].gain.gain.value=value}catch{};return}
+    if(starting.has(id)){await starting.get(id);const node=runtimeNodes()[id];if(node)node.gain.gain.value=value;return}
     const task=(async()=>{
-      await ensureContext();
-      if(!nodes[id])nodes[id]=await makeSourceNode(def);
-      nodes[id].gain.gain.value=value;
-      if(nodes[id].el.paused)await nodes[id].el.play();
+      await invoke('ensureContext');
+      const nodes=runtimeNodes();
+      if(!nodes[id])nodes[id]=await invoke('makeSourceNode',def);
+      const node=nodes[id];
+      if(!node)return;
+      node.gain.gain.value=value;
+      if(node.el.paused)await node.el.play();
     })().finally(()=>starting.delete(id));
     starting.set(id,task);
     await task;
@@ -109,16 +116,13 @@
 
   function disable(id){
     const def=sourceDef(id);if(!def)return;
-    try{
-      if(def.kind==='event'){
-        stopEventLayer(id);
-        if(eventState[id])eventState[id].volume=0;
-      }else if(nodes[id]){
-        nodes[id].el.pause();
-        nodes[id].el.currentTime=0;
-        nodes[id].gain.gain.value=0;
-      }
-    }catch{}
+    if(def.kind==='event'){
+      invoke('stopEventLayer',id);
+      const current=runtimeEvents()[id];if(current)current.volume=0;
+      return;
+    }
+    const node=runtimeNodes()[id];
+    if(node){node.el.pause();node.el.currentTime=0;node.gain.gain.value=0}
   }
 
   function preferredVolume(id){
@@ -135,7 +139,7 @@
       row.classList.toggle('is-off',!on);
       const output=row.querySelector(`[data-quick-output="${id}"]`);if(output)output.textContent=`${Math.round(value*100)}%`;
       const button=row.querySelector(`[data-quick-toggle="${id}"]`);if(button){button.textContent=on?(isEnglish()?'Turn off':'끔'):(isEnglish()?'Add':'추가');button.setAttribute('aria-pressed',String(on))}
-      const mirrors=row.querySelectorAll(`[data-quick-volume="${id}"]`);mirrors.forEach(input=>{if(document.activeElement!==input)input.value=String(Math.round(value*100))});
+      row.querySelectorAll(`[data-quick-volume="${id}"]`).forEach(input=>{if(document.activeElement!==input)input.value=String(Math.round(value*100))});
     });
   }
 
@@ -143,20 +147,18 @@
     const value=Math.max(0,Math.min(100,Number(percent)||0))/100;
     updateRowDuringInput(id,value);
     if(value===0)disable(id);else await ensureEnabled(id,value);
-    try{updateNowPlaying()}catch{}
+    invoke('updateNowPlaying');
   }
 
   async function toggle(id){
     const on=!!stateFor(id).on;
     if(on)disable(id);else await ensureEnabled(id,preferredVolume(id));
-    try{renderMixer();updateNowPlaying()}catch{}
-    requestRender();
+    invoke('renderMixer');invoke('updateNowPlaying');requestRender();
   }
 
   function turnAllOff(){
     catalogList().forEach(def=>disable(def.id));
-    try{renderMixer();updateNowPlaying()}catch{}
-    requestRender();
+    invoke('renderMixer');invoke('updateNowPlaying');requestRender();
   }
 
   function localize(){
@@ -169,40 +171,25 @@
 
   window.addEventListener('click',event=>{
     const preset=event.target.closest?.('[data-preset],[data-user-preset]');
-    if(preset){
-      activePreset=presetById(preset.dataset.preset||preset.dataset.userPreset);
-      setTimeout(render,180);
-      return;
-    }
+    if(preset){activePreset=presetById(preset.dataset.preset||preset.dataset.userPreset);setTimeout(render,180);return}
     const toggleButton=event.target.closest?.('[data-quick-toggle]');
-    if(toggleButton){
-      event.preventDefault();event.stopImmediatePropagation();
-      toggle(toggleButton.dataset.quickToggle);
-      return;
-    }
-    if(event.target.closest?.('[data-quick-all-off]')){
-      event.preventDefault();event.stopImmediatePropagation();turnAllOff();
-    }
+    if(toggleButton){event.preventDefault();event.stopImmediatePropagation();toggle(toggleButton.dataset.quickToggle);return}
+    if(event.target.closest?.('[data-quick-all-off]')){event.preventDefault();event.stopImmediatePropagation();turnAllOff()}
   },true);
 
   window.addEventListener('input',event=>{
     const input=event.target.closest?.('[data-quick-volume]');if(!input)return;
-    event.stopImmediatePropagation();interactionActive=true;
-    setQuickVolume(input.dataset.quickVolume,input.value);
+    event.stopImmediatePropagation();interactionActive=true;setQuickVolume(input.dataset.quickVolume,input.value);
   },true);
 
   window.addEventListener('change',event=>{
     const input=event.target.closest?.('[data-quick-volume]');if(!input)return;
-    event.stopImmediatePropagation();interactionActive=false;
-    try{renderMixer()}catch{}
-    if(renderPending)render();else requestRender();
+    event.stopImmediatePropagation();interactionActive=false;invoke('renderMixer');if(renderPending)render();else requestRender();
   },true);
 
-  document.addEventListener('lullaby-language-changed',()=>requestRender());
+  document.addEventListener('lullaby-language-changed',requestRender);
   document.addEventListener('lullaby-scene-mode-changed',event=>{if(event.detail?.mode==='simple')requestRender()});
   const mixer=$('#mixerGrid');if(mixer)new MutationObserver(requestRender).observe(mixer,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-  ensureMainQuickMixer();
-  setTimeout(render,100);
-  setTimeout(render,500);
+  ensureMainQuickMixer();setTimeout(render,100);setTimeout(render,500);
   window.LullabyQuickMixer={render,turnAllOff,get activePreset(){return activePreset}};
 })();
