@@ -165,6 +165,26 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                context.getString(R.string.update_include_prerelease),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Text(
+                                context.getString(R.string.update_include_prerelease_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline,
+                            )
+                        }
+                        Switch(
+                            checked = state.includePrereleaseUpdates,
+                            onCheckedChange = viewModel::setIncludePrereleaseUpdates,
+                        )
+                    }
                     state.update.available?.let { available ->
                         Text(
                             context.getString(R.string.update_available_version, available.version),
