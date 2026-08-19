@@ -1,0 +1,48 @@
+name: Diagnose production visitor counter
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-counter-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe production site and visitor backends
+        shell: bash
+        run: |
+          set -u
+          echo '=== homepage ==='
+          curl -sS -D /tmp/home.headers -o /tmp/home.body --max-time 20 https://lullabyscene.com/ || true
+          cat /tmp/home.headers || true
+          grep -o 'visitor-count-v1.js[^"<]*' /tmp/home.body || true
+
+          echo '=== deployed visitor JS ==='
+          curl -sS -D /tmp/js.headers -o /tmp/js.body --max-time 20 'https://lullabyscene.com/visitor-count-v1.js?v=2' || true
+          cat /tmp/js.headers || true
+          head -c 1200 /tmp/js.body || true
+          echo
+
+          echo '=== same-origin visitor API GET ==='
+          curl -sS -D /tmp/api.headers -o /tmp/api.body --max-time 20 https://lullabyscene.com/api/visitors || true
+          cat /tmp/api.headers || true
+          cat /tmp/api.body || true
+          echo
+
+          echo '=== CounterAPI GET with production Origin ==='
+          curl -sS -D /tmp/counter.headers -o /tmp/counter.body --max-time 20 -H 'Origin: https://lullabyscene.com' 'https://api.counterapi.dev/v1/lullaby-scene-site/visitors-total-v1' || true
+          cat /tmp/counter.headers || true
+          cat /tmp/counter.body || true
+          echo
+
+          echo '=== CounterAPI preflight ==='
+          curl -sS -D /tmp/options.headers -o /tmp/options.body --max-time 20 -X OPTIONS -H 'Origin: https://lullabyscene.com' -H 'Access-Control-Request-Method: GET' 'https://api.counterapi.dev/v1/lullaby-scene-site/visitors-total-v1' || true
+          cat /tmp/options.headers || true
+          cat /tmp/options.body || true
+          echo
