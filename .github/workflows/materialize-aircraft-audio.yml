@@ -7,6 +7,11 @@ on:
       - work/lullaby-2.0-audio-foundation
     paths:
       - '.github/workflows/materialize-aircraft-audio.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/materialize-aircraft-audio.yml'
+      - 'web/audio/aircraft_cabin_cruise_853735.ogg'
+      - 'app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
 
 permissions:
   contents: write
@@ -18,10 +23,30 @@ jobs:
       - name: Checkout source branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.head_ref || github.ref_name }}
           fetch-depth: 0
 
+      - name: Check whether materialization is needed
+        id: check
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH='${{ github.head_ref || github.ref_name }}'
+          if [[ "$BRANCH" == "work/lullaby-web-foundation" ]]; then
+            TARGET='web/audio/aircraft_cabin_cruise_853735.ogg'
+          elif [[ "$BRANCH" == "work/lullaby-2.0-audio-foundation" ]]; then
+            TARGET='app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg'
+          else
+            echo "Unexpected branch: $BRANCH" >&2; exit 1
+          fi
+          if [[ -s "$TARGET" ]]; then
+            echo 'needed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'needed=true' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Resolve official Freesound HQ preview
+        if: steps.check.outputs.needed == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -30,25 +55,18 @@ jobs:
           url='https://freesound.org/people/jasonm911/sounds/853735/'
           request=urllib.request.Request(url,headers={'User-Agent':'Lullaby-Scene-audio-materializer/1.0'})
           page=html.unescape(urllib.request.urlopen(request,timeout=30).read().decode('utf-8','replace'))
-          patterns=[
-              r'https://cdn\.freesound\.org/previews/853/853735_[^"\'<> ]+-hq\.ogg',
-              r'https://freesound\.org/data/previews/853/853735_[^"\'<> ]+-hq\.ogg',
-          ]
-          match=None
-          for pattern in patterns:
-              found=re.search(pattern,page)
-              if found:
-                  match=found.group(0);break
-          if not match:
+          found=re.findall(r'https://(?:cdn\.freesound\.org/previews|freesound\.org/data/previews)/853/853735_[^"<> ]+-hq\.ogg',page)
+          if not found:
               raise SystemExit('Could not find Freesound 853735 HQ OGG preview URL')
-          print(match)
-          open('/tmp/preview_url','w').write(match)
+          print(found[0])
+          open('/tmp/preview_url','w').write(found[0])
           PY
           curl --fail --location --retry 3 --output /tmp/aircraft-source.ogg "$(cat /tmp/preview_url)"
           test -s /tmp/aircraft-source.ogg
           ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration,size -of json /tmp/aircraft-source.ogg
 
       - name: Build 114 second stereo loop
+        if: steps.check.outputs.needed == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -68,35 +86,31 @@ jobs:
           assert size > 700000, info
           digest=hashlib.sha256(open(path,'rb').read()).hexdigest()
           print(f'duration={duration:.3f}s size={size} sha256={digest}')
-          open('/tmp/aircraft_sha256','w').write(digest)
-          open('/tmp/aircraft_size','w').write(str(size))
           PY
 
       - name: Install processed source into branch
+        if: steps.check.outputs.needed == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${GITHUB_REF_NAME}" == "work/lullaby-web-foundation" ]]; then
+          BRANCH='${{ github.head_ref || github.ref_name }}'
+          if [[ "$BRANCH" == "work/lullaby-web-foundation" ]]; then
             mkdir -p web/audio
             cp /tmp/aircraft_cabin_cruise_853735.ogg web/audio/aircraft_cabin_cruise_853735.ogg
-          elif [[ "${GITHUB_REF_NAME}" == "work/lullaby-2.0-audio-foundation" ]]; then
+            git add web/audio/aircraft_cabin_cruise_853735.ogg
+          else
             mkdir -p app/src/main/assets/ambience/aircraft_cabin/continuous
             cp /tmp/aircraft_cabin_cruise_853735.ogg app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg
-          else
-            echo "Unexpected branch: ${GITHUB_REF_NAME}" >&2
-            exit 1
+            git add app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg
           fi
 
       - name: Commit generated audio
+        if: steps.check.outputs.needed == 'true'
         shell: bash
         run: |
           set -euo pipefail
+          BRANCH='${{ github.head_ref || github.ref_name }}'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add web/audio/aircraft_cabin_cruise_853735.ogg app/src/main/assets/ambience/aircraft_cabin/continuous/aircraft_cabin_cruise_001.ogg 2>/dev/null || true
-          if git diff --cached --quiet; then
-            echo 'Aircraft source already materialized.'
-            exit 0
-          fi
           git commit -m 'feat(audio): materialize long stereo aircraft bed'
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "HEAD:$BRANCH"
