@@ -1,4 +1,4 @@
-name: Build and publish v1.1.0-alpha.2
+name: Build and publish v1.1.0-alpha.3
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: lullaby-v1.1.0-alpha.2
+  group: lullaby-v1.1.0-alpha.3
   cancel-in-progress: true
 
 jobs:
@@ -48,15 +48,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk dist/Lullaby-Scene-v1.1.0-alpha.2.apk
-          sha256sum dist/Lullaby-Scene-v1.1.0-alpha.2.apk > dist/Lullaby-Scene-v1.1.0-alpha.2.apk.sha256
-          test -s dist/Lullaby-Scene-v1.1.0-alpha.2.apk
+          cp app/build/outputs/apk/release/app-release.apk dist/Lullaby-Scene-v1.1.0-alpha.3.apk
+          sha256sum dist/Lullaby-Scene-v1.1.0-alpha.3.apk > dist/Lullaby-Scene-v1.1.0-alpha.3.apk.sha256
+          test -s dist/Lullaby-Scene-v1.1.0-alpha.3.apk
           ls -lh dist
 
       - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Lullaby-Scene-v1.1.0-alpha.2
+          name: Lullaby-Scene-v1.1.0-alpha.3
           path: dist/*
           if-no-files-found: error
           retention-days: 30
@@ -64,7 +64,7 @@ jobs:
       - name: Publish GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v1.1.0-alpha.2
+          TAG: v1.1.0-alpha.3
           TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         shell: bash
         run: |
@@ -76,19 +76,19 @@ jobs:
             git tag -f "$TAG" "$TARGET_SHA"
             git push --force origin "refs/tags/$TAG"
             gh release upload "$TAG" \
-              dist/Lullaby-Scene-v1.1.0-alpha.2.apk \
-              dist/Lullaby-Scene-v1.1.0-alpha.2.apk.sha256 \
+              dist/Lullaby-Scene-v1.1.0-alpha.3.apk \
+              dist/Lullaby-Scene-v1.1.0-alpha.3.apk.sha256 \
               --clobber
             gh release edit "$TAG" \
-              --title "Lullaby Scene v1.1.0-alpha.2" \
-              --notes-file RELEASE_NOTES_1.1.0-alpha.2.md \
+              --title "Lullaby Scene v1.1.0-alpha.3" \
+              --notes-file RELEASE_NOTES_1.1.0-alpha.3.md \
               --prerelease
           else
             gh release create "$TAG" \
-              dist/Lullaby-Scene-v1.1.0-alpha.2.apk \
-              dist/Lullaby-Scene-v1.1.0-alpha.2.apk.sha256 \
+              dist/Lullaby-Scene-v1.1.0-alpha.3.apk \
+              dist/Lullaby-Scene-v1.1.0-alpha.3.apk.sha256 \
               --target "$TARGET_SHA" \
-              --title "Lullaby Scene v1.1.0-alpha.2" \
-              --notes-file RELEASE_NOTES_1.1.0-alpha.2.md \
+              --title "Lullaby Scene v1.1.0-alpha.3" \
+              --notes-file RELEASE_NOTES_1.1.0-alpha.3.md \
               --prerelease
           fi
