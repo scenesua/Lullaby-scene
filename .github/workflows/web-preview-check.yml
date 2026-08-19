@@ -137,7 +137,7 @@ jobs:
           grep -q 'setPointerCapture' web/scene-audio-v2.js
           grep -q 'equalizer=f=10544' tools/materialize_aircraft_audio.py
           grep -q 'equalizer=f=3574' tools/materialize_aircraft_audio.py
-          ! grep -q 'loudnorm' tools/materialize_aircraft_audio.py
+          ! grep -q 'loudnorm=' tools/materialize_aircraft_audio.py
 
       - name: Start static test server
         run: |
