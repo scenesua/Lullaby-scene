@@ -44,6 +44,36 @@ class AircraftJourneyTimelineTest {
     }
 
     @Test
+    fun `disruptive random events avoid sleep onset and stay sparse`() {
+        val plan = AircraftJourneyTimelineBuilder.build(600, 99L)
+        val disruptive = plan.events.filter { it.arousal == SleepEventArousal.DISRUPTIVE }
+        val guardEnd = plan.seatbeltOffMs + SleepEventPolicy.EARLY_SLEEP_DISRUPTIVE_GUARD_MS
+
+        disruptive.forEach { event ->
+            assertTrue(event.startMs >= guardEnd)
+            assertTrue(event.intensity <= 0.32f)
+        }
+        disruptive.zipWithNext().forEach { (first, second) ->
+            assertTrue(second.startMs - first.startMs >= 100L * 60_000L)
+        }
+    }
+
+    @Test
+    fun `neutral events receive a settling guard and do not cluster around disruptive events`() {
+        val plan = AircraftJourneyTimelineBuilder.build(600, 123L)
+        val neutral = plan.events.filter { it.arousal == SleepEventArousal.NEUTRAL }
+        val disruptive = plan.events.filter { it.arousal == SleepEventArousal.DISRUPTIVE }
+        val guardEnd = plan.seatbeltOffMs + SleepEventPolicy.NEUTRAL_SETTLING_GUARD_MS
+
+        neutral.forEach { event ->
+            assertTrue(event.startMs >= guardEnd)
+            disruptive.forEach { loud ->
+                assertTrue(kotlin.math.abs(loud.startMs - event.startMs) >= 15L * 60_000L)
+            }
+        }
+    }
+
+    @Test
     fun `duration is bounded and quantized to thirty minutes`() {
         assertEquals(240, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(60))
         assertEquals(480, AircraftJourneyTimelineBuilder.normalizeDurationMinutes(475))
