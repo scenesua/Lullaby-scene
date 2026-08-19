@@ -21,6 +21,7 @@
   const cleanName=value=>String(value??'').trim().replace(/\s+/g,' ').slice(0,60);
   const find=id=>R.loadUserPresets().find(scene=>scene.id===id)||null;
   const fxSnapshot=()=>window.LullabyMixerFx?.snapshot?.()||null;
+  const setText=(element,value)=>{if(element&&element.textContent!==value)element.textContent=value};
   const sceneSnapshot=(id,name,previous={})=>({
     ...previous,
     id,
@@ -80,7 +81,8 @@
   }
 
   function enhance(){
-    const save=$('#saveSceneButton');if(save)save.textContent=copy().save;else replaceLegacySaveButton();
+    const labels=copy();
+    const save=$('#saveSceneButton');if(save)setText(save,labels.save);else replaceLegacySaveButton();
     $$('#userPresets .preset-card.user').forEach(card=>{
       const source=card.querySelector('[data-user-preset]'),id=source?.dataset.userPreset;if(!id)return;
       source.setAttribute('title',ko()?'클릭하여 불러오기':'Click to load');
@@ -90,9 +92,9 @@
         actions.innerHTML=`<button type="button" data-saved-load="${id}"></button><button type="button" data-saved-rename="${id}"></button><button type="button" data-saved-overwrite="${id}"></button>`;
         card.appendChild(actions);
       }
-      actions.querySelector('[data-saved-load]').textContent=copy().load;
-      actions.querySelector('[data-saved-rename]').textContent=copy().rename;
-      actions.querySelector('[data-saved-overwrite]').textContent=copy().overwrite;
+      setText(actions.querySelector('[data-saved-load]'),labels.load);
+      setText(actions.querySelector('[data-saved-rename]'),labels.rename);
+      setText(actions.querySelector('[data-saved-overwrite]'),labels.overwrite);
     });
     markActive();
   }
@@ -104,7 +106,7 @@
     const overwriteButton=event.target.closest?.('[data-saved-overwrite]');if(overwriteButton){event.preventDefault();event.stopPropagation();if(confirm(copy().overwriteConfirm))overwrite(overwriteButton.dataset.savedOverwrite)}
   });
   document.addEventListener('lullaby-language-changed',enhance);
-  const root=$('#userPresets');if(root)new MutationObserver(()=>queueMicrotask(enhance)).observe(root,{childList:true,subtree:true});
+  const root=$('#userPresets');if(root)new MutationObserver(()=>queueMicrotask(enhance)).observe(root,{childList:true});
   replaceLegacySaveButton();enhance();
   window.LullabySavedScenes={create,load,rename,overwrite,list:()=>R.loadUserPresets(),get activeId(){return activeId}};
 })();
