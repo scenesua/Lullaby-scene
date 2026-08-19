@@ -2,7 +2,7 @@
 <resources>
     <string name="nav_fx">FX</string>
     <string name="fx_master">내장 FX 랙</string>
-    <string name="fx_master_desc">연속 환경음과 씬 재생에 공통으로 적용되는 전역 효과입니다.</string>
+    <string name="fx_master_desc">FX 랙 전체를 켜고 끕니다. 모든 양이 0%면 켜져 있어도 원음과 동일합니다.</string>
     <string name="fx_tone">톤</string>
     <string name="fx_tone_desc">기존 EQ를 대체하지 않고 따뜻함과 고역의 개방감을 조절합니다.</string>
     <string name="fx_warmth">따뜻함</string>
@@ -13,6 +13,10 @@
     <string name="fx_body_desc">오디오 세션에서 저역의 무게감을 제한적으로 보강합니다.</string>
     <string name="fx_body_amount">저역 바디</string>
     <string name="fx_body_amount_desc">수면용으로 과하지 않게 제한된 베이스 보강입니다. 0%는 완전 바이패스입니다.</string>
+    <string name="fx_space">공간감</string>
+    <string name="fx_space_desc">모든 소리에 똑같이 거는 대신 소스 성격에 따라 공간감 반응도를 다르게 적용합니다.</string>
+    <string name="fx_space_amount">공간 폭</string>
+    <string name="fx_space_amount_desc">숲·카페·여객기·기차·자연음은 더 잘 반응하고, 팬·화이트/핑크/브라운 노이즈 같은 지속음은 훨씬 약하게 반응합니다.</string>
     <string name="fx_dynamics">다이내믹</string>
     <string name="fx_dynamics_desc">피크를 부드럽게 정리하고 여러 환경음 레이어를 자연스럽게 묶습니다.</string>
     <string name="fx_glue">글루</string>
