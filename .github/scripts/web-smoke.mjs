@@ -1,0 +1,18 @@
+import { chromium } from 'playwright';
+const browser=await chromium.launch({headless:true});
+const page=await browser.newPage({viewport:{width:1440,height:1000}});
+const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
+const visible=async sel=>{if(!(await page.locator(sel).isVisible()))throw new Error(`${sel} not visible`)};
+await page.locator('[data-scene-mode="simple"]').click();await visible('[data-scene-content="simple"]');await visible('[data-inspector-mode="simple"]');
+await page.locator('[data-view="mixer"]').first().click();await visible('[data-panel="mixer"]');
+await page.locator('[data-view="timer"]').first().click();await visible('[data-panel="timer"]');
+await page.locator('[data-view="settings"]').first().click();await visible('[data-panel="settings"]');
+await page.locator('[data-view="scene"]').first().click();await page.locator('[data-scene-mode="journey"]').click();await visible('[data-scene-content="journey"]');
+await page.locator('[data-duration="600"]').click();if(!(await page.locator('#durationOutput').textContent())?.includes('10h'))throw new Error('10h shortcut failed');
+await page.locator('#durationDirect').fill('08:30');await page.locator('#durationDirectApply').click();if((await page.locator('#durationSlider').inputValue())!=='510')throw new Error('HH:MM direct duration failed');
+await page.locator('[data-scene-mode="simple"]').click();await page.locator('[data-fx="warmth"]').fill('72');if((await page.locator('[data-fx-output="warmth"]').textContent())!=='72%')throw new Error('Simple Scene FX control failed');
+await page.locator('.language-toggle').click();if((await page.locator('[data-scene-mode="simple"]').textContent())?.trim()!=='Simple Scenes')throw new Error('language toggle failed');
+if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
+await browser.close();
+console.log('web interaction smoke test passed');
