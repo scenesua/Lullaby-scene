@@ -25,31 +25,22 @@ jobs:
           grep -q "fetch('/api/visitors'" /tmp/visitor.js
           ! grep -q 'FALLBACK_BASE' /tmp/visitor.js
 
-          curl -fsS --max-time 20 https://lullabyscene.com/api/visitors -o /tmp/get.json
-          cat /tmp/get.json
-          echo
-          python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/get.json'))
-          assert d.get('available') is True, d
-          assert d.get('backend') in ('counterapi.com','d1'), d
-          assert isinstance(d.get('today'), (int,float)), d
-          assert isinstance(d.get('total'), (int,float)), d
-          PY
+          GET_STATUS=$(curl -sS --max-time 20 -o /tmp/get.json -w '%{http_code}' https://lullabyscene.com/api/visitors)
+          echo "GET status=$GET_STATUS"; cat /tmp/get.json; echo
 
           VERIFY_ID="ci-live-verify-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          curl -fsS --max-time 20 -X POST https://lullabyscene.com/api/visitors \
+          POST_STATUS=$(curl -sS --max-time 20 -o /tmp/post.json -w '%{http_code}' -X POST https://lullabyscene.com/api/visitors \
             -H 'Content-Type: application/json' \
-            --data "{\"visitorId\":\"${VERIFY_ID}\",\"countTotal\":false,\"countDay\":false}" \
-            -o /tmp/post.json
-          cat /tmp/post.json
-          echo
+            --data "{\"visitorId\":\"${VERIFY_ID}\",\"countTotal\":false,\"countDay\":false}")
+          echo "POST status=$POST_STATUS"; cat /tmp/post.json; echo
+
           python3 - <<'PY'
           import json
-          d=json.load(open('/tmp/post.json'))
-          assert d.get('available') is True, d
-          assert d.get('backend') in ('counterapi.com','d1'), d
-          assert isinstance(d.get('today'), (int,float)), d
-          assert isinstance(d.get('total'), (int,float)), d
+          for path in ('/tmp/get.json','/tmp/post.json'):
+              d=json.load(open(path))
+              assert d.get('available') is True, (path,d)
+              assert d.get('backend') in ('counterapi.com','d1'), (path,d)
+              assert isinstance(d.get('today'), (int,float)), (path,d)
+              assert isinstance(d.get('total'), (int,float)), (path,d)
           print('production visitor counter returns numeric values')
           PY
