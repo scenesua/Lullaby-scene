@@ -139,20 +139,20 @@ jobs:
           grep -q 'equalizer=f=3574' tools/materialize_aircraft_audio.py
           ! grep -q 'loudnorm=' tools/materialize_aircraft_audio.py
 
-      - name: Start static test server
-        run: |
-          python3 -m http.server 4173 --directory web >/tmp/lullaby-web.log 2>&1 &
-          echo $! > /tmp/lullaby-web.pid
-          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
-
       - name: Browser primary smoke
         timeout-minutes: 2
-        run: timeout 90s node .github/scripts/web-smoke.mjs
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-web-primary.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
+          timeout 90s node .github/scripts/web-smoke.mjs
 
       - name: Browser Mixer and journey seek smoke
         timeout-minutes: 2
-        run: timeout 90s node .github/scripts/web-mixer-v14-smoke.mjs
-
-      - name: Stop static test server
-        if: always()
-        run: kill "$(cat /tmp/lullaby-web.pid)" || true
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-web-mixer.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
+          timeout 90s node .github/scripts/web-mixer-v14-smoke.mjs
