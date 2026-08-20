@@ -15,7 +15,7 @@ page.on('console',message=>{if(message.type()==='error')errors.push(message.text
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.waitForSelector('#builtInPresets [data-preset="preset_rainy_cafe"]',{state:'attached'});
 await page.addStyleTag({url:'http://127.0.0.1:4173/mobile-android-shell-v1.css?v=3'});
-await page.addStyleTag({url:'http://127.0.0.1:4173/display-tools-v1.css?v=1'});
+await page.addStyleTag({url:'http://127.0.0.1:4173/display-tools-v1.css?v=2'});
 for(const src of[
   '/site-locales-v10.js?v=11',
   '/player-runtime-bridge-v12.js?v=12',
@@ -24,7 +24,7 @@ for(const src of[
   '/saved-scenes-v13.js?v=13',
   '/i18n-runtime-v3.js?v=3',
   '/mobile-android-shell-v1.js?v=2',
-  '/display-tools-v1.js?v=1'
+  '/display-tools-v1.js?v=2'
 ])await page.addScriptTag({url:`http://127.0.0.1:4173${src}`});
 await page.waitForSelector('[data-quick-source="rain"]',{state:'attached'});
 await page.waitForTimeout(450);
@@ -77,6 +77,20 @@ await page.waitForTimeout(40);
 const darkBg=await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
 if(darkBg!=='#0b0d12')throw new Error(`Explicit dark theme did not restore dark palette: ${darkBg}`);
 
+// Wide layout: blackout is a dedicated rail destination and a sticky action at the top of the inspector.
+const desktopBlackout=await page.evaluate(()=>{
+  const rail=document.querySelector('.desktop-rail'),settings=rail?.querySelector('[data-view="settings"]'),railButton=rail?.querySelector('[data-blackout-placement="rail"]');
+  const inspector=document.querySelector('.desktop-inspector'),sticky=inspector?.querySelector('.blackout-inspector-sticky'),inspectorButton=inspector?.querySelector('[data-blackout-placement="inspector"]');
+  return{
+    railVisible:!!railButton&&getComputedStyle(railButton).display!=='none',
+    railAfterSettings:!!settings&&settings.nextElementSibling===railButton,
+    inspectorVisible:!!inspectorButton&&getComputedStyle(inspectorButton).display!=='none',
+    inspectorFirst:!!sticky&&inspector.firstElementChild===sticky,
+    inspectorPosition:sticky?getComputedStyle(sticky).position:null
+  };
+});
+if(!desktopBlackout.railVisible||!desktopBlackout.railAfterSettings||!desktopBlackout.inspectorVisible||!desktopBlackout.inspectorFirst||desktopBlackout.inspectorPosition!=='sticky')throw new Error(`Desktop blackout placement mismatch: ${JSON.stringify(desktopBlackout)}`);
+
 // Stress repeated locale changes, then verify the renderer becomes idle instead of entering a MutationObserver feedback loop.
 await page.evaluate(()=>{window.__mutationCount=0;window.__mutationObserver=new MutationObserver(records=>window.__mutationCount+=records.length);window.__mutationObserver.observe(document.getElementById('webPlayer'),{subtree:true,childList:true,attributes:true,characterData:true})});
 const codes=Object.keys(expected);
@@ -90,16 +104,21 @@ if(ticks<30)throw new Error(`renderer event loop stalled during idle stability t
 if(mutationCount>40)throw new Error(`renderer kept mutating while idle: ${mutationCount} mutations`);
 
 await page.setViewportSize({width:390,height:844});await page.waitForTimeout(250);
-const shell=await page.evaluate(()=>({
-  header:getComputedStyle(document.querySelector('.site-header')).display,
-  intro:getComputedStyle(document.querySelector('.player-page-intro')).display,
-  subtabs:getComputedStyle(document.querySelector('.scene-subtabs')).display,
-  nav:getComputedStyle(document.querySelector('.mobile-tabs')).display,
-  navCount:document.querySelectorAll('[data-android-dest]').length,
-  top:getComputedStyle(document.querySelector('.mobile-player-top')).display,
-  blackoutButtons:document.querySelectorAll('.android-top-actions [data-blackout-button]').length
-}));
-if(shell.header!=='none'||shell.intro!=='none'||shell.subtabs!=='none'||shell.nav==='none'||shell.navCount!==5||shell.top==='none'||shell.blackoutButtons!==1)throw new Error(`Android shell mismatch: ${JSON.stringify(shell)}`);
+const shell=await page.evaluate(()=>{
+  const top=document.querySelector('.mobile-player-top'),mobileBlackout=top?.querySelector('[data-blackout-placement="mobile"]'),actions=top?.querySelector('.android-top-actions');
+  return{
+    header:getComputedStyle(document.querySelector('.site-header')).display,
+    intro:getComputedStyle(document.querySelector('.player-page-intro')).display,
+    subtabs:getComputedStyle(document.querySelector('.scene-subtabs')).display,
+    nav:getComputedStyle(document.querySelector('.mobile-tabs')).display,
+    navCount:document.querySelectorAll('[data-android-dest]').length,
+    top:getComputedStyle(top).display,
+    blackoutMobile:mobileBlackout?getComputedStyle(mobileBlackout).display:'none',
+    blackoutInsideActions:actions?.querySelectorAll('[data-blackout-button]').length??-1,
+    blackoutBeforeActions:!!mobileBlackout&&mobileBlackout.nextElementSibling===actions
+  };
+});
+if(shell.header!=='none'||shell.intro!=='none'||shell.subtabs!=='none'||shell.nav==='none'||shell.navCount!==5||shell.top==='none'||shell.blackoutMobile==='none'||shell.blackoutInsideActions!==0||!shell.blackoutBeforeActions)throw new Error(`Android shell mismatch: ${JSON.stringify(shell)}`);
 
 // Blackout starts pitch black, reveals the slider only after touch, and exits cleanly.
 await page.evaluate(()=>window.LullabyBlackout.enter());await page.waitForTimeout(80);
@@ -142,4 +161,4 @@ if(!await page.locator('[data-panel="settings"]').evaluate(el=>el.classList.cont
 await page.evaluate(()=>window.__mutationObserver?.disconnect());
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log(`13-locale + Android shell + blackout + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);
+console.log(`13-locale + Android shell + blackout placement + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);

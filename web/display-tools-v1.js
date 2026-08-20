@@ -4,7 +4,7 @@
   const isSlave=location.pathname.replace(/\/+$/,'')==='/blackout';
   const $=s=>document.querySelector(s);
   const language=()=>window.LullabyLocales?.language||window.LullabyI18n?.language||'en';
-  const copy=()=>language()==='ko'?{screen:'화면 검게',slider:'밀어서 검은 화면 끄기',desktop:'Black Screen'}:{screen:'Black screen',slider:'Slide to exit black screen',desktop:'Black Screen'};
+  const copy=()=>language()==='ko'?{screen:'화면 검게',slider:'밀어서 검은 화면 끄기',desktop:'화면 검게'}:{screen:'Black screen',slider:'Slide to exit black screen',desktop:'Black Screen'};
   const channel='BroadcastChannel'in window?new BroadcastChannel(CHANNEL):null;
   let overlay=null,hideTimer=null,active=false,children=[];
 
@@ -19,7 +19,7 @@
     const c=copy();const label=overlay?.querySelector('.blackout-slider-label');if(label)label.textContent=c.slider;
     overlay?.querySelector('.blackout-slider-knob')?.setAttribute('aria-label',c.slider);
     document.querySelectorAll('[data-blackout-button]').forEach(btn=>{btn.setAttribute('aria-label',c.screen);btn.title=c.screen});
-    const rail=$('[data-blackout-rail-label]');if(rail)rail.textContent=c.desktop;
+    document.querySelectorAll('[data-blackout-label]').forEach(el=>el.textContent=c.desktop);
   }
   function showControls(){
     if(!overlay)return;overlay.classList.add('show-controls');clearTimeout(hideTimer);hideTimer=setTimeout(()=>{if(!overlay?.querySelector('.blackout-slider-knob.is-dragging'))overlay.classList.remove('show-controls')},5000);
@@ -56,7 +56,7 @@
   function sameScreen(a,b){return a===b||!!(a&&b&&a.left===b.left&&a.top===b.top&&a.width===b.width&&a.height===b.height)}
   function openOtherDisplays(details){
     if(!details?.screens?.length)return;const current=details.currentScreen;
-    details.screens.forEach((screen,index)=>{if(sameScreen(screen,current))return;const left=screen.availLeft??screen.left??0,top=screen.availTop??screen.top??0,width=screen.availWidth??screen.width,height=screen.availHeight??screen.height;const features=`popup=yes,left=${left},top=${top},width=${width},height=${height},toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no`;let child=null;try{child=window.open(`/blackout/?display=${index}` ,`lullaby_blackout_${index}`,features)}catch{}if(child){children.push(child);setTimeout(()=>{try{child.moveTo(left,top);child.resizeTo(width,height)}catch{}},80)}})
+    details.screens.forEach((screen,index)=>{if(sameScreen(screen,current))return;const left=screen.availLeft??screen.left??0,top=screen.availTop??screen.top??0,width=screen.availWidth??screen.width,height=screen.availHeight??screen.height;const features=`popup=yes,left=${left},top=${top},width=${width},height=${height},toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no`;let child=null;try{child=window.open(`/blackout/?display=${index}`,`lullaby_blackout_${index}`,features)}catch{}if(child){children.push(child);setTimeout(()=>{try{child.moveTo(left,top);child.resizeTo(width,height)}catch{}},80)}})
   }
   async function enterBlackout(){
     activateLocal();channel?.postMessage({type:'enter'});
@@ -64,11 +64,35 @@
     if('getScreenDetails'in window&&window.screen&&'isExtended'in window.screen&&window.screen.isExtended){try{details=await window.getScreenDetails();openOtherDisplays(details)}catch{}}
     await tryFullscreen(details?.currentScreen||null);
   }
+  function bindBlackoutButton(button){
+    if(!button||button.dataset.blackoutBound==='1')return;button.dataset.blackoutBound='1';button.addEventListener('click',enterBlackout);
+  }
   function injectButtons(){
     if(isSlave||!document.getElementById('webPlayer'))return;
-    const actions=$('.android-top-actions');if(actions&&!actions.querySelector('[data-blackout-button]')){const timer=actions.querySelector('[data-android-timer]');const button=document.createElement('button');button.className='android-icon-button';button.type='button';button.dataset.blackoutButton='';button.innerHTML='<span aria-hidden="true">■</span>';button.addEventListener('click',enterBlackout);timer?.after(button)||actions.appendChild(button)}
-    const rail=$('.desktop-rail');if(rail&&!rail.querySelector('[data-blackout-button]')){const timer=rail.querySelector('[data-view="timer"]');const button=document.createElement('button');button.className='rail-item blackout-rail-item';button.type='button';button.dataset.blackoutButton='';button.innerHTML='<span class="blackout-rail-glyph" aria-hidden="true">■</span><span data-blackout-rail-label>Black Screen</span>';button.addEventListener('click',enterBlackout);timer?.after(button)||rail.appendChild(button)}
-    localize();
+
+    const rail=$('.desktop-rail');
+    if(rail&&!rail.querySelector('[data-blackout-placement="rail"]')){
+      const settings=rail.querySelector('[data-view="settings"]'),button=document.createElement('button');
+      button.className='rail-item blackout-rail-item';button.type='button';button.dataset.blackoutButton='';button.dataset.blackoutPlacement='rail';
+      button.innerHTML='<span class="blackout-rail-glyph" aria-hidden="true">■</span><span data-blackout-label>Black Screen</span>';
+      settings?.after(button)||rail.insertBefore(button,rail.querySelector('.rail-spacer'));
+    }
+
+    const inspector=$('.desktop-inspector');
+    if(inspector&&!inspector.querySelector('[data-blackout-placement="inspector"]')){
+      const sticky=document.createElement('div');sticky.className='blackout-inspector-sticky';
+      sticky.innerHTML='<button class="blackout-inspector-button" type="button" data-blackout-button data-blackout-placement="inspector"><span aria-hidden="true">■</span><strong data-blackout-label>Black Screen</strong></button>';
+      inspector.prepend(sticky);
+    }
+
+    const top=$('.mobile-player-top'),actions=top?.querySelector('.android-top-actions');
+    if(top&&actions&&!top.querySelector('[data-blackout-placement="mobile"]')){
+      const button=document.createElement('button');button.className='android-top-blackout';button.type='button';button.dataset.blackoutButton='';button.dataset.blackoutPlacement='mobile';
+      button.innerHTML='<span aria-hidden="true">■</span>';
+      actions.before(button);
+    }
+
+    document.querySelectorAll('[data-blackout-button]').forEach(bindBlackoutButton);localize();
   }
   function resolvedLight(){const value=document.documentElement.dataset.theme||'system';return value==='light'||(value==='system'&&matchMedia('(prefers-color-scheme: light)').matches)}
   function syncThemeColor(){const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',resolvedLight()?'#e9e4da':'#11131a')}
