@@ -6,7 +6,9 @@ import android.os.SystemClock
 import com.scene.ambience.data.model.AudioAssetManifest
 import com.scene.ambience.data.model.CategoryPresetConfig
 import com.scene.ambience.util.EventScheduler
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -18,9 +20,11 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * Short one-shot event player. Scheduling lifetime is separate from audibility:
- * mute/fade skips triggers without killing the coroutine, while pause/stop owns
- * cancellation. Per-asset weights and cooldowns keep transition sounds rare.
+ * Short one-shot event player. Asset descriptors are opened on Dispatchers.IO,
+ * so enabling a source never synchronously walks packaged audio on the service
+ * thread. Per-asset weights/cooldowns remain intact and the final source gain is
+ * cached through applyBaseVolume instead of re-entering AmbienceEngine at every
+ * trigger.
  */
 class EventSourcePlayer(
     context: Context,
@@ -39,22 +43,35 @@ class EventSourcePlayer(
         val sampleId: Int,
     )
 
+    private val appContext = context.applicationContext
     private val random = Random(randomSeed ?: System.currentTimeMillis())
-    private val samples = mutableListOf<LoadedSample>()
+    private val samples = CopyOnWriteArrayList<LoadedSample>()
     private val lastPlayedAtMs = mutableMapOf<String, Long>()
     private var job: Job? = null
+    private var loadJob: Job? = null
     private var lastSample = -1
 
+    @Volatile private var baseGain = volumeProvider().coerceIn(0f, 1f)
+    @Volatile private var released = false
+
     init {
+        loadJob = scope.launch(Dispatchers.IO) { loadSamples() }
+    }
+
+    private fun loadSamples() {
         for (file in files) {
-            try {
-                val afd = context.assets.openFd(file.path)
-                val id = soundPool.load(afd, 1)
-                afd.close()
-                if (id != 0) samples += LoadedSample(file, id)
+            if (released) return
+            val id = try {
+                appContext.assets.openFd(file.path).use { afd -> soundPool.load(afd, 1) }
             } catch (_: Exception) {
-                // Manifest/instrumentation validation reports missing assets.
+                0
             }
+            if (id == 0) continue
+            if (released) {
+                runCatching { soundPool.unload(id) }
+                return
+            }
+            samples += LoadedSample(file, id)
         }
     }
 
@@ -69,14 +86,17 @@ class EventSourcePlayer(
     }
 
     fun release() {
+        released = true
         stopScheduling()
+        loadJob?.cancel()
+        loadJob = null
         samples.forEach { runCatching { soundPool.unload(it.sampleId) } }
         samples.clear()
         lastPlayedAtMs.clear()
     }
 
     fun applyBaseVolume(baseGain: Float) {
-        // Read from volumeProvider at trigger time; no persistent stream exists.
+        this.baseGain = baseGain.coerceIn(0f, 1f)
     }
 
     private suspend fun run() {
@@ -105,13 +125,13 @@ class EventSourcePlayer(
             val sampleIndex = noImmediateRepeat[localIndex]
             val sample = samples[sampleIndex]
 
-            val baseVolume = volumeProvider().coerceIn(0f, 1f)
-            if (baseVolume <= 0f) continue
+            val currentGain = baseGain
+            if (currentGain <= 0f) continue
             val volume = EventScheduler.randomVolume(
                 config.eventVolumeRange.getOrElse(0) { 0.75 }.toFloat(),
                 config.eventVolumeRange.getOrElse(1) { 1.0 }.toFloat(),
                 random,
-            ) * baseVolume
+            ) * currentGain
             val pan = EventScheduler.randomPan(
                 config.eventPanRange.getOrElse(0) { -0.6 }.toFloat(),
                 config.eventPanRange.getOrElse(1) { 0.6 }.toFloat(),
