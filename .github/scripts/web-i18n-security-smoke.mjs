@@ -13,12 +13,12 @@ page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
 
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await page.waitForSelector('#builtInPresets [data-preset="preset_rainy_cafe"]');
+await page.waitForSelector('#builtInPresets [data-preset="preset_rainy_cafe"]',{state:'attached'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js?v=12'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/i18n-catalog-v1.js?v=1'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=14'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=12'});
-await page.waitForSelector('[data-quick-source="rain"]');
+await page.waitForSelector('[data-quick-source="rain"]',{state:'attached'});
 await page.waitForTimeout(250);
 
 async function text(selector){return (await page.locator(selector).first().textContent())?.trim()}
