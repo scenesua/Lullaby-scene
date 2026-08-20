@@ -26,13 +26,14 @@
   const language=()=>window.LullabyI18n?.language==='en'?'en':'ko';
   const sourceName=(id,fallback=id)=>SOURCE_NAMES[language()]?.[id]||fallback;
   const presetName=(id,fallback=id)=>PRESET_NAMES[language()]?.[id]||fallback;
+  const setText=(element,value)=>{if(element&&element.textContent!==value)element.textContent=value};
   let domQueued=false;
 
   function patchKoreanCopy(){
     if(language()!=='ko')return;
-    Object.entries(KO_COPY).forEach(([key,value])=>document.querySelectorAll(`[data-i18n="${key}"]`).forEach(el=>{if(el.textContent!==value)el.textContent=value}));
-    const save=document.getElementById('saveSceneButton');if(save)save.textContent='장면 저장';
-    document.querySelectorAll('[data-quick-help]').forEach(el=>{el.textContent='0%는 꺼짐, 1% 이상은 켜짐입니다. 현재 장면의 소리는 위에 고정됩니다.'});
+    Object.entries(KO_COPY).forEach(([key,value])=>document.querySelectorAll(`[data-i18n="${key}"]`).forEach(el=>setText(el,value)));
+    setText(document.getElementById('saveSceneButton'),'장면 저장');
+    document.querySelectorAll('[data-quick-help]').forEach(el=>setText(el,'0%는 꺼짐, 1% 이상은 켜짐입니다. 현재 장면의 소리는 위에 고정됩니다.'));
   }
 
   function patchRuntimeNames(){
@@ -43,28 +44,28 @@
 
   function patchDom(){
     domQueued=false;const lang=language(),ko=lang==='ko';patchKoreanCopy();
-    document.querySelectorAll('[data-filter]').forEach(button=>{const value=FILTER_NAMES[lang]?.[button.dataset.filter];if(value&&button.textContent!==value)button.textContent=value});
+    document.querySelectorAll('[data-filter]').forEach(button=>{const value=FILTER_NAMES[lang]?.[button.dataset.filter];if(value)setText(button,value)});
     document.querySelectorAll('#mixerGrid [data-source]').forEach(row=>{
       const id=row.dataset.source,name=sourceName(id,id),def=window.LullabyPlayerRuntime?.sourceById?.[id];
-      const strong=row.querySelector('strong');if(strong)strong.textContent=name;
-      const meta=row.querySelector('span');if(meta&&def){const category=CATEGORY_NAMES[lang]?.[def.category]||def.category;const kind=def.kind==='event'?(ko?'이벤트':'event layer'):(ko?'연속 재생':'continuous');meta.textContent=`${category} · ${kind}`}
-      const toggle=row.querySelector('[data-source-toggle]');if(toggle)toggle.textContent=row.classList.contains('on')?(ko?'켬':'On'):(ko?'끔':'Off');
+      setText(row.querySelector('strong'),name);
+      const meta=row.querySelector('span');if(meta&&def){const category=CATEGORY_NAMES[lang]?.[def.category]||def.category;const kind=def.kind==='event'?(ko?'이벤트':'event layer'):(ko?'연속 재생':'continuous');setText(meta,`${category} · ${kind}`)}
+      const toggle=row.querySelector('[data-source-toggle]');if(toggle)setText(toggle,row.classList.contains('on')?(ko?'켬':'On'):(ko?'끔':'Off'));
       const volume=row.querySelector('[data-source-volume]');if(volume)volume.setAttribute('aria-label',ko?`${name} 음량`:`${name} volume`);
     });
     document.querySelectorAll('[data-quick-source]').forEach(row=>{
       const id=row.dataset.quickSource,name=sourceName(id,id),strong=row.querySelector('.quick-mixer-copy strong');
-      if(strong){strong.textContent=name;strong.title=name}
+      if(strong){setText(strong,name);if(strong.title!==name)strong.title=name}
       const volume=row.querySelector('[data-quick-volume]');if(volume)volume.setAttribute('aria-label',ko?`${name} 음량`:`${name} volume`);
-      const status=row.querySelector('.quick-mixer-copy span');if(status){const preferred=row.classList.contains('is-preset-source'),on=row.classList.contains('is-on');status.textContent=preferred?(ko?'현재 장면':'Current scene'):on?(ko?'켜짐':'On'):(ko?'꺼짐':'Off')}
-      const toggle=row.querySelector('[data-quick-toggle]');if(toggle)toggle.textContent=row.classList.contains('is-on')?(ko?'끔':'Off'):(ko?'켬':'On');
+      const status=row.querySelector('.quick-mixer-copy span');if(status){const preferred=row.classList.contains('is-preset-source'),on=row.classList.contains('is-on');setText(status,preferred?(ko?'현재 장면':'Current scene'):on?(ko?'켜짐':'On'):(ko?'꺼짐':'Off'))}
+      const toggle=row.querySelector('[data-quick-toggle]');if(toggle)setText(toggle,row.classList.contains('is-on')?(ko?'끔':'Off'):(ko?'켬':'On'));
     });
     document.querySelectorAll('#builtInPresets [data-preset]').forEach(button=>{
       const id=button.dataset.preset,strong=button.querySelector('strong'),span=button.querySelector('span');
-      if(strong)strong.textContent=presetName(id,strong.textContent||id);
-      if(span){const count=window.LullabyPlayerRuntime?.presets?.find(p=>p.id===id);const n=count?Object.keys(count.mix||{}).length:Number((span.textContent||'').match(/\d+/)?.[0]||0);span.textContent=ko?`${n}개 소스`:`${n} sources`}
+      if(strong)setText(strong,presetName(id,strong.textContent||id));
+      if(span){const preset=window.LullabyPlayerRuntime?.presets?.find(p=>p.id===id);const n=preset?Object.keys(preset.mix||{}).length:Number((span.textContent||'').match(/\d+/)?.[0]||0);setText(span,ko?`${n}개 소스`:`${n} sources`)}
     });
     const aircraft=ko?'여객기 객실':'Passenger Aircraft Cabin';
-    document.querySelectorAll('.aircraft-title-row h3,[data-inspector-mode="journey"] .inspector-section h3').forEach(el=>{if(el.textContent!==aircraft)el.textContent=aircraft});
+    document.querySelectorAll('.aircraft-title-row h3,[data-inspector-mode="journey"] .inspector-section h3').forEach(el=>setText(el,aircraft));
   }
 
   function queuePatch(){if(domQueued)return;domQueued=true;queueMicrotask(patchDom)}
