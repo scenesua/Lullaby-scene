@@ -1,7 +1,8 @@
 (()=>{
   function sync(){
     const lang=window.LullabyI18n?.language||'ko';
-    document.querySelectorAll('[data-lang-block]').forEach(el=>{el.hidden=el.dataset.langBlock!==lang});
+    const blockLanguage=lang==='ko'?'ko':'en';
+    document.querySelectorAll('[data-lang-block]').forEach(el=>{el.hidden=el.dataset.langBlock!==blockLanguage});
   }
-  document.addEventListener('lullaby-language-changed',sync);sync();setTimeout(sync,0);
+  document.addEventListener('lullaby-language-changed',sync);document.addEventListener('lullaby-locales-applied',sync);sync();setTimeout(sync,0);
 })();
