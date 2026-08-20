@@ -7,10 +7,12 @@ This is a prerelease build for testing before the stable v1.1.0 release.
 - Reworks continuous ambience playback so sources share one playback thread instead of creating one HandlerThread per source.
 - Creates ExoPlayer instances lazily and uses only one player for single-file seamless loops.
 - Moves event-sample asset loading off the service/UI thread while preserving weighted events and per-asset cooldowns.
-- Reduces repeated catalog, manifest, source-count and mixer calculations.
+- Caches source catalog and manifest indexes instead of rebuilding lookup collections during mixer updates.
 - Coalesces rapid master-volume MediaSession traffic while keeping the slider responsive.
-- Moves MediaSession snapshot JSON work away from the main thread and skips stale intermediate snapshots.
-- Reduces sleep-timer update traffic and prevents timer-only changes from needlessly refreshing unrelated UI state.
+- Moves MediaSession snapshot JSON encode/decode work away from the main thread and skips stale intermediate snapshots.
+- Reduces sleep-timer update traffic to one-second cadence and scopes countdown recomposition to Timer only.
+- Scopes the Passenger Aircraft journey clock to Scenes so it no longer refreshes unrelated tabs each second.
+- Stops rebuilding built-in presets for every UI-state emission and persists the last mix only when the mix actually changes.
 - Cleans up MediaController parse/reconnect work with the ViewModel lifecycle.
 
 ## Existing v1.1.0 prerelease features retained
