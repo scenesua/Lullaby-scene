@@ -7,7 +7,10 @@ const browser=await chromium.launch({headless:true,executablePath,args:['--no-sa
 const context=await browser.newContext({viewport:{width:1440,height:1000},locale:'ko-KR'});
 const page=await context.newPage();
 const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
-await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,today:7,total:42,day:'2026-08-19'})}));
+await page.route('**/api/visitors',async route=>{
+  const body=route.request().postDataJSON?.()||{};
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,backend:'countapi.mileshilliard-v1',mode:'pageviews',version:7,today:7,total:42,day:body.day||'2026-08-20',incremented:true})});
+});
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.evaluate(()=>localStorage.removeItem('lullaby-user-presets'));
 await page.addStyleTag({url:'http://127.0.0.1:4173/site-runtime-v12.css?v=12'});
@@ -18,7 +21,7 @@ await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=1
 await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=12'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/saved-scenes-v13.js?v=13'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/scene-recipe-v1.js?v=1'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=1'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=7'});
 const visible=async sel=>{if(!(await page.locator(sel).isVisible()))throw new Error(`${sel} not visible`)};
 
 // Full Mixer: every inactive source must display 0%, and a slider move must start it.
@@ -87,7 +90,7 @@ const loadedState=await page.evaluate(id=>({active:window.LullabySavedScenes.act
 if(loadedState.active!==savedId||!loadedState.rain.on||!loadedState.cafe.on||!loadedState.wind.on||Math.abs(loadedState.wind.volume-33)>2)throw new Error(`saved scene load failed: ${JSON.stringify(loadedState)}`);
 if(!(await page.locator(`[data-user-preset="${savedId}"]`).locator('xpath=..').evaluate(card=>card.classList.contains('is-active-saved-scene'))))throw new Error('loaded saved scene is not marked active');
 
-if((await page.locator('[data-visitor-today]').textContent())?.trim()!=='7'||(await page.locator('[data-visitor-total]').textContent())?.trim()!=='42')throw new Error('visitor counter did not render API values');
+if((await page.locator('[data-visitor-today]').textContent())?.trim()!=='7'||(await page.locator('[data-visitor-total]').textContent())?.trim()!=='42')throw new Error('page-view counter did not render API values');
 await page.setViewportSize({width:390,height:844});await visible('#simpleQuickMixerSection');await visible('#simpleQuickMixerList [data-quick-source="rain"]');await visible(`[data-saved-load="${savedId}"]`);
 await page.setViewportSize({width:1440,height:1000});
 
@@ -110,7 +113,7 @@ await page.locator('.language-toggle').click();if((await page.locator('[data-sce
 if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ Pause')throw new Error('Simple Scene transport did not localize');
 if((await page.locator('#saveSceneButton').textContent())?.trim()!=='Save scene')throw new Error('saved scene controls did not localize');
 if((await page.locator(`[data-saved-rename="${savedId}"]`).textContent())?.trim()!=='Rename')throw new Error('saved scene rename control did not localize');
-if((await page.locator('[data-visitor-today-label]').textContent())?.trim()!=='Today')throw new Error('visitor counter did not localize');
+if((await page.locator('[data-visitor-today-label]').textContent())?.trim()!=='Views today')throw new Error('page-view counter did not localize');
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log('web interaction smoke test passed');
