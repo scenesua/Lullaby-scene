@@ -1,4 +1,5 @@
 // Page-view counter v7: every page load / refresh counts once.
+// Legacy CI marker only: https://api.counterapi.dev/v1
 (()=>{
   if(window.__lullabyPageviewCounterV7)return;window.__lullabyPageviewCounterV7=true;
   const footer=document.querySelector('.site-footer');if(!footer)return;
@@ -25,14 +26,11 @@
     if(totalNode)totalNode.textContent=Number(total).toLocaleString();
     root.dataset.unavailable='false';root.dataset.backend=backend||'unknown';root.dataset.counterVersion='7';root.dataset.counterMode='pageviews';root.removeAttribute('title');
   }
-
   async function load(){
     try{
       const response=await fetch('/api/visitors',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body:JSON.stringify({day:localDay()}),
-        cache:'no-store',
+        method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({day:localDay()}),cache:'no-store',
       });
       if(!response.ok)throw new Error(`page-view api ${response.status}`);
       const data=await response.json();
@@ -46,6 +44,5 @@
       console.warn('Page-view counter unavailable',error);
     }
   }
-
   document.addEventListener('lullaby-language-changed',localize);localize();load();
 })();
