@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scene.ambience.R
 import com.scene.ambience.presentation.AmbienceUiState
 import com.scene.ambience.presentation.AmbienceViewModel
@@ -48,9 +49,8 @@ fun TimerScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val snapshot = state.snapshot
-    val remaining = snapshot?.sleepTimerRemainingMs
-    val running = remaining != null && remaining > 0L
+    val remaining by viewModel.timerRemaining.collectAsStateWithLifecycle()
+    val running = remaining != null && remaining!! > 0L
     val fadeSeconds = state.timerFadeSeconds
 
     var customMinutes by remember { mutableStateOf("") }
