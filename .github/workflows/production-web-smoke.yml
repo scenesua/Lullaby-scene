@@ -7,6 +7,8 @@ on:
       - work/lullaby-web-foundation
     paths:
       - 'web/_worker.js'
+      - 'web/display-tools-v1.js'
+      - 'web/display-tools-v1.css'
       - 'web/visitor-count-v1.js'
       - 'web/sw.js'
       - '.github/workflows/production-web-smoke.yml'
@@ -19,18 +21,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Wait for Cloudflare production and verify pageview v7
+      - name: Wait for Cloudflare production and verify blackout v3
         shell: bash
         run: |
           set -euo pipefail
           ok=0
           for i in {1..36}; do
-            if curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/?deploycheck=${GITHUB_SHA}" > /tmp/root.html \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/visitor-count-v1.js?v=7&deploycheck=${GITHUB_SHA}" > /tmp/pageviews.js; then
-              if grep -q 'visitor-count-v1.js?v=7' /tmp/root.html \
-                && grep -q '__lullabyPageviewCounterV7' /tmp/pageviews.js \
-                && grep -q "'오늘 조회수'" /tmp/pageviews.js \
-                && grep -q "counterMode='pageviews'" /tmp/pageviews.js; then
+            if curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" > /tmp/player.html \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css; then
+              if grep -q 'display-tools-v1.js?v=3' /tmp/player.html \
+                && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
+                && grep -q 'requestFullscreenImmediate' /tmp/display.js \
+                && grep -q "const fullscreenAttempt=requestFullscreenImmediate()" /tmp/display.js \
+                && grep -q 'top:50%' /tmp/display.css \
+                && grep -q 'translate(-50%,-50%)' /tmp/display.css; then
                 ok=1
                 break
               fi
@@ -38,11 +43,13 @@ jobs:
             sleep 5
           done
           if [[ "$ok" -ne 1 ]]; then
-            echo 'Production did not serve page-view counter v7 within the retry window.' >&2
-            echo '--- root tail ---' >&2
-            tail -n 20 /tmp/root.html 2>/dev/null >&2 || true
-            echo '--- pageview script head ---' >&2
-            head -n 20 /tmp/pageviews.js 2>/dev/null >&2 || true
+            echo 'Production did not serve blackout display tools v3 within the retry window.' >&2
+            echo '--- player tail ---' >&2
+            tail -n 30 /tmp/player.html 2>/dev/null >&2 || true
+            echo '--- display JS head ---' >&2
+            head -n 30 /tmp/display.js 2>/dev/null >&2 || true
+            echo '--- display CSS relevant lines ---' >&2
+            grep -n 'blackout-exit-shell\|top:50%' /tmp/display.css 2>/dev/null >&2 || true
             exit 1
           fi
-          echo 'Production lullabyscene.com is serving page-view counter v7.'
+          echo 'Production lullabyscene.com is serving blackout display tools v3.'
