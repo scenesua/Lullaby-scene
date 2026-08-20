@@ -3,7 +3,6 @@ package com.scene.ambience.media
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSession.ConnectionResult
@@ -20,6 +19,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /** Foreground playback service owning both the low-level mixer and living-scene runtime. */
@@ -68,8 +71,17 @@ class AmbiencePlaybackService : MediaSessionService() {
 
         serviceScope.launch {
             combine(engine.state, sceneOrchestrator.state) { engineSnapshot, sceneSnapshot ->
-                Commands.snapshotBundle(engineSnapshot, sceneSnapshot)
-            }.collect { extras -> session.setSessionExtras(extras) }
+                engineSnapshot to sceneSnapshot
+            }
+                .distinctUntilChanged()
+                .map { (engineSnapshot, sceneSnapshot) ->
+                    Commands.snapshotBundle(engineSnapshot, sceneSnapshot)
+                }
+                // JSON encoding is pure CPU work; keep it off the service/UI looper.
+                .flowOn(Dispatchers.Default)
+                // If the scene clock advances while encoding, only deliver the newest bundle.
+                .conflate()
+                .collect { extras -> session.setSessionExtras(extras) }
         }
 
         restoreState()
@@ -142,9 +154,7 @@ class AmbiencePlaybackService : MediaSessionService() {
             Commands.SET_MASTER_MUTED -> engine.setMasterMuted(args.getBoolean(Commands.EXTRA_MUTED))
             Commands.SET_SOURCE_VOLUME -> {
                 val id = args.getString(Commands.EXTRA_SOURCE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
-                val volume = args.getFloat(Commands.EXTRA_VOLUME, 0f)
-                Log.d("AmbiencePlayback", "ServiceCommand source=$id value=$volume")
-                engine.setSourceVolume(id, volume)
+                engine.setSourceVolume(id, args.getFloat(Commands.EXTRA_VOLUME, 0f))
             }
             Commands.SET_SOURCE_MUTED -> {
                 val id = args.getString(Commands.EXTRA_SOURCE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
