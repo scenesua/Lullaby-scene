@@ -25,7 +25,6 @@ await page.waitForTimeout(300);
 const visible=async selector=>{if(!(await page.locator(selector).first().isVisible()))throw new Error(`${selector} not visible`)};
 
 // Mixer: inactive sources are 0; moving a slider starts/stops the source.
-window;
 await page.evaluate(()=>window.LullabyAndroidWebShell.showDestination('mixer'));
 await visible('[data-panel="mixer"]');
 const inactiveNonZero=await page.locator('#mixerGrid .mixer-source:not(.on) [data-source-volume]').evaluateAll(inputs=>inputs.filter(input=>input.value!=='0').map(input=>[input.dataset.sourceVolume,input.value]));
