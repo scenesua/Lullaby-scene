@@ -4,19 +4,20 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -32,9 +33,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -62,7 +62,9 @@ const val ROUTE_LICENSES = "licenses"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AmbienceApp(viewModel: AmbienceViewModel) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    // Keep the persistent app chrome subscribed only to the two fields it renders.
+    // Mixer/timer snapshots are collected inside the active navigation destination.
+    val chrome by viewModel.chromeState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val navController = rememberNavController()
@@ -88,8 +90,8 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
         }
     }
 
-    LaunchedEffect(state.snapshot?.message) {
-        val message = state.snapshot?.message
+    LaunchedEffect(chrome.message) {
+        val message = chrome.message
         if (message != null) {
             snackbarHostState.showSnackbar(AmbienceStrings.messageText(context, message) ?: message)
             viewModel.clearMessage()
@@ -126,7 +128,7 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                 },
                 actions = {
                     FilledIconButton(onClick = viewModel::togglePlayPause) {
-                        val playing = state.snapshot?.playbackState == PlaybackState.PLAYING
+                        val playing = chrome.playbackState == PlaybackState.PLAYING
                         Icon(
                             imageVector = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                             contentDescription = context.getString(if (playing) R.string.action_pause else R.string.action_play),
@@ -183,10 +185,20 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
             startDestination = ROUTE_MIXER,
             modifier = Modifier.padding(padding),
         ) {
-            composable(ROUTE_MIXER) { MixerScreen(state, viewModel) }
-            composable(ROUTE_PRESETS) { PresetsScreen(state, viewModel) }
-            composable(ROUTE_TIMER) { TimerScreen(state, viewModel) }
+            composable(ROUTE_MIXER) {
+                val state by viewModel.nonTimerUiState.collectAsStateWithLifecycle()
+                MixerScreen(state, viewModel)
+            }
+            composable(ROUTE_PRESETS) {
+                val state by viewModel.nonTimerUiState.collectAsStateWithLifecycle()
+                PresetsScreen(state, viewModel)
+            }
+            composable(ROUTE_TIMER) {
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+                TimerScreen(state, viewModel)
+            }
             composable(ROUTE_SETTINGS) {
+                val state by viewModel.nonTimerUiState.collectAsStateWithLifecycle()
                 SettingsScreen(
                     state = state,
                     viewModel = viewModel,
@@ -195,12 +207,16 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                 )
             }
             composable(ROUTE_EQ) {
+                val state by viewModel.nonTimerUiState.collectAsStateWithLifecycle()
                 EqScreen(
                     initial = state.eqSettings,
                     onApply = { eq -> viewModel.setEqualizer(eq.enabled, eq.presetName, eq.bands) },
                 )
             }
-            composable(ROUTE_LICENSES) { LicensesScreen(state) }
+            composable(ROUTE_LICENSES) {
+                val state by viewModel.nonTimerUiState.collectAsStateWithLifecycle()
+                LicensesScreen(state)
+            }
         }
     }
 }
