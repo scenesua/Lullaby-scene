@@ -20,8 +20,8 @@ html[data-theme] .orbit{border-color:var(--line)!important}html[data-theme] .wav
 
 .blackout-overlay{position:fixed;inset:0;z-index:2147483647;display:none;background:#000;overscroll-behavior:none;touch-action:none;cursor:none;user-select:none;-webkit-user-select:none}
 .blackout-overlay.is-active{display:block}.blackout-overlay.show-controls{cursor:default}
-.blackout-exit-shell{position:absolute;left:50%;bottom:max(34px,calc(20px + env(safe-area-inset-bottom)));width:min(86vw,440px);transform:translateX(-50%) translateY(18px);opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease}
-.blackout-overlay.show-controls .blackout-exit-shell{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.blackout-exit-shell{position:absolute;left:50%;top:50%;bottom:auto;width:min(86vw,440px);transform:translate(-50%,calc(-50% + 18px));opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease}
+.blackout-overlay.show-controls .blackout-exit-shell{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
 .blackout-slider{--blackout-slide:0px;position:relative;height:66px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.075);box-shadow:0 12px 32px rgba(0,0,0,.38);overflow:hidden;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .blackout-slider-fill{position:absolute;inset:0 auto 0 0;width:calc(34px + var(--blackout-slide));background:linear-gradient(90deg,rgba(255,255,255,.14),rgba(255,255,255,.04));pointer-events:none}
 .blackout-slider-label{position:absolute;inset:0 64px 0 64px;display:grid;place-items:center;color:rgba(255,255,255,.72);font-size:.86rem;font-weight:700;letter-spacing:.01em;text-align:center;pointer-events:none}
