@@ -58,6 +58,13 @@ for(const [code,[prepared,rain,preset]] of Object.entries(expected)){
 await setLanguage('en');
 if(await page.locator('body').evaluate(el=>/\bSimple Scenes?\b/.test(el.innerText)))throw new Error('English UI still exposes legacy Simple Scene wording');
 
+// A translated phase must not pin the old phase key when the player advances.
+await setLanguage('ko');
+await page.evaluate(()=>{const phase=document.getElementById('phaseLabel');phase.dataset.phaseKey='Ready';phase.textContent='Taxi out';window.LullabyCatalogI18n.apply()});
+await page.waitForTimeout(40);await expectText('#phaseLabel','지상 이동');
+await page.evaluate(()=>{const phase=document.getElementById('phaseLabel');phase.textContent='Takeoff';window.LullabyCatalogI18n.apply()});
+await page.waitForTimeout(40);await expectText('#phaseLabel','이륙');
+
 // Stress repeated locale changes, then verify the renderer becomes idle instead of entering a MutationObserver feedback loop.
 await page.evaluate(()=>{window.__mutationCount=0;window.__mutationObserver=new MutationObserver(records=>window.__mutationCount+=records.length);window.__mutationObserver.observe(document.getElementById('webPlayer'),{subtree:true,childList:true,attributes:true,characterData:true})});
 const codes=Object.keys(expected);
@@ -95,4 +102,4 @@ if(!await page.locator('[data-panel="settings"]').evaluate(el=>el.classList.cont
 await page.evaluate(()=>window.__mutationObserver?.disconnect());
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log(`13-locale + Android shell stable; idle mutations=${mutationCount}, ticks=${ticks}`);
+console.log(`13-locale + Android shell + phase transitions stable; idle mutations=${mutationCount}, ticks=${ticks}`);

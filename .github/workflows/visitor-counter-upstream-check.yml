@@ -2,11 +2,6 @@ name: Verify visitor counter upstream
 
 on:
   pull_request:
-    paths:
-      - 'web/_worker.js'
-      - 'web/visitor-count-v1.js'
-      - '.github/scripts/web-visitor-fallback-smoke.mjs'
-      - '.github/workflows/visitor-counter-upstream-check.yml'
 
 jobs:
   countapi:
