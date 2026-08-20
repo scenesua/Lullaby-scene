@@ -15,19 +15,21 @@ page.on('console',message=>{if(message.type()==='error')errors.push(message.text
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.waitForSelector('#builtInPresets [data-preset="preset_rainy_cafe"]',{state:'attached'});
 await page.addStyleTag({url:'http://127.0.0.1:4173/mobile-android-shell-v1.css?v=3'});
-for(const src of [
+await page.addStyleTag({url:'http://127.0.0.1:4173/display-tools-v1.css?v=1'});
+for(const src of[
   '/site-locales-v10.js?v=11',
   '/player-runtime-bridge-v12.js?v=12',
   '/mixer-interaction-v14.js?v=14',
   '/simple-scene-quick-mixer-v12.js?v=12',
   '/saved-scenes-v13.js?v=13',
   '/i18n-runtime-v3.js?v=3',
-  '/mobile-android-shell-v1.js?v=2'
+  '/mobile-android-shell-v1.js?v=2',
+  '/display-tools-v1.js?v=1'
 ])await page.addScriptTag({url:`http://127.0.0.1:4173${src}`});
 await page.waitForSelector('[data-quick-source="rain"]',{state:'attached'});
 await page.waitForTimeout(450);
 
-async function text(selector){return (await page.locator(selector).first().textContent())?.trim()}
+async function text(selector){return(await page.locator(selector).first().textContent())?.trim()}
 async function expectText(selector,expected){const actual=await text(selector);if(actual!==expected)throw new Error(`${selector}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)}
 async function setLanguage(code){await page.evaluate(code=>window.LullabyLocales.setLanguage(code),code);await page.waitForTimeout(70)}
 
@@ -48,7 +50,7 @@ const expected={
 };
 const options=await page.locator('.language-select').first().locator('option').evaluateAll(nodes=>nodes.map(node=>node.value));
 if(JSON.stringify(options)!==JSON.stringify(Object.keys(expected)))throw new Error(`language dropdown mismatch: ${JSON.stringify(options)}`);
-for(const [code,[prepared,rain,preset]] of Object.entries(expected)){
+for(const[code,[prepared,rain,preset]]of Object.entries(expected)){
   await setLanguage(code);
   await expectText('[data-i18n="simpleScenes"]',prepared);
   await expectText('#mixerGrid [data-source="rain"] strong',rain);
@@ -64,6 +66,16 @@ await page.evaluate(()=>{const phase=document.getElementById('phaseLabel');phase
 await page.waitForTimeout(40);await expectText('#phaseLabel','지상 이동');
 await page.evaluate(()=>{const phase=document.getElementById('phaseLabel');phase.textContent='Takeoff';window.LullabyCatalogI18n.apply()});
 await page.waitForTimeout(40);await expectText('#phaseLabel','이륙');
+
+// Explicit theme selection must change the full palette, not only the text color.
+await page.evaluate(()=>{const select=document.getElementById('themeSelect');select.value='light';select.dispatchEvent(new Event('change',{bubbles:true}))});
+await page.waitForTimeout(40);
+const lightTheme=await page.evaluate(()=>({theme:document.documentElement.dataset.theme,bg:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),surface:getComputedStyle(document.documentElement).getPropertyValue('--surface').trim(),body:getComputedStyle(document.body).backgroundColor}));
+if(lightTheme.theme!=='light'||lightTheme.bg!=='#e9e4da'||lightTheme.surface!=='#f2eee6')throw new Error(`Explicit light theme did not apply: ${JSON.stringify(lightTheme)}`);
+await page.evaluate(()=>{const select=document.getElementById('themeSelect');select.value='dark';select.dispatchEvent(new Event('change',{bubbles:true}))});
+await page.waitForTimeout(40);
+const darkBg=await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
+if(darkBg!=='#0b0d12')throw new Error(`Explicit dark theme did not restore dark palette: ${darkBg}`);
 
 // Stress repeated locale changes, then verify the renderer becomes idle instead of entering a MutationObserver feedback loop.
 await page.evaluate(()=>{window.__mutationCount=0;window.__mutationObserver=new MutationObserver(records=>window.__mutationCount+=records.length);window.__mutationObserver.observe(document.getElementById('webPlayer'),{subtree:true,childList:true,attributes:true,characterData:true})});
@@ -84,9 +96,20 @@ const shell=await page.evaluate(()=>({
   subtabs:getComputedStyle(document.querySelector('.scene-subtabs')).display,
   nav:getComputedStyle(document.querySelector('.mobile-tabs')).display,
   navCount:document.querySelectorAll('[data-android-dest]').length,
-  top:getComputedStyle(document.querySelector('.mobile-player-top')).display
+  top:getComputedStyle(document.querySelector('.mobile-player-top')).display,
+  blackoutButtons:document.querySelectorAll('.android-top-actions [data-blackout-button]').length
 }));
-if(shell.header!=='none'||shell.intro!=='none'||shell.subtabs!=='none'||shell.nav==='none'||shell.navCount!==5||shell.top==='none')throw new Error(`Android shell mismatch: ${JSON.stringify(shell)}`);
+if(shell.header!=='none'||shell.intro!=='none'||shell.subtabs!=='none'||shell.nav==='none'||shell.navCount!==5||shell.top==='none'||shell.blackoutButtons!==1)throw new Error(`Android shell mismatch: ${JSON.stringify(shell)}`);
+
+// Blackout starts pitch black, reveals the slider only after touch, and exits cleanly.
+await page.evaluate(()=>window.LullabyBlackout.enter());await page.waitForTimeout(80);
+const blackoutStart=await page.evaluate(()=>{const o=document.getElementById('lullabyBlackoutOverlay');return{display:getComputedStyle(o).display,controls:o.classList.contains('show-controls'),bg:getComputedStyle(o).backgroundColor}});
+if(blackoutStart.display==='none'||blackoutStart.controls||blackoutStart.bg!=='rgb(0, 0, 0)')throw new Error(`Blackout did not start cleanly: ${JSON.stringify(blackoutStart)}`);
+await page.locator('#lullabyBlackoutOverlay').dispatchEvent('pointerup',{clientX:20,clientY:20});await page.waitForTimeout(40);
+if(!await page.locator('#lullabyBlackoutOverlay').evaluate(el=>el.classList.contains('show-controls')))throw new Error('Blackout slider did not appear after touch');
+await page.evaluate(()=>window.LullabyBlackout.exit());await page.waitForTimeout(40);
+if(await page.locator('#lullabyBlackoutOverlay').evaluate(el=>el.classList.contains('is-active')))throw new Error('Blackout did not exit cleanly');
+
 await page.locator('[data-android-dest="prepared"]').click();await page.waitForTimeout(80);
 if(!await page.locator('[data-scene-content="simple"]').evaluate(el=>el.classList.contains('active')))throw new Error('Prepared destination did not open ready-made scenes');
 await expectText('[data-android-title]','준비된 장면');
@@ -119,4 +142,4 @@ if(!await page.locator('[data-panel="settings"]').evaluate(el=>el.classList.cont
 await page.evaluate(()=>window.__mutationObserver?.disconnect());
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log(`13-locale + Android shell + prepared-scene mobile layout stable; idle mutations=${mutationCount}, ticks=${ticks}`);
+console.log(`13-locale + Android shell + blackout + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);
