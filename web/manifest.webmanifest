@@ -12,7 +12,7 @@
   "lang": "ko",
   "categories": ["health", "lifestyle", "music"],
   "icons": [
-    {"src": "/assets/icon-launcher.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable"}
+    {"src": "/assets/icon-webapp.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
   ],
   "shortcuts": [
     {"name": "Web Player", "short_name": "Player", "url": "/player/"},
