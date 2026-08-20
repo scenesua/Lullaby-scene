@@ -1,6 +1,9 @@
 name: Build and publish v1.1.0-alpha.4
 
 on:
+  push:
+    branches:
+      - work/lullaby-2.0-audio-foundation
   pull_request:
     branches:
       - main
@@ -11,8 +14,8 @@ permissions:
   contents: write
   pull-requests: read
 
-# Keep the previous alpha.3 concurrency key for this transition so this sync
-# cancels any stale alpha.3 run started before the workflow rename.
+# Keep the previous alpha.3 concurrency key during this transition so the
+# first alpha.4 run cancels any stale alpha.3 job that was already in flight.
 concurrency:
   group: lullaby-v1.1.0-alpha.3
   cancel-in-progress: true
@@ -20,6 +23,7 @@ concurrency:
 jobs:
   build-and-release:
     if: >-
+      github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
       github.event.pull_request.head.ref == 'work/lullaby-2.0-audio-foundation'
     runs-on: ubuntu-latest
@@ -39,7 +43,7 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Verify shared cleaned aircraft bed
+      - name: Verify alpha 4 source and performance invariants
         shell: bash
         run: |
           set -euo pipefail
@@ -60,6 +64,8 @@ jobs:
           grep -q 'HandlerThread("ambience-playback")' app/src/main/java/com/scene/ambience/media/ContinuousSourcePlayer.kt
           grep -q 'Dispatchers.IO' app/src/main/java/com/scene/ambience/media/EventSourcePlayer.kt
           grep -q 'flowOn(Dispatchers.Default)' app/src/main/java/com/scene/ambience/media/AmbiencePlaybackService.kt
+          grep -q 'collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/TimerScreen.kt
+          grep -q 'sceneState.collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
@@ -136,7 +142,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Remove the accidental prerelease/tag created from the stable main line.
           if gh release view "$ACCIDENTAL_TAG" >/dev/null 2>&1; then
             gh release delete "$ACCIDENTAL_TAG" --cleanup-tag --yes
           else
