@@ -72,6 +72,7 @@ jobs:
           grep -q 'flowOn(Dispatchers.Default)' app/src/main/java/com/scene/ambience/media/AmbiencePlaybackService.kt
           grep -q 'sceneState.collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
           grep -q 'timerRemaining.collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/TimerScreen.kt
+          grep -Fq 'val remainingMs = remaining ?: 0L' app/src/main/java/com/scene/ambience/ui/screens/TimerScreen.kt
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
