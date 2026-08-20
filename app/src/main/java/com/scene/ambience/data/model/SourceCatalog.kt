@@ -31,9 +31,7 @@ enum class SourceId(val id: String) {
     BROWN_NOISE("brown_noise");
 
     companion object {
-        private val byId: Map<String, SourceId> = entries.associateBy(SourceId::id)
-
-        fun fromId(id: String): SourceId? = byId[id]
+        fun fromId(id: String): SourceId? = entries.firstOrNull { it.id == id }
     }
 }
 
@@ -74,11 +72,6 @@ object SourceCatalog {
         SourceDefinition(SourceId.BROWN_NOISE, R.string.source_brown_noise, UiCategory.OTHER),
     )
 
-    /** Pre-grouped once instead of filtering the complete catalog on every recomposition. */
-    val byCategory: Map<UiCategory, List<SourceDefinition>> = all.groupBy(SourceDefinition::uiCategory)
-
-    private val bySourceId: Map<SourceId, SourceDefinition> = all.associateBy(SourceDefinition::sourceId)
-
     fun definitionFor(sourceId: SourceId): SourceDefinition =
-        requireNotNull(bySourceId[sourceId]) { "Unknown source id: $sourceId" }
+        all.first { it.sourceId == sourceId }
 }

@@ -4,8 +4,6 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
 import android.media.audiofx.Equalizer
-import android.os.Handler
-import android.os.HandlerThread
 import android.util.Log
 import com.scene.ambience.data.model.CategoryPresetConfig
 import com.scene.ambience.data.model.EngineSnapshot
@@ -13,17 +11,20 @@ import com.scene.ambience.data.model.EqSettings
 import com.scene.ambience.data.model.FocusPolicy
 import com.scene.ambience.data.model.MixState
 import com.scene.ambience.data.model.PlaybackState
+import com.scene.ambience.data.model.SourceManifest
 import com.scene.ambience.data.model.SourceState
 import com.scene.ambience.data.model.SoundLibraryState
+import com.scene.ambience.util.SleepTimerMath
 import com.scene.ambience.util.VolumeCurve
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.android.asCoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.sqrt
+import kotlin.random.Random
 
 /**
  * The single playback engine. Owned by AmbiencePlaybackService; its state
@@ -44,11 +45,6 @@ class AmbienceEngine(
 
     private val continuousPlayers = mutableMapOf<String, ContinuousSourcePlayer>()
     private val eventPlayers = mutableMapOf<String, EventSourcePlayer>()
-
-    /** One playback looper is shared by every continuous source. */
-    private val playbackThread = HandlerThread("ambience-playback").apply { start() }
-    private val playbackHandler = Handler(playbackThread.looper)
-    private val playbackDispatcher = playbackHandler.asCoroutineDispatcher()
 
     private val soundPool: SoundPool = SoundPool.Builder()
         .setMaxStreams(MAX_EVENT_STREAMS)
@@ -78,8 +74,6 @@ class AmbienceEngine(
     private val sleepTimer = SleepTimerController(this, scope)
 
     private var sources = mutableMapOf<String, SourceState>()
-    private var publishedSources: Map<String, SourceState> = emptyMap()
-    private var enabledSourceCount = 0
     private var masterVolume = 0.8f
     private var masterMuted = false
     private var playback = PlaybackState.IDLE
@@ -90,20 +84,18 @@ class AmbienceEngine(
     private var transientPausedForFocus = false
     private var ducked = false
 
+    private var updateJob: Job? = null
+
     private val random = Random(System.currentTimeMillis())
 
     fun setMasterVolume(volume: Float) {
-        val nextVolume = volume.coerceIn(0f, 1f)
-        val nextMuted = if (nextVolume > 0f) false else masterMuted
-        if (nextVolume == masterVolume && nextMuted == masterMuted) return
-        masterVolume = nextVolume
-        masterMuted = nextMuted
+        masterVolume = volume.coerceIn(0f, 1f)
+        if (masterVolume > 0f) masterMuted = false
         recomputeVolumes()
         publish()
     }
 
     fun setMasterMuted(muted: Boolean) {
-        if (masterMuted == muted) return
         masterMuted = muted
         recomputeVolumes()
         publish()
@@ -112,11 +104,8 @@ class AmbienceEngine(
     fun setSourceVolume(id: String, volume: Float) {
         val v = volume.coerceIn(0f, 1f)
         val current = sources[id] ?: SourceState(id = id)
-        val next = current.copy(enabled = v > 0f, volume = v)
-        if (next == current && id in sources) return
-        if (next == current && id !in sources && v <= 0f) return
-        sources[id] = next
-        commitSources()
+        sources[id] = current.copy(enabled = v > 0f, volume = v)
+        Log.d("AmbiencePlayback", "EngineVolume source=$id value=$v active=${v > 0f}")
         if (v <= 0f) {
             removePlayer(id)
         } else {
@@ -128,9 +117,7 @@ class AmbienceEngine(
 
     fun setSourceMuted(id: String, muted: Boolean) {
         val current = sources[id] ?: SourceState(id = id)
-        if (current.muted == muted && id in sources) return
         sources[id] = current.copy(muted = muted)
-        commitSources()
         recomputeVolumes()
         publish()
     }
@@ -139,17 +126,18 @@ class AmbienceEngine(
         masterVolume = mix.masterVolume.coerceIn(0f, 1f)
         masterMuted = mix.masterMuted
         activePresetId = presetId
-        val next = mix.sources.mapValues { (id, source) ->
-            source.copy(enabled = source.volume > 0f && library.manifestFor(id) != null)
+        val next = mix.sources.mapValues { (id, s) ->
+            s.copy(enabled = s.volume > 0f && library.manifestFor(id) != null)
         }
-        for (id in sources.keys - next.keys) removePlayer(id)
-        for ((id, source) in next) {
-            if (!source.enabled) removePlayer(id)
+        for (id in sources.keys - next.keys) {
+            removePlayer(id)
+        }
+        for ((id, s) in next) {
+            if (!s.enabled) removePlayer(id)
         }
         sources = next.toMutableMap()
-        commitSources()
-        for ((id, source) in next) {
-            if (source.enabled) startPlayerIfNeeded(id)
+        for (id in next.keys) {
+            if (next[id]!!.enabled) startPlayerIfNeeded(id)
         }
         recomputeVolumes()
         publish()
@@ -158,12 +146,11 @@ class AmbienceEngine(
     /** Turns every source off at once (volume 0, unmuted, disabled) and drops its player. */
     fun disableAllSources() {
         if (sources.values.none { it.enabled || it.volume > 0f || it.muted }) return
-        for (id in sources.keys.toList()) removePlayer(id)
-        sources = sources.mapValues { (_, source) ->
-            source.copy(enabled = false, volume = 0f, muted = false)
-        }.toMutableMap()
+        for (id in sources.keys.toList()) {
+            removePlayer(id)
+        }
+        sources = sources.mapValues { (_, s) -> s.copy(enabled = false, volume = 0f, muted = false) }.toMutableMap()
         activePresetId = null
-        commitSources()
         recomputeVolumes()
         if (playback == PlaybackState.PLAYING) {
             pauseInternal(autoResume = false)
@@ -173,16 +160,19 @@ class AmbienceEngine(
     }
 
     fun play() {
-        if (enabledSourceCount == 0) {
+        if (sources.values.none { it.enabled }) {
             publish(message = "no_active_sources")
             return
         }
-        if (playback == PlaybackState.PLAYING) return
+        if (playback == PlaybackState.PLAYING) {
+            publish()
+            return
+        }
         transientPausedForFocus = false
         focusController.request(focusPolicyProvider())
         var anyPlayable = false
-        for ((id, source) in sources) {
-            if (source.enabled && ensurePlayer(id)) anyPlayable = true
+        for (id in sources.keys) {
+            if (ensurePlayer(id)) anyPlayable = true
         }
         if (!anyPlayable) {
             publish(message = "no_playable_sources")
@@ -245,6 +235,7 @@ class AmbienceEngine(
             created
         }
         applyTo(eq)
+        Log.d(TAG, "Equalizer attached session=$sessionId")
     }
 
     fun applyEqualizer(enabled: Boolean, presetName: String, bands: List<Int>) {
@@ -265,6 +256,7 @@ class AmbienceEngine(
                     eq.setBandLevel(band.toShort(), level.toShort())
                 }
                 eq.enabled = true
+                Log.d(TAG, "Equalizer applied preset=$eqPreset bands=$eqBands")
             } else {
                 eq.enabled = false
             }
@@ -297,9 +289,7 @@ class AmbienceEngine(
     }
 
     fun setSleepFade(fade: Float) {
-        val next = fade.coerceIn(0f, 1f)
-        if (next == sleepFade) return
-        sleepFade = next
+        sleepFade = fade.coerceIn(0f, 1f)
         recomputeVolumes()
         publish()
     }
@@ -313,8 +303,7 @@ class AmbienceEngine(
             for (i in 1..steps) {
                 sleepFade = start + (1f - start) * (i.toFloat() / steps)
                 recomputeVolumes()
-                // Audio remains 50 Hz smooth, while UI/session state is capped at 10 Hz.
-                if (i % 5 == 0 || i == steps) publish()
+                publish()
                 delay(20L)
             }
             sleepFade = 1f
@@ -347,7 +336,9 @@ class AmbienceEngine(
                         pauseForFocusLoss()
                         publish(message = "focus_paused")
                     }
-                    FocusPolicy.DUCK, FocusPolicy.CONTINUE -> Unit
+                    FocusPolicy.DUCK, FocusPolicy.CONTINUE -> {
+                        // handled below for all policies on CAN_DUCK too
+                    }
                 }
             }
             FocusEvent.DUCK -> {
@@ -369,9 +360,8 @@ class AmbienceEngine(
 
     private fun ensurePlayer(id: String): Boolean {
         val manifest = library.manifestFor(id) ?: return false
-        val source = sources[id] ?: return false
-        if (!source.enabled) return false
-        val initialGain = sourceGain(id)
+        val state = sources[id] ?: return false
+        if (!state.enabled) return false
         if (manifest.continuous.isNotEmpty() && continuousPlayers[id] == null) {
             continuousPlayers[id] = ContinuousSourcePlayer(
                 context = context,
@@ -379,11 +369,11 @@ class AmbienceEngine(
                 files = manifest.continuous,
                 loopMode = manifest.loopMode,
                 scope = scope,
-                playbackLooper = playbackThread.looper,
-                playbackDispatcher = playbackDispatcher,
-                initialBaseGain = initialGain,
+                volumeProvider = { sourceGain(id) },
                 onAudioSessionId = { sessionId -> attachEqualizer(sessionId) },
-                onPlayerError = { publish(message = "source_failed") },
+                onPlayerError = { sourceId ->
+                    publish(message = "source_failed")
+                },
             )
         }
         if (manifest.events.isNotEmpty() && eventPlayers[id] == null) {
@@ -396,7 +386,8 @@ class AmbienceEngine(
                 soundPool = soundPool,
                 scope = scope,
                 randomSeed = random.nextLong(),
-                initialBaseGain = initialGain,
+                volumeProvider = { sourceGain(id) },
+                isActive = { isAudible(id) },
             )
         }
         return continuousPlayers[id] != null || eventPlayers[id] != null
@@ -418,17 +409,23 @@ class AmbienceEngine(
         eventPlayers.remove(id)?.release()
     }
 
+    private fun isAudible(id: String): Boolean {
+        val s = sources[id] ?: return false
+        return playback == PlaybackState.PLAYING && s.enabled && !s.muted && s.volume > 0f && !masterMuted && sleepFade > 0f
+    }
+
     /** Final per-source gain including master, mute, sleep fade, duck and mix normalization. */
     fun sourceGain(id: String): Float {
-        val source = sources[id] ?: return 0f
+        val s = sources[id] ?: return 0f
+        val activeCount = sources.values.count { it.enabled }
         val baseGain = VolumeCurve.combinedGain(
-            sourceVolume = source.volume,
-            sourceMuted = source.muted,
+            sourceVolume = s.volume,
+            sourceMuted = s.muted,
             masterVolume = masterVolume,
             masterMuted = masterMuted,
             sleepFade = sleepFade,
             focusDuck = duckFactor,
-            activeSourceCount = enabledSourceCount.coerceAtLeast(1),
+            activeSourceCount = activeCount.coerceAtLeast(1),
             mixNormalization = true,
         )
         val trimGain = library.manifestFor(id)?.trimGain ?: 1f
@@ -436,36 +433,25 @@ class AmbienceEngine(
     }
 
     private fun recomputeVolumes() {
-        for (id in sources.keys) {
-            val gain = sourceGain(id)
-            continuousPlayers[id]?.applyBaseVolume(gain)
-            eventPlayers[id]?.applyBaseVolume(gain)
-        }
-    }
-
-    private fun commitSources() {
-        enabledSourceCount = sources.values.count { it.enabled }
-        publishedSources = sources.toMap()
+        val gains = sources.keys.associateWith { sourceGain(it) }
+        continuousPlayers.forEach { (id, p) -> p.applyBaseVolume(gains[id] ?: 0f) }
+        eventPlayers.forEach { (id, p) -> p.applyBaseVolume(gains[id] ?: 0f) }
     }
 
     // -------- state publication ------------------------------------------------
 
-    private fun publish(
-        timerRemaining: Long? = sleepTimer.remainingMs,
-        message: String? = _state.value.message,
-    ) {
+    private fun publish(timerRemaining: Long? = null, message: String? = null) {
         val current = _state.value
-        val next = current.copy(
+        _state.value = current.copy(
             playbackState = playback,
             masterVolume = masterVolume,
             masterMuted = masterMuted,
-            sources = publishedSources,
-            sleepTimerRemainingMs = timerRemaining,
+            sources = sources.toMap(),
+            sleepTimerRemainingMs = timerRemaining ?: sleepTimer.remainingMs,
             sleepFading = sleepFade < 1f,
             activePresetId = activePresetId,
-            message = message,
+            message = message ?: current.message,
         )
-        if (next != current) _state.value = next
     }
 
     fun snapshot(): EngineSnapshot = _state.value
@@ -486,7 +472,6 @@ class AmbienceEngine(
         }
         soundPool.release()
         playback = PlaybackState.STOPPED
-        playbackThread.quitSafely()
     }
 
     companion object {
