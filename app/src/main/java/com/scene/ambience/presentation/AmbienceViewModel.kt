@@ -1,7 +1,6 @@
 package com.scene.ambience.presentation
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.scene.ambience.AmbienceApplication
@@ -31,17 +30,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
+private val BUILT_IN_PRESETS: List<AmbiencePreset> = BuiltInPresets.createAll()
+
 data class AmbienceUiState(
     val library: SoundLibraryState = SoundLibraryState(),
     val snapshot: EngineSnapshot? = null,
-    val scene: SceneRuntimeSnapshot = SceneRuntimeSnapshot(),
     val update: UpdateUiState = UpdateUiState(),
     val connected: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -56,7 +59,7 @@ data class AmbienceUiState(
     val eqSettings: EqSettings = EqSettings(),
     val fxSettings: FxSettings = FxSettings(),
 ) {
-    val builtInPresets: List<AmbiencePreset> = BuiltInPresets.createAll()
+    val builtInPresets: List<AmbiencePreset> = BUILT_IN_PRESETS
     val allPresets: List<AmbiencePreset> get() = builtInPresets + userPresets
 }
 
@@ -70,7 +73,11 @@ private data class CoreUiState(
     val snapshot: EngineSnapshot?,
     val connected: Boolean,
     val settings: com.scene.ambience.data.AppSettings,
-    val scene: SceneRuntimeSnapshot,
+)
+
+private data class PersistedMixCandidate(
+    val mix: MixState,
+    val presetId: String?,
 )
 
 class AmbienceViewModel(application: Application) : AndroidViewModel(application) {
@@ -87,14 +94,36 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     private val _events = MutableSharedFlow<AmbienceUiEvent>(extraBufferCapacity = 8)
     val events: SharedFlow<AmbienceUiEvent> = _events.asSharedFlow()
 
+    /** High-frequency scene clock updates are consumed only by ScenesScreen. */
+    val sceneState: StateFlow<SceneRuntimeSnapshot> = controllerRepository.sceneSnapshot
+
+    /** Sleep countdown updates are consumed only by TimerScreen. */
+    val timerRemaining: StateFlow<Long?> = controllerRepository.snapshot
+        .map { it?.sleepTimerRemainingMs }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /**
+     * Remove timer-only fields from app-wide state so a countdown/fade cannot
+     * recompose Mixer, Presets, FX, Settings and the navigation chrome every tick.
+     */
+    private val stableSnapshot: StateFlow<EngineSnapshot?> = controllerRepository.snapshot
+        .map { snapshot ->
+            snapshot?.copy(
+                sleepTimerRemainingMs = null,
+                sleepFading = false,
+            )
+        }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     private val coreState = combine(
         libraryRepository.state,
-        controllerRepository.snapshot,
+        stableSnapshot,
         controllerRepository.connected,
         settingsRepository.settings,
-        controllerRepository.sceneSnapshot,
-    ) { library, snapshot, connected, settings, scene ->
-        CoreUiState(library, snapshot, connected, settings, scene)
+    ) { library, snapshot, connected, settings ->
+        CoreUiState(library, snapshot, connected, settings)
     }
 
     val uiState: StateFlow<AmbienceUiState> = combine(coreState, updateCoordinator.state) { core, update ->
@@ -102,7 +131,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         AmbienceUiState(
             library = core.library,
             snapshot = core.snapshot,
-            scene = core.scene,
             update = update,
             connected = core.connected,
             themeMode = settings.themeMode,
@@ -121,20 +149,28 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
 
     init {
         controllerRepository.connect()
+
+        // Timer and scene-only snapshots must not keep resetting the persistence debounce.
         viewModelScope.launch {
             controllerRepository.snapshot
+                .filterNotNull()
+                .map { snapshot ->
+                    PersistedMixCandidate(
+                        mix = MixState(
+                            masterVolume = snapshot.masterVolume,
+                            masterMuted = snapshot.masterMuted,
+                            sources = snapshot.sources,
+                        ),
+                        presetId = snapshot.activePresetId,
+                    )
+                }
+                .distinctUntilChanged()
                 .drop(1)
                 .debounce(1200L)
-                .collect { snapshot ->
-                    if (snapshot != null && (snapshot.sources.isNotEmpty() || snapshot.masterVolume != 0.8f || snapshot.masterMuted)) {
-                        settingsRepository.saveLastMix(
-                            MixState(
-                                masterVolume = snapshot.masterVolume,
-                                masterMuted = snapshot.masterMuted,
-                                sources = snapshot.sources,
-                            ),
-                            snapshot.activePresetId,
-                        )
+                .collect { candidate ->
+                    val mix = candidate.mix
+                    if (mix.sources.isNotEmpty() || mix.masterVolume != 0.8f || mix.masterMuted) {
+                        settingsRepository.saveLastMix(mix, candidate.presetId)
                     }
                 }
         }
@@ -172,12 +208,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
 
     fun setMasterVolume(volume: Float) = controllerRepository.setMasterVolume(volume)
     fun setMasterMuted(muted: Boolean) = controllerRepository.setMasterMuted(muted)
-
-    fun setSourceVolume(id: String, volume: Float) {
-        Log.d("AmbiencePlayback", "ViewModelVolume source=$id value=$volume")
-        controllerRepository.setSourceVolume(id, volume)
-    }
-
+    fun setSourceVolume(id: String, volume: Float) = controllerRepository.setSourceVolume(id, volume)
     fun setSourceMuted(id: String, muted: Boolean) = controllerRepository.setSourceMuted(id, muted)
 
     fun toggleSourceEnabled(id: String) {
@@ -195,7 +226,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     fun disableAllSources() = controllerRepository.disableAllSources()
 
     fun applyPreset(preset: AmbiencePreset) {
-        if (uiState.value.scene.active) controllerRepository.stopScene()
+        if (sceneState.value.active) controllerRepository.stopScene()
         val mixJson = json.encodeToString(MixState.serializer(), preset.mix)
         controllerRepository.applyMix(mixJson, preset.id)
         val snapshot = uiState.value.snapshot
@@ -234,7 +265,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun applySceneRecipe(recipe: SceneRecipeV1) {
-        if (uiState.value.scene.active) controllerRepository.stopScene()
+        if (sceneState.value.active) controllerRepository.stopScene()
         val mix = SceneRecipeCodec.toMixState(recipe)
         controllerRepository.applyMix(json.encodeToString(MixState.serializer(), mix), null)
         setFxSettings(SceneRecipeCodec.toFxSettings(recipe, uiState.value.fxSettings))
@@ -321,4 +352,9 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     fun clearUpdateMessage() = updateCoordinator.clearMessage()
 
     fun clearMessage() = controllerRepository.clearMessage()
+
+    override fun onCleared() {
+        controllerRepository.release()
+        super.onCleared()
+    }
 }
