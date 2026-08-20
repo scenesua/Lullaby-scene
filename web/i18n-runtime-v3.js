@@ -87,7 +87,7 @@
     return text;
   }
   function localizeJourney(){
-    const phase=document.getElementById('phaseLabel');if(phase){const raw=phase.dataset.phaseKey||rawPhase(phase.textContent);phase.dataset.phaseKey=raw;setText(phase,PHASES[language()]?.[raw]||PHASES.en[raw]||raw)}
+    const phase=document.getElementById('phaseLabel');if(phase){const detected=rawPhase(phase.textContent);const raw=PHASES.en[detected]?detected:(phase.dataset.phaseKey||detected);phase.dataset.phaseKey=raw;setText(phase,PHASES[language()]?.[raw]||PHASES.en[raw]||raw)}
     const aircraft=sourceName('aircraft_cabin','Passenger Aircraft Cabin');document.querySelectorAll('.aircraft-title-row h3,[data-inspector-mode="journey"] .inspector-section h3').forEach(el=>setText(el,aircraft));
     setText(document.getElementById('journeyPrevPhase'),term('previousPhase','◀ Previous phase'));setText(document.getElementById('journeyNextPhase'),term('nextPhase','Next phase ▶'));document.querySelector('.journey-track')?.setAttribute('aria-label',term('journeyPosition','Journey position'));
     const event=document.getElementById('eventLabel');if(event&&['None','없음','なし','无','無','Нет','Aucun','Ninguno','Nenhum','ไม่มี','Wala','कोई नहीं','Không có'].includes(event.textContent.trim()))setText(event,term('none','None'));
