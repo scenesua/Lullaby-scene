@@ -20,7 +20,7 @@ permissions:
 jobs:
   hardening:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,12 +30,16 @@ jobs:
       - name: Install browser and Worker tooling
         run: npm install --no-save playwright-core@1.55.0 wrangler@4
 
-      - name: Static security assertions
+      - name: Static security and locale assertions
         shell: bash
         run: |
           set -euo pipefail
-          node --check web/i18n-catalog-v1.js
+          node --check web/site-locales-v10.js
+          node --check web/i18n-catalog-v2.js
+          node --check web/mobile-android-shell-v1.js
+          node --check web/legal-language-v9.js
           node --check web/_worker.js
+          test -s web/mobile-android-shell-v1.css
           grep -Fq "frame-ancestors 'none'" web/_worker.js
           grep -Fq "'X-Frame-Options':'DENY'" web/_worker.js
           grep -Fq "script-src 'self'; script-src-attr 'none'" web/_worker.js
@@ -44,11 +48,18 @@ jobs:
           grep -Fq "'Strict-Transport-Security':'max-age=31536000'" web/_worker.js
           grep -Fq "fetchSite==='cross-site'" web/_worker.js
           grep -Fq "startsWith('application/json')" web/_worker.js
-          grep -Fq '/i18n-catalog-v1.js?v=1' web/_worker.js
-          grep -Fq '/i18n-catalog-v1.js?v=1' web/sw.js
+          grep -Fq '/site-locales-v10.js?v=10' web/_worker.js
+          grep -Fq '/i18n-catalog-v2.js?v=2' web/_worker.js
+          grep -Fq '/mobile-android-shell-v1.js?v=1' web/_worker.js
+          grep -Fq '/mobile-android-shell-v1.css?v=1' web/_worker.js
+          grep -Fq '/site-locales-v10.js?v=10' web/sw.js
+          grep -Fq '/i18n-catalog-v2.js?v=2' web/sw.js
+          grep -Fq '/mobile-android-shell-v1.js?v=1' web/sw.js
+          grep -Fq '/mobile-android-shell-v1.css?v=1' web/sw.js
+          ! grep -Fq '/i18n-catalog-v1.js?v=1' web/_worker.js
           ! grep -Eq "script-src[^;]*unsafe-(inline|eval)" web/_worker.js
 
-      - name: Browser localization smoke
+      - name: Browser localization and Android-shell smoke
         shell: bash
         run: |
           set -euo pipefail
@@ -56,7 +67,7 @@ jobs:
           SERVER_PID=$!
           trap 'kill $SERVER_PID || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
-          timeout 90s node .github/scripts/web-i18n-security-smoke.mjs
+          timeout 120s node .github/scripts/web-i18n-security-smoke.mjs
 
       - name: Worker header and anti-clickjacking smoke
         shell: bash
@@ -72,7 +83,10 @@ jobs:
           grep -Eiq '^content-security-policy:.*frame-ancestors .none.' /tmp/headers
           grep -Eiq '^content-security-policy:.*object-src .none.' /tmp/headers
           grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
-          grep -Fq 'i18n-catalog-v1.js?v=1' /tmp/home
+          grep -Fq 'site-locales-v10.js?v=10' /tmp/home
+          grep -Fq 'i18n-catalog-v2.js?v=2' /tmp/home
+          grep -Fq 'mobile-android-shell-v1.js?v=1' /tmp/home
+          grep -Fq 'mobile-android-shell-v1.css?v=1' /tmp/home
 
           code=$(curl -sS -o /tmp/cross.json -w '%{http_code}' -X POST \
             -H 'Origin: https://evil.example' \
