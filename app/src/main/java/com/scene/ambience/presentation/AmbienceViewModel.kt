@@ -109,7 +109,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
             }
         }
         .distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), AmbienceUiState())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, AmbienceUiState())
 
     /** Minimal state used by the persistent app chrome. */
     val chromeState: StateFlow<AppChromeState> = uiState
@@ -120,7 +120,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
             )
         }
         .distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), AppChromeState())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, AppChromeState())
 
     init {
         controllerRepository.connect()
@@ -293,4 +293,9 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun clearMessage() = controllerRepository.clearMessage()
+
+    override fun onCleared() {
+        controllerRepository.release()
+        super.onCleared()
+    }
 }
