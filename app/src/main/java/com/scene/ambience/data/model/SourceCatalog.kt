@@ -28,7 +28,8 @@ enum class SourceId(val id: String) {
     BROWN_NOISE("brown_noise");
 
     companion object {
-        fun fromId(id: String): SourceId? = entries.firstOrNull { it.id == id }
+        private val byId = entries.associateBy { it.id }
+        fun fromId(id: String): SourceId? = byId[id]
     }
 }
 
@@ -70,5 +71,10 @@ object SourceCatalog {
         SourceDefinition(SourceId.BROWN_NOISE, R.string.source_brown_noise, UiCategory.OTHER),
     )
 
-    fun definitionFor(sourceId: SourceId): SourceDefinition = all.first { it.sourceId == sourceId }
+    private val byId: Map<SourceId, SourceDefinition> = all.associateBy { it.sourceId }
+    val byCategory: Map<UiCategory, List<SourceDefinition>> = UiCategory.entries.associateWith { category ->
+        all.filter { it.uiCategory == category }
+    }
+
+    fun definitionFor(sourceId: SourceId): SourceDefinition = byId.getValue(sourceId)
 }
