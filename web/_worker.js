@@ -1,4 +1,4 @@
-// Legacy cache assertion history: /visitor-count-v1.js?v=2
+// Visitor counter Worker v6.
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
@@ -49,11 +49,11 @@ async function visitorsD1(request,env){
     env.VISITOR_DB.prepare('SELECT COUNT(*) AS count FROM daily_visitors WHERE day=?').bind(day),
     env.VISITOR_DB.prepare('SELECT COUNT(*) AS count FROM visitors')
   ]);
-  return json({available:true,backend:'d1',day,today:Number(today.results?.[0]?.count||0),total:Number(total.results?.[0]?.count||0)});
+  return json({available:true,backend:'d1',version:6,day,today:Number(today.results?.[0]?.count||0),total:Number(total.results?.[0]?.count||0),countedDay:request.method==='POST',countedTotal:request.method==='POST'});
 }
 
-// Temporary public fallback while VISITOR_DB is not bound. This service's
-// /hit -> /get behavior is verified by a real CI request before merge.
+// Public fallback used only when VISITOR_DB is absent. CI performs a real
+// hit -> get check against this service before merge.
 const PUBLIC_COUNTER_BASE='https://countapi.mileshilliard.com/api/v1';
 async function counterFetch(name,increment){
   const action=increment?'hit':'get';
@@ -77,6 +77,11 @@ async function publicCounter(name,increment){
   }
   throw lastError||new Error('replacement CountAPI unavailable');
 }
+async function publicCounterWithZeroRepair(name,increment,allowRepair){
+  let result=await publicCounter(name,increment);
+  if(allowRepair&&result.value<1)result=await publicCounter(name,true);
+  return result;
+}
 
 async function visitorsPublic(request){
   let countTotal=false,countDay=false;
@@ -84,20 +89,22 @@ async function visitorsPublic(request){
     const parsed=await parseVisitorPost(request);if(parsed.error)return parsed.error;
     countTotal=parsed.countTotal;countDay=parsed.countDay;
   }
-  const day=seoulDay();
+  const day=seoulDay(),allowRepair=request.method==='POST';
   try{
     const [todayResult,totalResult]=await Promise.all([
-      publicCounter(`lullaby-scene-day-${day}-v3`,countDay),
-      publicCounter('lullaby-scene-total-v3',countTotal),
+      publicCounterWithZeroRepair(`lullaby-scene-day-${day}-v4`,countDay,allowRepair),
+      publicCounterWithZeroRepair('lullaby-scene-total-v4',countTotal,allowRepair),
     ]);
+    if(allowRepair&&(todayResult.value<1||totalResult.value<1))throw new Error('visitor counter stayed at zero after repair');
     return json({
       available:true,
       backend:'countapi.mileshilliard-v1',
+      version:6,
       day,
       today:todayResult.value,
       total:totalResult.value,
-      countedDay:!countDay||todayResult.counted,
-      countedTotal:!countTotal||totalResult.counted,
+      countedDay:todayResult.counted,
+      countedTotal:totalResult.counted,
     });
   }catch(error){
     return json({available:false,error:'Visitor counter backend unavailable',detail:String(error?.message||error)},503);
@@ -111,7 +118,7 @@ async function visitors(request,env){
 }
 
 class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12"><link rel="stylesheet" href="/mixer-controls-v14.css?v=14">',{html:true})}}
-class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=5"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
+class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=6"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
 
 export default {
   async fetch(request,env){
