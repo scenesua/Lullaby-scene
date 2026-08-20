@@ -8,7 +8,7 @@ const SECURITY_HEADERS={
   'X-Frame-Options':'DENY',
   'X-Content-Type-Options':'nosniff',
   'Referrer-Policy':'strict-origin-when-cross-origin',
-  'Permissions-Policy':'camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), browsing-topics=(), accelerometer=(), gyroscope=(), magnetometer=()',
+  'Permissions-Policy':'camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), browsing-topics=(), accelerometer=(), gyroscope=(), magnetometer=(), window-management=(self)',
   'Cross-Origin-Opener-Policy':'same-origin',
   'Cross-Origin-Resource-Policy':'same-origin',
   'Origin-Agent-Cluster':'?1',
@@ -91,8 +91,8 @@ async function pageviews(request,env){
   return pageviewsPublic(request,day);
 }
 
-class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12"><link rel="stylesheet" href="/mixer-controls-v14.css?v=14"><link rel="stylesheet" href="/mobile-android-shell-v1.css?v=3"><link rel="icon" href="/assets/icon-webapp-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/assets/icon-webapp-192.png"><meta name="application-name" content="Lullaby Scene"><meta name="apple-mobile-web-app-title" content="Lullaby Scene">',{html:true})}}
-class BodyInjector{element(element){element.append('<script src="/site-locales-v10.js?v=11"></script><script src="/visitor-count-v1.js?v=7"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script><script src="/i18n-runtime-v3.js?v=3"></script><script src="/mobile-android-shell-v1.js?v=2"></script>',{html:true})}}
+class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12"><link rel="stylesheet" href="/mixer-controls-v14.css?v=14"><link rel="stylesheet" href="/mobile-android-shell-v1.css?v=3"><link rel="stylesheet" href="/display-tools-v1.css?v=1"><link rel="icon" href="/assets/icon-webapp-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/assets/icon-webapp-192.png"><meta name="application-name" content="Lullaby Scene"><meta name="apple-mobile-web-app-title" content="Lullaby Scene">',{html:true})}}
+class BodyInjector{element(element){element.append('<script src="/site-locales-v10.js?v=11"></script><script src="/visitor-count-v1.js?v=7"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script><script src="/i18n-runtime-v3.js?v=3"></script><script src="/mobile-android-shell-v1.js?v=2"></script><script src="/display-tools-v1.js?v=1"></script>',{html:true})}}
 export default{
   async fetch(request,env){
     const url=new URL(request.url);
