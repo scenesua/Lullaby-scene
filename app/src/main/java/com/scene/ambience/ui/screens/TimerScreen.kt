@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material3.AssistChip
@@ -30,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scene.ambience.R
@@ -50,7 +50,8 @@ fun TimerScreen(
 ) {
     val context = LocalContext.current
     val remaining by viewModel.timerRemaining.collectAsStateWithLifecycle()
-    val running = remaining != null && remaining!! > 0L
+    val remainingMs = remaining ?: 0L
+    val running = remainingMs > 0L
     val fadeSeconds = state.timerFadeSeconds
 
     var customMinutes by remember { mutableStateOf("") }
@@ -79,7 +80,7 @@ fun TimerScreen(
                         modifier = Modifier.size(48.dp),
                     )
                     Text(
-                        text = if (running) AmbienceStrings.formatCountdown(remaining) else context.getString(R.string.timer_off),
+                        text = if (running) AmbienceStrings.formatCountdown(remainingMs) else context.getString(R.string.timer_off),
                         style = MaterialTheme.typography.displaySmall,
                     )
                     Text(
