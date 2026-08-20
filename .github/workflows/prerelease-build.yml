@@ -1,4 +1,4 @@
-name: Build and publish v1.1.0-alpha.3
+name: Build and publish v1.1.0-alpha.4
 
 on:
   pull_request:
@@ -11,6 +11,8 @@ permissions:
   contents: write
   pull-requests: read
 
+# Keep the previous alpha.3 concurrency key for this transition so this sync
+# cancels any stale alpha.3 run started before the workflow rename.
 concurrency:
   group: lullaby-v1.1.0-alpha.3
   cancel-in-progress: true
@@ -52,6 +54,12 @@ jobs:
           grep -q 'SEEK_SCENE' app/src/main/java/com/scene/ambience/media/Commands.kt
           grep -q 'seekToElapsedMs' app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt
           grep -q 'viewModel.seekScene' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
+          grep -q 'versionCode = 8' app/build.gradle.kts
+          grep -q 'versionName = "1.1.0-alpha.4"' app/build.gradle.kts
+          ! grep -R -q 'CountDownLatch' app/src/main/java/com/scene/ambience/media/ContinuousSourcePlayer.kt
+          grep -q 'HandlerThread("ambience-playback")' app/src/main/java/com/scene/ambience/media/ContinuousSourcePlayer.kt
+          grep -q 'Dispatchers.IO' app/src/main/java/com/scene/ambience/media/EventSourcePlayer.kt
+          grep -q 'flowOn(Dispatchers.Default)' app/src/main/java/com/scene/ambience/media/AmbiencePlaybackService.kt
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
@@ -103,15 +111,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk dist/Lullaby-Scene-v1.1.0-alpha.3.apk
-          sha256sum dist/Lullaby-Scene-v1.1.0-alpha.3.apk > dist/Lullaby-Scene-v1.1.0-alpha.3.apk.sha256
-          test -s dist/Lullaby-Scene-v1.1.0-alpha.3.apk
+          cp app/build/outputs/apk/release/app-release.apk dist/Lullaby-Scene-v1.1.0-alpha.4.apk
+          sha256sum dist/Lullaby-Scene-v1.1.0-alpha.4.apk > dist/Lullaby-Scene-v1.1.0-alpha.4.apk.sha256
+          test -s dist/Lullaby-Scene-v1.1.0-alpha.4.apk
           ls -lh dist
 
       - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Lullaby-Scene-v1.1.0-alpha.3
+          name: Lullaby-Scene-v1.1.0-alpha.4
           path: dist/*
           if-no-files-found: error
           retention-days: 30
@@ -119,7 +127,8 @@ jobs:
       - name: Publish GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v1.1.0-alpha.3
+          TAG: v1.1.0-alpha.4
+          ACCIDENTAL_TAG: v1.0.4-beta.1
         shell: bash
         run: |
           set -euo pipefail
@@ -127,23 +136,30 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Remove the accidental prerelease/tag created from the stable main line.
+          if gh release view "$ACCIDENTAL_TAG" >/dev/null 2>&1; then
+            gh release delete "$ACCIDENTAL_TAG" --cleanup-tag --yes
+          else
+            git push origin ":refs/tags/$ACCIDENTAL_TAG" >/dev/null 2>&1 || true
+          fi
+
           if gh release view "$TAG" >/dev/null 2>&1; then
             git tag -f "$TAG" "$TARGET_SHA"
             git push --force origin "refs/tags/$TAG"
             gh release upload "$TAG" \
-              dist/Lullaby-Scene-v1.1.0-alpha.3.apk \
-              dist/Lullaby-Scene-v1.1.0-alpha.3.apk.sha256 \
+              dist/Lullaby-Scene-v1.1.0-alpha.4.apk \
+              dist/Lullaby-Scene-v1.1.0-alpha.4.apk.sha256 \
               --clobber
             gh release edit "$TAG" \
-              --title "Lullaby Scene v1.1.0-alpha.3" \
-              --notes-file RELEASE_NOTES_1.1.0-alpha.3.md \
+              --title "Lullaby Scene v1.1.0-alpha.4" \
+              --notes-file RELEASE_NOTES_1.1.0-alpha.4.md \
               --prerelease
           else
             gh release create "$TAG" \
-              dist/Lullaby-Scene-v1.1.0-alpha.3.apk \
-              dist/Lullaby-Scene-v1.1.0-alpha.3.apk.sha256 \
+              dist/Lullaby-Scene-v1.1.0-alpha.4.apk \
+              dist/Lullaby-Scene-v1.1.0-alpha.4.apk.sha256 \
               --target "$TARGET_SHA" \
-              --title "Lullaby Scene v1.1.0-alpha.3" \
-              --notes-file RELEASE_NOTES_1.1.0-alpha.3.md \
+              --title "Lullaby Scene v1.1.0-alpha.4" \
+              --notes-file RELEASE_NOTES_1.1.0-alpha.4.md \
               --prerelease
           fi
