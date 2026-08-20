@@ -13,64 +13,52 @@ page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
 
 await page.route('**/api/visitors',async route=>{
-  const request=route.request();
-  const body=request.postDataJSON?.()||{};requests.push(body);
+  const body=route.request().postDataJSON?.()||{};
+  requests.push(body);
+  const count=requests.length;
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
-    available:true,backend:'countapi.mileshilliard-v1',version:6,day:'2026-08-20',
-    today:13,total:101,countedDay:body.countDay===true,countedTotal:body.countTotal===true,
+    available:true,backend:'countapi.mileshilliard-v1',mode:'pageviews',version:7,
+    day:body.day,today:count,total:count,incremented:true,
   })});
 });
 
-async function loadCounter(targetPage=page){
-  await targetPage.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
-  await targetPage.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=6'});
-  await targetPage.waitForFunction(()=>document.querySelector('[data-visitor-total]')?.textContent!=='—');
-  return targetPage.evaluate(()=>({
+async function loadCounter(){
+  await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
+  await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=7'});
+  await page.waitForFunction(()=>document.querySelector('[data-visitor-total]')?.textContent!=='—');
+  return page.evaluate(()=>({
     today:document.querySelector('[data-visitor-today]')?.textContent?.trim(),
     total:document.querySelector('[data-visitor-total]')?.textContent?.trim(),
+    todayLabel:document.querySelector('[data-visitor-today-label]')?.textContent?.trim(),
+    totalLabel:document.querySelector('[data-visitor-total-label]')?.textContent?.trim(),
     backend:document.querySelector('[data-visitor-stats]')?.dataset.backend,
     version:document.querySelector('[data-visitor-stats]')?.dataset.counterVersion,
-    totalMarker:localStorage.getItem('lullaby-visitor-total-counted-v4'),
-    dayMarker:localStorage.getItem('lullaby-visitor-day-counted-v4'),
-    totalLast:localStorage.getItem('lullaby-visitor-total-last-v4'),
-    dayLast:localStorage.getItem('lullaby-visitor-day-last-v4'),
+    mode:document.querySelector('[data-visitor-stats]')?.dataset.counterMode,
   }));
 }
 
+// Old unique-visitor markers must be irrelevant to the new page-view counter.
 await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
-await page.evaluate(()=>localStorage.clear());
+await page.evaluate(()=>{
+  localStorage.setItem('lullaby-visitor-total-counted-v4','1');
+  localStorage.setItem('lullaby-visitor-day-counted-v4','2099-01-01');
+  localStorage.setItem('lullaby-visitor-id','old-visitor-id-that-must-not-matter');
+});
+
 let state=await loadCounter();
-if(state.today!=='13'||state.total!=='101'||state.backend!=='countapi.mileshilliard-v1'||state.version!=='6'||state.totalMarker!=='1'||!/^\d{4}-\d{2}-\d{2}$/.test(state.dayMarker||'')||state.totalLast!=='101'||state.dayLast!=='13')throw new Error(`visitor v6 first load failed: ${JSON.stringify(state)}`);
-if(requests.length!==1||requests[0].countTotal!==true||requests[0].countDay!==true)throw new Error(`first visit count flags invalid: ${JSON.stringify(requests)}`);
+if(state.today!=='1'||state.total!=='1'||state.todayLabel!=='오늘 조회수'||state.totalLabel!=='총 조회수'||state.backend!=='countapi.mileshilliard-v1'||state.version!=='7'||state.mode!=='pageviews')throw new Error(`page-view first load failed: ${JSON.stringify(state)}`);
+if(requests.length!==1||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(requests[0].day||''))throw new Error(`first page-view request invalid: ${JSON.stringify(requests)}`);
+if('visitorId' in requests[0]||'countTotal' in requests[0]||'countDay' in requests[0])throw new Error(`legacy visitor fields leaked into page-view request: ${JSON.stringify(requests[0])}`);
+
+// A second navigation/refresh must count again, even in the same browser.
+state=await loadCounter();
+if(state.today!=='2'||state.total!=='2')throw new Error(`second page view did not increment: ${JSON.stringify(state)}`);
+if(requests.length!==2)throw new Error(`expected exactly two page-view POSTs, got ${requests.length}`);
 
 state=await loadCounter();
-if(state.today!=='13'||state.total!=='101')throw new Error(`visitor v6 reload failed: ${JSON.stringify(state)}`);
-if(requests.length!==2||requests[1].countTotal!==false||requests[1].countDay!==false)throw new Error(`reload count flags invalid: ${JSON.stringify(requests)}`);
-
-// Regression: even if stale markers say this browser was already counted, a
-// 0/0 response must trigger a second POST with both count flags forced true.
-const repairContext=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
-const repairPage=await repairContext.newPage();
-const repairRequests=[];
-await repairPage.route('**/api/visitors',async route=>{
-  const body=route.request().postDataJSON?.()||{};repairRequests.push(body);
-  const repairing=repairRequests.length>1;
-  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
-    available:true,backend:'countapi.mileshilliard-v1',version:6,day:'2026-08-20',
-    today:repairing?1:0,total:repairing?1:0,
-    countedDay:repairing,countedTotal:repairing,
-  })});
-});
-await repairPage.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
-await repairPage.evaluate(()=>{
-  localStorage.setItem('lullaby-visitor-total-counted-v4','1');
-  localStorage.setItem('lullaby-visitor-day-counted-v4',new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()));
-});
-const repaired=await loadCounter(repairPage);
-if(repaired.today!=='1'||repaired.total!=='1'||repairRequests.length!==2)throw new Error(`stale 0/0 was not repaired: ${JSON.stringify({repaired,repairRequests})}`);
-if(repairRequests[0].countTotal!==false||repairRequests[0].countDay!==false||repairRequests[1].countTotal!==true||repairRequests[1].countDay!==true)throw new Error(`repair flags invalid: ${JSON.stringify(repairRequests)}`);
-await repairContext.close();
+if(state.today!=='3'||state.total!=='3')throw new Error(`third page view did not increment: ${JSON.stringify(state)}`);
+if(requests.length!==3)throw new Error(`expected exactly three page-view POSTs, got ${requests.length}`);
 
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log('same-origin visitor counter v6 smoke test passed');
+console.log('same-browser reload page-view counter v7 smoke test passed');
