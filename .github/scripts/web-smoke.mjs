@@ -6,7 +6,10 @@ if(!executablePath)throw new Error('No Chrome/Chromium executable found on runne
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
 const context=await browser.newContext({viewport:{width:1440,height:1000},locale:'ko-KR'});
 const page=await context.newPage();
-const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+const errors=[];
+const benignAbort=value=>String(value).includes('AbortError: The play() request was interrupted by a call to pause()');
+page.on('pageerror',e=>{if(!benignAbort(e))errors.push(String(e))});
+page.on('console',m=>{if(m.type()==='error'&&!benignAbort(m.text()))errors.push(m.text())});
 await page.route('**/api/visitors',async route=>{
   const body=route.request().postDataJSON?.()||{};
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,backend:'countapi.mileshilliard-v1',mode:'pageviews',version:7,today:7,total:42,day:body.day||'2026-08-20',incremented:true})});
