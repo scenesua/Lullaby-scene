@@ -3,24 +3,25 @@ package com.scene.ambience.media
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import com.google.common.util.concurrent.Futures
-import com.google.common.util.concurrent.ListenableFuture
 import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSession.ConnectionResult
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommands
 import androidx.media3.session.SessionResult
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
 import com.scene.ambience.AmbienceApplication
 import com.scene.ambience.MainActivity
 import com.scene.ambience.R
-import com.scene.ambience.data.model.PlaybackState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Foreground playback service owning the [AmbienceEngine] and its
@@ -64,9 +65,15 @@ class AmbiencePlaybackService : MediaSessionService() {
         setMediaNotificationProvider(notificationController)
 
         serviceScope.launch {
-            engine.state.collect { snapshot ->
-                session.setSessionExtras(Commands.snapshotBundle(snapshot))
-            }
+            engine.state
+                .drop(1) // the builder already received the initial snapshot
+                .collectLatest { snapshot ->
+                    // JSON serialization of the full source map is CPU work, not UI work.
+                    val extras = withContext(Dispatchers.Default) {
+                        Commands.snapshotBundle(snapshot)
+                    }
+                    session.setSessionExtras(extras)
+                }
         }
 
         restoreState()
@@ -136,9 +143,7 @@ class AmbiencePlaybackService : MediaSessionService() {
             Commands.SET_MASTER_MUTED -> engine.setMasterMuted(args.getBoolean(Commands.EXTRA_MUTED))
             Commands.SET_SOURCE_VOLUME -> {
                 val id = args.getString(Commands.EXTRA_SOURCE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
-                val volume = args.getFloat(Commands.EXTRA_VOLUME, 0f)
-                Log.d("AmbiencePlayback", "ServiceCommand source=$id value=$volume")
-                engine.setSourceVolume(id, volume)
+                engine.setSourceVolume(id, args.getFloat(Commands.EXTRA_VOLUME, 0f))
             }
             Commands.SET_SOURCE_MUTED -> {
                 val id = args.getString(Commands.EXTRA_SOURCE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
