@@ -6,9 +6,11 @@ import com.scene.ambience.data.model.LicensesFile
 import com.scene.ambience.data.model.SoundLibraryManifest
 import com.scene.ambience.data.model.SoundLibraryState
 import com.scene.ambience.data.model.SourceManifest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 /**
@@ -23,17 +25,20 @@ class SoundLibraryRepository(context: Context) {
     private val _state = MutableStateFlow(SoundLibraryState(loadError = "loading"))
     val state: StateFlow<SoundLibraryState> = _state.asStateFlow()
 
+    /** Background-safe one-shot load. Repeated calls after success are free. */
     suspend fun load() {
-        if (_state.value.sources.isNotEmpty() || _state.value.loadError == "loading") {
-            _state.value = readAll()
-        }
+        val current = _state.value
+        if (current.sources.isNotEmpty() && current.loadError == null) return
+        _state.value = withContext(Dispatchers.IO) { readAll() }
     }
 
     fun loadNow() {
+        val current = _state.value
+        if (current.sources.isNotEmpty() && current.loadError == null) return
         _state.value = readAll()
     }
 
-    /** Synchronous accessor for the service; re-reads if not loaded yet. */
+    /** Synchronous accessor for the service; re-reads only if not loaded yet. */
     fun requireLibrary(): SoundLibraryState {
         if (_state.value.sources.isEmpty() && _state.value.loadError != null) loadNow()
         return _state.value
@@ -51,7 +56,7 @@ class SoundLibraryRepository(context: Context) {
             }
             SoundLibraryState(
                 version = manifest.version,
-                sources = manifest.sources.filter { it.allFiles.isNotEmpty() },
+                sources = manifest.sources.filter { it.continuous.isNotEmpty() || it.events.isNotEmpty() },
                 categoryPresets = presets?.categories ?: emptyMap(),
                 licenses = licenses?.entries ?: emptyList(),
                 loadError = null,
@@ -62,8 +67,7 @@ class SoundLibraryRepository(context: Context) {
     }
 
     /** Manifest source for a source id, or null when the source has no packaged files. */
-    fun manifestFor(sourceId: String): SourceManifest? =
-        _state.value.sources.firstOrNull { it.id == sourceId }
+    fun manifestFor(sourceId: String): SourceManifest? = _state.value.manifestFor(sourceId)
 
     private fun readAsset(path: String): String? = try {
         appContext.assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() }
