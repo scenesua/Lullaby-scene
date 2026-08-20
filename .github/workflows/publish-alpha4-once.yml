@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - '.github/workflows/publish-alpha4-once.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/publish-alpha4-once.yml'
 
 permissions:
   contents: write
@@ -31,8 +36,10 @@ jobs:
         run: |
           set -euo pipefail
           echo "TARGET_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "RUN_URL=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
 
       - name: Mark alpha4 publication pending
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -42,7 +49,8 @@ jobs:
             "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
             -f state=pending \
             -f context='prerelease/v1.1.0-alpha.4' \
-            -f description='Building and publishing signed alpha.4 APK'
+            -f description='Building and publishing signed alpha.4 APK' \
+            -f target_url="$RUN_URL"
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -64,6 +72,7 @@ jobs:
           grep -q 'flowOn(Dispatchers.Default)' app/src/main/java/com/scene/ambience/media/AmbiencePlaybackService.kt
           grep -q 'sceneState.collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
           grep -q 'timerRemaining.collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/TimerScreen.kt
+          grep -Fq 'val remainingMs = remaining ?: 0L' app/src/main/java/com/scene/ambience/ui/screens/TimerScreen.kt
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
@@ -71,7 +80,12 @@ jobs:
       - name: Run tests and unsigned release compile
         run: ./gradlew --no-daemon testDebugUnitTest assembleRelease --stacktrace
 
+      - name: Stop after validation on pull requests
+        if: github.event_name == 'pull_request'
+        run: echo 'alpha4 validation completed; publishing is push-only'
+
       - name: Load persistent prerelease signing key
+        if: github.event_name == 'push'
         env:
           KEYSTORE_B64: ${{ secrets.LULLABY_ANDROID_KEYSTORE_B64 }}
           STORE_PASSWORD: ${{ secrets.LULLABY_ANDROID_STORE_PASSWORD }}
@@ -95,9 +109,11 @@ jobs:
           echo "LULLABY_ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Build signed alpha4 APK
+        if: github.event_name == 'push'
         run: ./gradlew --no-daemon assembleRelease --stacktrace
 
       - name: Verify signer and stage files
+        if: github.event_name == 'push'
         shell: bash
         run: |
           set -euo pipefail
@@ -112,6 +128,7 @@ jobs:
           sha256sum dist/Lullaby-Scene-v1.1.0-alpha.4.apk > dist/Lullaby-Scene-v1.1.0-alpha.4.apk.sha256
 
       - name: Publish fresh alpha4 prerelease
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: v1.1.0-alpha.4
@@ -132,6 +149,7 @@ jobs:
             --prerelease
 
       - name: Verify release API and remove accidental beta
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: v1.1.0-alpha.4
@@ -149,6 +167,7 @@ jobs:
           fi
 
       - name: Mark alpha4 publication successful
+        if: github.event_name == 'push' && success()
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -157,10 +176,11 @@ jobs:
             "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
             -f state=success \
             -f context='prerelease/v1.1.0-alpha.4' \
-            -f description='Signed alpha.4 APK is published and verified'
+            -f description='Signed alpha.4 APK is published and verified' \
+            -f target_url="$RUN_URL"
 
       - name: Mark alpha4 publication failed
-        if: failure()
+        if: github.event_name == 'push' && failure()
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -169,4 +189,5 @@ jobs:
             "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
             -f state=failure \
             -f context='prerelease/v1.1.0-alpha.4' \
-            -f description='alpha.4 publication failed; inspect Actions' || true
+            -f description='alpha.4 publication failed; inspect Actions' \
+            -f target_url="$RUN_URL" || true
