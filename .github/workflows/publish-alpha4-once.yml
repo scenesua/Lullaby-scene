@@ -1,0 +1,172 @@
+name: Publish Android v1.1.0-alpha.4 once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/publish-alpha4-once.yml'
+
+permissions:
+  contents: write
+  statuses: write
+
+concurrency:
+  group: publish-lullaby-alpha4-once
+  cancel-in-progress: false
+
+jobs:
+  publish-alpha4:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout alpha4 source
+        uses: actions/checkout@v4
+        with:
+          ref: work/lullaby-2.0-audio-foundation
+          fetch-depth: 0
+
+      - name: Capture alpha4 source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "TARGET_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Mark alpha4 publication pending
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=pending \
+            -f context='prerelease/v1.1.0-alpha.4' \
+            -f description='Building and publishing signed alpha.4 APK'
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Verify alpha4 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'versionCode = 8' app/build.gradle.kts
+          grep -q 'versionName = "1.1.0-alpha.4"' app/build.gradle.kts
+          test -s RELEASE_NOTES_1.1.0-alpha.4.md
+          ! grep -q 'CountDownLatch' app/src/main/java/com/scene/ambience/media/ContinuousSourcePlayer.kt
+          grep -q 'HandlerThread("ambience-playback")' app/src/main/java/com/scene/ambience/media/ContinuousSourcePlayer.kt
+          grep -q 'Dispatchers.IO' app/src/main/java/com/scene/ambience/media/EventSourcePlayer.kt
+          grep -q 'flowOn(Dispatchers.Default)' app/src/main/java/com/scene/ambience/media/AmbiencePlaybackService.kt
+          grep -q 'sceneState.collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
+          grep -q 'timerRemaining.collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/TimerScreen.kt
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Run tests and unsigned release compile
+        run: ./gradlew --no-daemon testDebugUnitTest assembleRelease --stacktrace
+
+      - name: Load persistent prerelease signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.LULLABY_ANDROID_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.LULLABY_ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.LULLABY_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.LULLABY_ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::$name is required for an updatable prerelease"
+              exit 1
+            fi
+          done
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/lullaby-release.jks"
+          chmod 600 "$RUNNER_TEMP/lullaby-release.jks"
+          keytool -list -keystore "$RUNNER_TEMP/lullaby-release.jks" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+          echo "LULLABY_ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/lullaby-release.jks" >> "$GITHUB_ENV"
+          echo "LULLABY_ANDROID_STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "LULLABY_ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "LULLABY_ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Build signed alpha4 APK
+        run: ./gradlew --no-daemon assembleRelease --stacktrace
+
+      - name: Verify signer and stage files
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/release/app-release.apk'
+          test -s "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)"
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          "$APKSIGNER" verify "$APK"
+          mkdir -p dist
+          cp "$APK" dist/Lullaby-Scene-v1.1.0-alpha.4.apk
+          sha256sum dist/Lullaby-Scene-v1.1.0-alpha.4.apk > dist/Lullaby-Scene-v1.1.0-alpha.4.apk.sha256
+
+      - name: Publish fresh alpha4 prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v1.1.0-alpha.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release delete "$TAG" --cleanup-tag --yes
+          else
+            git push origin ":refs/tags/$TAG" >/dev/null 2>&1 || true
+          fi
+          gh release create "$TAG" \
+            dist/Lullaby-Scene-v1.1.0-alpha.4.apk \
+            dist/Lullaby-Scene-v1.1.0-alpha.4.apk.sha256 \
+            --target "$TARGET_SHA" \
+            --title 'Lullaby Scene v1.1.0-alpha.4' \
+            --notes-file RELEASE_NOTES_1.1.0-alpha.4.md \
+            --prerelease
+
+      - name: Verify release API and remove accidental beta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v1.1.0-alpha.4
+          ACCIDENTAL_TAG: v1.0.4-beta.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.prerelease')" = 'true'
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.assets[].name' | grep -Fx 'Lullaby-Scene-v1.1.0-alpha.4.apk'
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.assets[].name' | grep -Fx 'Lullaby-Scene-v1.1.0-alpha.4.apk.sha256'
+          if gh release view "$ACCIDENTAL_TAG" >/dev/null 2>&1; then
+            gh release delete "$ACCIDENTAL_TAG" --cleanup-tag --yes
+          else
+            git push origin ":refs/tags/$ACCIDENTAL_TAG" >/dev/null 2>&1 || true
+          fi
+
+      - name: Mark alpha4 publication successful
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=success \
+            -f context='prerelease/v1.1.0-alpha.4' \
+            -f description='Signed alpha.4 APK is published and verified'
+
+      - name: Mark alpha4 publication failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=failure \
+            -f context='prerelease/v1.1.0-alpha.4' \
+            -f description='alpha.4 publication failed; inspect Actions' || true
