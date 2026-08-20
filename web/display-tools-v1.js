@@ -2,11 +2,12 @@
   if(window.__lullabyDisplayToolsV1)return;window.__lullabyDisplayToolsV1=true;
   const CHANNEL='lullaby-blackout-v1';
   const isSlave=location.pathname.replace(/\/+$/,'')==='/blackout';
+  const isPendingSlave=isSlave&&new URLSearchParams(location.search).get('pending')==='1';
   const $=s=>document.querySelector(s);
   const language=()=>window.LullabyLocales?.language||window.LullabyI18n?.language||'en';
   const copy=()=>language()==='ko'?{screen:'화면 검게',slider:'밀어서 검은 화면 끄기',desktop:'화면 검게'}:{screen:'Black screen',slider:'Slide to exit black screen',desktop:'Black Screen'};
   const channel='BroadcastChannel'in window?new BroadcastChannel(CHANNEL):null;
-  let overlay=null,hideTimer=null,active=false,children=[];
+  let overlay=null,hideTimer=null,active=false,children=[],cachedScreenDetails=null;
 
   function ensureOverlay(){
     if(overlay)return overlay;
@@ -29,7 +30,7 @@
     if(fullscreenElement())return Promise.resolve(true);
     const root=document.documentElement;
     if(typeof root.requestFullscreen==='function'){
-      try{return Promise.resolve(root.requestFullscreen()).then(()=>true).catch(()=>false)}catch{return Promise.resolve(false)}
+      try{return Promise.resolve(root.requestFullscreen({navigationUI:'hide'})).then(()=>true).catch(()=>false)}catch{return Promise.resolve(false)}
     }
     if(typeof root.webkitRequestFullscreen==='function'){
       try{root.webkitRequestFullscreen();return Promise.resolve(true)}catch{return Promise.resolve(false)}
@@ -39,6 +40,7 @@
   function bindOverlay(){
     const track=overlay.querySelector('.blackout-slider'),knob=overlay.querySelector('.blackout-slider-knob');let progress=0,dragging=false;
     const setProgress=value=>{progress=Math.max(0,Math.min(1,value));const travel=Math.max(0,track.clientWidth-knob.offsetWidth-10);track.style.setProperty('--blackout-slide',`${travel*progress}px`)};
+    overlay._resetBlackoutSlider=()=>{dragging=false;knob.classList.remove('is-dragging');setProgress(0)};
     const finish=()=>{dragging=false;knob.classList.remove('is-dragging');if(progress>=.84){exitEverywhere()}else setProgress(0)};
     knob.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();dragging=true;knob.classList.add('is-dragging');knob.setPointerCapture?.(e.pointerId);showControls()});
     knob.addEventListener('pointermove',e=>{if(!dragging)return;const rect=track.getBoundingClientRect(),travel=Math.max(1,rect.width-knob.offsetWidth-10);setProgress((e.clientX-rect.left-knob.offsetWidth/2-5)/travel)});
@@ -46,7 +48,7 @@
     overlay.addEventListener('pointerup',e=>{if(e.target.closest('.blackout-slider'))return;if(!fullscreenElement())requestFullscreenImmediate();showControls()});
     window.addEventListener('resize',()=>setProgress(progress));
   }
-  function activateLocal(){ensureOverlay();active=true;document.body.classList.add('blackout-lock');overlay.classList.add('is-active');overlay.classList.remove('show-controls');overlay.setAttribute('aria-hidden','false')}
+  function activateLocal(){ensureOverlay();overlay._resetBlackoutSlider?.();active=true;document.body.classList.add('blackout-lock');overlay.classList.add('is-active');overlay.classList.remove('show-controls');overlay.setAttribute('aria-hidden','false')}
   async function deactivateLocal(closeSlave=false){
     active=false;clearTimeout(hideTimer);overlay?.classList.remove('is-active','show-controls');overlay?.setAttribute('aria-hidden','true');document.body.classList.remove('blackout-lock');
     if(fullscreenElement()){
@@ -55,24 +57,82 @@
     if(closeSlave)setTimeout(()=>{try{window.close()}catch{}},30);
   }
   function notifyExit(){channel?.postMessage({type:'exit'});if(window.opener&&window.opener!==window){try{window.opener.postMessage({type:'lullaby-blackout-exit'},location.origin)}catch{}}}
-  async function exitEverywhere(){
-    notifyExit();for(const child of children){try{child.postMessage({type:'lullaby-blackout-exit'},location.origin);child.close()}catch{}}children=[];await deactivateLocal(isSlave);
-  }
-  function receiveExit(){for(const child of children){try{child.close()}catch{}}children=[];deactivateLocal(isSlave)}
+  function closeChildren(){for(const child of children){try{child.postMessage({type:'lullaby-blackout-exit'},location.origin);child.close()}catch{}}children=[]}
+  async function exitEverywhere(){notifyExit();closeChildren();await deactivateLocal(isSlave)}
+  function receiveExit(){closeChildren();deactivateLocal(isSlave)}
   channel?.addEventListener('message',e=>{if(e.data?.type==='exit')receiveExit();if(e.data?.type==='enter'&&isSlave)activateLocal()});
-  window.addEventListener('message',e=>{if(e.origin!==location.origin)return;if(e.data?.type==='lullaby-blackout-exit')receiveExit()});
+  window.addEventListener('message',e=>{
+    if(e.origin!==location.origin)return;
+    if(e.data?.type==='lullaby-blackout-exit')receiveExit();
+    if(e.data?.type==='lullaby-blackout-target'&&isSlave){activateLocal();requestFullscreenImmediate()}
+  });
 
   function sameScreen(a,b){return a===b||!!(a&&b&&a.left===b.left&&a.top===b.top&&a.width===b.width&&a.height===b.height)}
-  function openOtherDisplays(details){
-    if(!details?.screens?.length)return;const current=details.currentScreen;
-    details.screens.forEach((screen,index)=>{if(sameScreen(screen,current))return;const left=screen.availLeft??screen.left??0,top=screen.availTop??screen.top??0,width=screen.availWidth??screen.width,height=screen.availHeight??screen.height;const features=`popup=yes,left=${left},top=${top},width=${width},height=${height},toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no`;let child=null;try{child=window.open(`/blackout/?display=${index}`,`lullaby_blackout_${index}`,features)}catch{}if(child){children.push(child);setTimeout(()=>{try{child.moveTo(left,top);child.resizeTo(width,height)}catch{}},80)}})
+  function rememberChild(child){if(child&&!children.includes(child))children.push(child);return child}
+  function screenBox(screen){return{left:screen.left??screen.availLeft??0,top:screen.top??screen.availTop??0,width:screen.width??screen.availWidth??800,height:screen.height??screen.availHeight??600}}
+  function positionChild(child,screen){
+    if(!child||child.closed)return;const box=screenBox(screen);
+    const place=()=>{try{child.moveTo(box.left,box.top);child.resizeTo(box.width,box.height)}catch{}};
+    place();setTimeout(place,80);setTimeout(place,260);
+    try{child.postMessage({type:'lullaby-blackout-target'},location.origin)}catch{}
+  }
+  function openDisplayWindow(screen,index){
+    const box=screenBox(screen),features=`popup=yes,left=${box.left},top=${box.top},width=${box.width},height=${box.height},toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no`;
+    let child=null;try{child=window.open(`/blackout/?display=${index}&v=4`,`lullaby_blackout_${index}`,features)}catch{}
+    if(child){rememberChild(child);positionChild(child,screen)}
+    return child;
+  }
+  function openPendingWindow(){
+    if(!window.screen?.isExtended)return null;
+    const left=(window.screen.availLeft??window.screen.left??0)+Math.max(0,(window.screen.availWidth??window.screen.width??800)-220),top=(window.screen.availTop??window.screen.top??0)+20;
+    const features=`popup=yes,left=${left},top=${top},width=180,height=120,toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no`;
+    let child=null;try{child=window.open('/blackout/?pending=1&v=4','lullaby_blackout_pending',features)}catch{}
+    return rememberChild(child);
+  }
+  function openOtherDisplays(details,pending=null){
+    if(!details?.screens?.length){try{pending?.close()}catch{}return 0}
+    const current=details.currentScreen,others=details.screens.filter(screen=>!sameScreen(screen,current));let opened=0;
+    others.forEach((screen,index)=>{
+      let child=null;
+      if(index===0&&pending&&!pending.closed){child=pending;positionChild(child,screen)}else child=openDisplayWindow(screen,index);
+      if(child)opened++;
+    });
+    if(!others.length&&pending){try{pending.close()}catch{}}
+    return opened;
+  }
+  async function primeScreenDetails(){
+    if(!('getScreenDetails'in window)||!window.screen?.isExtended)return;
+    try{
+      const permission=await navigator.permissions?.query?.({name:'window-management'});
+      if(permission?.state==='granted')cachedScreenDetails=await window.getScreenDetails();
+      permission?.addEventListener?.('change',async()=>{if(permission.state==='granted'){try{cachedScreenDetails=await window.getScreenDetails()}catch{cachedScreenDetails=null}}else cachedScreenDetails=null});
+    }catch{}
   }
   async function enterBlackout(){
     activateLocal();channel?.postMessage({type:'enter'});
-    // Fullscreen must be requested synchronously from the user's click. Waiting for
-    // Window Management permission first consumes the browser's user activation.
+    const extended=!!(window.screen?.isExtended&&'getScreenDetails'in window);
+    let detailsPromise=null;
+    if(extended&&!cachedScreenDetails){try{detailsPromise=window.getScreenDetails()}catch{}}
+
+    // Keep the current display reliable: fullscreen is requested immediately from
+    // the user's click, before any awaited permission work can expire activation.
     const fullscreenAttempt=requestFullscreenImmediate();
-    if('getScreenDetails'in window&&window.screen&&'isExtended'in window.screen&&window.screen.isExtended){try{const details=await window.getScreenDetails();openOtherDisplays(details)}catch{}}
+
+    if(extended){
+      if(cachedScreenDetails){
+        // With persistent Window Management permission, placement happens in the
+        // same click task instead of after an async permission round-trip.
+        openOtherDisplays(cachedScreenDetails);
+      }else{
+        // Reserve one script-opened black window while the click is still fresh.
+        // This greatly improves two-monitor coverage even when the first permission
+        // prompt delays ScreenDetails resolution and later popups would be blocked.
+        const pending=openPendingWindow();
+        if(detailsPromise){
+          try{const details=await detailsPromise;cachedScreenDetails=details;openOtherDisplays(details,pending)}catch{try{pending?.close()}catch{}}
+        }else{try{pending?.close()}catch{}}
+      }
+    }
     await fullscreenAttempt;
   }
   function bindBlackoutButton(button){
@@ -111,7 +171,7 @@
   try{matchMedia('(prefers-color-scheme: light)').addEventListener('change',syncThemeColor)}catch{}
   document.addEventListener('lullaby-language-changed',localize);
 
-  if(isSlave){document.documentElement.classList.add('blackout-slave');activateLocal();requestFullscreenImmediate();window.addEventListener('beforeunload',()=>notifyExit());return}
-  injectButtons();setTimeout(injectButtons,250);setTimeout(injectButtons,900);syncThemeColor();
-  window.LullabyBlackout={enter:enterBlackout,exit:exitEverywhere,get active(){return active}};
+  if(isSlave){document.documentElement.classList.add('blackout-slave');activateLocal();if(!isPendingSlave)requestFullscreenImmediate();window.addEventListener('beforeunload',()=>notifyExit());return}
+  injectButtons();setTimeout(injectButtons,250);setTimeout(injectButtons,900);syncThemeColor();primeScreenDetails();
+  window.LullabyBlackout={enter:enterBlackout,exit:exitEverywhere,get active(){return active},get screenDetailsCached(){return!!cachedScreenDetails}};
 })();
