@@ -22,9 +22,10 @@ data class SourceManifest(
     val continuous: List<AudioAssetManifest> = emptyList(),
     val events: List<AudioAssetManifest> = emptyList(),
 ) {
-    val trimGain: Float get() = 10.0.pow(trimGainDb / 20.0).toFloat()
-    val allFiles: List<AudioAssetManifest>
-        get() = continuous + events
+    // Derived once per manifest instead of recomputing pow() for every gain update.
+    val trimGain: Float = 10.0.pow(trimGainDb / 20.0).toFloat()
+    val hasFiles: Boolean get() = continuous.isNotEmpty() || events.isNotEmpty()
+    val allFiles: List<AudioAssetManifest> get() = continuous + events
 }
 
 @Serializable
@@ -123,8 +124,10 @@ data class SoundLibraryState(
     val licenses: List<LicenseEntry> = emptyList(),
     val loadError: String? = null,
 ) {
-    val hasAssets: Boolean get() = sources.isNotEmpty()
+    // Stable per-instance indexes used by engine/UI hot paths.
+    val sourceById: Map<String, SourceManifest> = sources.associateBy { it.id }
+    val sourceIds: Set<String> = sourceById.keys
+    val hasAssets: Boolean get() = sourceById.isNotEmpty()
 
-    fun manifestFor(sourceId: String): SourceManifest? =
-        sources.firstOrNull { it.id == sourceId }
+    fun manifestFor(sourceId: String): SourceManifest? = sourceById[sourceId]
 }
