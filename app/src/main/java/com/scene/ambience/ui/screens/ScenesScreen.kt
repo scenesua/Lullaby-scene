@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scene.ambience.R
 import com.scene.ambience.media.AircraftJourneyTimelineBuilder
 import com.scene.ambience.media.SceneOrchestrator
@@ -49,7 +50,7 @@ fun ScenesScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val scene = state.scene
+    val scene by viewModel.sceneState.collectAsStateWithLifecycle()
     val active = scene.sceneId == SceneOrchestrator.PASSENGER_AIRCRAFT
     val available = state.library.manifestFor(SceneOrchestrator.SOURCE_AIRCRAFT) != null
     var selectedDuration by remember { mutableIntStateOf(if (active) scene.totalDurationMinutes else 480) }
