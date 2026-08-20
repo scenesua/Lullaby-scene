@@ -2,11 +2,12 @@ package com.scene.ambience.controller
 
 import android.content.ComponentName
 import android.content.Context
-import android.util.Log
+import android.os.Bundle
+import androidx.media3.common.Player
 import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
-import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
+import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
@@ -14,12 +15,14 @@ import com.scene.ambience.data.model.EngineSnapshot
 import com.scene.ambience.media.AmbiencePlaybackService
 import com.scene.ambience.media.Commands
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import androidx.media3.common.Player
 
 /**
  * Owns the single [MediaController] used by the whole UI. Connects to
@@ -46,49 +49,73 @@ class AmbienceControllerRepository(
     private val _connected = MutableStateFlow(false)
     val connected: StateFlow<Boolean> = _connected.asStateFlow()
 
-    private var buildJob: Job? = null
-    private var listenerAttached = false
+    private var connecting = false
+    private var reconnectJob: Job? = null
+    private var snapshotParseJob: Job? = null
+
+    // Master-volume drags can produce many Compose callbacks per second. Keep the UI
+    // local and collapse binder commands to a maximum of roughly 25 updates/second.
+    private var pendingMasterVolume: Float? = null
+    private var masterVolumeJob: Job? = null
 
     /** Connect (or re-create the connection) to the playback service. */
     fun connect() {
-        if (_controller.value != null && _connected.value) return
-        buildJob?.cancel()
-        buildJob = scope.launch {
-            val listener = ControllerListener()
-            val future = MediaController.Builder(context, sessionToken)
-                .setListener(listener)
-                .buildAsync()
-            listenerAttached = true
-            Futures.addCallback(future, object : com.google.common.util.concurrent.FutureCallback<MediaController> {
-                override fun onSuccess(controller: MediaController?) {
-                    if (controller != null) attach(controller)
-                }
+        if ((_controller.value != null && _connected.value) || connecting) return
+        connecting = true
+        val listener = ControllerListener()
+        val future = MediaController.Builder(context, sessionToken)
+            .setListener(listener)
+            .buildAsync()
+        Futures.addCallback(future, object : com.google.common.util.concurrent.FutureCallback<MediaController> {
+            override fun onSuccess(controller: MediaController?) {
+                connecting = false
+                if (controller != null) attach(controller) else scheduleReconnect()
+            }
 
-                override fun onFailure(t: Throwable) {
-                    listenerAttached = false
-                    _connected.value = false
-                    connect()
-                }
-            }, MoreExecutors.directExecutor())
+            override fun onFailure(t: Throwable) {
+                connecting = false
+                _connected.value = false
+                scheduleReconnect()
+            }
+        }, MoreExecutors.directExecutor())
+    }
+
+    private fun scheduleReconnect() {
+        if (reconnectJob?.isActive == true) return
+        reconnectJob = scope.launch {
+            delay(RECONNECT_DELAY_MS)
+            connect()
         }
     }
 
     private fun attach(controller: MediaController) {
+        reconnectJob?.cancel()
+        reconnectJob = null
         _controller.value = controller
         _connected.value = true
-        _snapshot.value = Commands.parseSnapshot(controller.sessionExtras)
+        parseSnapshotAsync(controller.sessionExtras)
+    }
+
+    /** JSON decoding can be measurable on older phones; keep it off the UI thread. */
+    private fun parseSnapshotAsync(extras: Bundle) {
+        val copy = Bundle(extras)
+        snapshotParseJob?.cancel()
+        snapshotParseJob = scope.launch(Dispatchers.Default) {
+            val parsed = Commands.parseSnapshot(copy)
+            if (isActive && parsed != null) _snapshot.value = parsed
+        }
     }
 
     private inner class ControllerListener : MediaController.Listener {
-        override fun onExtrasChanged(controller: MediaController, extras: android.os.Bundle) {
-            _snapshot.value = Commands.parseSnapshot(extras)
+        override fun onExtrasChanged(controller: MediaController, extras: Bundle) {
+            parseSnapshotAsync(extras)
         }
 
         override fun onDisconnected(controller: MediaController) {
+            snapshotParseJob?.cancel()
             _connected.value = false
             _controller.value = null
-            listenerAttached = false
-            connect()
+            scheduleReconnect()
         }
     }
 
@@ -120,18 +147,43 @@ class AmbienceControllerRepository(
 
     /** Send a custom command; returns null when not yet connected. */
     fun dispatch(command: SessionCommand): ListenableFuture<SessionResult>? =
-        _controller.value?.sendCustomCommand(command, command.customExtras ?: android.os.Bundle())
+        _controller.value?.sendCustomCommand(command, command.customExtras ?: Bundle())
 
     fun setMasterVolume(volume: Float) {
-        dispatch(Commands.setMasterVolume(volume))
+        pendingMasterVolume = volume.coerceIn(0f, 1f)
+        if (masterVolumeJob?.isActive == true) return
+        masterVolumeJob = scope.launch {
+            while (isActive) {
+                val next = pendingMasterVolume
+                pendingMasterVolume = null
+                if (next != null) dispatch(Commands.setMasterVolume(next))
+                delay(MASTER_VOLUME_INTERVAL_MS)
+                if (pendingMasterVolume == null) break
+            }
+        }
+    }
+
+    private fun flushPendingMasterVolume() {
+        masterVolumeJob?.cancel()
+        masterVolumeJob = null
+        val pending = pendingMasterVolume
+        pendingMasterVolume = null
+        if (pending != null) dispatch(Commands.setMasterVolume(pending))
+    }
+
+    private fun discardPendingMasterVolume() {
+        masterVolumeJob?.cancel()
+        masterVolumeJob = null
+        pendingMasterVolume = null
     }
 
     fun setMasterMuted(muted: Boolean) {
+        // Preserve command ordering: a delayed volume command must never unmute after mute.
+        flushPendingMasterVolume()
         dispatch(Commands.setMasterMuted(muted))
     }
 
     fun setSourceVolume(id: String, volume: Float) {
-        Log.d("AmbiencePlayback", "ControllerCommand source=$id value=$volume")
         dispatch(Commands.setSourceVolume(id, volume))
     }
 
@@ -140,6 +192,8 @@ class AmbienceControllerRepository(
     }
 
     fun applyMix(mixJson: String, presetId: String?) {
+        // A pending drag from the previous mix must not overwrite a newly applied preset.
+        discardPendingMasterVolume()
         dispatch(Commands.applyMix(mixJson, presetId))
     }
 
@@ -168,8 +222,26 @@ class AmbienceControllerRepository(
         val future = dispatch(command) ?: return
         Futures.addCallback(future, object : com.google.common.util.concurrent.FutureCallback<SessionResult> {
             override fun onSuccess(result: SessionResult?) {}
-
             override fun onFailure(t: Throwable) {}
         }, MoreExecutors.directExecutor())
+    }
+
+    fun release() {
+        reconnectJob?.cancel()
+        snapshotParseJob?.cancel()
+        masterVolumeJob?.cancel()
+        reconnectJob = null
+        snapshotParseJob = null
+        masterVolumeJob = null
+        pendingMasterVolume = null
+        connecting = false
+        _connected.value = false
+        _controller.value?.release()
+        _controller.value = null
+    }
+
+    companion object {
+        private const val MASTER_VOLUME_INTERVAL_MS = 40L
+        private const val RECONNECT_DELAY_MS = 500L
     }
 }
