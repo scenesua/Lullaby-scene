@@ -101,7 +101,6 @@ class ContinuousSourcePlayer(
         }
     }
 
-    /** Coalesce rapid master/fade updates to one runnable on the shared playback looper. */
     fun applyBaseVolume(baseGain: Float) {
         this.baseGain = baseGain.coerceIn(0f, 1f)
         if (Looper.myLooper() == sharedLooper) {
@@ -132,7 +131,7 @@ class ContinuousSourcePlayer(
             .build()
         return ExoPlayer.Builder(context)
             .setLooper(sharedLooper)
-            .setAudioAttributes(audioAttributes, /* handleAudioFocus = */ false)
+            .setAudioAttributes(audioAttributes, false)
             .setHandleAudioBecomingNoisy(false)
             .build()
             .also {
@@ -142,16 +141,13 @@ class ContinuousSourcePlayer(
                         eventTime: AnalyticsListener.EventTime,
                         audioSessionId: Int,
                     ) {
-                        if (audioSessionId != C.AUDIO_SESSION_ID_UNSET) {
-                            onAudioSessionId(audioSessionId)
-                        }
+                        if (audioSessionId != C.AUDIO_SESSION_ID_UNSET) onAudioSessionId(audioSessionId)
                     }
                 })
             }
     }
 
-    private fun uriFor(asset: AudioAssetManifest): android.net.Uri =
-        android.net.Uri.parse("asset:///${asset.path}")
+    private fun uriFor(asset: AudioAssetManifest): android.net.Uri = android.net.Uri.parse("asset:///${asset.path}")
 
     private suspend fun runLoop() {
         ensurePlayers()
@@ -159,30 +155,25 @@ class ContinuousSourcePlayer(
             playSingleFile(files.single())
             return
         }
-
         var current = 0
         var currentFile = nextFile() ?: return
         envelopes[0] = 1f
         envelopes[1] = 0f
-        prepareAndPlay(current, currentFile, repeat = false, initialEnvelope = 1f)
+        prepareAndPlay(current, currentFile, false, 1f)
         while (kotlin.coroutines.coroutineContext.isActive) {
             var attemptedFile: AudioAssetManifest? = null
             try {
                 val configuredFade = currentFile.crossfadeMs.takeIf { it > 0L } ?: AmbienceEngine.CROSSFADE_MS
-                val reserve = minOf(configuredFade, currentFile.durationMs / 3)
-                    .coerceAtLeast(200L)
+                val reserve = minOf(configuredFade, currentFile.durationMs / 3).coerceAtLeast(200L)
                 delayUntilRemaining(current, currentFile, reserve + PREPARE_LEAD_MS)
-
                 val nextFile = nextFile() ?: continue
                 attemptedFile = nextFile
                 val standby = 1 - current
-                prepare(standby, nextFile, repeat = false, initialEnvelope = 0f)
+                prepare(standby, nextFile, false, 0f)
                 delayUntilRemaining(current, currentFile, reserve)
                 playPrepared(standby)
-                val remaining = (playableDuration(current, currentFile) - player(current).currentPosition)
-                    .coerceAtLeast(50L)
-                val actualFade = minOf(reserve, remaining)
-                crossfade(outgoingIndex = current, incomingIndex = standby, fadeMs = actualFade)
+                val remaining = (playableDuration(current, currentFile) - player(current).currentPosition).coerceAtLeast(50L)
+                crossfade(current, standby, minOf(reserve, remaining))
                 player(current).stop()
                 player(current).clearMediaItems()
                 current = standby
@@ -195,7 +186,7 @@ class ContinuousSourcePlayer(
                 if (!player(current).isPlaying) {
                     val recovery = nextFile() ?: return
                     val standby = 1 - current
-                    prepareAndPlay(standby, recovery, repeat = false, initialEnvelope = 1f)
+                    prepareAndPlay(standby, recovery, false, 1f)
                     player(current).stop()
                     player(current).clearMediaItems()
                     current = standby
@@ -207,7 +198,7 @@ class ContinuousSourcePlayer(
 
     private suspend fun playSingleFile(file: AudioAssetManifest) {
         envelopes[0] = 1f
-        prepareAndPlay(index = 0, file = file, repeat = true, initialEnvelope = 1f)
+        prepareAndPlay(0, file, true, 1f)
         awaitCancellation()
     }
 
@@ -271,9 +262,7 @@ class ContinuousSourcePlayer(
     private fun applyEnvelopesNow() {
         val currentPlayers = players ?: return
         val gain = baseGain
-        currentPlayers.forEachIndexed { index, player ->
-            player.volume = gain * envelopes[index]
-        }
+        currentPlayers.forEachIndexed { index, player -> player.volume = gain * envelopes[index] }
     }
 
     companion object {
@@ -281,9 +270,9 @@ class ContinuousSourcePlayer(
         private const val PREPARE_LEAD_MS = 3_000L
         private const val PREPARE_TIMEOUT_MS = 15_000L
         private const val START_TIMEOUT_MS = 3_000L
-
         private val sharedThread = HandlerThread("ambience-playback").apply { start() }
         private val sharedLooper: Looper = sharedThread.looper
-        private val sharedDispatcher = sharedLooper.asCoroutineDispatcher()
+        private val sharedHandler = Handler(sharedLooper)
+        private val sharedDispatcher = sharedHandler.asCoroutineDispatcher()
     }
 }
