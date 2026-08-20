@@ -14,7 +14,7 @@ page.on('console',message=>{if(message.type()==='error')errors.push(message.text
 
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.waitForSelector('#builtInPresets [data-preset="preset_rainy_cafe"]',{state:'attached'});
-await page.addStyleTag({url:'http://127.0.0.1:4173/mobile-android-shell-v1.css?v=2'});
+await page.addStyleTag({url:'http://127.0.0.1:4173/mobile-android-shell-v1.css?v=3'});
 for(const src of [
   '/site-locales-v10.js?v=11',
   '/player-runtime-bridge-v12.js?v=12',
@@ -90,6 +90,23 @@ if(shell.header!=='none'||shell.intro!=='none'||shell.subtabs!=='none'||shell.na
 await page.locator('[data-android-dest="prepared"]').click();await page.waitForTimeout(80);
 if(!await page.locator('[data-scene-content="simple"]').evaluate(el=>el.classList.contains('active')))throw new Error('Prepared destination did not open ready-made scenes');
 await expectText('[data-android-title]','준비된 장면');
+const preparedLayout=await page.evaluate(()=>{
+  const preset=document.querySelector('#builtInPresets [data-preset="preset_rainy_cafe"]');
+  const transport=document.querySelector('#simpleSceneTransport');
+  const quick=document.querySelector('#simpleQuickMixerSection');
+  const mixerSource=document.querySelector('#mixerGrid [data-source="rain"]');
+  return{
+    presetVisible:!!preset&&getComputedStyle(preset).display!=='none',
+    presetTop:preset?.getBoundingClientRect().top??null,
+    transportTop:transport?.getBoundingClientRect().top??null,
+    quickDisplay:quick?getComputedStyle(quick).display:null,
+    mixerSourceVisible:!!mixerSource&&mixerSource.getClientRects().length>0
+  };
+});
+if(!preparedLayout.presetVisible||preparedLayout.quickDisplay!=='none'||preparedLayout.mixerSourceVisible||preparedLayout.presetTop===null||preparedLayout.transportTop===null||preparedLayout.presetTop>=preparedLayout.transportTop)throw new Error(`Prepared mobile layout mismatch: ${JSON.stringify(preparedLayout)}`);
+await page.locator('[data-android-dest="mixer"]').click();await page.waitForTimeout(80);
+if(!await page.locator('#mixerGrid [data-source="rain"]').isVisible())throw new Error('Mixer destination did not expose source controls');
+await page.locator('[data-android-dest="prepared"]').click();await page.waitForTimeout(80);
 await page.locator('[data-android-dest="fx"]').click();await page.waitForTimeout(80);
 if(!await page.locator('[data-panel="fx"]').evaluate(el=>el.classList.contains('active')))throw new Error('FX destination did not open');
 await page.locator('[data-android-dest="settings"]').click();await page.waitForTimeout(80);
@@ -102,4 +119,4 @@ if(!await page.locator('[data-panel="settings"]').evaluate(el=>el.classList.cont
 await page.evaluate(()=>window.__mutationObserver?.disconnect());
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log(`13-locale + Android shell + phase transitions stable; idle mutations=${mutationCount}, ticks=${ticks}`);
+console.log(`13-locale + Android shell + prepared-scene mobile layout stable; idle mutations=${mutationCount}, ticks=${ticks}`);
