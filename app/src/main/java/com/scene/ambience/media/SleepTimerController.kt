@@ -84,9 +84,7 @@ class SleepTimerController(
                 startFade(remaining.toFloat() / fadeMs)
             }
             engine.onTimerRemaining(remaining)
-            // Countdown text has one-second resolution; 2 Hz snapshots only doubled
-            // JSON/MediaSession/UI work without presenting additional useful detail.
-            delay(1_000L)
+            delay(500L)
         }
     }
 

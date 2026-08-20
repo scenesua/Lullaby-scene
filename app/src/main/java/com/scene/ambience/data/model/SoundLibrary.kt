@@ -22,9 +22,7 @@ data class SourceManifest(
     val continuous: List<AudioAssetManifest> = emptyList(),
     val events: List<AudioAssetManifest> = emptyList(),
 ) {
-    /** Expensive dB -> linear conversion is constant for the lifetime of a manifest. */
-    val trimGain: Float by lazy { 10.0.pow(trimGainDb / 20.0).toFloat() }
-
+    val trimGain: Float get() = 10.0.pow(trimGainDb / 20.0).toFloat()
     val allFiles: List<AudioAssetManifest>
         get() = continuous + events
 }
@@ -86,9 +84,6 @@ data class SoundLibraryState(
 ) {
     val hasAssets: Boolean get() = sources.isNotEmpty()
 
-    /** Immutable indexes are built at most once and reused by the mixer and audio engine. */
-    private val manifestsById: Map<String, SourceManifest> by lazy { sources.associateBy(SourceManifest::id) }
-    val sourceIds: Set<String> by lazy { manifestsById.keys }
-
-    fun manifestFor(sourceId: String): SourceManifest? = manifestsById[sourceId]
+    fun manifestFor(sourceId: String): SourceManifest? =
+        sources.firstOrNull { it.id == sourceId }
 }

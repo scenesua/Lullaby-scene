@@ -10,7 +10,6 @@ import com.scene.ambience.data.model.ThemeMode
 import com.scene.ambience.presentation.AmbienceViewModel
 import com.scene.ambience.ui.AmbienceApp
 import com.scene.ambience.ui.theme.AmbienceTheme
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 class MainActivity : ComponentActivity() {
@@ -20,7 +19,6 @@ class MainActivity : ComponentActivity() {
             val viewModel: AmbienceViewModel = viewModel()
             val themeMode by viewModel.uiState
                 .map { it.themeMode }
-                .distinctUntilChanged()
                 .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
             AmbienceTheme(themeMode) {
                 AmbienceApp(viewModel)

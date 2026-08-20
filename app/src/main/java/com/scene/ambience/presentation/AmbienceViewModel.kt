@@ -1,9 +1,9 @@
 package com.scene.ambience.presentation
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.scene.ambience.controller.AmbienceControllerRepository
 import com.scene.ambience.data.BuiltInPresets
 import com.scene.ambience.data.PresetRepository
 import com.scene.ambience.data.SettingsRepository
@@ -13,24 +13,22 @@ import com.scene.ambience.data.model.EngineSnapshot
 import com.scene.ambience.data.model.EqSettings
 import com.scene.ambience.data.model.FocusPolicy
 import com.scene.ambience.data.model.MixState
-import com.scene.ambience.data.model.PlaybackState
 import com.scene.ambience.data.model.SoundLibraryState
 import com.scene.ambience.data.model.ThemeMode
+import com.scene.ambience.controller.AmbienceControllerRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-
-private val BUILT_IN_PRESETS: List<AmbiencePreset> by lazy { BuiltInPresets.createAll() }
 
 data class AmbienceUiState(
     val library: SoundLibraryState = SoundLibraryState(),
@@ -46,15 +44,9 @@ data class AmbienceUiState(
     val userPresets: List<AmbiencePreset> = emptyList(),
     val eqSettings: EqSettings = EqSettings(),
 ) {
-    /** Built-ins are immutable and shared instead of being rebuilt for every engine snapshot. */
-    val builtInPresets: List<AmbiencePreset> get() = BUILT_IN_PRESETS
-    val allPresets: List<AmbiencePreset> get() = BUILT_IN_PRESETS + userPresets
+    val builtInPresets: List<AmbiencePreset> = BuiltInPresets.createAll()
+    val allPresets: List<AmbiencePreset> get() = builtInPresets + userPresets
 }
-
-data class AppChromeState(
-    val playbackState: PlaybackState = PlaybackState.IDLE,
-    val message: String? = null,
-)
 
 sealed interface AmbienceUiEvent {
     data class ShowMessage(val message: String) : AmbienceUiEvent
@@ -63,6 +55,7 @@ sealed interface AmbienceUiEvent {
 
 class AmbienceViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val app = application
     private val json = Json { ignoreUnknownKeys = true }
 
     val libraryRepository: SoundLibraryRepository = (application as com.scene.ambience.AmbienceApplication).libraryRepository
@@ -95,33 +88,6 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, AmbienceUiState())
 
-    /**
-     * Most screens do not display the running countdown. Strip timer-only fields so a
-     * once-per-second timer update does not invalidate the mixer, presets or settings UI.
-     */
-    val nonTimerUiState: StateFlow<AmbienceUiState> = uiState
-        .map { state ->
-            val snapshot = state.snapshot
-            if (snapshot == null || (snapshot.sleepTimerRemainingMs == null && !snapshot.sleepFading)) {
-                state
-            } else {
-                state.copy(snapshot = snapshot.copy(sleepTimerRemainingMs = null, sleepFading = false))
-            }
-        }
-        .distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, AmbienceUiState())
-
-    /** Minimal state used by the persistent app chrome. */
-    val chromeState: StateFlow<AppChromeState> = uiState
-        .map { state ->
-            AppChromeState(
-                playbackState = state.snapshot?.playbackState ?: PlaybackState.IDLE,
-                message = state.snapshot?.message,
-            )
-        }
-        .distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, AppChromeState())
-
     init {
         controllerRepository.connect()
 
@@ -153,7 +119,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
             _events.tryEmit(AmbienceUiEvent.ShowMessage("no_active_sources"))
             return
         }
-        if (snapshot?.playbackState == PlaybackState.PLAYING) {
+        if (snapshot?.playbackState == com.scene.ambience.data.model.PlaybackState.PLAYING) {
             controllerRepository.pause()
         } else {
             controllerRepository.play()
@@ -168,7 +134,10 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
 
     fun setMasterMuted(muted: Boolean) = controllerRepository.setMasterMuted(muted)
 
-    fun setSourceVolume(id: String, volume: Float) = controllerRepository.setSourceVolume(id, volume)
+    fun setSourceVolume(id: String, volume: Float) {
+        Log.d("AmbiencePlayback", "ViewModelVolume source=$id value=$volume")
+        controllerRepository.setSourceVolume(id, volume)
+    }
 
     fun setSourceMuted(id: String, muted: Boolean) = controllerRepository.setSourceMuted(id, muted)
 
@@ -193,7 +162,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         val mixJson = json.encodeToString(MixState.serializer(), preset.mix)
         controllerRepository.applyMix(mixJson, preset.id)
         val snapshot = uiState.value.snapshot
-        if (snapshot?.playbackState != PlaybackState.PLAYING) {
+        if (snapshot?.playbackState != com.scene.ambience.data.model.PlaybackState.PLAYING) {
             controllerRepository.play()
         }
     }
@@ -293,9 +262,4 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun clearMessage() = controllerRepository.clearMessage()
-
-    override fun onCleared() {
-        controllerRepository.release()
-        super.onCleared()
-    }
 }
