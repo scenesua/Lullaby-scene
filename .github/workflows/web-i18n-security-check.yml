@@ -2,10 +2,6 @@ name: Validate web i18n and security
 
 on:
   pull_request:
-    paths:
-      - 'web/**'
-      - '.github/scripts/web-i18n-security-smoke.mjs'
-      - '.github/workflows/web-i18n-security-check.yml'
   push:
     branches:
       - work/lullaby-web-foundation
