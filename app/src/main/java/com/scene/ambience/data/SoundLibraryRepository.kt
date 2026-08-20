@@ -87,7 +87,7 @@ class SoundLibraryRepository(context: Context) {
 
             SoundLibraryState(
                 version = maxOf(manifest.version, sceneSources?.version ?: 1),
-                sources = mergedSources.filter { it.allFiles.isNotEmpty() },
+                sources = mergedSources.filter { it.hasFiles },
                 categoryPresets = presets?.categories ?: emptyMap(),
                 licenses = (legacyLicenses?.entries.orEmpty() + externalLicenses?.entries.orEmpty())
                     .distinctBy { it.assetId },
@@ -141,8 +141,7 @@ class SoundLibraryRepository(context: Context) {
     private inline fun <reified T> decodeOptional(path: String): T? =
         readAsset(path)?.let { runCatching { json.decodeFromString<T>(it) }.getOrNull() }
 
-    fun manifestFor(sourceId: String): SourceManifest? =
-        _state.value.sources.firstOrNull { it.id == sourceId }
+    fun manifestFor(sourceId: String): SourceManifest? = _state.value.manifestFor(sourceId)
 
     private fun readAsset(path: String): String? = try {
         appContext.assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() }
