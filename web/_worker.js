@@ -1,4 +1,4 @@
-// Page-view counter Worker v8. Legacy CI marker only: /visitor-count-v1.js?v=2
+// Page-view counter Worker v10. Legacy CI marker only: /visitor-count-v1.js?v=2
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
 const PUBLIC_COUNTER_BASE='https://countapi.mileshilliard.com/api/v1';
 const DAY_RE=/^\d{4}-\d{2}-\d{2}$/;
@@ -61,7 +61,7 @@ async function pageviewsD1(request,env,day){
     env.VISITOR_DB.prepare('SELECT value FROM pageview_counts WHERE counter_key=?').bind(dayKey),
     env.VISITOR_DB.prepare("SELECT value FROM pageview_counts WHERE counter_key='total'"),
   ]);
-  return json({available:true,backend:'d1',mode:'pageviews',version:8,day,today:Number(today.results?.[0]?.value||0),total:Number(total.results?.[0]?.value||0),incremented:request.method==='POST'});
+  return json({available:true,backend:'d1',mode:'pageviews',version:10,day,today:Number(today.results?.[0]?.value||0),total:Number(total.results?.[0]?.value||0),incremented:request.method==='POST'});
 }
 
 async function counterFetch(name,increment){
@@ -80,7 +80,7 @@ async function pageviewsPublic(request,day){
       counterFetch('lullaby-scene-pageviews-total-v1',increment),
     ]);
     if(increment&&(today<1||total<1))throw new Error('CountAPI page-view increment was not confirmed');
-    return json({available:true,backend:'countapi.mileshilliard-v1',mode:'pageviews',version:8,day,today,total,incremented:increment});
+    return json({available:true,backend:'countapi.mileshilliard-v1',mode:'pageviews',version:10,day,today,total,incremented:increment});
   }catch(error){return json({available:false,error:'Page-view counter backend unavailable',detail:String(error?.message||error)},503)}
 }
 async function pageviews(request,env){
@@ -91,8 +91,8 @@ async function pageviews(request,env){
   return pageviewsPublic(request,day);
 }
 
-class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12"><link rel="stylesheet" href="/mixer-controls-v14.css?v=14">',{html:true})}}
-class BodyInjector{element(element){element.append('<script src="/visitor-count-v1.js?v=7"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/i18n-catalog-v1.js?v=1"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script>',{html:true})}}
+class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=12"><link rel="stylesheet" href="/mixer-controls-v14.css?v=14"><link rel="stylesheet" href="/mobile-android-shell-v1.css?v=2">',{html:true})}}
+class BodyInjector{element(element){element.append('<script src="/site-locales-v10.js?v=11"></script><script src="/visitor-count-v1.js?v=7"></script><script src="/player-runtime-bridge-v12.js?v=12"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=14"></script><script src="/simple-scene-quick-mixer-v12.js?v=12"></script><script src="/saved-scenes-v13.js?v=13"></script><script src="/scene-recipe-v1.js?v=1"></script><script src="/i18n-runtime-v3.js?v=3"></script><script src="/mobile-android-shell-v1.js?v=2"></script>',{html:true})}}
 export default{
   async fetch(request,env){
     const url=new URL(request.url);
