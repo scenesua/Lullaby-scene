@@ -24,6 +24,18 @@
   function showControls(){
     if(!overlay)return;overlay.classList.add('show-controls');clearTimeout(hideTimer);hideTimer=setTimeout(()=>{if(!overlay?.querySelector('.blackout-slider-knob.is-dragging'))overlay.classList.remove('show-controls')},5000);
   }
+  function fullscreenElement(){return document.fullscreenElement||document.webkitFullscreenElement||null}
+  function requestFullscreenImmediate(){
+    if(fullscreenElement())return Promise.resolve(true);
+    const root=document.documentElement;
+    if(typeof root.requestFullscreen==='function'){
+      try{return Promise.resolve(root.requestFullscreen()).then(()=>true).catch(()=>false)}catch{return Promise.resolve(false)}
+    }
+    if(typeof root.webkitRequestFullscreen==='function'){
+      try{root.webkitRequestFullscreen();return Promise.resolve(true)}catch{return Promise.resolve(false)}
+    }
+    return Promise.resolve(false);
+  }
   function bindOverlay(){
     const track=overlay.querySelector('.blackout-slider'),knob=overlay.querySelector('.blackout-slider-knob');let progress=0,dragging=false;
     const setProgress=value=>{progress=Math.max(0,Math.min(1,value));const travel=Math.max(0,track.clientWidth-knob.offsetWidth-10);track.style.setProperty('--blackout-slide',`${travel*progress}px`)};
@@ -31,18 +43,15 @@
     knob.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();dragging=true;knob.classList.add('is-dragging');knob.setPointerCapture?.(e.pointerId);showControls()});
     knob.addEventListener('pointermove',e=>{if(!dragging)return;const rect=track.getBoundingClientRect(),travel=Math.max(1,rect.width-knob.offsetWidth-10);setProgress((e.clientX-rect.left-knob.offsetWidth/2-5)/travel)});
     knob.addEventListener('pointerup',e=>{if(!dragging)return;knob.releasePointerCapture?.(e.pointerId);finish()});knob.addEventListener('pointercancel',finish);
-    overlay.addEventListener('pointerup',e=>{if(e.target.closest('.blackout-slider'))return;if(isSlave&&!document.fullscreenElement)tryFullscreen();showControls()});
+    overlay.addEventListener('pointerup',e=>{if(e.target.closest('.blackout-slider'))return;if(!fullscreenElement())requestFullscreenImmediate();showControls()});
     window.addEventListener('resize',()=>setProgress(progress));
-  }
-  async function tryFullscreen(screenTarget=null){
-    if(document.fullscreenElement||!document.documentElement.requestFullscreen)return;
-    try{await document.documentElement.requestFullscreen(screenTarget?{navigationUI:'hide',screen:screenTarget}:{navigationUI:'hide'})}
-    catch{try{await document.documentElement.requestFullscreen()}catch{}}
   }
   function activateLocal(){ensureOverlay();active=true;document.body.classList.add('blackout-lock');overlay.classList.add('is-active');overlay.classList.remove('show-controls');overlay.setAttribute('aria-hidden','false')}
   async function deactivateLocal(closeSlave=false){
     active=false;clearTimeout(hideTimer);overlay?.classList.remove('is-active','show-controls');overlay?.setAttribute('aria-hidden','true');document.body.classList.remove('blackout-lock');
-    if(document.fullscreenElement){try{await document.exitFullscreen()}catch{}}
+    if(fullscreenElement()){
+      try{if(typeof document.exitFullscreen==='function')await document.exitFullscreen();else if(typeof document.webkitExitFullscreen==='function')document.webkitExitFullscreen()}catch{}
+    }
     if(closeSlave)setTimeout(()=>{try{window.close()}catch{}},30);
   }
   function notifyExit(){channel?.postMessage({type:'exit'});if(window.opener&&window.opener!==window){try{window.opener.postMessage({type:'lullaby-blackout-exit'},location.origin)}catch{}}}
@@ -60,9 +69,11 @@
   }
   async function enterBlackout(){
     activateLocal();channel?.postMessage({type:'enter'});
-    let details=null;
-    if('getScreenDetails'in window&&window.screen&&'isExtended'in window.screen&&window.screen.isExtended){try{details=await window.getScreenDetails();openOtherDisplays(details)}catch{}}
-    await tryFullscreen(details?.currentScreen||null);
+    // Fullscreen must be requested synchronously from the user's click. Waiting for
+    // Window Management permission first consumes the browser's user activation.
+    const fullscreenAttempt=requestFullscreenImmediate();
+    if('getScreenDetails'in window&&window.screen&&'isExtended'in window.screen&&window.screen.isExtended){try{const details=await window.getScreenDetails();openOtherDisplays(details)}catch{}}
+    await fullscreenAttempt;
   }
   function bindBlackoutButton(button){
     if(!button||button.dataset.blackoutBound==='1')return;button.dataset.blackoutBound='1';button.addEventListener('click',enterBlackout);
@@ -75,7 +86,7 @@
       const settings=rail.querySelector('[data-view="settings"]'),button=document.createElement('button');
       button.className='rail-item blackout-rail-item';button.type='button';button.dataset.blackoutButton='';button.dataset.blackoutPlacement='rail';
       button.innerHTML='<span class="blackout-rail-glyph" aria-hidden="true">■</span><span data-blackout-label>Black Screen</span>';
-      settings?.after(button)||rail.insertBefore(button,rail.querySelector('.rail-spacer'));
+      if(settings)settings.after(button);else rail.insertBefore(button,rail.querySelector('.rail-spacer'));
     }
 
     const inspector=$('.desktop-inspector');
@@ -100,7 +111,7 @@
   try{matchMedia('(prefers-color-scheme: light)').addEventListener('change',syncThemeColor)}catch{}
   document.addEventListener('lullaby-language-changed',localize);
 
-  if(isSlave){document.documentElement.classList.add('blackout-slave');activateLocal();tryFullscreen();window.addEventListener('beforeunload',()=>notifyExit());return}
+  if(isSlave){document.documentElement.classList.add('blackout-slave');activateLocal();requestFullscreenImmediate();window.addEventListener('beforeunload',()=>notifyExit());return}
   injectButtons();setTimeout(injectButtons,250);setTimeout(injectButtons,900);syncThemeColor();
   window.LullabyBlackout={enter:enterBlackout,exit:exitEverywhere,get active(){return active}};
 })();
