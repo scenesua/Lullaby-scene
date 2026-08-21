@@ -15,13 +15,18 @@ This is a prerelease build for testing before the stable v1.1.0 release.
 - Stops rebuilding built-in presets for every UI-state emission and persists the last mix only when the mix actually changes.
 - Cleans up MediaController parse/reconnect work with the ViewModel lifecycle.
 
+## Update channel fix
+
+- Debug and `space-preview` APKs are no longer treated as in-place application updates.
+- The prerelease channel now considers only installable Lullaby Scene release APKs when choosing the newest version.
+
 ## Existing v1.1.0 prerelease features retained
 
 - Scene-first home screen and Passenger Aircraft Cabin journey runtime.
 - Journey seek and previous/next phase controls.
 - Semantic Macro controls and Android FX rack, including source-aware Space processing.
 - Web-compatible `lullaby.scene.recipe` v1 sharing/import.
-- Prerelease update channel and persistent prerelease signing flow.
+- Prerelease update channel.
 
 ## Important
 
