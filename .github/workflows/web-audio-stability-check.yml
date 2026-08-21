@@ -1,0 +1,44 @@
+name: Validate web audio stability
+
+on:
+  pull_request:
+    paths:
+      - 'web/audio-stability-v1.js'
+      - 'web/_worker.js'
+      - 'web/sw.js'
+      - '.github/workflows/web-audio-stability-check.yml'
+  push:
+    branches:
+      - work/lullaby-web-foundation
+    paths:
+      - 'web/audio-stability-v1.js'
+      - 'web/_worker.js'
+      - 'web/sw.js'
+      - '.github/workflows/web-audio-stability-check.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check runtime syntax
+        run: |
+          node --check web/audio-stability-v1.js
+          node --check web/_worker.js
+          node --check web/sw.js
+      - name: Check stability wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq '/audio-stability-v1.js?v=1' web/_worker.js
+          grep -Fq '/audio-stability-v1.js?v=1' web/sw.js
+          grep -Fq "lullaby-scene-site-v35" web/sw.js
+          grep -Fq "createDynamicsCompressor" web/audio-stability-v1.js
+          grep -Fq "master.disconnect()" web/audio-stability-v1.js
+          grep -Fq "node.src.connect(node.gain)" web/audio-stability-v1.js
+          grep -Fq "document.hidden" web/audio-stability-v1.js
+          grep -Fq "BACKGROUND_EVENT_MIN_MS" web/audio-stability-v1.js
+          grep -Fq "mediaSession.playbackState" web/audio-stability-v1.js
