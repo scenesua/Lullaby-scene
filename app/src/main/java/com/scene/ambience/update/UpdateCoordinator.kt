@@ -59,6 +59,20 @@ data class UpdateUiState(
     val messageKey: String? = null,
 )
 
+/** Preview/debug artifacts install alongside the app and must never be offered as in-place updates. */
+internal fun isInstallableUpdateTag(tag: String): Boolean {
+    val normalized = tag.lowercase()
+    return "preview" !in normalized && "debug" !in normalized
+}
+
+internal fun isInstallableUpdateApkName(name: String): Boolean {
+    val normalized = name.lowercase()
+    return normalized.startsWith("lullaby-scene-") &&
+        normalized.endsWith(".apk") &&
+        "preview" !in normalized &&
+        "debug" !in normalized
+}
+
 /** GitHub-distribution updater. Stable-only by default; prereleases are opt-in. */
 class UpdateCoordinator(context: Context) {
     private val appContext = context.applicationContext
@@ -195,6 +209,7 @@ class UpdateCoordinator(context: Context) {
             val text = connection.inputStream.bufferedReader().use { it.readText() }
             val releases = json.decodeFromString<List<GithubRelease>>(text)
                 .filterNot { it.draft }
+                .filter { isInstallableUpdateTag(it.tagName) }
                 .filter { release -> release.assets.any(::isAppApk) }
             releases.maxWithOrNull { a, b -> compareVersions(a.tagName, b.tagName) }
                 ?: throw IllegalStateException("no published release")
@@ -212,9 +227,7 @@ class UpdateCoordinator(context: Context) {
         }
     }
 
-    private fun isAppApk(asset: GithubAsset): Boolean =
-        asset.name.startsWith("Lullaby-Scene-", ignoreCase = true) &&
-            asset.name.endsWith(".apk", ignoreCase = true)
+    private fun isAppApk(asset: GithubAsset): Boolean = isInstallableUpdateApkName(asset.name)
 
     private fun fetchChecksum(url: String): String? {
         val conn = open(url)
