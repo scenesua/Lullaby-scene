@@ -7,6 +7,11 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val releaseKeystorePath = providers.environmentVariable("LULLABY_ANDROID_KEYSTORE_PATH").orNull
+val releaseStorePassword = providers.environmentVariable("LULLABY_ANDROID_STORE_PASSWORD").orNull
+val releaseKeyAlias = providers.environmentVariable("LULLABY_ANDROID_KEY_ALIAS").orNull
+val releaseKeyPassword = providers.environmentVariable("LULLABY_ANDROID_KEY_PASSWORD").orNull
+
 android {
     namespace = "com.scene.ambience"
     compileSdk = 36
@@ -15,9 +20,25 @@ android {
         applicationId = "com.scene.ambience"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 8
+        versionName = "1.1.0-alpha.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (
+            !releaseKeystorePath.isNullOrBlank() &&
+            !releaseStorePassword.isNullOrBlank() &&
+            !releaseKeyAlias.isNullOrBlank() &&
+            !releaseKeyPassword.isNullOrBlank()
+        ) {
+            create("stableRelease") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
@@ -27,7 +48,9 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
+            // Never fall back to the per-machine/per-runner debug key for the
+            // production package. CI supplies a persistent private release key.
+            signingConfigs.findByName("stableRelease")?.let { signingConfig = it }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "sources": {
+    "fire": [
+      {
+        "asset_id": "fire_event_generated_001",
+        "path": "ambience/fire/events/fire_event_generated_001.ogg",
+        "duration_ms": 550,
+        "event_weight": 1.0,
+        "cooldown_ms": 0,
+        "role": "crackle",
+        "tags": ["fire", "crackle", "generated"],
+        "provenance_id": "generated_fire_events_v1"
+      },
+      {
+        "asset_id": "fire_event_generated_002",
+        "path": "ambience/fire/events/fire_event_generated_002.ogg",
+        "duration_ms": 800,
+        "event_weight": 1.0,
+        "cooldown_ms": 0,
+        "role": "crackle",
+        "tags": ["fire", "crackle", "generated"],
+        "provenance_id": "generated_fire_events_v1"
+      },
+      {
+        "asset_id": "fire_event_generated_003",
+        "path": "ambience/fire/events/fire_event_generated_003.ogg",
+        "duration_ms": 420,
+        "event_weight": 1.0,
+        "cooldown_ms": 0,
+        "role": "crackle",
+        "tags": ["fire", "crackle", "generated"],
+        "provenance_id": "generated_fire_events_v1"
+      }
+    ],
+    "train": [
+      {
+        "asset_id": "train_event_generated_001",
+        "path": "ambience/train/events/train_event_generated_001.ogg",
+        "duration_ms": 1100,
+        "event_weight": 8.0,
+        "cooldown_ms": 0,
+        "role": "rail_impact",
+        "tags": ["train", "rail_joint", "generated"],
+        "provenance_id": "generated_train_events_v1"
+      }
+    ]
+  }
+}

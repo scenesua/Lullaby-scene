@@ -3,34 +3,34 @@ package com.scene.ambience.media
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import com.google.common.util.concurrent.Futures
-import com.google.common.util.concurrent.ListenableFuture
 import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSession.ConnectionResult
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommands
 import androidx.media3.session.SessionResult
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
 import com.scene.ambience.AmbienceApplication
 import com.scene.ambience.MainActivity
 import com.scene.ambience.R
-import com.scene.ambience.data.model.PlaybackState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-/**
- * Foreground playback service owning the [AmbienceEngine] and its
- * [MediaSession]. Engine snapshots are pushed to controllers through
- * session extras; all mixer commands arrive as custom session commands.
- */
+/** Foreground playback service owning both the low-level mixer and living-scene runtime. */
 class AmbiencePlaybackService : MediaSessionService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private lateinit var engine: AmbienceEngine
+    private lateinit var sceneOrchestrator: SceneOrchestrator
     private lateinit var sessionPlayer: AmbienceSessionPlayer
     private lateinit var session: MediaSession
     private lateinit var notificationController: NotificationController
@@ -39,7 +39,6 @@ class AmbiencePlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
         application = super.getApplication() as AmbienceApplication
-
         val library = application.libraryRepository.requireLibrary()
         engine = AmbienceEngine(
             context = this,
@@ -47,14 +46,21 @@ class AmbiencePlaybackService : MediaSessionService() {
             scope = serviceScope,
             focusPolicyProvider = { application.settingsRepository.settingsFlow.value.focusPolicy },
             eqSettingsProvider = { application.settingsRepository.settingsFlow.value.eqSettings },
+            fxSettingsProvider = { application.settingsRepository.settingsFlow.value.fxSettings },
             onStopRequested = { stopSelf() },
+        )
+        sceneOrchestrator = SceneOrchestrator(
+            engine = engine,
+            scope = serviceScope,
+            eqSettingsProvider = { application.settingsRepository.settingsFlow.value.eqSettings },
+            isSourceAvailable = { id -> library.manifestFor(id) != null },
         )
 
         sessionPlayer = AmbienceSessionPlayer(engine)
         session = MediaSession.Builder(this, sessionPlayer)
             .setSessionActivity(launcherPendingIntent())
             .setCallback(ServiceCallback())
-            .setSessionExtras(Commands.snapshotBundle(engine.snapshot()))
+            .setSessionExtras(Commands.snapshotBundle(engine.snapshot(), sceneOrchestrator.state.value))
             .build()
         addSession(session)
         notificationController = NotificationController(
@@ -64,9 +70,18 @@ class AmbiencePlaybackService : MediaSessionService() {
         setMediaNotificationProvider(notificationController)
 
         serviceScope.launch {
-            engine.state.collect { snapshot ->
-                session.setSessionExtras(Commands.snapshotBundle(snapshot))
+            combine(engine.state, sceneOrchestrator.state) { engineSnapshot, sceneSnapshot ->
+                engineSnapshot to sceneSnapshot
             }
+                .distinctUntilChanged()
+                .map { (engineSnapshot, sceneSnapshot) ->
+                    Commands.snapshotBundle(engineSnapshot, sceneSnapshot)
+                }
+                // JSON encoding is pure CPU work; keep it off the service/UI looper.
+                .flowOn(Dispatchers.Default)
+                // If the scene clock advances while encoding, only deliver the newest bundle.
+                .conflate()
+                .collect { extras -> session.setSessionExtras(extras) }
         }
 
         restoreState()
@@ -74,6 +89,8 @@ class AmbiencePlaybackService : MediaSessionService() {
 
     private fun restoreState() {
         val settings = application.settingsRepository.settingsFlow.value
+        engine.applyFx(settings.fxSettings)
+        engine.applyEqualizer(settings.eqSettings.enabled, settings.eqSettings.presetName, settings.eqSettings.bands)
         val mix = settings.lastMix ?: return
         engine.applyMix(mix, settings.lastPresetId)
         val timerEnd = settings.sleepTimerEndEpochMs
@@ -91,6 +108,7 @@ class AmbiencePlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        sceneOrchestrator.release()
         engine.release()
         sessionPlayer.release()
         session.release()
@@ -136,17 +154,15 @@ class AmbiencePlaybackService : MediaSessionService() {
             Commands.SET_MASTER_MUTED -> engine.setMasterMuted(args.getBoolean(Commands.EXTRA_MUTED))
             Commands.SET_SOURCE_VOLUME -> {
                 val id = args.getString(Commands.EXTRA_SOURCE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
-                val volume = args.getFloat(Commands.EXTRA_VOLUME, 0f)
-                Log.d("AmbiencePlayback", "ServiceCommand source=$id value=$volume")
-                engine.setSourceVolume(id, volume)
+                engine.setSourceVolume(id, args.getFloat(Commands.EXTRA_VOLUME, 0f))
             }
             Commands.SET_SOURCE_MUTED -> {
                 val id = args.getString(Commands.EXTRA_SOURCE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
                 engine.setSourceMuted(id, args.getBoolean(Commands.EXTRA_MUTED))
             }
             Commands.APPLY_MIX -> {
-                val json = args.getString(Commands.EXTRA_MIX_JSON)
-                val mix = if (json != null) com.scene.ambience.data.model.MixState.fromJson(json) else null
+                val raw = args.getString(Commands.EXTRA_MIX_JSON)
+                val mix = if (raw != null) com.scene.ambience.data.model.MixState.fromJson(raw) else null
                 if (mix != null) engine.applyMix(mix, args.getString(Commands.EXTRA_PRESET_ID))
             }
             Commands.DISABLE_ALL_SOURCES -> engine.disableAllSources()
@@ -161,6 +177,20 @@ class AmbiencePlaybackService : MediaSessionService() {
                 args.getString(Commands.EXTRA_EQ_PRESET) ?: "",
                 args.getIntegerArrayList(Commands.EXTRA_EQ_BANDS) ?: emptyList(),
             )
+            Commands.SET_FX -> engine.applyFx(Commands.fxFrom(args))
+            Commands.START_SCENE -> {
+                val id = args.getString(Commands.EXTRA_SCENE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
+                val started = sceneOrchestrator.start(id, args.getInt(Commands.EXTRA_ARC_MINUTES, 480))
+                if (!started) return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
+            }
+            Commands.STOP_SCENE -> sceneOrchestrator.stopScene()
+            Commands.SET_SCENE_MACRO -> {
+                val key = args.getString(Commands.EXTRA_MACRO_KEY) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
+                sceneOrchestrator.setMacro(key, args.getFloat(Commands.EXTRA_MACRO_VALUE, 0.5f))
+            }
+            Commands.SET_SCENE_ARC -> sceneOrchestrator.setDurationMinutes(args.getInt(Commands.EXTRA_ARC_MINUTES, 480))
+            Commands.SEEK_SCENE -> sceneOrchestrator.seekToElapsedMs(args.getLong(Commands.EXTRA_ELAPSED_MS, 0L))
+            Commands.STEP_SCENE_PHASE -> sceneOrchestrator.stepPhase(args.getInt(Commands.EXTRA_DIRECTION, 1))
             else -> return SessionResult(SessionResult.RESULT_ERROR_UNKNOWN)
         }
         return SessionResult(SessionResult.RESULT_SUCCESS)

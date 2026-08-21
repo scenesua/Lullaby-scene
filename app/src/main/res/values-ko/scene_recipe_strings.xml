@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scene_recipe_share_title">이 씬 공유</string>
+    <string name="scene_recipe_share_desc">같은 링크를 Android Lullaby Scene 앱과 웹 플레이어에서 모두 열 수 있습니다.</string>
+    <string name="scene_recipe_share">링크 공유</string>
+    <string name="scene_recipe_share_chooser">Lullaby Scene 공유</string>
+    <string name="scene_recipe_share_unavailable">공유하려면 소리를 하나 이상 켜 주세요.</string>
+</resources>

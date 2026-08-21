@@ -1,9 +1,9 @@
 package com.scene.ambience.media
 
 import android.content.Context
-import android.media.AudioManager
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import androidx.media3.common.AudioAttributes
@@ -19,17 +19,20 @@ import com.scene.ambience.util.FilePicker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.android.asCoroutineDispatcher
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import java.util.concurrent.CountDownLatch
 
 /**
- * Continuous-loop player: two ExoPlayers cross-faded with an equal-power
- * envelope. Files rotate without consecutive repeats, with varying start
- * offsets (section 21).
+ * Continuous ambience playback.
+ *
+ * All sound-source instances share one playback thread instead of creating a
+ * HandlerThread per source. Players are allocated lazily on that looper, so
+ * enabling several sources never blocks the service/UI thread. A single-file
+ * seamless source uses one ExoPlayer; only cross-faded sources allocate a
+ * standby player.
  */
 class ContinuousSourcePlayer(
     private val context: Context,
@@ -47,16 +50,6 @@ class ContinuousSourcePlayer(
             Log.e(TAG, "PlayerError source=$sourceId code=${error.errorCodeName}")
         }
 
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (isPlaying) Log.d(TAG, "PlayerStart source=$sourceId isPlaying=true")
-        }
-
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT) {
-                Log.d(TAG, "LoopTransition source=$sourceId reason=REPEAT")
-            }
-        }
-
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
                 Log.w(TAG, "LoopState source=$sourceId state=ENDED")
@@ -64,31 +57,22 @@ class ContinuousSourcePlayer(
         }
     }
 
-    private val playerThread = HandlerThread("ambience-player-$sourceId").apply { start() }
-    private val handler = Handler(playerThread.looper)
-    private val dispatcher = handler.asCoroutineDispatcher()
-    private val players = buildPlayers()
+    private val handler = Handler(sharedLooper)
     private val picker = FilePicker()
+    private val failedFiles = mutableSetOf<String>()
+    private val playerCount = if (loopMode == "seamless" && files.size == 1) 1 else 2
+    private val envelopes = FloatArray(playerCount) { index -> if (index == 0) 1f else 0f }
+
+    private var players: Array<ExoPlayer>? = null
     private var job: Job? = null
-    private var failedFiles = mutableSetOf<String>()
 
-    private val envelopes = floatArrayOf(1f, 0f)
-
-    private fun buildPlayers(): Array<ExoPlayer> {
-        val latch = CountDownLatch(1)
-        val result = arrayOfNulls<ExoPlayer>(2)
-        handler.post {
-            result[0] = createExoPlayer(context)
-            result[1] = createExoPlayer(context)
-            latch.countDown()
-        }
-        latch.await()
-        return arrayOf(result[0]!!, result[1]!!)
-    }
+    @Volatile private var baseGain = volumeProvider().coerceIn(0f, 1f)
+    private val volumeUpdateRunnable = Runnable { applyEnvelopesNow() }
 
     fun start() {
-        stop()
-        job = scope.launch(dispatcher) {
+        job?.cancel()
+        job = scope.launch(sharedDispatcher) {
+            ensurePlayers().forEach { it.stop() }
             runLoop()
         }
     }
@@ -98,31 +82,47 @@ class ContinuousSourcePlayer(
     fun pause() {
         job?.cancel()
         job = null
-        handler.post { players.forEach { it.pause() } }
+        handler.post { players?.forEach { it.pause() } }
     }
 
     fun stop() {
         job?.cancel()
         job = null
-        handler.post { players.forEach { it.stop() } }
+        handler.post { players?.forEach { it.stop() } }
     }
 
     fun release() {
         job?.cancel()
         job = null
+        handler.removeCallbacks(volumeUpdateRunnable)
         handler.post {
-            players.forEach { it.release() }
-            playerThread.quitSafely()
+            players?.forEach { it.release() }
+            players = null
         }
     }
 
     fun applyBaseVolume(baseGain: Float) {
-        handler.post {
-            players.forEachIndexed { index, player ->
-                player.volume = baseGain * envelopes[index]
-            }
+        this.baseGain = baseGain.coerceIn(0f, 1f)
+        if (Looper.myLooper() == sharedLooper) {
+            applyEnvelopesNow()
+        } else {
+            handler.removeCallbacks(volumeUpdateRunnable)
+            handler.post(volumeUpdateRunnable)
         }
     }
+
+    private fun ensurePlayers(): Array<ExoPlayer> {
+        players?.let { return it }
+        check(Looper.myLooper() == sharedLooper) {
+            "ContinuousSourcePlayer must create ExoPlayer on the shared playback looper"
+        }
+        val created = Array(playerCount) { createExoPlayer(context) }
+        players = created
+        applyEnvelopesNow()
+        return created
+    }
+
+    private fun player(index: Int): ExoPlayer = ensurePlayers()[index]
 
     private fun createExoPlayer(context: Context): ExoPlayer {
         val audioAttributes = AudioAttributes.Builder()
@@ -130,7 +130,8 @@ class ContinuousSourcePlayer(
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
             .build()
         return ExoPlayer.Builder(context)
-            .setAudioAttributes(audioAttributes, /* handleAudioFocus = */ false)
+            .setLooper(sharedLooper)
+            .setAudioAttributes(audioAttributes, false)
             .setHandleAudioBecomingNoisy(false)
             .build()
             .also {
@@ -140,63 +141,54 @@ class ContinuousSourcePlayer(
                         eventTime: AnalyticsListener.EventTime,
                         audioSessionId: Int,
                     ) {
-                        if (audioSessionId != C.AUDIO_SESSION_ID_UNSET) {
-                            onAudioSessionId(audioSessionId)
-                        }
+                        if (audioSessionId != C.AUDIO_SESSION_ID_UNSET) onAudioSessionId(audioSessionId)
                     }
                 })
             }
     }
 
-    private fun uriFor(asset: AudioAssetManifest): android.net.Uri =
-        android.net.Uri.parse("asset:///${asset.path}")
+    private fun uriFor(asset: AudioAssetManifest): android.net.Uri = android.net.Uri.parse("asset:///${asset.path}")
 
     private suspend fun runLoop() {
-        if (loopMode == "seamless" && files.size == 1) {
+        ensurePlayers()
+        if (playerCount == 1) {
             playSingleFile(files.single())
             return
         }
-
         var current = 0
         var currentFile = nextFile() ?: return
         envelopes[0] = 1f
         envelopes[1] = 0f
-        prepareAndPlay(current, currentFile, repeat = false, initialEnvelope = 1f)
+        prepareAndPlay(current, currentFile, false, 1f)
         while (kotlin.coroutines.coroutineContext.isActive) {
             var attemptedFile: AudioAssetManifest? = null
             try {
                 val configuredFade = currentFile.crossfadeMs.takeIf { it > 0L } ?: AmbienceEngine.CROSSFADE_MS
-                val reserve = minOf(configuredFade, currentFile.durationMs / 3)
-                    .coerceAtLeast(200L)
+                val reserve = minOf(configuredFade, currentFile.durationMs / 3).coerceAtLeast(200L)
                 delayUntilRemaining(current, currentFile, reserve + PREPARE_LEAD_MS)
-
                 val nextFile = nextFile() ?: continue
                 attemptedFile = nextFile
                 val standby = 1 - current
-                prepare(standby, nextFile, repeat = false, initialEnvelope = 0f)
+                prepare(standby, nextFile, false, 0f)
                 delayUntilRemaining(current, currentFile, reserve)
                 playPrepared(standby)
-                val remaining = (playableDuration(current, currentFile) - players[current].currentPosition)
-                    .coerceAtLeast(50L)
-                val actualFade = minOf(reserve, remaining)
-                Log.d(TAG, "CrossfadeStart source=$sourceId from=${currentFile.assetId} to=${nextFile.assetId}")
-                crossfade(outgoingIndex = current, incomingIndex = standby, fadeMs = actualFade)
-                players[current].stop()
-                players[current].clearMediaItems()
-                Log.d(TAG, "CrossfadeEnd source=$sourceId item=${nextFile.assetId}")
+                val remaining = (playableDuration(current, currentFile) - player(current).currentPosition).coerceAtLeast(50L)
+                crossfade(current, standby, minOf(reserve, remaining))
+                player(current).stop()
+                player(current).clearMediaItems()
                 current = standby
                 currentFile = nextFile
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 attemptedFile?.let { failedFiles.add(it.assetId) }
                 onPlayerError(sourceId)
-                if (!players[current].isPlaying) {
+                if (!player(current).isPlaying) {
                     val recovery = nextFile() ?: return
                     val standby = 1 - current
-                    prepareAndPlay(standby, recovery, repeat = false, initialEnvelope = 1f)
-                    players[current].stop()
-                    players[current].clearMediaItems()
+                    prepareAndPlay(standby, recovery, false, 1f)
+                    player(current).stop()
+                    player(current).clearMediaItems()
                     current = standby
                     currentFile = recovery
                 }
@@ -205,8 +197,8 @@ class ContinuousSourcePlayer(
     }
 
     private suspend fun playSingleFile(file: AudioAssetManifest) {
-        envelopes[1] = 0f
-        prepareAndPlay(index = 0, file = file, repeat = true, initialEnvelope = 1f)
+        envelopes[0] = 1f
+        prepareAndPlay(0, file, true, 1f)
         awaitCancellation()
     }
 
@@ -224,7 +216,7 @@ class ContinuousSourcePlayer(
     }
 
     private suspend fun prepare(index: Int, file: AudioAssetManifest, repeat: Boolean, initialEnvelope: Float) {
-        val player = players[index]
+        val player = player(index)
         player.stop()
         player.clearMediaItems()
         player.repeatMode = if (repeat) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
@@ -234,17 +226,15 @@ class ContinuousSourcePlayer(
             while (player.playbackState != Player.STATE_READY) delay(10L)
         }
         envelopes[index] = initialEnvelope
-        applyEnvelopes()
-        Log.d(TAG, "LoopPrepare source=$sourceId item=${file.assetId} repeat=${player.repeatMode}")
+        applyEnvelopesNow()
     }
 
     private suspend fun playPrepared(index: Int) {
-        val player = players[index]
+        val player = player(index)
         player.play()
         withTimeout(START_TIMEOUT_MS) {
             while (!player.isPlaying) delay(10L)
         }
-        Log.d(TAG, "LoopPlay source=$sourceId")
     }
 
     private suspend fun crossfade(outgoingIndex: Int, incomingIndex: Int, fadeMs: Long) {
@@ -257,22 +247,22 @@ class ContinuousSourcePlayer(
             val (outGain, inGain) = CrossfadeEnvelope.gains(t)
             envelopes[outgoingIndex] = outGain
             envelopes[incomingIndex] = inGain
-            applyEnvelopes()
+            applyEnvelopesNow()
         }
     }
 
     private fun playableDuration(index: Int, file: AudioAssetManifest): Long =
-        players[index].duration.takeIf { it > 0L && it != C.TIME_UNSET } ?: file.durationMs
+        player(index).duration.takeIf { it > 0L && it != C.TIME_UNSET } ?: file.durationMs
 
     private suspend fun delayUntilRemaining(index: Int, file: AudioAssetManifest, targetRemainingMs: Long) {
-        val remaining = playableDuration(index, file) - players[index].currentPosition
+        val remaining = playableDuration(index, file) - player(index).currentPosition
         delay((remaining - targetRemainingMs).coerceAtLeast(0L))
     }
 
-    private fun applyEnvelopes() {
-        val base = volumeProvider()
-        players[0].volume = base * envelopes[0]
-        players[1].volume = base * envelopes[1]
+    private fun applyEnvelopesNow() {
+        val currentPlayers = players ?: return
+        val gain = baseGain
+        currentPlayers.forEachIndexed { index, player -> player.volume = gain * envelopes[index] }
     }
 
     companion object {
@@ -280,5 +270,9 @@ class ContinuousSourcePlayer(
         private const val PREPARE_LEAD_MS = 3_000L
         private const val PREPARE_TIMEOUT_MS = 15_000L
         private const val START_TIMEOUT_MS = 3_000L
+        private val sharedThread = HandlerThread("ambience-playback").apply { start() }
+        private val sharedLooper: Looper = sharedThread.looper
+        private val sharedHandler = Handler(sharedLooper)
+        private val sharedDispatcher = sharedHandler.asCoroutineDispatcher()
     }
 }

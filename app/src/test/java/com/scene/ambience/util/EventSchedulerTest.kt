@@ -39,6 +39,34 @@ class EventSchedulerTest {
     }
 
     @Test
+    fun weightedSelectionNeverChoosesZeroWeight() {
+        val random = Random(17)
+        repeat(300) {
+            assertTrue(EventScheduler.nextWeightedIndex(listOf(0f, 2f, 0f), random) == 1)
+        }
+    }
+
+    @Test
+    fun weightedSelectionFavorsLargeWeights() {
+        val random = Random(21)
+        var common = 0
+        var rare = 0
+        repeat(2_000) {
+            when (EventScheduler.nextWeightedIndex(listOf(8f, 0.2f), random)) {
+                0 -> common++
+                1 -> rare++
+            }
+        }
+        assertTrue("common=$common rare=$rare", common > rare * 10)
+    }
+
+    @Test
+    fun emptyOrDisabledWeightsReturnMinusOne() {
+        assertEquals(-1, EventScheduler.nextWeightedIndex(emptyList(), Random(1)))
+        assertEquals(-1, EventScheduler.nextWeightedIndex(listOf(0f, -1f), Random(1)))
+    }
+
+    @Test
     fun volumesStayWithinRange() {
         val random = Random(9)
         repeat(500) {

@@ -1,0 +1,121 @@
+name: Publish Space FX alpha.3 preview
+
+on:
+  push:
+    branches:
+      - work/lullaby-2.0-audio-foundation
+    paths:
+      - '.github/workflows/space-fx-preview.yml'
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/space-fx-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lullaby-space-fx-alpha3-preview
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      github.event.pull_request.head.ref == 'work/lullaby-2.0-audio-foundation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/lullaby-2.0-audio-foundation
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Verify Space FX source sensitivity and phase controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '"forest" -> 1.25f' app/src/main/java/com/scene/ambience/media/AmbienceEngine.kt
+          grep -q '"bamboo_forest" -> 1.22f' app/src/main/java/com/scene/ambience/media/AmbienceEngine.kt
+          grep -q '"aircraft_cabin" -> 1.12f' app/src/main/java/com/scene/ambience/media/AmbienceEngine.kt
+          grep -q '"train" -> 1.12f' app/src/main/java/com/scene/ambience/media/AmbienceEngine.kt
+          grep -q '"white_noise" -> 0.14f' app/src/main/java/com/scene/ambience/media/AmbienceEngine.kt
+          grep -q '"brown_noise" -> 0.10f' app/src/main/java/com/scene/ambience/media/AmbienceEngine.kt
+          grep -q 'Virtualizer' app/src/main/java/com/scene/ambience/media/AmbienceEngine.kt
+          grep -q 'previousScenePhase' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
+          grep -q 'nextScenePhase' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
+          grep -q 'versionName = "1.1.0-alpha.3"' app/build.gradle.kts
+          grep -q 'applicationIdSuffix = ".debug"' app/build.gradle.kts
+
+      - name: Build and test separate debug-signed preview
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon testDebugUnitTest assembleDebug --stacktrace
+
+      - name: Prepare preview APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/debug/app-debug.apk'
+          test -s "$APK"
+          mkdir -p dist
+          cp "$APK" dist/Lullaby-Scene-v1.1.0-alpha.3-space-preview-debug.apk
+          sha256sum dist/Lullaby-Scene-v1.1.0-alpha.3-space-preview-debug.apk > dist/Lullaby-Scene-v1.1.0-alpha.3-space-preview-debug.apk.sha256
+          cat > dist/README.txt <<'TXT'
+          Lullaby Scene v1.1.0-alpha.3 Space FX preview
+
+          This is a DEBUG-SIGNED prerelease preview using applicationId com.scene.ambience.debug.
+          It installs separately from the stable com.scene.ambience package and does not replace it.
+          It contains the current per-source Space/Virtualizer sensitivity changes and journey phase controls.
+          TXT
+
+      - name: Upload CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lullaby-Scene-v1.1.0-alpha.3-space-preview
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v1.1.0-alpha.3-space-preview.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET_SHA="$(git rev-parse HEAD)"
+          NOTES="$RUNNER_TEMP/space-preview-notes.md"
+          cat > "$NOTES" <<'MD'
+          ## Lullaby Scene v1.1.0-alpha.3 — Space FX preview
+
+          This is a **debug-signed prerelease preview**, not a stable release.
+
+          - Separate package: `com.scene.ambience.debug` (installs alongside the stable app).
+          - Includes Android Space FX using per-audio-session `Virtualizer`.
+          - Wide ambience reacts more strongly: forest, bamboo forest, cafe, birds, aircraft cabin, train, ocean, etc.
+          - Steady noises stay restrained: ventilation, fan, white/pink/brown noise.
+          - Includes explicit previous/next journey phase controls and the current alpha.3 journey runtime.
+
+          Because the repository does not currently provide the persistent production signing secrets, this preview intentionally does **not** claim to be an updatable production-signed APK.
+          MD
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            git tag -f "$TAG" "$TARGET_SHA"
+            git push --force origin "refs/tags/$TAG"
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --title 'Lullaby Scene v1.1.0-alpha.3 Space FX preview' --notes-file "$NOTES" --prerelease
+          else
+            gh release create "$TAG" dist/* --target "$TARGET_SHA" --title 'Lullaby Scene v1.1.0-alpha.3 Space FX preview' --notes-file "$NOTES" --prerelease
+          fi

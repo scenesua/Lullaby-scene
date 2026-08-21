@@ -1,0 +1,21 @@
+{
+  "version": 3,
+  "entries": [
+    {
+      "asset_id": "aircraft_cabin_cruise_001",
+      "source_name": "Airplane Cabin (after take-off) - 1",
+      "creator": "jasonm911",
+      "source_page": "https://freesound.org/people/jasonm911/sounds/853735/",
+      "license": "CC0-1.0",
+      "license_status": "verified",
+      "attribution_required": false,
+      "original_filename": "853735__jasonm911__airplane-cabin-after-take-off-1.wav",
+      "provenance_id": "freesound_jasonm911_853735",
+      "original_sample_rate": 44100,
+      "sample_rate": 48000,
+      "channels": 2,
+      "duration_ms": 105006,
+      "transformation": "Profile derived from the supplied 2-minute stereo WAV: preserve natural level and stereo; 20 Hz high-pass; narrow -11 dB notch near 10.544 kHz and -5 dB notch near 3.574 kHz; 5-second circular equal-power bridge; no loudness normalization, broadband denoise, mono fold-down, synthetic rumble, or widening; 48 kHz Ogg Opus 112 kbps VBR"
+    }
+  ]
+}

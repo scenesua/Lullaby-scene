@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "sources": {
+    "cafe": {
+      "disabled_asset_ids": [
+        "cafe_loop_001",
+        "cafe_loop_002"
+      ]
+    },
+    "city": {
+      "disabled_asset_ids": [
+        "city_loop_002"
+      ]
+    }
+  }
+}
