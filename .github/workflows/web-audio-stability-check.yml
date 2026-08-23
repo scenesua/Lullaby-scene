@@ -6,6 +6,7 @@ on:
       - 'web/audio-stability-v1.js'
       - 'web/_worker.js'
       - 'web/sw.js'
+      - '.github/scripts/web-audio-stability-smoke.mjs'
       - '.github/workflows/web-audio-stability-check.yml'
   push:
     branches:
@@ -14,33 +15,52 @@ on:
       - 'web/audio-stability-v1.js'
       - 'web/_worker.js'
       - 'web/sw.js'
+      - '.github/scripts/web-audio-stability-smoke.mjs'
       - '.github/workflows/web-audio-stability-check.yml'
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
       - name: Check runtime syntax
         run: |
           node --check web/audio-stability-v1.js
           node --check web/_worker.js
           node --check web/sw.js
+          node --check .github/scripts/web-audio-stability-smoke.mjs
+
       - name: Check stability wiring
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '/audio-stability-v1.js?v=1' web/_worker.js
-          grep -Fq '/audio-stability-v1.js?v=1' web/sw.js
+          grep -Fq '/audio-stability-v1.js?v=2' web/_worker.js
+          grep -Fq '/audio-stability-v1.js?v=2' web/sw.js
           grep -Fq "lullaby-scene-site-v39" web/sw.js
           grep -Fq "event.request.destination==='audio'" web/sw.js
           ! sed -n '3p' web/sw.js | grep -Fq '/audio/'
           grep -Fq "createDynamicsCompressor" web/audio-stability-v1.js
           grep -Fq "master.disconnect()" web/audio-stability-v1.js
-          grep -Fq "node.src.connect(node.gain)" web/audio-stability-v1.js
-          grep -Fq "document.hidden" web/audio-stability-v1.js
+          grep -Fq "__lullabyDirect:true" web/audio-stability-v1.js
+          grep -Fq "runtime.makeSourceNode=makeSourceNode" web/audio-stability-v1.js
+          grep -Fq "ctx.suspend" web/audio-stability-v1.js
           grep -Fq "BACKGROUND_EVENT_MIN_MS" web/audio-stability-v1.js
           grep -Fq "mediaSession.playbackState" web/audio-stability-v1.js
+
+      - name: Install browser dependency
+        run: npm install --no-save playwright-core@1.55.0
+
+      - name: Browser native-media mixer smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-web-audio.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
+          timeout 90s node .github/scripts/web-audio-stability-smoke.mjs
