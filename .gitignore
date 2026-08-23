@@ -12,6 +12,8 @@ app/build
 *.jks
 *.keystore
 keystore.properties
+/.signing/
+/.wrangler/
 
 # 빌드/디버그 로그
 *.log

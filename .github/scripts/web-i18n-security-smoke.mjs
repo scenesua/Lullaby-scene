@@ -22,7 +22,7 @@ for(const src of[
   '/mixer-interaction-v14.js?v=14',
   '/simple-scene-quick-mixer-v12.js?v=12',
   '/saved-scenes-v13.js?v=13',
-  '/i18n-runtime-v3.js?v=3',
+  '/i18n-runtime-v3.js?v=4',
   '/mobile-android-shell-v1.js?v=2',
   '/display-tools-v1.js?v=2'
 ])await page.addScriptTag({url:`http://127.0.0.1:4173${src}`});

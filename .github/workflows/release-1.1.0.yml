@@ -29,19 +29,45 @@ jobs:
           grep -q 'versionCode = 9' app/build.gradle.kts
           grep -q 'versionName = "1.1.0"' app/build.gradle.kts
           chmod +x gradlew
-      - name: Test and build unsigned release APK
+      - name: Load persistent release signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.LULLABY_ANDROID_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.LULLABY_ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.LULLABY_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.LULLABY_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for value in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            test -n "${!value:-}" || { echo "::error::$value is required"; exit 1; }
+          done
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/lullaby-release.jks"
+          chmod 600 "$RUNNER_TEMP/lullaby-release.jks"
+          keytool -list -keystore "$RUNNER_TEMP/lullaby-release.jks" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+          echo "LULLABY_ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/lullaby-release.jks" >> "$GITHUB_ENV"
+          echo "LULLABY_ANDROID_STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "LULLABY_ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "LULLABY_ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+      - name: Test and build signed release APK
         run: ./gradlew --no-daemon testDebugUnitTest assembleRelease --stacktrace
+      - name: Verify release APK signer
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/release/app-release.apk'
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)"
+          test -s "$APK"
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
       - name: Prepare release assets
         run: |
           set -euo pipefail
-          APK='app/build/outputs/apk/release/app-release-unsigned.apk'
+          APK='app/build/outputs/apk/release/app-release.apk'
           test -s "$APK"
           mkdir -p dist
-          cp "$APK" dist/Lullaby-Scene-v1.1.0-unsigned.apk
-          sha256sum dist/Lullaby-Scene-v1.1.0-unsigned.apk > dist/Lullaby-Scene-v1.1.0-unsigned.apk.sha256
+          cp "$APK" dist/Lullaby-Scene-v1.1.0.apk
+          sha256sum dist/Lullaby-Scene-v1.1.0.apk > dist/Lullaby-Scene-v1.1.0.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: Lullaby-Scene-v1.1.0-unsigned
+          name: Lullaby-Scene-v1.1.0
           path: dist/*
           if-no-files-found: error
       - name: Publish GitHub release
@@ -52,6 +78,8 @@ jobs:
           TAG='v1.1.0'
           SHA="$(git rev-parse HEAD)"
           if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release delete-asset "$TAG" 'Lullaby-Scene-v1.1.0-unsigned.apk' --yes || true
+            gh release delete-asset "$TAG" 'Lullaby-Scene-v1.1.0-unsigned.apk.sha256' --yes || true
             gh release upload "$TAG" dist/* --clobber
             gh release edit "$TAG" --title 'Lullaby Scene v1.1.0' --notes-file RELEASE_NOTES_1.1.0.md --latest
           else
