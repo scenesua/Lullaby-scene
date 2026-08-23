@@ -58,8 +58,8 @@ for(const journey of[
   state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole,elapsed:window.LullabyJourneyRuntime.elapsedMs}));
   if(state.role!=='bed'||state.elapsed<departureMs-1000)throw new Error(`${id} bed transition failed: ${JSON.stringify(state)}`);
   await page.evaluate(()=>window.LullabyJourneyRuntime.seekToMs(window.LullabyJourneyRuntime.totalMs-1000));await page.waitForTimeout(650);
-  state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole,paused:Object.fromEntries(Object.entries(window.LullabyRemainingJourneys?.activeNodes||{}).map(([key,node])=>[key,node.el.paused]))}));
-  if(state.role!=='arrival'||state.paused.bed!==false)throw new Error(`${id} arrival crossfade failed: ${JSON.stringify(state)}`);
+  state=await page.evaluate(()=>{const runtime=window.LullabyRemainingJourneys,paused=Object.fromEntries(Object.entries(runtime?.activeNodes||{}).map(([key,node])=>[key,node.el.paused]));return{role:runtime?.audibleRole,paused,bedOverlaps:runtime?.configs?.[runtime.active]?.roles?.bed?.every(key=>paused[key]===false)}});
+  if(state.role!=='arrival'||!state.bedOverlaps)throw new Error(`${id} arrival crossfade failed: ${JSON.stringify(state)}`);
   await page.locator('#scenePlay').click();await page.waitForTimeout(60);
 }
 await page.locator('[data-journey="passenger_aircraft_cabin"]').click();
