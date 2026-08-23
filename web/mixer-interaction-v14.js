@@ -48,7 +48,7 @@
     const frame=requestAnimationFrame(()=>{
       rafById.delete(id);
       const latest=latestPercent.get(id)??percent,node=R.nodes[id];
-      if(!node)return;
+      if(!node||!window.AudioContext&& !window.webkitAudioContext)return;
       const value=latest/100;
       try{
         if(typeof ctx!=='undefined'&&ctx&&node.gain?.gain?.setTargetAtTime)node.gain.gain.setTargetAtTime(value,ctx.currentTime,.025);
@@ -72,8 +72,7 @@
   async function startContinuous(id,def){
     if(starting.has(id))return starting.get(id);
     const task=(async()=>{
-      // Audio stability v2 provides native-media mixer nodes. If it is absent,
-      // the legacy makeSourceNode still creates/resumes its own AudioContext.
+      await R.ensureContext();
       if(!R.nodes[id])R.nodes[id]=await R.makeSourceNode(def);
       const node=R.nodes[id];if(!node)throw new Error(`missing audio node: ${id}`);
       const latest=Math.max(1,latestPercent.get(id)||1);node.gain.gain.value=latest/100;
@@ -111,7 +110,7 @@
 
   window.addEventListener('pointerdown',event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
-    input.dataset.dragging='1';
+    input.dataset.dragging='1';R.ensureContext().catch(()=>{});
   },true);
   window.addEventListener('input',event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
