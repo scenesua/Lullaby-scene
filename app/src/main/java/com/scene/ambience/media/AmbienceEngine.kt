@@ -250,14 +250,17 @@ class AmbienceEngine(
     }
 
     fun applyEqualizer(enabled: Boolean, presetName: String, bands: List<Int>) {
+        if (eqEnabled == enabled && eqPreset == presetName && eqBands == bands) return
         eqEnabled = enabled
         eqPreset = presetName
-        eqBands = bands
+        eqBands = bands.toList()
         synchronized(fxLock) { equalizers.toMap() }.forEach { (sessionId, effect) -> applyEqTo(effect, sessionSources[sessionId]) }
     }
 
     fun applyFx(settings: FxSettings) {
-        fxSettings = settings.normalized()
+        val normalized = settings.normalized()
+        if (fxSettings == normalized) return
+        fxSettings = normalized
         val sessions = synchronized(fxLock) { attachedSessions.toList() }
         sessions.forEach(::applyEffectsToSession)
     }
