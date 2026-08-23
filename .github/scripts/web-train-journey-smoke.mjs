@@ -59,7 +59,7 @@ for(const journey of[
   if(state.role!=='bed'||state.elapsed<departureMs-1000)throw new Error(`${id} bed transition failed: ${JSON.stringify(state)}`);
   await page.evaluate(()=>window.LullabyJourneyRuntime.seekToMs(window.LullabyJourneyRuntime.totalMs-1000));await page.waitForTimeout(650);
   state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole,paused:Object.fromEntries(Object.entries(window.LullabyRemainingJourneys?.activeNodes||{}).map(([key,node])=>[key,node.el.paused]))}));
-  if(state.role!=='arrival'||Object.entries(state.paused).some(([key,paused])=>key!=='arrival'&&key!=='transition'&&!paused))throw new Error(`${id} arrival failed: ${JSON.stringify(state)}`);
+  if(state.role!=='arrival'||state.paused.bed!==false)throw new Error(`${id} arrival crossfade failed: ${JSON.stringify(state)}`);
   await page.locator('#scenePlay').click();await page.waitForTimeout(60);
 }
 await page.locator('[data-journey="passenger_aircraft_cabin"]').click();
