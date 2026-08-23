@@ -192,11 +192,23 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
     fun stop() = controllerRepository.stop()
 
     fun startPassengerAircraftScene(totalDurationMinutes: Int) {
-        if (uiState.value.library.manifestFor(SceneOrchestrator.SOURCE_AIRCRAFT) == null) {
-            _events.tryEmit(AmbienceUiEvent.ShowMessage("scene_aircraft_unavailable"))
+        startScene(SceneOrchestrator.PASSENGER_AIRCRAFT, totalDurationMinutes)
+    }
+
+    fun startScene(sceneId: String, totalDurationMinutes: Int) {
+        val required = SceneOrchestrator.requiredSourcesFor(sceneId)
+        if (required.isEmpty() || required.any { uiState.value.library.manifestFor(it) == null }) {
+            val message = when (sceneId) {
+                SceneOrchestrator.TRAIN_JOURNEY -> "scene_train_unavailable"
+                SceneOrchestrator.FERRY_JOURNEY -> "scene_ferry_unavailable"
+                SceneOrchestrator.SPACECRAFT_JOURNEY -> "scene_spacecraft_unavailable"
+                SceneOrchestrator.SUBMARINE_JOURNEY -> "scene_submarine_unavailable"
+                else -> "scene_aircraft_unavailable"
+            }
+            _events.tryEmit(AmbienceUiEvent.ShowMessage(message))
             return
         }
-        controllerRepository.startScene(SceneOrchestrator.PASSENGER_AIRCRAFT, totalDurationMinutes)
+        controllerRepository.startScene(sceneId, totalDurationMinutes)
     }
 
     fun stopScene() = controllerRepository.stopScene()

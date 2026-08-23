@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 9,
   "sources": [
     {
       "id": "aircraft_cabin",
@@ -19,6 +19,94 @@
         }
       ],
       "events": []
+    },
+    {
+      "id": "train_journey_departure",
+      "category": "travel",
+      "display_name_key": "source_train_journey_departure",
+      "default_volume": 0.58,
+      "loop_mode": "seamless",
+      "continuous": [{
+        "asset_id": "train_journey_departure_001",
+        "path": "ambience/train_journey/continuous/train_journey_departure_001.ogg",
+        "duration_ms": 35183,
+        "role": "departure",
+        "tags": ["train", "doors", "acceleration", "transition", "stereo"],
+        "provenance_id": "wikimedia_train_departure_public_domain"
+      }],
+      "events": []
+    },
+    {
+      "id": "train_journey_bed",
+      "category": "travel",
+      "display_name_key": "source_train_journey_bed",
+      "default_volume": 0.54,
+      "loop_mode": "seamless",
+      "continuous": [{
+        "asset_id": "train_journey_bed_001",
+        "path": "ambience/train_journey/continuous/train_journey_bed_001.ogg",
+        "duration_ms": 240673,
+        "role": "bed",
+        "tags": ["train", "carriage", "wheels", "night", "stereo"],
+        "provenance_id": "wikimedia_ural66_train_wheels"
+      }],
+      "events": []
+    },
+    {
+      "id": "train_journey_arrival",
+      "category": "travel",
+      "display_name_key": "source_train_journey_arrival",
+      "default_volume": 0.56,
+      "loop_mode": "seamless",
+      "continuous": [{
+        "asset_id": "train_journey_arrival_001",
+        "path": "ambience/train_journey/continuous/train_journey_arrival_001.ogg",
+        "duration_ms": 32236,
+        "role": "arrival",
+        "tags": ["train", "deceleration", "arrival", "transition", "stereo"],
+        "provenance_id": "wikimedia_e217_e231_deceleration"
+      }],
+      "events": []
+    },
+    {
+      "id": "ferry_journey_departure", "category": "travel", "display_name_key": "source_ferry_journey_departure", "default_volume": 0.54, "loop_mode": "seamless",
+      "continuous": [{"asset_id": "ferry_journey_departure_001", "path": "ambience/ferry_journey/continuous/ferry_journey_departure_001.ogg", "duration_ms": 128667, "role": "departure", "tags": ["ferry", "stern", "departure", "stereo"], "provenance_id": "freesound_mrmayo_74916"}], "events": []
+    },
+    {
+      "id": "ferry_journey_bed", "category": "travel", "display_name_key": "source_ferry_journey_bed", "default_volume": 0.52, "loop_mode": "seamless",
+      "continuous": [{"asset_id": "ferry_journey_bed_001", "path": "ambience/ferry_journey/continuous/ferry_journey_bed_001.ogg", "duration_ms": 221686, "role": "bed", "tags": ["ferry", "engine", "interior", "night", "stereo"], "provenance_id": "freesound_alcappuccino_338035"}], "events": []
+    },
+    {
+      "id": "ferry_journey_arrival", "category": "travel", "display_name_key": "source_ferry_journey_arrival", "default_volume": 0.52, "loop_mode": "seamless",
+      "continuous": [{"asset_id": "ferry_journey_arrival_001", "path": "ambience/ferry_journey/continuous/ferry_journey_arrival_001.ogg", "duration_ms": 98065, "role": "arrival", "tags": ["ferry", "waves", "harbor", "arrival", "stereo"], "provenance_id": "freesound_hajohansen_758917"}], "events": []
+    },
+    {
+      "id": "spacecraft_journey_transition", "category": "travel", "display_name_key": "source_spacecraft_journey_transition", "default_volume": 0.50, "loop_mode": "seamless",
+      "continuous": [{"asset_id": "spacecraft_journey_transition_001", "path": "ambience/spacecraft_journey/continuous/spacecraft_journey_transition_001.ogg", "duration_ms": 17824, "role": "transition", "tags": ["spacecraft", "hum", "transition", "stereo"], "provenance_id": "freesound_alaskarobotics_221570"}], "events": []
+    },
+    {
+      "id": "spacecraft_journey_bed", "category": "travel", "display_name_key": "source_spacecraft_journey_bed", "default_volume": 0.48, "loop_mode": "seamless",
+      "continuous": [{"asset_id": "spacecraft_journey_bed_001", "path": "ambience/spacecraft_journey/continuous/spacecraft_journey_bed_001.ogg", "duration_ms": 160007, "role": "bed", "tags": ["spacecraft", "interior", "drift", "night", "stereo"], "provenance_id": "freesound_jmayoff_256269"}], "events": []
+    },
+    {
+      "id": "submarine_journey_departure", "category": "travel", "display_name_key": "source_submarine_journey_departure", "default_volume": 0.54, "loop_mode": "seamless",
+      "continuous": [{"asset_id": "submarine_journey_departure_001", "path": "ambience/submarine_journey/continuous/submarine_journey_departure_001.ogg", "duration_ms": 47282, "role": "departure", "tags": ["submarine", "dive", "movement", "stereo"], "provenance_id": "freesound_tim_verberne_484187"}], "events": []
+    },
+    {
+      "id": "submarine_journey_engine_bed", "category": "travel", "display_name_key": "source_submarine_journey_engine_bed", "default_volume": 0.43, "loop_mode": "seamless",
+      "continuous": [{"asset_id": "submarine_journey_engine_bed_001", "path": "ambience/submarine_journey/continuous/submarine_journey_engine_bed_001.ogg", "duration_ms": 133038, "role": "bed", "tags": ["submarine", "engine", "interior", "mono_source"], "provenance_id": "freesound_craigsmith_438726"}], "events": []
+    },
+    {
+      "id": "submarine_journey_water_bed", "category": "travel", "display_name_key": "source_submarine_journey_water_bed", "default_volume": 0.24, "loop_mode": "seamless",
+      "continuous": [{"asset_id": "submarine_journey_water_bed_001", "path": "ambience/submarine_journey/continuous/submarine_journey_water_bed_001.ogg", "duration_ms": 120006, "role": "bed", "tags": ["submarine", "underwater", "ambience", "stereo"], "provenance_id": "freesound_tim_verberne_482167"}], "events": []
+    },
+    {
+      "id": "submarine_journey_arrival", "category": "travel", "display_name_key": "source_submarine_journey_arrival", "default_volume": 0.52, "loop_mode": "seamless",
+      "continuous": [{"asset_id": "submarine_journey_arrival_001", "path": "ambience/submarine_journey/continuous/submarine_journey_arrival_001.ogg", "duration_ms": 54232, "role": "arrival", "tags": ["submarine", "interior", "surface", "mono_source"], "provenance_id": "freesound_craigsmith_438724"}], "events": []
+    },
+    {
+      "id": "submarine_sonar", "category": "travel", "display_name_key": "source_submarine_sonar", "default_volume": 0.08, "loop_mode": "event",
+      "continuous": [], "events": [{"asset_id": "submarine_sonar_event_001", "path": "ambience/submarine_journey/events/submarine_sonar_event_001.ogg", "duration_ms": 5006, "role": "event", "tags": ["submarine", "sonar", "sleep_safe", "stereo"], "provenance_id": "freesound_breviceps_493162", "event_weight": 1.0, "cooldown_ms": 180000}]
     }
   ]
 }

@@ -9,12 +9,20 @@ on:
       - 'web/**'
       - 'tools/materialize_aircraft_audio.py'
       - 'tools/materialize_aircraft_taxi.py'
+      - 'tools/materialize_train_journey.py'
+      - 'tools/materialize_remaining_journeys.py'
+      - 'app/src/main/assets/ambience/*_journey/**'
+      - 'app/src/main/assets/ambience/manifest/scene_sources.json'
+      - 'app/src/main/java/com/scene/ambience/media/TrainJourneyTimeline.kt'
+      - 'app/src/main/java/com/scene/ambience/media/AmbientJourneyTimeline.kt'
       - 'tools/resolve_freesound_preview.mjs'
       - 'WEB_REQUIREMENTS_STATUS.md'
       - '.github/workflows/web-preview-check.yml'
       - '.github/scripts/web-smoke.mjs'
       - '.github/scripts/web-mixer-v14-smoke.mjs'
       - '.github/scripts/web-visitor-fallback-smoke.mjs'
+      - '.github/scripts/train-journey-parity-smoke.mjs'
+      - '.github/scripts/web-train-journey-smoke.mjs'
 
 jobs:
   validate:
@@ -47,6 +55,8 @@ jobs:
           node --check web/site.js
           node --check web/player-v2.js
           node --check web/scene-audio-v2.js
+          node --check web/train-journey-v1.js
+          node --check web/remaining-journeys-v1.js
           node --check web/mixer-fx-v9.js
           node --check web/player-shell-v10.js
           node --check web/player-controls-v11.js
@@ -64,6 +74,11 @@ jobs:
           node --check .github/scripts/web-smoke.mjs
           node --check .github/scripts/web-mixer-v14-smoke.mjs
           node --check .github/scripts/web-visitor-fallback-smoke.mjs
+          node --check .github/scripts/train-journey-parity-smoke.mjs
+          node --check .github/scripts/web-train-journey-smoke.mjs
+
+      - name: Validate all Journey Android and Web parity
+        run: node .github/scripts/train-journey-parity-smoke.mjs
 
       - name: Check required web pages and runtimes
         shell: bash
@@ -78,6 +93,11 @@ jobs:
           test -s web/mixer-interaction-v14.js
           test -s web/aircraft-source-v15.js
           test -s web/scene-recipe-v1.js
+          test -s web/train-journey-v1.js
+          test -s web/remaining-journeys-v1.js
+          test -s web/audio/scenes/train_journey/train_journey_departure_001.ogg
+          test -s web/audio/scenes/train_journey/train_journey_bed_001.ogg
+          test -s web/audio/scenes/train_journey/train_journey_arrival_001.ogg
           test -s web/audio/aircraft_cabin_cruise_v2.ogg
           grep -q 'data-scene-mode="journey"' web/player/index.html
           grep -q 'data-scene-mode="simple"' web/player/index.html
@@ -88,6 +108,8 @@ jobs:
           grep -q '/visitor-count-v1.js?v=2' web/_worker.js
           grep -q 'api.counterapi.dev/v1' web/visitor-count-v1.js
           grep -q '/audio/aircraft_cabin_cruise_v2.ogg' web/sw.js
+          grep -q '/train-journey-v1.js?v=1' web/sw.js
+          grep -q '/remaining-journeys-v1.js?v=1' web/sw.js
           grep -q '/aircraft-source-v15.js?v=15' web/_worker.js
           grep -q '/mixer-interaction-v14.js?v=14' web/_worker.js
           grep -q '/mixer-controls-v14.css?v=14' web/_worker.js
@@ -188,6 +210,15 @@ jobs:
           trap 'kill $SERVER_PID || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
           timeout 90s node .github/scripts/web-mixer-v14-smoke.mjs
+
+      - name: Browser Train Journey smoke
+        timeout-minutes: 2
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-web-train.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
+          timeout 90s node .github/scripts/web-train-journey-smoke.mjs
 
       - name: Browser static visitor fallback smoke
         timeout-minutes: 2

@@ -4,7 +4,7 @@ document.getElementById('year').textContent=new Date().getFullYear();
 const AudioCtx=window.AudioContext||window.webkitAudioContext;
 let ctx=null,master=null,masterValue=+(localStorage.getItem('lullaby-master')||70)/100;
 const nodes={};const eventState={};let catalog=[];let sourceById={};let currentFilter='all';let aircraftObjectUrl=null;
-let sceneNode=null,sceneTimer=null,sceneStartedAt=0,pausedAt=0,scenePlaying=false,durationMinutes=480,sceneEvents=[];
+let sceneNode=null,sceneTimer=null,sceneStartedAt=0,pausedAt=0,scenePlaying=false,durationMinutes=480,sceneEvents=[],activeJourneyId='passenger_aircraft_cabin';
 const macro={engine:.55,activity:.22,turbulence:.12,night:.68};
 let sleepTimerEnd=0,sleepTimerTick=null,sleepFadeSeconds=30;
 let deferredInstall=null;
@@ -67,7 +67,7 @@ function setDuration(v){durationMinutes=clamp(+v,240,720);$('#durationSlider').v
 $('#durationSlider')?.addEventListener('input',e=>setDuration(e.target.value));$$('[data-duration]').forEach(b=>b.addEventListener('click',()=>setDuration(b.dataset.duration)));
 $$('[data-macro]').forEach(input=>input.addEventListener('input',e=>{const k=e.target.dataset.macro,v=+e.target.value/100;macro[k]=v;$$(`[data-output="${k}"]`).forEach(o=>o.textContent=`${Math.round(v*100)}%`);$$(`[data-macro="${k}"]`).forEach(other=>{if(other!==e.target)other.value=e.target.value});updateSceneAudio(currentElapsed())}));
 
-function updateNowPlaying(){const active=[];if(scenePlaying)active.push('Passenger Aircraft Cabin');catalog.forEach(s=>{const st=getMixerUiState(s.id);if(st.on)active.push(s.name)});$('#railNowPlaying').textContent=active.length?`${active.length} active`:'Stopped'}
+function updateNowPlaying(){const active=[],journeyNames={train_journey:'Overnight Train Journey',ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage'};if(scenePlaying)active.push(journeyNames[activeJourneyId]||'Passenger Aircraft Cabin');catalog.forEach(s=>{const st=getMixerUiState(s.id);if(st.on)active.push(s.name)});$('#railNowPlaying').textContent=active.length?`${active.length} active`:'Stopped'}
 
 function renderPresets(){if(!$('#builtInPresets'))return;$('#builtInPresets').innerHTML=builtinPresets.map(p=>`<button class="preset-card" data-preset="${p.id}" type="button"><strong>${p.name}</strong><span>${Object.keys(p.mix).length} sources</span></button>`).join('');$$('[data-preset]').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));renderUserPresets()}
 async function applyPreset(id){const p=builtinPresets.find(x=>x.id===id)||loadUserPresets().find(x=>x.id===id);if(!p)return;try{await ensureContext();stopScene(false);stopAllMixer();setMaster(p.master);for(const [sourceId,volume] of Object.entries(p.mix)){const def=sourceById[sourceId];if(!def)continue;if(def.kind==='event'){startEventLayer(def);eventState[sourceId].volume=volume}else{if(!nodes[sourceId])nodes[sourceId]=await makeSourceNode(def);nodes[sourceId].gain.gain.value=volume;await nodes[sourceId].el.play()}}renderMixer();updateNowPlaying();setStatus(`${p.name} 프리셋 적용됨`);switchView('mixer')}catch(err){console.error(err);setStatus('프리셋을 적용하지 못했습니다.')}}

@@ -99,6 +99,13 @@
       "event_volume_range": [0.75, 1.0],
       "event_pan_range": [-0.6, 0.6]
     },
+    "submarine_sonar": {
+      "min_interval_seconds": 180,
+      "max_interval_seconds": 420,
+      "density": "very-low",
+      "event_volume_range": [0.45, 0.70],
+      "event_pan_range": [-0.15, 0.15]
+    },
     "water": {
       "min_interval_seconds": 2,
       "max_interval_seconds": 12,

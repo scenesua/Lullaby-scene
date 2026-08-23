@@ -24,10 +24,11 @@ def probe(path: Path):
 
 def runtime_sources():
     base = read("sound_library.json", {"sources": []})
+    scenes = read("scene_sources.json", {"sources": []})
     cont = read("continuous_extensions.json", {"sources": {}})
     events = read("event_extensions.json", {"sources": {}})
     overrides = read("asset_overrides.json", {"sources": {}})
-    blockers = [x.get("_error") for x in (base, cont, events, overrides) if x.get("_error")]
+    blockers = [x.get("_error") for x in (base, scenes, cont, events, overrides) if x.get("_error")]
     merged = []
     for src in base.get("sources", []):
         src = dict(src); sid = src["id"]; ov = overrides.get("sources", {}).get(sid, {}); disabled = set(ov.get("disabled_asset_ids", []))
@@ -35,6 +36,7 @@ def runtime_sources():
         src["continuous"] = [a for a in src.get("continuous", []) + cont.get("sources", {}).get(sid, []) if a.get("asset_id") not in disabled]
         src["events"] = [a for a in src.get("events", []) + events.get("sources", {}).get(sid, []) if a.get("asset_id") not in disabled]
         src["disabled_asset_ids"] = sorted(disabled); merged.append(src)
+    merged.extend(scenes.get("sources", []))
     return merged, blockers
 
 

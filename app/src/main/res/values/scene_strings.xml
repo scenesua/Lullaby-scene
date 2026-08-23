@@ -2,11 +2,22 @@
 <resources>
     <string name="nav_scenes">Scenes</string>
     <string name="source_aircraft_cabin">Aircraft Cabin</string>
+    <string name="source_train_journey_departure">Train departure</string>
+    <string name="source_train_journey_bed">Overnight train</string>
+    <string name="source_train_journey_arrival">Train arrival</string>
+    <string name="source_ferry_journey_departure">Ferry departure</string><string name="source_ferry_journey_bed">Night ferry engine</string><string name="source_ferry_journey_arrival">Ferry arrival</string>
+    <string name="source_spacecraft_journey_transition">Spacecraft transition</string><string name="source_spacecraft_journey_bed">Spacecraft drift</string>
+    <string name="source_submarine_journey_departure">Submarine dive</string><string name="source_submarine_journey_engine_bed">Submarine engine room</string><string name="source_submarine_journey_water_bed">Underwater ambience</string><string name="source_submarine_journey_arrival">Submarine surface</string><string name="source_submarine_sonar">Distant sonar</string>
 
     <string name="scenes_question">Where do you want to be?</string>
     <string name="scenes_subtitle">Living scenes evolve slowly instead of repeating a fixed mix.</string>
     <string name="scene_aircraft_name">Passenger Aircraft Cabin</string>
     <string name="scene_aircraft_description">A complete overnight aircraft journey fitted to your sleep time.</string>
+    <string name="scene_aircraft_short_name">Aircraft</string>
+    <string name="scene_train_short_name">Train</string>
+    <string name="scene_train_name">Overnight Train Journey</string>
+    <string name="scene_train_description">Doors close, the train leaves the city, runs through the night, and slows into the destination.</string>
+    <string name="scene_train_asset_unavailable">The Train Journey recordings are not packaged in this build.</string>
     <string name="scene_asset_unavailable">The aircraft recording is not packaged in this build.</string>
     <string name="scene_start">Start journey</string>
     <string name="scene_end">End scene</string>
@@ -19,6 +30,8 @@
     <string name="scene_seatbelt_off">Seat belt sign off</string>
     <string name="scene_event_turbulence">Passing light turbulence</string>
     <string name="scene_event_cabin">Small cabin activity</string>
+    <string name="scene_event_train_departure">Doors closing and train accelerating</string>
+    <string name="scene_event_train_arrival">Train slowing into the destination</string>
     <string name="scene_state_taxi_out">Taxiing for departure</string>
     <string name="scene_state_takeoff">Takeoff roll</string>
     <string name="scene_state_climb">Initial climb</string>
@@ -26,9 +39,23 @@
     <string name="scene_state_descent">Descent</string>
     <string name="scene_state_approach">Final approach</string>
     <string name="scene_state_taxi_in">Taxiing after landing</string>
+    <string name="scene_state_train_departure">Departing the station</string>
+    <string name="scene_state_train_leaving_city">Leaving the city</string>
+    <string name="scene_state_train_night_run">Overnight rail rhythm</string>
+    <string name="scene_state_train_approach">Approaching the destination</string>
+    <string name="scene_state_train_arrival">Slowing into the station</string>
     <string name="scene_state_arrived">Arrived</string>
     <string name="scene_spatial_hint">Engine presence changes both level and high-frequency distance filtering. Timed flight phases and short random cruise events temporarily bias the same acoustic model.</string>
     <string name="scene_aircraft_unavailable">Passenger Aircraft Cabin audio is not available in this build</string>
+    <string name="scene_train_unavailable">Train Journey audio is not available in this build</string>
+    <string name="scene_train_spatial_hint">Rail rhythm, carriage detail, track texture, and night depth shape the long running bed while departure and arrival use dedicated recordings.</string>
+    <string name="scene_ferry_short_name">Ferry</string><string name="scene_ferry_name">Night Ferry Journey</string><string name="scene_ferry_description">Cast off, leave the harbor, cross dark open water, and wake as the ferry reaches shore.</string><string name="scene_ferry_asset_unavailable">The Night Ferry recordings are not packaged in this build.</string><string name="scene_ferry_unavailable">Night Ferry audio is not available in this build</string><string name="scene_ferry_spatial_hint">Engine presence, quiet deck detail, wave texture and night depth shape the crossing between dedicated departure and arrival beds.</string>
+    <string name="scene_spacecraft_short_name">Spacecraft</string><string name="scene_spacecraft_name">Spacecraft Drift</string><string name="scene_spacecraft_description">Leave orbit, settle into a long deep-space drift, approach the destination, and dock quietly.</string><string name="scene_spacecraft_asset_unavailable">The Spacecraft recordings are not packaged in this build.</string><string name="scene_spacecraft_unavailable">Spacecraft audio is not available in this build</string><string name="scene_spacecraft_spatial_hint">Drive presence and hull texture shape a stable sleep-safe interior without sudden random events.</string>
+    <string name="scene_submarine_short_name">Submarine</string><string name="scene_submarine_name">Submarine Voyage</string><string name="scene_submarine_description">Dive below the surface, settle into a deep cruise with rare sonar, then rise into a quiet arrival.</string><string name="scene_submarine_asset_unavailable">The Submarine recordings are not packaged in this build.</string><string name="scene_submarine_unavailable">Submarine audio is not available in this build</string><string name="scene_submarine_spatial_hint">Engine room and underwater beds move together; rare low-level sonar follows a sleep-safe event schedule.</string>
+    <string name="scene_event_departure">Journey departure transition</string><string name="scene_event_arrival">Journey arrival transition</string><string name="scene_event_submarine_sonar">Rare distant sonar</string>
+    <string name="scene_state_ferry_cast_off">Casting off</string><string name="scene_state_ferry_leaving_harbor">Leaving the harbor</string><string name="scene_state_ferry_night_crossing">Night crossing</string><string name="scene_state_ferry_harbor_approach">Harbor approach</string><string name="scene_state_ferry_arrival">Reaching shore</string>
+    <string name="scene_state_spacecraft_departure">Leaving orbit</string><string name="scene_state_spacecraft_orbital_settle">Settling the cabin</string><string name="scene_state_spacecraft_deep_drift">Deep-space drift</string><string name="scene_state_spacecraft_approach">Destination approach</string><string name="scene_state_spacecraft_docking">Quiet docking</string>
+    <string name="scene_state_submarine_dive">Diving below the surface</string><string name="scene_state_submarine_settle">Settling at depth</string><string name="scene_state_submarine_deep_cruise">Deep-water cruise</string><string name="scene_state_submarine_ascent">Ascending</string><string name="scene_state_submarine_surface">Reaching the surface</string>
 
     <string name="macro_engine_presence">Engine presence</string>
     <string name="macro_engine_presence_desc">Far and softened ↔ close and present</string>
@@ -38,6 +65,15 @@
     <string name="macro_turbulence_desc">Baseline movement; occasional cruise events are added on top</string>
     <string name="macro_night_depth">Night depth</string>
     <string name="macro_night_depth_desc">Darker and softer for late-night listening</string>
+    <string name="macro_rail_rhythm">Rail rhythm</string>
+    <string name="macro_rail_rhythm_desc">Soft and distant ↔ present wheel rhythm</string>
+    <string name="macro_carriage_activity">Carriage activity</string>
+    <string name="macro_carriage_activity_desc">Amount of subtle interior detail around the rail bed</string>
+    <string name="macro_track_texture">Track texture</string>
+    <string name="macro_track_texture_desc">Smooth ride ↔ more tactile rail movement</string>
+    <string name="macro_ferry_engine">Engine presence</string><string name="macro_ferry_engine_desc">Distant hull hum ↔ present engine room</string><string name="macro_deck_activity">Deck activity</string><string name="macro_deck_activity_desc">Amount of subtle movement around the vessel</string><string name="macro_wave_texture">Wave texture</string><string name="macro_wave_texture_desc">Calm water ↔ more tactile hull and waves</string>
+    <string name="macro_drive_presence">Drive presence</string><string name="macro_drive_presence_desc">Soft distant system hum ↔ present spacecraft drive</string><string name="macro_spacecraft_activity">Cabin activity</string><string name="macro_spacecraft_activity_desc">Amount of quiet interior system detail</string><string name="macro_hull_texture">Hull texture</string><string name="macro_hull_texture_desc">Smooth drift ↔ more tactile structural detail</string>
+    <string name="macro_submarine_engine">Engine presence</string><string name="macro_submarine_engine_desc">Distant machinery ↔ present engine room</string><string name="macro_crew_activity">Crew activity</string><string name="macro_crew_activity_desc">Also controls the level of rare sonar events</string><string name="macro_water_pressure">Water pressure</string><string name="macro_water_pressure_desc">Smooth interior ↔ more underwater texture</string>
 
     <string name="settings_update">Updates</string>
     <string name="update_channel_github">Distribution channel: GitHub Releases</string>
