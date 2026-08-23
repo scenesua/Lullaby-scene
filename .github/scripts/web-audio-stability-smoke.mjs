@@ -21,6 +21,7 @@ await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window
 const direct=await page.evaluate(async()=>{
   const R=window.LullabyPlayerRuntime;
   const node=await R.makeSourceNode(R.sourceById.rain);
+  R.nodes.rain=node;
   node.gain.gain.value=.4;
   R.setMaster(.5);
   window.LullabyAudioStability.syncDirectVolumes();
@@ -46,7 +47,7 @@ if(!aircraft.direct||aircraft.hasWebAudioSource||!aircraft.url)throw new Error(`
 
 const timer=await page.evaluate(()=>{
   const R=window.LullabyPlayerRuntime;
-  R.nodes.rain=undefined;
+  delete R.nodes.rain;
   return{backgroundMode:window.LullabyAudioStability.backgroundMode,directSourceCount:window.LullabyAudioStability.directSourceCount};
 });
 if(timer.backgroundMode!==false)throw new Error(`unexpected hidden state in foreground smoke: ${JSON.stringify(timer)}`);
