@@ -107,11 +107,11 @@ jobs:
           grep -q '/visitor-count-v1.js?v=2' web/sw.js
           grep -q '/visitor-count-v1.js?v=2' web/_worker.js
           grep -q 'api.counterapi.dev/v1' web/visitor-count-v1.js
-          grep -q 'lullaby-scene-site-v39' web/sw.js
+          grep -q 'lullaby-scene-site-v40' web/sw.js
           grep -q "event.request.destination==='audio'" web/sw.js
           ! sed -n '3p' web/sw.js | grep -q '/audio/'
-          grep -q '/train-journey-v1.js?v=1' web/sw.js
-          grep -q '/remaining-journeys-v1.js?v=2' web/sw.js
+          grep -q '/train-journey-v1.js?v=2' web/sw.js
+          grep -q '/remaining-journeys-v1.js?v=3' web/sw.js
           grep -q '/aircraft-source-v15.js?v=15' web/_worker.js
           grep -q '/mixer-interaction-v14.js?v=14' web/_worker.js
           grep -q '/mixer-controls-v14.css?v=14' web/_worker.js

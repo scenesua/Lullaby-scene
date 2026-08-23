@@ -32,8 +32,8 @@ for(const marker of ['35_183L','32_236L','8 * MINUTE_MS'])if(!kotlin.includes(ma
 for(const phase of ['train_departure','train_leaving_city','train_night_run','train_approach','train_arrival']){
   if(!text('app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt').includes(phase))throw new Error(`Android phase missing ${phase}`);
 }
-if(!text('web/player/index.html').includes('/train-journey-v1.js?v=1'))throw new Error('Web player does not load Train Journey runtime');
-if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=2'))throw new Error('Web player does not load remaining Journey runtime');
+if(!text('web/player/index.html').includes('/train-journey-v1.js?v=2'))throw new Error('Web player does not load Train Journey runtime');
+if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=3'))throw new Error('Web player does not load remaining Journey runtime');
 const orchestrator=text('app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt'),remaining=text('web/remaining-journeys-v1.js'),strings=text('app/src/main/res/values/scene_strings.xml'),sw=text('web/sw.js');
 for(const [id,title] of Object.entries({ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage'})){
   if(!orchestrator.includes(`"${id}"`)||!remaining.includes(`${id}:`)||!strings.includes(title))throw new Error(`${id} platform definition mismatch`);
