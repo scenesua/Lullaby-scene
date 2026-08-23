@@ -20,6 +20,7 @@ class UpdateChannelFilterTest {
     @Test
     fun onlyInstallableReleaseApkNamesAreAccepted() {
         assertTrue(isInstallableUpdateApkName("Lullaby-Scene-v1.1.0-alpha.4.apk"))
+        assertFalse(isInstallableUpdateApkName("Lullaby-Scene-v1.1.0-unsigned.apk"))
         assertFalse(isInstallableUpdateApkName("Lullaby-Scene-v1.1.0-alpha.3-space-preview.1-debug.apk"))
         assertFalse(isInstallableUpdateApkName("Lullaby-Scene-v1.1.0-alpha.4-preview.apk"))
         assertFalse(isInstallableUpdateApkName("Lullaby-Scene-v1.1.0-alpha.4.apk.sha256"))

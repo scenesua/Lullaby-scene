@@ -1,13 +1,16 @@
 package com.scene.ambience.update
 
+import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
+import android.os.Environment
 import androidx.core.content.FileProvider
 import com.scene.ambience.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -69,6 +72,7 @@ internal fun isInstallableUpdateApkName(name: String): Boolean {
     val normalized = name.lowercase()
     return normalized.startsWith("lullaby-scene-") &&
         normalized.endsWith(".apk") &&
+        "unsigned" !in normalized &&
         "preview" !in normalized &&
         "debug" !in normalized
 }
@@ -146,25 +150,26 @@ class UpdateCoordinator(context: Context) {
         val release = _state.value.available ?: return@withContext
         if (_state.value.downloading) return@withContext
         _state.value = _state.value.copy(downloading = true, downloadProgress = 0, messageKey = null)
+        val downloadManager = appContext.getSystemService(DownloadManager::class.java)
+        var downloadId: Long? = null
         try {
-            val updateDir = File(appContext.cacheDir, "updates").apply { mkdirs() }
-            updateDir.listFiles()?.filter { it.name != release.apkName }?.forEach { it.delete() }
-            val partial = File(updateDir, release.apkName + ".part")
+            val updateDir = appContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                ?: throw IllegalStateException("downloads directory unavailable")
             val target = File(updateDir, release.apkName)
-            partial.delete()
-
-            downloadToFile(release.apkUrl, partial, release.apkSize) { progress ->
-                _state.value = _state.value.copy(downloadProgress = progress)
-            }
+            target.delete()
+            val request = DownloadManager.Request(Uri.parse(release.apkUrl))
+                .setTitle(release.title)
+                .setDescription(release.apkName)
+                .setMimeType(APK_MIME_TYPE)
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalFilesDir(appContext, Environment.DIRECTORY_DOWNLOADS, release.apkName)
+            downloadId = downloadManager.enqueue(request)
+            waitForDownload(downloadManager, downloadId, release.apkSize)
+            if (!target.isFile) throw IllegalStateException("downloaded file missing")
             val expected = release.expectedSha256 ?: release.checksumUrl?.let { fetchChecksum(it) }
-            if (expected != null && !sha256(partial).equals(expected, ignoreCase = true)) {
-                partial.delete()
+            if (expected != null && !sha256(target).equals(expected, ignoreCase = true)) {
+                target.delete()
                 throw IllegalStateException("digest mismatch")
-            }
-            if (target.exists()) target.delete()
-            if (!partial.renameTo(target)) {
-                partial.copyTo(target, overwrite = true)
-                partial.delete()
             }
             val uri: Uri = FileProvider.getUriForFile(
                 appContext,
@@ -177,12 +182,36 @@ class UpdateCoordinator(context: Context) {
                 installUri = uri.toString(),
             )
         } catch (_: Exception) {
+            downloadId?.let { downloadManager.remove(it) }
             _state.value = _state.value.copy(
                 downloading = false,
                 downloadProgress = null,
                 installUri = null,
                 messageKey = "update_download_failed",
             )
+        }
+    }
+
+    private suspend fun waitForDownload(manager: DownloadManager, id: Long, expectedSize: Long) {
+        val query = DownloadManager.Query().setFilterById(id)
+        while (true) {
+            manager.query(query).use { cursor ->
+                if (!cursor.moveToFirst()) throw IllegalStateException("download disappeared")
+                val status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                val downloaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                val total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                    .takeIf { it > 0 } ?: expectedSize
+                if (total > 0) {
+                    _state.value = _state.value.copy(
+                        downloadProgress = ((downloaded * 100L) / total).toInt().coerceIn(0, 99)
+                    )
+                }
+                when (status) {
+                    DownloadManager.STATUS_SUCCESSFUL -> return
+                    DownloadManager.STATUS_FAILED -> throw IllegalStateException("download failed")
+                }
+            }
+            delay(500)
         }
     }
 
@@ -238,37 +267,6 @@ class UpdateCoordinator(context: Context) {
                 .split(Regex("\\s+"))
                 .firstOrNull()
                 ?.takeIf { it.matches(Regex("[0-9a-fA-F]{64}")) }
-        }
-    }
-
-    private fun downloadToFile(url: String, output: File, expectedSize: Long, onProgress: (Int) -> Unit) {
-        val conn = open(url)
-        conn.useConnection { connection ->
-            if (connection.responseCode !in 200..299) throw IllegalStateException("HTTP ${connection.responseCode}")
-            val total = connection.contentLengthLong.takeIf { it > 0 } ?: expectedSize
-            connection.inputStream.use { input ->
-                output.outputStream().buffered().use { out ->
-                    val buffer = ByteArray(64 * 1024)
-                    var read: Int
-                    var done = 0L
-                    var last = -1
-                    while (input.read(buffer).also { read = it } >= 0) {
-                        if (read == 0) continue
-                        out.write(buffer, 0, read)
-                        done += read
-                        if (total > 0) {
-                            val progress = ((done * 100L) / total).toInt().coerceIn(0, 99)
-                            if (progress != last) {
-                                last = progress
-                                onProgress(progress)
-                            }
-                        }
-                    }
-                }
-            }
-            if (expectedSize > 0L && output.length() != expectedSize) {
-                throw IllegalStateException("size mismatch")
-            }
         }
     }
 
@@ -348,6 +346,7 @@ class UpdateCoordinator(context: Context) {
     companion object {
         private const val GET_LATEST_RELEASE = "https://api.github.com/repos/scenesua/Lullaby-scene/releases/latest"
         private const val LIST_RELEASES = "https://api.github.com/repos/scenesua/Lullaby-scene/releases?per_page=30"
+        private const val APK_MIME_TYPE = "application/vnd.android.package-archive"
         private const val PREFS = "lullaby_updates"
         private const val KEY_SUPPRESSED_VERSION = "suppressed_version"
         private const val KEY_SUPPRESS_UNTIL = "suppress_until"

@@ -77,8 +77,8 @@ async function wireLatestAndroid(){
   const link=document.getElementById('androidLatest');if(!link)return;
   try{
     const res=await fetch('https://api.github.com/repos/scenesua/Lullaby-scene/releases',{headers:{Accept:'application/vnd.github+json'}});if(!res.ok)throw new Error('release api');
-    const releases=await res.json();const release=releases.find(r=>!r.draft&&r.assets?.some(a=>a.name.toLowerCase().endsWith('.apk')));if(!release)return;
-    const apk=release.assets.find(a=>a.name.toLowerCase().endsWith('.apk'));link.href=apk.browser_download_url;
+    const releases=await res.json(),installable=a=>a.name.toLowerCase().endsWith('.apk')&&!a.name.toLowerCase().includes('unsigned');const release=releases.find(r=>!r.draft&&r.assets?.some(installable));if(!release)return;
+    const apk=release.assets.find(installable);link.href=apk.browser_download_url;
     const version=document.getElementById('androidVersion');if(version)version.textContent=release.tag_name;
   }catch(err){console.warn('Latest Android release lookup failed',err)}
 }

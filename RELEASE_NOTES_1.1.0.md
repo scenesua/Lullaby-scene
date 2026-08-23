@@ -20,7 +20,7 @@
 - 이 릴리즈에는 1.1.0-alpha.1부터 alpha.4까지 검증한 기능과 안정화 변경이 모두 포함됩니다.
 - Forest Night, Beach/Ocean, City Night는 기존 심플 씬과 역할이 겹쳐 새로운 Journey로 추가하지 않았습니다.
 - Rainy Cafe와 Fireplace는 향후 Living Scene 확장 후보로 유지합니다.
-- 이번 GitHub Release의 APK는 요청에 따라 아직 서명하지 않은 개발용 산출물입니다. 기존 설치본 위에 업데이트하려면 후속 서명 릴리즈가 필요합니다.
+- GitHub Release APK는 지속적으로 재사용할 릴리즈 키로 서명하고 패키지 서명을 검증했습니다. 이전 일회성 프리릴리즈와 서명이 다르면 기존 앱을 삭제한 뒤 설치해야 합니다.
 
 ---
 
@@ -44,7 +44,7 @@
 - This release rolls up the features and stability work tested from 1.1.0-alpha.1 through alpha.4.
 - Forest Night, Beach/Ocean, and City Night remain Simple Scenes instead of becoming redundant Journeys.
 - Rainy Cafe and Fireplace remain candidates for future Living Scene work.
-- As requested, the APK attached to this GitHub Release is currently an unsigned developer artifact. A later signed release is required for in-place updates over existing installs.
+- The GitHub Release APK is signed with a persistent release key and its package signature is verified. If an older one-off prerelease used a different signer, uninstall it before installing this build.
 
 ---
 
@@ -64,4 +64,4 @@
 - 1.1.0-alpha.1からalpha.4までに検証した機能と安定化内容を統合したリリースです。
 - Forest Night、Beach/Ocean、City Nightは重複するJourneyにはせず、Simple Sceneとして維持します。
 - Rainy CafeとFireplaceは将来のLiving Scene候補として残しています。
-- 今回のGitHub Releaseに添付するAPKは、要望により未署名の開発用成果物です。既存インストールへの上書き更新には、後続の署名済みリリースが必要です。
+- GitHub ReleaseのAPKは継続利用するリリースキーで署名し、パッケージ署名を検証しています。以前の一時的なプレリリースと署名が異なる場合は、旧版を削除してからインストールしてください。
