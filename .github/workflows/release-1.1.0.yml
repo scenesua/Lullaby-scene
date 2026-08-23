@@ -1,0 +1,62 @@
+name: Publish Android v1.1.0
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lullaby-v1.1.0-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - name: Verify stable version
+        run: |
+          grep -q 'versionCode = 9' app/build.gradle.kts
+          grep -q 'versionName = "1.1.0"' app/build.gradle.kts
+      - name: Test and build unsigned release APK
+        run: ./gradlew --no-daemon testDebugUnitTest assembleRelease --stacktrace
+      - name: Prepare release assets
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/release/app-release-unsigned.apk'
+          test -s "$APK"
+          mkdir -p dist
+          cp "$APK" dist/Lullaby-Scene-v1.1.0-unsigned.apk
+          sha256sum dist/Lullaby-Scene-v1.1.0-unsigned.apk > dist/Lullaby-Scene-v1.1.0-unsigned.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lullaby-Scene-v1.1.0-unsigned
+          path: dist/*
+          if-no-files-found: error
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='v1.1.0'
+          SHA="$(git rev-parse HEAD)"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --title 'Lullaby Scene v1.1.0' --notes-file RELEASE_NOTES_1.1.0.md --latest
+          else
+            gh release create "$TAG" dist/* \
+              --target "$SHA" \
+              --title 'Lullaby Scene v1.1.0' \
+              --notes-file RELEASE_NOTES_1.1.0.md \
+              --latest
+          fi

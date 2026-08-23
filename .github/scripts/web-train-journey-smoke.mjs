@@ -31,7 +31,10 @@ for(const journey of[
   ['spacecraft_journey','우주선 표류',17824],
   ['submarine_journey','잠수함 항해',47282]
 ]){
-  const[id,title,departureMs]=journey;await page.locator(`[data-journey="${id}"]`).click();await page.waitForTimeout(80);
+  const[id,title,departureMs]=journey;
+  const immediate=await page.evaluate(id=>{document.querySelector(`[data-journey="${id}"]`)?.click();return{title:document.querySelector('.aircraft-title-row h3')?.textContent,phase:document.querySelector('#phaseLabel')?.textContent}},id);
+  if(immediate.title!==title||immediate.phase!=='Ready')throw new Error(`${id} flickered through the aircraft renderer: ${JSON.stringify(immediate)}`);
+  await page.waitForTimeout(80);
   state=await page.evaluate(()=>({active:window.LullabyRemainingJourneys?.active,title:document.querySelector('.aircraft-title-row h3')?.textContent,phase:document.querySelector('#phaseLabel')?.textContent}));
   if(state.active!==id||state.title!==title||state.phase!=='Ready')throw new Error(`${id} selection failed: ${JSON.stringify(state)}`);
   await page.locator('#scenePlay').click();await page.waitForTimeout(650);
@@ -41,7 +44,8 @@ for(const journey of[
   state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole,elapsed:window.LullabyJourneyRuntime.elapsedMs}));
   if(state.role!=='bed'||state.elapsed<departureMs-1000)throw new Error(`${id} bed transition failed: ${JSON.stringify(state)}`);
   await page.evaluate(()=>window.LullabyJourneyRuntime.seekToMs(window.LullabyJourneyRuntime.totalMs-1000));await page.waitForTimeout(650);
-  state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole}));if(state.role!=='arrival')throw new Error(`${id} arrival failed: ${JSON.stringify(state)}`);
+  state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole,paused:Object.fromEntries(Object.entries(window.LullabyRemainingJourneys?.activeNodes||{}).map(([key,node])=>[key,node.el.paused]))}));
+  if(state.role!=='arrival'||Object.entries(state.paused).some(([key,paused])=>key!=='arrival'&&key!=='transition'&&!paused))throw new Error(`${id} arrival failed: ${JSON.stringify(state)}`);
   await page.locator('#scenePlay').click();await page.waitForTimeout(60);
 }
 await page.locator('[data-journey="passenger_aircraft_cabin"]').click();

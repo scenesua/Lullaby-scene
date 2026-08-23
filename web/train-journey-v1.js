@@ -13,7 +13,7 @@
   const playButton=document.getElementById('scenePlay');
   if(playButton)playButton.removeEventListener('click',aircraft.start);
   const trainNodes={departure:null,bed:null,arrival:null};
-  let audibleRole=null,lastElapsed=-1;
+  let audibleRole=null,lastElapsed=-1,roleGeneration=0;
 
   const isTrain=()=>activeJourneyId===TRAIN_ID;
   const isEnglish=()=>(window.LullabyI18n?.language||document.documentElement.lang||'en')!=='ko';
@@ -57,18 +57,21 @@
   async function ensureTrainNodes(){
     await ensureContext();
     for(const [role,[url]] of Object.entries(SOURCES))if(!trainNodes[role]){
-      const node=makeMediaNode(url,{loop:role==='bed'});node.el.preload='auto';node.gain.gain.value=0;trainNodes[role]=node;
+      const node=makeMediaNode(url,{loop:role==='bed',preload:role==='departure'?'auto':'none'});node.gain.gain.value=0;trainNodes[role]=node;
     }
   }
   function pauseTrainNodes(reset=false){for(const node of Object.values(trainNodes))if(node){node.el.pause();if(reset)try{node.el.currentTime=0}catch{}node.gain.gain.value=0}}
   async function activateTrainRole(role,ms,total){
     const jumped=lastElapsed>=0&&Math.abs(ms-lastElapsed)>2500;
     if(role===audibleRole&&!jumped)return;
-    pauseTrainNodes();audibleRole=role;
+    const generation=++roleGeneration,previous=audibleRole;audibleRole=role;
+    if(previous&&previous!==role){const old=trainNodes[previous];old?.gain.gain.setTargetAtTime(0,ctx.currentTime,.08);setTimeout(()=>{if(audibleRole!==previous)old?.el.pause()},320)}
     if(!role||!scenePlaying)return;
     const node=trainNodes[role];
+    node.el.preload='auto';
     try{node.el.currentTime=offsetFor(role,ms,total)}catch{}
     await node.el.play();
+    if(generation!==roleGeneration&&audibleRole!==role)node.el.pause();
   }
   function updateTrainAudio(ms){
     if(!ctx)return;
@@ -93,14 +96,14 @@
       sceneStartedAt=performance.now();scenePlaying=true;lastElapsed=-1;updateTrainAudio(currentElapsed());
       if(playButton)playButton.textContent=isEnglish()?'Ⅱ Pause':'Ⅱ 일시정지';setStatus(copy().playing);
       clearInterval(sceneTimer);sceneTimer=setInterval(updateSceneUi,1000);updateSceneUi();
-    }catch(error){console.error(error);scenePlaying=false;pauseTrainNodes();setStatus(copy().error)}
+    }catch(error){console.error(error);scenePlaying=false;roleGeneration++;pauseTrainNodes();audibleRole=null;setStatus(copy().error)}
   }
   function pauseTrain(){
-    if(!scenePlaying)return;pausedAt=currentElapsed();scenePlaying=false;pauseTrainNodes();clearInterval(sceneTimer);
+    if(!scenePlaying)return;pausedAt=currentElapsed();scenePlaying=false;roleGeneration++;pauseTrainNodes();audibleRole=null;clearInterval(sceneTimer);
     if(playButton)playButton.textContent=isEnglish()?'▶ Resume':'▶ 계속 재생';setStatus(isEnglish()?'Paused':'일시정지됨');updateNowPlaying();
   }
   function stopTrain(arrived=false){
-    scenePlaying=false;pausedAt=0;clearInterval(sceneTimer);pauseTrainNodes(true);audibleRole=null;lastElapsed=-1;
+    scenePlaying=false;pausedAt=0;clearInterval(sceneTimer);roleGeneration++;pauseTrainNodes(true);audibleRole=null;lastElapsed=-1;
     if(playButton)playButton.textContent=copy().start;
     const values={phaseLabel:arrived?'Arrived':'Ready',elapsedLabel:'00:00',remainingLabel:fmt(durationMinutes*60000),seatbeltLabel:'—',eventLabel:copy().none};
     for(const [id,value] of Object.entries(values)){const el=document.getElementById(id);if(el)el.textContent=value}
@@ -136,6 +139,7 @@
     const style=document.createElement('style');style.textContent='.journey-selector{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.journey-selector button{border:1px solid var(--line,#343a4a);border-radius:999px;background:transparent;color:inherit;padding:9px 14px;cursor:pointer}.journey-selector button.active{border-color:#8aa8ff;background:rgba(92,126,220,.18)}';document.head.appendChild(style);
   }
   function renderJourney(){
+    if(activeJourneyId!==AIRCRAFT_ID&&activeJourneyId!==TRAIN_ID)return;
     const text=copy(),train=isTrain();
     const selectorLabels={passenger_aircraft_cabin:isEnglish()?'Aircraft':'여객기',train_journey:isEnglish()?'Train':'기차'};
     for(const [id,label] of Object.entries(selectorLabels)){const span=document.querySelector(`[data-journey="${id}"] span`);if(span)span.textContent=label}

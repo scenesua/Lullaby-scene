@@ -107,7 +107,9 @@ jobs:
           grep -q '/visitor-count-v1.js?v=2' web/sw.js
           grep -q '/visitor-count-v1.js?v=2' web/_worker.js
           grep -q 'api.counterapi.dev/v1' web/visitor-count-v1.js
-          grep -q '/audio/aircraft_cabin_cruise_v2.ogg' web/sw.js
+          grep -q 'lullaby-scene-site-v38' web/sw.js
+          grep -q "event.request.destination==='audio'" web/sw.js
+          ! sed -n '3p' web/sw.js | grep -q '/audio/'
           grep -q '/train-journey-v1.js?v=1' web/sw.js
           grep -q '/remaining-journeys-v1.js?v=1' web/sw.js
           grep -q '/aircraft-source-v15.js?v=15' web/_worker.js
@@ -117,13 +119,8 @@ jobs:
           grep -q '/saved-scenes-v13.js?v=13' web/_worker.js
           grep -q '/scene-recipe-v1.js?v=1' web/_worker.js
           ! grep -q '/mixer-zero-v13.js?v=13' web/_worker.js
-          if [[ -f web/audio/aircraft_cabin_taxi_627056_v1.ogg ]]; then
-            grep -q 'lullaby-scene-site-v20' web/sw.js
-            grep -q '/audio/aircraft_cabin_taxi_627056_v1.ogg' web/sw.js
-            grep -q 'freesound_mar_sounds_627056' web/aircraft-source-v15.js
-          else
-            grep -q 'lullaby-scene-site-v19' web/sw.js
-          fi
+          test -s web/audio/aircraft_cabin_taxi_627056_v1.ogg
+          grep -q 'freesound_mar_sounds_627056' web/aircraft-source-v15.js
 
       - name: Validate full mixer catalog
         run: |
