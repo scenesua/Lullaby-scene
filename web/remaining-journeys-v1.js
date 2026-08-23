@@ -22,6 +22,7 @@
     }
   };
   const base={start:startScene,pause:pauseScene,stop:stopScene,phaseFor,updateUi:updateSceneUi,updateAudio:updateSceneAudio};
+  const ROLE_FADE_SECONDS=5;
   const playButton=document.getElementById('scenePlay');if(playButton)playButton.removeEventListener('click',base.start);
   const media={};let audibleRole=null,lastElapsed=-1,sonarNode=null,sonarTimer=null,roleGeneration=0;
   const config=()=>configs[activeJourneyId]||null;
@@ -37,7 +38,7 @@
   }
   async function ensureNodes(){
     const cfg=config();if(!cfg)return;await ensureContext();media[cfg.title[0]]??={};const bucket=media[cfg.title[0]];
-    for(const [key,[url]] of Object.entries(cfg.nodes))if(!bucket[key]){const node=makeMediaNode(url,{loop:key!=='departure'&&key!=='arrival'&&key!=='transition',preload:key==='departure'||key==='transition'?'auto':'none'});node.gain.gain.value=0;bucket[key]=node}
+    for(const [key,[url]] of Object.entries(cfg.nodes))if(!bucket[key]){const node=makeMediaNode(url,{loop:key!=='departure'&&key!=='arrival'&&key!=='transition',preload:'auto'});node.gain.gain.value=0;bucket[key]=node}
     if(cfg.sonar&&!sonarNode){sonarNode=makeMediaNode(cfg.sonar,{loop:false,preload:'none'});sonarNode.gain.gain.value=.04}
   }
   function activeNodes(){const cfg=config();return cfg?media[cfg.title[0]]||{}:{}}
@@ -46,14 +47,14 @@
   async function activateRole(role,ms,total){
     const cfg=config(),jumped=lastElapsed>=0&&Math.abs(ms-lastElapsed)>2500;if(!cfg||(role===audibleRole&&!jumped))return;
     const generation=++roleGeneration,previous=audibleRole,nodes=activeNodes();audibleRole=role;
-    if(previous&&previous!==role)for(const key of cfg.roles[previous]){const old=nodes[key];old?.gain.gain.setTargetAtTime(0,ctx.currentTime,.08);setTimeout(()=>{if(!cfg.roles[audibleRole]?.includes(key))old?.el.pause()},320)}
+    if(previous&&previous!==role)for(const key of cfg.roles[previous]){const old=nodes[key];old?.gain.gain.setTargetAtTime(0,ctx.currentTime,ROLE_FADE_SECONDS/4);setTimeout(()=>{if(!cfg.roles[audibleRole]?.includes(key))old?.el.pause()},ROLE_FADE_SECONDS*1000)}
     if(!role||!scenePlaying)return;
     for(const key of cfg.roles[role]){const node=nodes[key];node.el.preload='auto';try{node.el.currentTime=offset(key,role,ms,total,cfg)}catch{}await node.el.play();if(generation!==roleGeneration&&!cfg.roles[audibleRole]?.includes(key))node.el.pause()}
   }
   function updateAudio(ms){
-    const cfg=config();if(!cfg||!ctx)return;const total=Math.max(60000,durationMinutes*60000),role=phaseInfo(ms,total,cfg)[2];void activateRole(role,ms,total).catch(console.error);
+    const cfg=config();if(!cfg||!ctx)return;const total=Math.max(60000,durationMinutes*60000),role=phaseInfo(ms,total,cfg)[2],roleChanged=role!==audibleRole;void activateRole(role,ms,total).catch(console.error);
     const factor=(.88+.18*macro.engine)*(.96+.05*macro.activity)*(.96+.04*macro.turbulence)*(1-.08*macro.night);
-    for(const [key,node] of Object.entries(activeNodes())){const on=role&&cfg.roles[role].includes(key),gain=on?cfg.gains[key]*(role==='bed'?factor:1):0;node.gain.gain.setTargetAtTime(gain,ctx.currentTime,.22)}
+    for(const [key,node] of Object.entries(activeNodes())){const on=role&&cfg.roles[role].includes(key),gain=on?cfg.gains[key]*(role==='bed'?factor:1):0;node.gain.gain.setTargetAtTime(gain,ctx.currentTime,roleChanged?ROLE_FADE_SECONDS/4:.22)}
     if(sonarNode)sonarNode.gain.gain.setTargetAtTime(.08*(.65+.35*macro.activity)*(1-.08*macro.night),ctx.currentTime,.4);lastElapsed=ms;
   }
   function scheduleSonar(){clearTimeout(sonarTimer);const cfg=config();if(!cfg?.sonar||!scenePlaying)return;sonarTimer=setTimeout(async()=>{if(config()?.sonar&&scenePlaying){try{sonarNode.el.currentTime=0;await sonarNode.el.play()}catch{}scheduleSonar()}},180000+Math.random()*240000)}
