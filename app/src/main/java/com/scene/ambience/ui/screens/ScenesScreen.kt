@@ -406,8 +406,8 @@ private fun formatDuration(minutes: Int): String {
 private val JOURNEY_IDS = listOf(
     SceneOrchestrator.PASSENGER_AIRCRAFT,
     SceneOrchestrator.TRAIN_JOURNEY,
-    SceneOrchestrator.FERRY_JOURNEY,
     SceneOrchestrator.SPACECRAFT_JOURNEY,
+    SceneOrchestrator.FERRY_JOURNEY,
     SceneOrchestrator.SUBMARINE_JOURNEY,
 )
 

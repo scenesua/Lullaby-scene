@@ -11,6 +11,8 @@ const errors=[];page.on('pageerror',error=>errors.push(String(error)));
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.waitForFunction(()=>window.LullabyTrainJourney&&window.LullabyJourneyRuntime);
+const journeyOrder=await page.locator('#journeySelector [data-journey]').evaluateAll(nodes=>nodes.map(node=>node.dataset.journey));
+if(journeyOrder[2]!=='spacecraft_journey')throw new Error(`Spacecraft is not the third Journey: ${JSON.stringify(journeyOrder)}`);
 await page.locator('[data-journey="train_journey"]').click();
 let state=await page.evaluate(()=>({active:window.LullabyTrainJourney.active,title:document.querySelector('.aircraft-title-row h3')?.textContent,phase:document.querySelector('#phaseLabel')?.textContent}));
 if(!state.active||!state.title?.includes('열차')||state.phase!=='Ready')throw new Error(`Train selection failed: ${JSON.stringify(state)}`);

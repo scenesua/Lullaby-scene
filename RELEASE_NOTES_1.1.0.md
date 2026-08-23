@@ -2,7 +2,7 @@
 
 ## 주요 변경 사항
 
-- `Passenger Aircraft Cabin`, `Overnight Train Journey`, `Night Ferry Journey`, `Spacecraft Drift`, `Submarine Voyage`까지 다섯 개의 잠의 여정을 제공합니다.
+- `Passenger Aircraft Cabin`, `Overnight Train Journey`, `Spacecraft Drift`, `Night Ferry Journey`, `Submarine Voyage`까지 다섯 개의 잠의 여정을 제공합니다. 우주선 여정은 세 번째에 배치했습니다.
 - 사용자가 정한 전체 수면 시간 안에서 출발, 장거리 이동, 접근과 도착이 순서대로 진행되며 이전·다음 단계 이동과 타임라인 탐색을 지원합니다.
 - 엔진 존재감, 활동감, 움직임의 질감, 밤의 깊이를 조절하는 Semantic Macro Control을 각 여정에 맞게 적용했습니다.
 - 항공기 오디오의 합성 저역과 주기적인 음량 흔들림을 제거하고, 실제 기내 질감을 유지하도록 톤 처리와 루프 구성을 개선했습니다.
@@ -26,7 +26,7 @@
 
 ## What's Changed
 
-- Ships five Sleep Journeys: `Passenger Aircraft Cabin`, `Overnight Train Journey`, `Night Ferry Journey`, `Spacecraft Drift`, and `Submarine Voyage`.
+- Ships five Sleep Journeys: `Passenger Aircraft Cabin`, `Overnight Train Journey`, `Spacecraft Drift`, `Night Ferry Journey`, and `Submarine Voyage`, with Spacecraft placed third.
 - Fits departure, long travel, approach, and arrival into the selected sleep duration, with timeline seeking and previous/next phase controls.
 - Adds journey-specific semantic controls for engine presence, activity, motion texture, and night depth.
 - Removes synthetic low-end and periodic gain wobble from the aircraft scene while preserving more of the original cabin recording.
@@ -50,7 +50,7 @@
 
 ## 主な変更点
 
-- `Passenger Aircraft Cabin`、`Overnight Train Journey`、`Night Ferry Journey`、`Spacecraft Drift`、`Submarine Voyage`の5つの睡眠ジャーニーを追加しました。
+- `Passenger Aircraft Cabin`、`Overnight Train Journey`、`Spacecraft Drift`、`Night Ferry Journey`、`Submarine Voyage`の5つの睡眠ジャーニーを追加し、宇宙船ジャーニーを3番目に配置しました。
 - 指定した睡眠時間の中で出発、長距離移動、接近、到着が順番に進み、タイムライン移動と前後フェーズ操作に対応します。
 - エンジンの存在感、活動感、動きの質感、夜の深さを各ジャーニーに合わせて調整できます。
 - 航空機シーンの合成低域と周期的な音量揺れを取り除き、元の機内録音の質感をより保つよう改善しました。
