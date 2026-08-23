@@ -1,0 +1,122 @@
+import fs from 'node:fs';
+import { chromium } from 'playwright-core';
+const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].filter(Boolean);
+const executablePath=candidates.find(p=>fs.existsSync(p));
+if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
+const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
+const context=await browser.newContext({viewport:{width:1440,height:1000},locale:'ko-KR'});
+const page=await context.newPage();
+const errors=[];
+const benignAbort=value=>String(value).includes('AbortError: The play() request was interrupted by a call to pause()');
+page.on('pageerror',e=>{if(!benignAbort(e))errors.push(String(e))});
+page.on('console',m=>{if(m.type()==='error'&&!benignAbort(m.text()))errors.push(m.text())});
+await page.route('**/api/visitors',async route=>{
+  const body=route.request().postDataJSON?.()||{};
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,backend:'countapi.mileshilliard-v1',mode:'pageviews',version:7,today:7,total:42,day:body.day||'2026-08-20',incremented:true})});
+});
+await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
+await page.evaluate(()=>localStorage.removeItem('lullaby-user-presets'));
+await page.addStyleTag({url:'http://127.0.0.1:4173/site-runtime-v12.css?v=12'});
+await page.addStyleTag({url:'http://127.0.0.1:4173/mixer-controls-v14.css?v=14'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js?v=12'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/aircraft-source-v15.js?v=15'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=14'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=12'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/saved-scenes-v13.js?v=13'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/scene-recipe-v1.js?v=1'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=7'});
+const visible=async sel=>{if(!(await page.locator(sel).isVisible()))throw new Error(`${sel} not visible`)};
+
+// Full Mixer: every inactive source must display 0%, and a slider move must start it.
+await page.locator('[data-view="mixer"]').first().click();await visible('[data-panel="mixer"]');
+await page.waitForTimeout(180);
+const initialNonZeroOff=await page.locator('#mixerGrid .mixer-source:not(.on) [data-source-volume]').evaluateAll(inputs=>inputs.filter(input=>input.value!=='0').map(input=>({id:input.dataset.sourceVolume,value:input.value})));
+if(initialNonZeroOff.length)throw new Error(`inactive Mixer sliders are not zero: ${JSON.stringify(initialNonZeroOff)}`);
+const mixerWind=page.locator('#mixerGrid [data-source="wind"]');
+await mixerWind.locator('[data-source-volume]').evaluate(input=>{input.value='18';input.dispatchEvent(new Event('input',{bubbles:true}))});
+await page.waitForTimeout(250);
+let mixerWindState=await page.evaluate(()=>({ui:window.LullabyPlayerRuntime.getMixerUiState('wind'),slider:document.querySelector('#mixerGrid [data-source="wind"] [data-source-volume]')?.value,on:document.querySelector('#mixerGrid [data-source="wind"]')?.classList.contains('on')}));
+if(!mixerWindState.ui.on||!mixerWindState.on||Math.abs(mixerWindState.ui.volume-18)>2||mixerWindState.slider!=='18')throw new Error(`Mixer slider did not auto-enable: ${JSON.stringify(mixerWindState)}`);
+await page.locator('#mixerGrid [data-source="wind"] [data-source-volume]').evaluate(input=>{input.value='0';input.dispatchEvent(new Event('input',{bubbles:true}))});
+await page.waitForTimeout(220);
+mixerWindState=await page.evaluate(()=>({ui:window.LullabyPlayerRuntime.getMixerUiState('wind'),slider:document.querySelector('#mixerGrid [data-source="wind"] [data-source-volume]')?.value,on:document.querySelector('#mixerGrid [data-source="wind"]')?.classList.contains('on')}));
+if(mixerWindState.ui.on||mixerWindState.on||mixerWindState.slider!=='0')throw new Error(`Mixer zero did not turn source off: ${JSON.stringify(mixerWindState)}`);
+
+await page.locator('[data-view="scene"]').first().click();
+await page.locator('[data-scene-mode="simple"]').click();await visible('[data-scene-content="simple"]');await visible('[data-inspector-mode="simple"]');await visible('#simpleScenePlayPause');await visible('#simpleSceneStop');await visible('#saveSceneButton');await visible('#shareSceneRecipe');
+if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ 일시정지')throw new Error('Simple Scene pause control missing');
+
+await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(350);
+const quickOrder=await page.locator('#inspectorMixerList [data-quick-source]').evaluateAll(rows=>rows.slice(0,4).map(row=>row.getAttribute('data-quick-source')));
+if(JSON.stringify(quickOrder.slice(0,2))!==JSON.stringify(['rain','cafe']))throw new Error(`preset sources were not sorted first: ${JSON.stringify(quickOrder)}`);
+const inactive=page.locator('#inspectorMixerList [data-quick-source="wind"]');
+if(!(await inactive.count()))throw new Error('inactive quick mixer source missing');
+if(!(await inactive.evaluate(row=>row.classList.contains('is-off'))))throw new Error('non-preset quick mixer source is not dimmed/off');
+if((await inactive.locator('[data-quick-volume]').inputValue())!=='0')throw new Error('inactive quick mixer slider is not 0%');
+await inactive.locator('[data-quick-volume]').evaluate(input=>{input.value='25';input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}))});
+await page.waitForTimeout(180);
+let windState=await page.locator('#inspectorMixerList [data-quick-source="wind"]').evaluate(row=>({on:row.classList.contains('is-on'),value:row.querySelector('[data-quick-volume]')?.value,output:row.querySelector('[data-quick-output]')?.textContent}));
+if(!windState.on||windState.value!=='25'||windState.output!=='25%')throw new Error(`slider did not enable source: ${JSON.stringify(windState)}`);
+await page.locator('#inspectorMixerList [data-quick-source="wind"] [data-quick-toggle]').click();await page.waitForTimeout(120);
+windState=await page.locator('#inspectorMixerList [data-quick-source="wind"]').evaluate(row=>({off:row.classList.contains('is-off'),value:row.querySelector('[data-quick-volume]')?.value}));
+if(!windState.off||windState.value!=='0')throw new Error(`turn-off did not reset source to 0%: ${JSON.stringify(windState)}`);
+
+// Cross-platform Scene Recipe schema: base64url JSON + shared source ids/0..1 gains.
+const recipeRoundTrip=await page.evaluate(()=>{
+  const recipe=window.LullabySceneRecipe.snapshot('Browser Recipe');
+  const encoded=window.LullabySceneRecipe.encode(recipe);
+  const decoded=window.LullabySceneRecipe.decode(encoded);
+  const url=new URL(location.href);url.searchParams.set('scene','simple');url.searchParams.set('recipe',encoded);
+  return{recipe,encoded,decoded,url:url.toString()};
+});
+if(recipeRoundTrip.decoded?.schema!=='lullaby.scene.recipe'||recipeRoundTrip.decoded?.version!==1)throw new Error(`Scene Recipe round-trip failed: ${JSON.stringify(recipeRoundTrip)}`);
+if(!recipeRoundTrip.url.includes('recipe='))throw new Error(`Scene Recipe share URL missing payload: ${recipeRoundTrip.url}`);
+if(Object.values(recipeRoundTrip.decoded.mix||{}).some(value=>typeof value!=='number'||value<=0||value>1))throw new Error(`Scene Recipe mix is not normalized: ${JSON.stringify(recipeRoundTrip.decoded.mix)}`);
+
+const savedId=await page.evaluate(()=>window.LullabySavedScenes.create('My Sleep Scene'));
+await page.waitForTimeout(80);await visible(`[data-user-preset="${savedId}"]`);await visible(`[data-saved-load="${savedId}"]`);await visible(`[data-saved-rename="${savedId}"]`);await visible(`[data-saved-overwrite="${savedId}"]`);
+let savedState=await page.evaluate(id=>window.LullabySavedScenes.list().find(scene=>scene.id===id),savedId);
+if(savedState?.name!=='My Sleep Scene'||!savedState.mix?.rain||!savedState.mix?.cafe)throw new Error(`saved scene snapshot failed: ${JSON.stringify(savedState)}`);
+if(!(await page.evaluate(id=>window.LullabySavedScenes.rename(id,'Renamed Sleep Scene'),savedId)))throw new Error('saved scene rename returned false');
+await page.waitForTimeout(80);
+if((await page.locator(`[data-user-preset="${savedId}"] strong`).textContent())?.trim()!=='Renamed Sleep Scene')throw new Error('saved scene rename did not update UI');
+
+const windAgain=page.locator('#inspectorMixerList [data-quick-source="wind"] [data-quick-volume]');
+await windAgain.evaluate(input=>{input.value='33';input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}))});await page.waitForTimeout(180);
+if(!(await page.evaluate(id=>window.LullabySavedScenes.overwrite(id),savedId)))throw new Error('saved scene overwrite returned false');
+savedState=await page.evaluate(id=>window.LullabySavedScenes.list().find(scene=>scene.id===id),savedId);
+if(Math.abs((savedState?.mix?.wind??0)-0.33)>.02)throw new Error(`saved scene overwrite missed current mix: ${JSON.stringify(savedState)}`);
+await page.evaluate(()=>window.LullabyQuickMixer.turnAllOff());await page.waitForTimeout(100);
+if(!(await page.evaluate(id=>window.LullabySavedScenes.load(id),savedId)))throw new Error('saved scene load returned false');
+await page.waitForTimeout(300);
+const loadedState=await page.evaluate(id=>({active:window.LullabySavedScenes.activeId,scene:window.LullabySavedScenes.list().find(item=>item.id===id),rain:window.LullabyPlayerRuntime.getMixerUiState('rain'),cafe:window.LullabyPlayerRuntime.getMixerUiState('cafe'),wind:window.LullabyPlayerRuntime.getMixerUiState('wind')}),savedId);
+if(loadedState.active!==savedId||!loadedState.rain.on||!loadedState.cafe.on||!loadedState.wind.on||Math.abs(loadedState.wind.volume-33)>2)throw new Error(`saved scene load failed: ${JSON.stringify(loadedState)}`);
+if(!(await page.locator(`[data-user-preset="${savedId}"]`).locator('xpath=..').evaluate(card=>card.classList.contains('is-active-saved-scene'))))throw new Error('loaded saved scene is not marked active');
+
+if((await page.locator('[data-visitor-today]').textContent())?.trim()!=='7'||(await page.locator('[data-visitor-total]').textContent())?.trim()!=='42')throw new Error('page-view counter did not render API values');
+await page.setViewportSize({width:390,height:844});await visible('#simpleQuickMixerSection');await visible('#simpleQuickMixerList [data-quick-source="rain"]');await visible(`[data-saved-load="${savedId}"]`);
+await page.setViewportSize({width:1440,height:1000});
+
+await page.locator('[data-view="mixer"]').first().click();await visible('[data-panel="mixer"]');
+await page.locator('[data-view="timer"]').first().click();await visible('[data-panel="timer"]');
+await page.locator('[data-view="settings"]').first().click();await visible('[data-panel="settings"]');
+await page.locator('[data-view="scene"]').first().click();await page.locator('[data-scene-mode="journey"]').click();await visible('[data-scene-content="journey"]');
+await page.locator('[data-duration="600"]').click();if(!(await page.locator('#durationOutput').textContent())?.includes('10h'))throw new Error('10h shortcut failed');
+await page.locator('#durationDirect').fill('10:15');await page.locator('#durationDirectApply').click();await page.waitForTimeout(50);
+let directState=await page.evaluate(()=>({output:document.querySelector('#durationOutput')?.textContent,input:document.querySelector('#durationDirect')?.value,duration:typeof durationMinutes==='number'?durationMinutes:null,controls:!!window.LullabyControls}));
+if(!directState.output?.includes('10h 15m')||directState.input!=='10:15'||directState.duration!==615)throw new Error(`minute-precise HH:MM duration failed: ${JSON.stringify(directState)}`);
+await page.locator('#durationDirect').fill('00:05');await page.locator('#durationDirectApply').click();await page.waitForTimeout(50);
+directState=await page.evaluate(()=>({output:document.querySelector('#durationOutput')?.textContent,input:document.querySelector('#durationDirect')?.value,duration:typeof durationMinutes==='number'?durationMinutes:null,phaseStart:phaseFor(0,5*60000)[0],phaseEnd:phaseFor(5*60000,5*60000)[0]}));
+if(directState.output!=='5m'||directState.input!=='00:05'||directState.duration!==5)throw new Error(`free short duration failed: ${JSON.stringify(directState)}`);
+if(directState.phaseStart!=='Taxi out'||directState.phaseEnd!=='Arrived')throw new Error(`compressed phase timeline failed: ${JSON.stringify(directState)}`);
+const fixed=await page.evaluate(()=>window.LullabyJourneyDurationProfiles?.aircraft?.fixedDurations);
+if(JSON.stringify(fixed)!=='[360,480,600]')throw new Error(`aircraft fixed duration profile changed: ${JSON.stringify(fixed)}`);
+await page.locator('[data-scene-mode="simple"]').click();await page.locator('[data-fx="warmth"]').evaluate(el=>{el.value='72';el.dispatchEvent(new Event('input',{bubbles:true}))});if((await page.locator('[data-fx-output="warmth"]').textContent())!=='72%')throw new Error('Simple Scene FX control failed');
+await page.locator('.language-toggle').click();if((await page.locator('[data-scene-mode="simple"]').textContent())?.trim()!=='Simple Scenes')throw new Error('language toggle failed');
+if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ Pause')throw new Error('Simple Scene transport did not localize');
+if((await page.locator('#saveSceneButton').textContent())?.trim()!=='Save scene')throw new Error('saved scene controls did not localize');
+if((await page.locator(`[data-saved-rename="${savedId}"]`).textContent())?.trim()!=='Rename')throw new Error('saved scene rename control did not localize');
+if((await page.locator('[data-visitor-today-label]').textContent())?.trim()!=='Views today')throw new Error('page-view counter did not localize');
+if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
+await browser.close();
+console.log('web interaction smoke test passed');

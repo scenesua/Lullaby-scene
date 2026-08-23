@@ -1,0 +1,213 @@
+name: Publish Android v1.1.0-alpha.4 once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/publish-alpha4-once.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/publish-alpha4-once.yml'
+
+permissions:
+  contents: write
+  statuses: write
+
+concurrency:
+  group: publish-lullaby-alpha4-once
+  cancel-in-progress: false
+
+jobs:
+  publish-alpha4:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout alpha4 source
+        uses: actions/checkout@v4
+        with:
+          ref: work/lullaby-2.0-audio-foundation
+          fetch-depth: 0
+
+      - name: Capture alpha4 source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "TARGET_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "RUN_URL=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+
+      - name: Mark alpha4 publication pending
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=pending \
+            -f context='prerelease/v1.1.0-alpha.4' \
+            -f description='Checking alpha.3 signer compatibility and building alpha.4' \
+            -f target_url="$RUN_URL"
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Verify alpha4 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'versionCode = 8' app/build.gradle.kts
+          grep -q 'versionName = "1.1.0-alpha.4"' app/build.gradle.kts
+          test -s RELEASE_NOTES_1.1.0-alpha.4.md
+          ! grep -q 'CountDownLatch' app/src/main/java/com/scene/ambience/media/ContinuousSourcePlayer.kt
+          grep -q 'HandlerThread("ambience-playback")' app/src/main/java/com/scene/ambience/media/ContinuousSourcePlayer.kt
+          grep -q 'Dispatchers.IO' app/src/main/java/com/scene/ambience/media/EventSourcePlayer.kt
+          grep -q 'flowOn(Dispatchers.Default)' app/src/main/java/com/scene/ambience/media/AmbiencePlaybackService.kt
+          grep -q 'sceneState.collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/ScenesScreen.kt
+          grep -q 'timerRemaining.collectAsStateWithLifecycle' app/src/main/java/com/scene/ambience/ui/screens/TimerScreen.kt
+          grep -q 'isInstallableUpdateTag' app/src/main/java/com/scene/ambience/update/UpdateCoordinator.kt
+          grep -q 'space-preview' app/src/test/java/com/scene/ambience/update/UpdateChannelFilterTest.kt
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Run unit tests and unsigned release compile
+        run: ./gradlew --no-daemon testDebugUnitTest assembleRelease --stacktrace
+
+      - name: Stop after validation on pull requests
+        if: github.event_name == 'pull_request'
+        run: echo 'alpha4 validation completed; signer compatibility and publishing are push-only'
+
+      - name: Rebuild alpha4 with the legacy alpha3 debug signing path
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('app/build.gradle.kts')
+          text = path.read_text()
+          old = 'signingConfigs.findByName("stableRelease")?.let { signingConfig = it }'
+          new = 'signingConfig = signingConfigs.getByName("debug")'
+          if old not in text:
+              raise SystemExit('expected alpha4 signing stanza not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          ./gradlew --no-daemon assembleRelease --stacktrace
+
+      - name: Compare alpha4 signer with published alpha3
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/release/app-release.apk'
+          test -s "$APK"
+          mkdir -p reference
+          gh release download v1.1.0-alpha.3 \
+            --pattern 'Lullaby-Scene-v1.1.0-alpha.3.apk' \
+            --dir reference
+          OLD_APK='reference/Lullaby-Scene-v1.1.0-alpha.3.apk'
+          test -s "$OLD_APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)"
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$OLD_APK"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          OLD_CERT="$($APKSIGNER verify --print-certs "$OLD_APK" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1 | tr '[:upper:]' '[:lower:]')"
+          NEW_CERT="$($APKSIGNER verify --print-certs "$APK" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1 | tr '[:upper:]' '[:lower:]')"
+          test -n "$OLD_CERT"
+          test -n "$NEW_CERT"
+          echo "alpha3 signer: $OLD_CERT"
+          echo "alpha4 signer: $NEW_CERT"
+          if [[ "$OLD_CERT" != "$NEW_CERT" ]]; then
+            echo 'FAILURE_DESCRIPTION=alpha.3 signing key is not reproducible; permanent signing migration required' >> "$GITHUB_ENV"
+            echo '::error::alpha.4 was NOT published because its signer differs from the installed alpha.3 lineage.'
+            exit 1
+          fi
+          echo 'SIGNER_COMPATIBLE=true' >> "$GITHUB_ENV"
+
+      - name: Verify signer and stage files
+        if: github.event_name == 'push' && env.SIGNER_COMPATIBLE == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/release/app-release.apk'
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)"
+          "$APKSIGNER" verify "$APK"
+          mkdir -p dist
+          cp "$APK" dist/Lullaby-Scene-v1.1.0-alpha.4.apk
+          sha256sum dist/Lullaby-Scene-v1.1.0-alpha.4.apk > dist/Lullaby-Scene-v1.1.0-alpha.4.apk.sha256
+
+      - name: Publish fresh alpha4 prerelease
+        if: github.event_name == 'push' && env.SIGNER_COMPATIBLE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v1.1.0-alpha.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release delete "$TAG" --cleanup-tag --yes
+          else
+            git push origin ":refs/tags/$TAG" >/dev/null 2>&1 || true
+          fi
+          gh release create "$TAG" \
+            dist/Lullaby-Scene-v1.1.0-alpha.4.apk \
+            dist/Lullaby-Scene-v1.1.0-alpha.4.apk.sha256 \
+            --target "$TARGET_SHA" \
+            --title 'Lullaby Scene v1.1.0-alpha.4' \
+            --notes-file RELEASE_NOTES_1.1.0-alpha.4.md \
+            --prerelease
+
+      - name: Verify release API and remove accidental beta
+        if: github.event_name == 'push' && env.SIGNER_COMPATIBLE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v1.1.0-alpha.4
+          ACCIDENTAL_TAG: v1.0.4-beta.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.prerelease')" = 'true'
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.assets[].name' | grep -Fx 'Lullaby-Scene-v1.1.0-alpha.4.apk'
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.assets[].name' | grep -Fx 'Lullaby-Scene-v1.1.0-alpha.4.apk.sha256'
+          if gh release view "$ACCIDENTAL_TAG" >/dev/null 2>&1; then
+            gh release delete "$ACCIDENTAL_TAG" --cleanup-tag --yes
+          else
+            git push origin ":refs/tags/$ACCIDENTAL_TAG" >/dev/null 2>&1 || true
+          fi
+
+      - name: Mark alpha4 publication successful
+        if: github.event_name == 'push' && success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=success \
+            -f context='prerelease/v1.1.0-alpha.4' \
+            -f description='alpha.4 signer matches alpha.3; APK published and verified' \
+            -f target_url="$RUN_URL"
+
+      - name: Mark alpha4 publication failed
+        if: github.event_name == 'push' && failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          DESCRIPTION="${FAILURE_DESCRIPTION:-alpha.4 publication failed; inspect Actions}"
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            -f state=failure \
+            -f context='prerelease/v1.1.0-alpha.4' \
+            -f description="$DESCRIPTION" \
+            -f target_url="$RUN_URL" || true

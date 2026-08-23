@@ -1,0 +1,103 @@
+name: Validate web i18n and security
+
+on:
+  pull_request:
+  push:
+    branches:
+      - work/lullaby-web-foundation
+    paths:
+      - 'web/**'
+      - '.github/scripts/web-i18n-security-smoke.mjs'
+      - '.github/workflows/web-i18n-security-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  hardening:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install browser and Worker tooling
+        run: npm install --no-save playwright-core@1.55.0 wrangler@4
+
+      - name: Static security and stability assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check web/site-locales-v10.js
+          node --check web/i18n-runtime-v3.js
+          node --check web/mobile-android-shell-v1.js
+          node --check web/legal-language-v9.js
+          node --check web/_worker.js
+          grep -Fq "frame-ancestors 'none'" web/_worker.js
+          grep -Fq "'X-Frame-Options':'DENY'" web/_worker.js
+          grep -Fq "script-src 'self'; script-src-attr 'none'" web/_worker.js
+          grep -Fq "object-src 'none'" web/_worker.js
+          grep -Fq "frame-src 'none'" web/_worker.js
+          grep -Fq "'Strict-Transport-Security':'max-age=31536000'" web/_worker.js
+          grep -Fq "fetchSite==='cross-site'" web/_worker.js
+          grep -Fq "startsWith('application/json')" web/_worker.js
+          grep -Fq '/site-locales-v10.js?v=11' web/_worker.js
+          grep -Fq '/i18n-runtime-v3.js?v=3' web/_worker.js
+          grep -Fq '/mobile-android-shell-v1.js?v=2' web/_worker.js
+          grep -Fq '/site-locales-v10.js?v=11' web/sw.js
+          grep -Fq '/i18n-runtime-v3.js?v=3' web/sw.js
+          grep -Fq '/mobile-android-shell-v1.js?v=2' web/sw.js
+          ! grep -Fq 'i18n-catalog-v2.js' web/_worker.js
+          ! grep -Fq "observe(host,{childList:true,subtree:true" web/i18n-runtime-v3.js
+          ! grep -Eq "script-src[^;]*unsafe-(inline|eval)" web/_worker.js
+
+      - name: Browser localization and renderer stability smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-i18n-static.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
+          timeout 120s node .github/scripts/web-i18n-security-smoke.mjs
+
+      - name: Worker header and anti-clickjacking smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler pages dev web --port 4174 --ip 127.0.0.1 --d1 VISITOR_DB=00000000-0000-0000-0000-000000000000 --log-level error --show-interactive-dev-session=false >/tmp/lullaby-wrangler.log 2>&1 &
+          WRANGLER_PID=$!
+          trap 'kill $WRANGLER_PID || true' EXIT
+          for i in {1..40}; do curl -fsS http://127.0.0.1:4174/ >/dev/null && break; sleep 0.5; done
+          curl -fsS -D /tmp/headers -o /tmp/home http://127.0.0.1:4174/
+          grep -Eiq '^x-frame-options:[[:space:]]*DENY' /tmp/headers
+          grep -Eiq '^x-content-type-options:[[:space:]]*nosniff' /tmp/headers
+          grep -Eiq '^content-security-policy:.*frame-ancestors .none.' /tmp/headers
+          grep -Eiq '^content-security-policy:.*object-src .none.' /tmp/headers
+          grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
+          grep -Fq 'site-locales-v10.js?v=11' /tmp/home
+          grep -Fq 'i18n-runtime-v3.js?v=3' /tmp/home
+          grep -Fq 'mobile-android-shell-v1.js?v=2' /tmp/home
+
+          code=$(curl -sS -o /tmp/cross.json -w '%{http_code}' -X POST \
+            -H 'Origin: https://evil.example' \
+            -H 'Content-Type: application/json' \
+            --data '{"day":"'"$(date -u +%F)"'"}' \
+            http://127.0.0.1:4174/api/visitors)
+          test "$code" = '403'
+
+          code=$(curl -sS -o /tmp/form.json -w '%{http_code}' -X POST \
+            -H 'Content-Type: text/plain' \
+            --data '{"day":"'"$(date -u +%F)"'"}' \
+            http://127.0.0.1:4174/api/visitors)
+          test "$code" = '403'
+
+          code=$(curl -sS -o /tmp/ok.json -w '%{http_code}' -X POST \
+            -H 'Origin: http://127.0.0.1:4174' \
+            -H 'Content-Type: application/json' \
+            --data '{"day":"'"$(date -u +%F)"'"}' \
+            http://127.0.0.1:4174/api/visitors)
+          test "$code" = '200'
+          node -e "const x=require('fs').readFileSync('/tmp/ok.json','utf8');const j=JSON.parse(x);if(!j.available||j.mode!=='pageviews'||j.incremented!==true||j.today<1||j.total<1)throw new Error(x)"
