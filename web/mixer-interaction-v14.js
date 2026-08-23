@@ -2,7 +2,7 @@
   const R=window.LullabyPlayerRuntime;
   if(!R||!document.getElementById('webPlayer'))return;
   const desired=new Map(),starting=new Map(),latestPercent=new Map(),lastNonZero=new Map(),rafById=new Map();
-  const clampPercent=v=>Math.max(0,Math.min(100,Math.round(Number(v)||0)));
+  const clampPercent=v=>Math.max(0,Math.min(100,Math.round(Number(v)||0));
   const source=id=>R.sourceById[id]||R.catalog.find(item=>item.id===id)||null;
 
   function actualState(id){
@@ -48,7 +48,7 @@
     const frame=requestAnimationFrame(()=>{
       rafById.delete(id);
       const latest=latestPercent.get(id)??percent,node=R.nodes[id];
-      if(!node||!window.AudioContext&& !window.webkitAudioContext)return;
+      if(!node)return;
       const value=latest/100;
       try{
         if(typeof ctx!=='undefined'&&ctx&&node.gain?.gain?.setTargetAtTime)node.gain.gain.setTargetAtTime(value,ctx.currentTime,.025);
@@ -72,7 +72,8 @@
   async function startContinuous(id,def){
     if(starting.has(id))return starting.get(id);
     const task=(async()=>{
-      await R.ensureContext();
+      // Audio stability v2 provides native-media mixer nodes. If it is absent,
+      // the legacy makeSourceNode still creates/resumes its own AudioContext.
       if(!R.nodes[id])R.nodes[id]=await R.makeSourceNode(def);
       const node=R.nodes[id];if(!node)throw new Error(`missing audio node: ${id}`);
       const latest=Math.max(1,latestPercent.get(id)||1);node.gain.gain.value=latest/100;
@@ -110,7 +111,7 @@
 
   window.addEventListener('pointerdown',event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
-    input.dataset.dragging='1';R.ensureContext().catch(()=>{});
+    input.dataset.dragging='1';
   },true);
   window.addEventListener('input',event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
