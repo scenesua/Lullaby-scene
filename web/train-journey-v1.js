@@ -4,6 +4,7 @@
 
   const AIRCRAFT_ID='passenger_aircraft_cabin',TRAIN_ID='train_journey';
   const DEPARTURE_MS=35183,LEAVING_CITY_END_MS=480000,APPROACH_MS=480000,ARRIVAL_MS=32236;
+  const ROLE_FADE_SECONDS=5;
   const SOURCES={
     departure:['/audio/scenes/train_journey/train_journey_departure_001.ogg',35.183],
     bed:['/audio/scenes/train_journey/train_journey_bed_001.ogg',240.673],
@@ -57,7 +58,7 @@
   async function ensureTrainNodes(){
     await ensureContext();
     for(const [role,[url]] of Object.entries(SOURCES))if(!trainNodes[role]){
-      const node=makeMediaNode(url,{loop:role==='bed',preload:role==='departure'?'auto':'none'});node.gain.gain.value=0;trainNodes[role]=node;
+      const node=makeMediaNode(url,{loop:role==='bed',preload:'auto'});node.gain.gain.value=0;trainNodes[role]=node;
     }
   }
   function pauseTrainNodes(reset=false){for(const node of Object.values(trainNodes))if(node){node.el.pause();if(reset)try{node.el.currentTime=0}catch{}node.gain.gain.value=0}}
@@ -65,7 +66,7 @@
     const jumped=lastElapsed>=0&&Math.abs(ms-lastElapsed)>2500;
     if(role===audibleRole&&!jumped)return;
     const generation=++roleGeneration,previous=audibleRole;audibleRole=role;
-    if(previous&&previous!==role){const old=trainNodes[previous];old?.gain.gain.setTargetAtTime(0,ctx.currentTime,.08);setTimeout(()=>{if(audibleRole!==previous)old?.el.pause()},320)}
+    if(previous&&previous!==role){const old=trainNodes[previous];old?.gain.gain.setTargetAtTime(0,ctx.currentTime,ROLE_FADE_SECONDS/4);setTimeout(()=>{if(audibleRole!==previous)old?.el.pause()},ROLE_FADE_SECONDS*1000)}
     if(!role||!scenePlaying)return;
     const node=trainNodes[role];
     node.el.preload='auto';
@@ -76,10 +77,10 @@
   function updateTrainAudio(ms){
     if(!ctx)return;
     const total=Math.max(60000,durationMinutes*60000),role=roleFor(ms,total);
-    void activateTrainRole(role,ms,total).catch(console.error);
+    const roleChanged=role!==audibleRole;void activateTrainRole(role,ms,total).catch(console.error);
     const rhythm=.46+.18*macro.engine,carriage=.96+.06*macro.activity,texture=.96+.05*macro.turbulence,night=1-.10*macro.night;
     const gain=role==='bed'?rhythm*carriage*texture*night:role==='departure'?.58:role==='arrival'?.56:0;
-    for(const [key,node] of Object.entries(trainNodes))if(node)node.gain.gain.setTargetAtTime(key===role?gain:0,ctx.currentTime,.22);
+    for(const [key,node] of Object.entries(trainNodes))if(node)node.gain.gain.setTargetAtTime(key===role?gain:0,ctx.currentTime,roleChanged?ROLE_FADE_SECONDS/4:.22);
     lastElapsed=ms;
   }
   function updateTrainUi(){

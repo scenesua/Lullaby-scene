@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.cos
+import kotlin.math.sin
 
 /** Service-owned living-scene runtime. */
 class SceneOrchestrator(
@@ -311,12 +313,14 @@ class SceneOrchestrator(
         val texture = 0.96f + 0.05f * m.turbulence
         val night = 1f - 0.10f * m.nightDepth
         val bedVolume = (rhythm * carriage * texture * night).coerceIn(0.30f, 0.68f)
-        setVolumeIfChanged(SOURCE_TRAIN_DEPARTURE, if (phase == STATE_TRAIN_DEPARTURE) 0.58f else 0f)
+        val departureFade = journeyCrossfade(current.elapsedMs, plan.departureEndMs)
+        val arrivalFade = journeyCrossfade(current.elapsedMs, plan.arrivalStartMs)
+        setVolumeIfChanged(SOURCE_TRAIN_DEPARTURE, 0.58f * departureFade.first)
         setVolumeIfChanged(
             SOURCE_TRAIN_BED,
-            if (phase in setOf(STATE_TRAIN_LEAVING_CITY, STATE_TRAIN_NIGHT_RUN, STATE_TRAIN_APPROACH)) bedVolume else 0f,
+            bedVolume * departureFade.second * arrivalFade.first,
         )
-        setVolumeIfChanged(SOURCE_TRAIN_ARRIVAL, if (phase == STATE_TRAIN_ARRIVAL) 0.56f else 0f)
+        setVolumeIfChanged(SOURCE_TRAIN_ARRIVAL, 0.56f * arrivalFade.second)
     }
 
     private fun applyAmbientFrame(current: SceneRuntimeSnapshot) {
@@ -339,13 +343,13 @@ class SceneOrchestrator(
         val texture = 0.96f + 0.04f * m.turbulence
         val night = 1f - 0.08f * m.nightDepth
         val desired = profile.requiredSources.associateWith { 0f }.toMutableMap()
-        when (phase) {
-            profile.phases[0] -> desired[profile.departureSource] = profile.departureVolume
-            profile.phases[4] -> desired[profile.arrivalSource] = profile.arrivalVolume
-            in profile.phases.subList(1, 4) -> profile.bedSources.forEach { (source, base) ->
-                desired[source] = (base * presence * activity * texture * night).coerceIn(0.18f, 0.68f)
-            }
+        val departureFade = journeyCrossfade(current.elapsedMs, plan.departureEndMs)
+        val arrivalFade = journeyCrossfade(current.elapsedMs, plan.arrivalStartMs)
+        desired[profile.departureSource] = profile.departureVolume * departureFade.first
+        profile.bedSources.forEach { (source, base) ->
+            desired[source] = (base * presence * activity * texture * night).coerceIn(0.18f, 0.68f) * departureFade.second * arrivalFade.first
         }
+        desired[profile.arrivalSource] = maxOf(desired[profile.arrivalSource] ?: 0f, profile.arrivalVolume * arrivalFade.second)
         profile.eventSource?.let { desired[it] = (profile.eventVolume * (0.65f + 0.35f * m.cabinActivity) * night).coerceAtLeast(0.03f) }
         desired.forEach(::setVolumeIfChanged)
     }
@@ -554,5 +558,18 @@ class SceneOrchestrator(
         }
 
         private const val TICK_MS = 1_000L
+        internal const val JOURNEY_CROSSFADE_MS = 5_000L
     }
+}
+
+internal fun journeyCrossfade(
+    elapsedMs: Long,
+    boundaryMs: Long,
+    fadeMs: Long = SceneOrchestrator.JOURNEY_CROSSFADE_MS,
+): Pair<Float, Float> {
+    val progress = ((elapsedMs - (boundaryMs - fadeMs)).toFloat() / fadeMs).coerceIn(0f, 1f)
+    if (progress == 0f) return 1f to 0f
+    if (progress == 1f) return 0f to 1f
+    val angle = progress * (Math.PI.toFloat() / 2f)
+    return cos(angle) to sin(angle)
 }
