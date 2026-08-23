@@ -6,57 +6,53 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import android.util.Log
 import com.scene.ambience.R
 import com.scene.ambience.data.model.PlaybackState
 import com.scene.ambience.data.model.SourceCatalog
 import com.scene.ambience.data.model.SourceDefinition
-import com.scene.ambience.data.model.SourceId
 import com.scene.ambience.data.model.UiCategory
 import com.scene.ambience.presentation.AmbienceUiState
 import com.scene.ambience.presentation.AmbienceViewModel
 import com.scene.ambience.ui.AmbienceStrings
 import com.scene.ambience.ui.components.SourceVolumeRow
+import kotlin.math.abs
 
 @Composable
 fun MixerScreen(
@@ -67,7 +63,7 @@ fun MixerScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val snapshot = state.snapshot
     val playing = snapshot?.playbackState == PlaybackState.PLAYING
-    val availableIds = state.library.sources.map { it.id }.toSet()
+    val availableIds = state.library.sourceIds
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -110,7 +106,7 @@ fun MixerScreen(
         }
 
         UiCategory.entries.forEach { category ->
-            val defs = SourceCatalog.all.filter { it.uiCategory == category }
+            val defs = SourceCatalog.byCategory[category].orEmpty()
             item(key = "header_${category.id}") {
                 val collapsed = state.expandedCategories.contains(category.id)
                 CategoryHeader(
@@ -152,6 +148,13 @@ private fun MasterControls(
     val panelColor = if (darkTheme) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.inverseSurface
     val panelContentColor = if (darkTheme) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.inverseOnSurface
     val panelAccentColor = if (darkTheme) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.inversePrimary
+
+    // UI follows the finger immediately; controller traffic is separately coalesced.
+    var sliderVolume by remember { mutableFloatStateOf(volume.coerceIn(0f, 1f)) }
+    LaunchedEffect(volume) {
+        if (abs(sliderVolume - volume) > 0.001f) sliderVolume = volume.coerceIn(0f, 1f)
+    }
+
     Surface(
         shape = MaterialTheme.shapes.large,
         color = panelColor,
@@ -167,7 +170,7 @@ private fun MasterControls(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = context.getString(R.string.master_volume), style = MaterialTheme.typography.titleLarge)
                     Text(
-                        text = "${(volume * 100).toInt()}%",
+                        text = "${(sliderVolume * 100).toInt()}%",
                         style = MaterialTheme.typography.labelMedium,
                         color = panelAccentColor,
                     )
@@ -187,9 +190,11 @@ private fun MasterControls(
                 }
             }
             Slider(
-                value = volume,
-                onValueChange = onVolume,
-                enabled = true,
+                value = sliderVolume,
+                onValueChange = {
+                    sliderVolume = it
+                    onVolume(it)
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(
                     thumbColor = panelAccentColor,
@@ -279,10 +284,7 @@ private fun SourceRow(
         enabled = enabled,
         available = available,
         unavailableText = unavailableText,
-        onVolumeChangeFinished = {
-            Log.d("AmbiencePlayback", "SliderInput source=${def.sourceId.id} value=$it")
-            viewModel.setSourceVolume(def.sourceId.id, it)
-        },
+        onVolumeChangeFinished = { viewModel.setSourceVolume(def.sourceId.id, it) },
         onToggleMuted = { viewModel.setSourceMuted(def.sourceId.id, !muted) },
     )
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scene_duration_direct">Direct duration</string>
+    <string name="scene_duration_direct_hint">HH:MM · any positive duration</string>
+    <string name="scene_duration_apply">Apply</string>
+    <string name="scene_duration_direct_error">Enter HH:MM of at least 00:01.</string>
+    <string name="scene_duration_slider_hint">Slider: 1 min–12 h · fixed buttons are scene-specific recommendations</string>
+</resources>

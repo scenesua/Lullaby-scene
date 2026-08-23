@@ -10,6 +10,11 @@ on:
       - 'web/display-tools-v1.js'
       - 'web/display-tools-v1.css'
       - 'web/visitor-count-v1.js'
+      - 'web/player/index.html'
+      - 'web/player-v2.js'
+      - 'web/train-journey-v1.js'
+      - 'web/remaining-journeys-v1.js'
+      - 'web/audio/scenes/**'
       - 'web/sw.js'
       - '.github/workflows/production-web-smoke.yml'
 
@@ -21,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Wait for Cloudflare production and verify blackout v4
+      - name: Wait for Cloudflare production and verify blackout v4 plus all Journeys
         shell: bash
         run: |
           set -euo pipefail
@@ -29,9 +34,25 @@ jobs:
           for i in {1..36}; do
             if curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" > /tmp/player.html \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=4&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css; then
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=1&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=1&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/train_journey/train_journey_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/train-bed.ogg \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/ferry_journey/ferry_journey_arrival_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/ferry.ogg \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/spacecraft_journey/spacecraft_journey_transition_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.ogg \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg; then
               if grep -q 'display-tools-v1.js?v=4' /tmp/player.html \
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
+                && grep -q 'train-journey-v1.js?v=1' /tmp/player.html \
+                && grep -q 'remaining-journeys-v1.js?v=1' /tmp/player.html \
+                && grep -q "TRAIN_ID='train_journey'" /tmp/train.js \
+                && grep -q 'ferry_journey' /tmp/remaining.js \
+                && grep -q 'spacecraft_journey' /tmp/remaining.js \
+                && grep -q 'submarine_journey' /tmp/remaining.js \
+                && echo '3f4bfe13db2e8a74a6313defb4aee67fab6240a309d0a568f03c1be9ff5d309f  /tmp/train-bed.ogg' | sha256sum -c - \
+                && echo '6439ec0e9029126670bcf94b576261e0dbf40e304300b27221e6268b58a51932  /tmp/ferry.ogg' | sha256sum -c - \
+                && echo '33f2897080646f6febdd92fc3d5fbc5ca210117e4ba7952186bbdadc2d120a20  /tmp/spacecraft.ogg' | sha256sum -c - \
+                && echo '2b2c9089ce20af23fae721d5b3007c5e579f26b5f3c1623df1b9329d020c41f7  /tmp/submarine.ogg' | sha256sum -c - \
                 && grep -q '_resetBlackoutSlider' /tmp/display.js \
                 && grep -q 'openPendingWindow' /tmp/display.js \
                 && grep -q 'primeScreenDetails' /tmp/display.js \
@@ -45,11 +66,11 @@ jobs:
             sleep 5
           done
           if [[ "$ok" -ne 1 ]]; then
-            echo 'Production did not serve blackout display tools v4 within the retry window.' >&2
+            echo 'Production did not serve blackout display tools v4 and all Journeys within the retry window.' >&2
             echo '--- player tail ---' >&2
             tail -n 30 /tmp/player.html 2>/dev/null >&2 || true
             echo '--- display JS relevant lines ---' >&2
             grep -n '_resetBlackoutSlider\|openPendingWindow\|primeScreenDetails' /tmp/display.js 2>/dev/null >&2 || true
             exit 1
           fi
-          echo 'Production lullabyscene.com is serving blackout display tools v4.'
+          echo 'Production lullabyscene.com is serving blackout display tools v4 and all Journeys.'

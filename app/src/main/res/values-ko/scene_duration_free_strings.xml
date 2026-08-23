@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scene_duration_direct">직접 입력</string>
+    <string name="scene_duration_direct_hint">HH:MM · 원하는 시간 자유 입력</string>
+    <string name="scene_duration_apply">적용</string>
+    <string name="scene_duration_direct_error">HH:MM 형식으로 00:01 이상 입력해 주세요.</string>
+    <string name="scene_duration_slider_hint">슬라이더 1분–12시간 · 고정 버튼은 이 씬의 추천 시간입니다</string>
+</resources>

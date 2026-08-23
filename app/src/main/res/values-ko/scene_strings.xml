@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_scenes">씬</string>
+    <string name="source_aircraft_cabin">여객기 기내</string>
+    <string name="source_train_journey_departure">기차 출발</string>
+    <string name="source_train_journey_bed">야간 열차</string>
+    <string name="source_train_journey_arrival">기차 도착</string>
+    <string name="source_ferry_journey_departure">페리 출항</string><string name="source_ferry_journey_bed">야간 페리 엔진</string><string name="source_ferry_journey_arrival">페리 도착</string>
+    <string name="source_spacecraft_journey_transition">우주선 전환음</string><string name="source_spacecraft_journey_bed">우주선 표류</string>
+    <string name="source_submarine_journey_departure">잠수함 잠항</string><string name="source_submarine_journey_engine_bed">잠수함 기관실</string><string name="source_submarine_journey_water_bed">수중 환경음</string><string name="source_submarine_journey_arrival">잠수함 부상</string><string name="source_submarine_sonar">먼 소나</string>
+
+    <string name="scenes_question">오늘은 어디에서 쉬고 싶나요?</string>
+    <string name="scenes_subtitle">고정된 믹스를 반복하는 대신, 시간이 지나며 천천히 변하는 살아있는 장면입니다.</string>
+    <string name="scene_aircraft_name">Passenger Aircraft Cabin</string>
+    <string name="scene_aircraft_description">내 수면 시간에 맞춰 출발부터 도착까지 이어지는 야간 여객기 여정입니다.</string>
+    <string name="scene_aircraft_short_name">여객기</string>
+    <string name="scene_train_short_name">기차</string>
+    <string name="scene_train_name">야간 열차 여정</string>
+    <string name="scene_train_description">문이 닫히고 도시를 떠난 열차가 밤새 달린 뒤 목적지로 천천히 감속합니다.</string>
+    <string name="scene_train_asset_unavailable">이 빌드에는 Train Journey 음원이 포함되어 있지 않습니다.</string>
+    <string name="scene_asset_unavailable">이 빌드에는 여객기 기내 음원이 포함되어 있지 않습니다.</string>
+    <string name="scene_start">여정 시작</string>
+    <string name="scene_end">씬 종료</string>
+    <string name="scene_duration_title">수면 / 전체 여정 시간</string>
+    <string name="scene_duration_hint">출발·이륙·상승과 하강·접근·착륙은 절대적인 시간 구간을 사용하고, 남는 시간은 장거리 순항으로 채웁니다.</string>
+    <string name="scene_macros_title">씬 컨트롤</string>
+    <string name="scene_elapsed">경과 %1$s</string>
+    <string name="scene_remaining">남은 시간 %1$s</string>
+    <string name="scene_seatbelt_on">좌석벨트 사인 켜짐</string>
+    <string name="scene_seatbelt_off">좌석벨트 사인 꺼짐</string>
+    <string name="scene_event_turbulence">가벼운 난기류 통과 중</string>
+    <string name="scene_event_cabin">작은 기내 활동</string>
+    <string name="scene_event_train_departure">문이 닫히고 열차가 가속하는 중</string>
+    <string name="scene_event_train_arrival">목적지로 감속하는 중</string>
+    <string name="scene_state_taxi_out">출발을 위한 지상 이동</string>
+    <string name="scene_state_takeoff">이륙 활주</string>
+    <string name="scene_state_climb">초기 상승</string>
+    <string name="scene_state_cruise">장거리 순항</string>
+    <string name="scene_state_descent">하강</string>
+    <string name="scene_state_approach">최종 접근</string>
+    <string name="scene_state_taxi_in">착륙 후 지상 이동</string>
+    <string name="scene_state_train_departure">역을 출발하는 중</string>
+    <string name="scene_state_train_leaving_city">도시를 벗어나는 중</string>
+    <string name="scene_state_train_night_run">밤을 달리는 차륜 리듬</string>
+    <string name="scene_state_train_approach">목적지에 접근하는 중</string>
+    <string name="scene_state_train_arrival">역으로 감속하는 중</string>
+    <string name="scene_state_arrived">도착</string>
+    <string name="scene_spatial_hint">엔진 존재감은 음량과 고역 거리 필터에 함께 반영됩니다. 비행 단계와 순항 중 랜덤 이벤트가 같은 공간/DSP 모델 위에 일시적으로 더해집니다.</string>
+    <string name="scene_aircraft_unavailable">이 빌드에서는 Passenger Aircraft Cabin 음원을 사용할 수 없습니다</string>
+    <string name="scene_train_unavailable">이 빌드에서는 Train Journey 음원을 사용할 수 없습니다</string>
+    <string name="scene_train_spatial_hint">차륜 리듬·객차 활동감·선로 질감·밤의 깊이가 긴 주행음을 만들고, 출발과 도착에는 전용 음원을 사용합니다.</string>
+    <string name="scene_ferry_short_name">페리</string><string name="scene_ferry_name">야간 페리 여정</string><string name="scene_ferry_description">부두를 떠나 어두운 바다를 밤새 건넌 뒤 해안에 닿으며 깨어나는 여정입니다.</string><string name="scene_ferry_asset_unavailable">이 빌드에는 야간 페리 음원이 포함되어 있지 않습니다.</string><string name="scene_ferry_unavailable">이 빌드에서는 야간 페리 음원을 사용할 수 없습니다</string><string name="scene_ferry_spatial_hint">엔진 존재감·갑판 활동감·파도 질감·밤의 깊이가 출항과 도착 전용 음원 사이의 항해를 만듭니다.</string>
+    <string name="scene_spacecraft_short_name">우주선</string><string name="scene_spacecraft_name">우주선 표류</string><string name="scene_spacecraft_description">궤도를 떠나 깊은 우주를 오래 표류한 뒤 목적지에 접근해 조용히 도킹합니다.</string><string name="scene_spacecraft_asset_unavailable">이 빌드에는 우주선 음원이 포함되어 있지 않습니다.</string><string name="scene_spacecraft_unavailable">이 빌드에서는 우주선 음원을 사용할 수 없습니다</string><string name="scene_spacecraft_spatial_hint">갑작스러운 랜덤 이벤트 없이 구동계 존재감과 선체 질감으로 안정적인 수면용 내부음을 만듭니다.</string>
+    <string name="scene_submarine_short_name">잠수함</string><string name="scene_submarine_name">잠수함 항해</string><string name="scene_submarine_description">수면 아래로 잠항해 드문 소나와 함께 심해를 순항한 뒤 조용히 부상합니다.</string><string name="scene_submarine_asset_unavailable">이 빌드에는 잠수함 음원이 포함되어 있지 않습니다.</string><string name="scene_submarine_unavailable">이 빌드에서는 잠수함 음원을 사용할 수 없습니다</string><string name="scene_submarine_spatial_hint">기관실과 수중 환경음이 함께 움직이며, 낮은 음량의 소나는 수면 친화적인 간격으로 드물게 재생됩니다.</string>
+    <string name="scene_event_departure">여정 출발 전환</string><string name="scene_event_arrival">여정 도착 전환</string><string name="scene_event_submarine_sonar">멀리서 들리는 드문 소나</string>
+    <string name="scene_state_ferry_cast_off">부두를 떠나는 중</string><string name="scene_state_ferry_leaving_harbor">항구를 벗어나는 중</string><string name="scene_state_ferry_night_crossing">밤바다를 건너는 중</string><string name="scene_state_ferry_harbor_approach">항구에 접근하는 중</string><string name="scene_state_ferry_arrival">해안에 닿는 중</string>
+    <string name="scene_state_spacecraft_departure">궤도를 떠나는 중</string><string name="scene_state_spacecraft_orbital_settle">기내가 안정되는 중</string><string name="scene_state_spacecraft_deep_drift">깊은 우주를 표류하는 중</string><string name="scene_state_spacecraft_approach">목적지에 접근하는 중</string><string name="scene_state_spacecraft_docking">조용히 도킹하는 중</string>
+    <string name="scene_state_submarine_dive">수면 아래로 잠항하는 중</string><string name="scene_state_submarine_settle">심도에 안정되는 중</string><string name="scene_state_submarine_deep_cruise">심해를 순항하는 중</string><string name="scene_state_submarine_ascent">부상하는 중</string><string name="scene_state_submarine_surface">수면에 도달하는 중</string>
+
+    <string name="macro_engine_presence">엔진 존재감</string>
+    <string name="macro_engine_presence_desc">멀고 부드럽게 ↔ 가깝고 선명하게</string>
+    <string name="macro_cabin_activity">기내 활동감</string>
+    <string name="macro_cabin_activity_desc">평소 들리는 기내의 작은 디테일 양을 조절합니다</string>
+    <string name="macro_turbulence">난기류</string>
+    <string name="macro_turbulence_desc">기본 움직임을 정하며 순항 중 랜덤 난기류가 여기에 추가됩니다</string>
+    <string name="macro_night_depth">밤의 깊이</string>
+    <string name="macro_night_depth_desc">늦은 밤에 어울리도록 더 어둡고 부드럽게 만듭니다</string>
+    <string name="macro_rail_rhythm">차륜 리듬</string>
+    <string name="macro_rail_rhythm_desc">멀고 부드럽게 ↔ 또렷한 차륜 리듬</string>
+    <string name="macro_carriage_activity">객차 활동감</string>
+    <string name="macro_carriage_activity_desc">주행음 주변의 작은 객차 디테일 양을 조절합니다</string>
+    <string name="macro_track_texture">선로 질감</string>
+    <string name="macro_track_texture_desc">부드러운 주행 ↔ 더 선명한 선로 움직임</string>
+    <string name="macro_ferry_engine">엔진 존재감</string><string name="macro_ferry_engine_desc">먼 선체 진동 ↔ 또렷한 기관실</string><string name="macro_deck_activity">갑판 활동감</string><string name="macro_deck_activity_desc">선박 주변의 작은 움직임 양을 조절합니다</string><string name="macro_wave_texture">파도 질감</string><string name="macro_wave_texture_desc">잔잔한 물결 ↔ 더 선명한 선체와 파도</string>
+    <string name="macro_drive_presence">구동계 존재감</string><string name="macro_drive_presence_desc">멀고 부드러운 시스템음 ↔ 또렷한 우주선 구동음</string><string name="macro_spacecraft_activity">기내 활동감</string><string name="macro_spacecraft_activity_desc">조용한 내부 시스템 디테일 양을 조절합니다</string><string name="macro_hull_texture">선체 질감</string><string name="macro_hull_texture_desc">매끄러운 표류 ↔ 더 선명한 구조 디테일</string>
+    <string name="macro_submarine_engine">엔진 존재감</string><string name="macro_submarine_engine_desc">먼 기계음 ↔ 또렷한 기관실</string><string name="macro_crew_activity">승조원 활동감</string><string name="macro_crew_activity_desc">드문 소나 이벤트의 음량에도 반영됩니다</string><string name="macro_water_pressure">수압 질감</string><string name="macro_water_pressure_desc">매끄러운 내부음 ↔ 더 선명한 수중 질감</string>
+
+    <string name="settings_update">업데이트</string>
+    <string name="update_channel_github">배포 채널: GitHub Releases</string>
+    <string name="update_include_prerelease">프리릴리즈도 확인</string>
+    <string name="update_include_prerelease_desc">새 버전을 확인할 때 alpha, beta, RC 빌드도 업데이트 대상으로 포함합니다.</string>
+    <string name="update_current_version">현재 버전: %1$s</string>
+    <string name="update_available_version">새 버전 %1$s 사용 가능</string>
+    <string name="update_check_now">업데이트 확인</string>
+    <string name="update_checking">확인 중…</string>
+    <string name="update_available_title">새 업데이트가 있습니다</string>
+    <string name="update_version_change">설치됨 %1$s → 새 버전 %2$s</string>
+    <string name="update_now">지금 업데이트</string>
+    <string name="update_later">나중에</string>
+    <string name="update_hide_24h">24시간 보지 않기</string>
+    <string name="update_up_to_date">선택한 업데이트 채널의 최신 버전을 사용 중입니다</string>
+    <string name="update_check_failed">GitHub Releases를 확인하지 못했습니다. 재생에는 영향이 없습니다.</string>
+    <string name="update_download_failed">업데이트 다운로드 또는 검증에 실패했습니다</string>
+    <string name="update_downloading">다운로드 중… %1$d%%</string>
+    <string name="update_allow_install_permission">Lullaby Scene의 알 수 없는 앱 설치를 허용한 뒤 ‘지금 업데이트’를 다시 눌러 주세요.</string>
+    <string name="update_install_failed">Android 패키지 설치 화면을 열지 못했습니다</string>
+    <string name="scene_previous_phase">◀ 이전 단계</string>
+    <string name="scene_next_phase">다음 단계 ▶</string>
+</resources>

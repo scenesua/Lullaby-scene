@@ -35,7 +35,7 @@ jobs:
           set -euo pipefail
           grep -Fq '/audio-stability-v1.js?v=1' web/_worker.js
           grep -Fq '/audio-stability-v1.js?v=1' web/sw.js
-          grep -Fq "lullaby-scene-site-v35" web/sw.js
+          grep -Fq "lullaby-scene-site-v37" web/sw.js
           grep -Fq "createDynamicsCompressor" web/audio-stability-v1.js
           grep -Fq "master.disconnect()" web/audio-stability-v1.js
           grep -Fq "node.src.connect(node.gain)" web/audio-stability-v1.js

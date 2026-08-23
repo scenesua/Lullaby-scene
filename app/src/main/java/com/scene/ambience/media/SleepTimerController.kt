@@ -83,8 +83,10 @@ class SleepTimerController(
                 wasFading = true
                 startFade(remaining.toFloat() / fadeMs)
             }
+            // A one-second UI cadence is sufficient for a countdown and halves
+            // MediaSession snapshot traffic compared with the old 500 ms tick.
             engine.onTimerRemaining(remaining)
-            delay(500L)
+            delay(1_000L)
         }
     }
 

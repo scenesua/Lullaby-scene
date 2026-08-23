@@ -55,6 +55,11 @@ object AmbienceStrings {
         "focus_paused" -> context.getString(R.string.msg_focus_paused)
         "noisy_paused" -> context.getString(R.string.msg_noisy_paused)
         "source_failed" -> context.getString(R.string.msg_source_failed)
+        "scene_aircraft_unavailable" -> context.getString(R.string.scene_aircraft_unavailable)
+        "scene_train_unavailable" -> context.getString(R.string.scene_train_unavailable)
+        "scene_ferry_unavailable" -> context.getString(R.string.scene_ferry_unavailable)
+        "scene_spacecraft_unavailable" -> context.getString(R.string.scene_spacecraft_unavailable)
+        "scene_submarine_unavailable" -> context.getString(R.string.scene_submarine_unavailable)
         else -> null
     }
 

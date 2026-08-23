@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_fx">FX</string>
+    <string name="fx_master">내장 FX 랙</string>
+    <string name="fx_master_desc">FX 랙 전체를 켜고 끕니다. 모든 양이 0%면 켜져 있어도 원음과 동일합니다.</string>
+    <string name="fx_tone">톤</string>
+    <string name="fx_tone_desc">기존 EQ를 대체하지 않고 따뜻함과 고역의 개방감을 조절합니다.</string>
+    <string name="fx_warmth">따뜻함</string>
+    <string name="fx_warmth_desc">과한 저음 없이 저중역의 두께를 부드럽게 더합니다.</string>
+    <string name="fx_air">공기감</string>
+    <string name="fx_air_desc">답답하지 않도록 상단 고역의 개방감과 디테일을 조금 더합니다.</string>
+    <string name="fx_body">바디</string>
+    <string name="fx_body_desc">오디오 세션에서 저역의 무게감을 제한적으로 보강합니다.</string>
+    <string name="fx_body_amount">저역 바디</string>
+    <string name="fx_body_amount_desc">수면용으로 과하지 않게 제한된 베이스 보강입니다. 0%는 완전 바이패스입니다.</string>
+    <string name="fx_space">공간감</string>
+    <string name="fx_space_desc">모든 소리에 똑같이 거는 대신 소스 성격에 따라 공간감 반응도를 다르게 적용합니다.</string>
+    <string name="fx_space_amount">공간 폭</string>
+    <string name="fx_space_amount_desc">숲·카페·여객기·기차·자연음은 더 잘 반응하고, 팬·화이트/핑크/브라운 노이즈 같은 지속음은 훨씬 약하게 반응합니다.</string>
+    <string name="fx_dynamics">다이내믹</string>
+    <string name="fx_dynamics_desc">피크를 부드럽게 정리하고 여러 환경음 레이어를 자연스럽게 묶습니다.</string>
+    <string name="fx_glue">글루</string>
+    <string name="fx_glue_desc">강한 압축 대신 부드러운 다이내믹/리미팅을 점진적으로 적용합니다.</string>
+    <string name="fx_output">출력</string>
+    <string name="fx_output_desc">톤과 다이내믹 처리 뒤 최종 출력 레벨을 조절합니다.</string>
+    <string name="fx_loudness">라우드니스</string>
+    <string name="fx_loudness_desc">장시간 청취에 무리가 없도록 제한된 메이크업 게인만 추가합니다.</string>
+    <string name="fx_eq_on">이퀄라이저 켜짐</string>
+    <string name="fx_eq_off">이퀄라이저 바이패스</string>
+    <string name="fx_eq_editor_desc">기존 그래픽 10밴드 EQ를 FX 랙 안으로 옮겼습니다.</string>
+    <string name="fx_open_eq">10밴드 EQ 열기</string>
+    <string name="fx_reset">내장 FX 초기화</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scene_recipe_share_title">Share this scene</string>
+    <string name="scene_recipe_share_desc">The same link can be opened in Lullaby Scene for Android or the web player.</string>
+    <string name="scene_recipe_share">Share link</string>
+    <string name="scene_recipe_share_chooser">Share Lullaby Scene</string>
+    <string name="scene_recipe_share_unavailable">Start at least one sound before sharing.</string>
+</resources>
