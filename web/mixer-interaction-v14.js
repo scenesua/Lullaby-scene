@@ -2,7 +2,7 @@
   const R=window.LullabyPlayerRuntime;
   if(!R||!document.getElementById('webPlayer'))return;
   const desired=new Map(),starting=new Map(),latestPercent=new Map(),lastNonZero=new Map(),rafById=new Map();
-  const clampPercent=v=>Math.max(0,Math.min(100,Math.round(Number(v)||0));
+  const clampPercent=v=>Math.max(0,Math.min(100,Math.round(Number(v)||0)));
   const source=id=>R.sourceById[id]||R.catalog.find(item=>item.id===id)||null;
 
   function actualState(id){
