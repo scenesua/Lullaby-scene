@@ -17,13 +17,13 @@ await page.waitForSelector('#builtInPresets [data-preset="preset_rainy_cafe"]',{
 await page.addStyleTag({url:'http://127.0.0.1:4173/mobile-android-shell-v1.css?v=3'});
 await page.addStyleTag({url:'http://127.0.0.1:4173/display-tools-v1.css?v=2'});
 for(const src of[
-  '/site-locales-v10.js?v=13',
+  '/site-locales-v10.js?v=14',
   '/player-runtime-bridge-v12.js?v=12',
   '/mixer-interaction-v14.js?v=14',
   '/simple-scene-quick-mixer-v12.js?v=12',
   '/saved-scenes-v13.js?v=13',
-  '/i18n-runtime-v3.js?v=4',
-  '/mobile-android-shell-v1.js?v=2',
+  '/i18n-runtime-v3.js?v=6',
+  '/mobile-android-shell-v1.js?v=5',
   '/display-tools-v1.js?v=2'
 ])await page.addScriptTag({url:`http://127.0.0.1:4173${src}`});
 await page.waitForSelector('[data-quick-source="rain"]',{state:'attached'});

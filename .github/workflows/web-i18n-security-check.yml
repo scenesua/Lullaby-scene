@@ -43,12 +43,12 @@ jobs:
           grep -Fq "'Strict-Transport-Security':'max-age=31536000'" web/_worker.js
           grep -Fq "fetchSite==='cross-site'" web/_worker.js
           grep -Fq "startsWith('application/json')" web/_worker.js
-          grep -Fq '/site-locales-v10.js?v=13' web/_worker.js
-          grep -Fq '/i18n-runtime-v3.js?v=4' web/_worker.js
-          grep -Fq '/mobile-android-shell-v1.js?v=2' web/_worker.js
-          grep -Fq '/site-locales-v10.js?v=13' web/sw.js
-          grep -Fq '/i18n-runtime-v3.js?v=4' web/sw.js
-          grep -Fq '/mobile-android-shell-v1.js?v=2' web/sw.js
+          grep -Fq '/site-locales-v10.js?v=14' web/_worker.js
+          grep -Fq '/i18n-runtime-v3.js?v=6' web/_worker.js
+          grep -Fq '/mobile-android-shell-v1.js?v=5' web/_worker.js
+          grep -Fq '/site-locales-v10.js?v=14' web/sw.js
+          grep -Fq '/i18n-runtime-v3.js?v=6' web/sw.js
+          grep -Fq '/mobile-android-shell-v1.js?v=5' web/sw.js
           ! grep -Fq 'i18n-catalog-v2.js' web/_worker.js
           ! grep -Fq "observe(host,{childList:true,subtree:true" web/i18n-runtime-v3.js
           ! grep -Eq "script-src[^;]*unsafe-(inline|eval)" web/_worker.js
@@ -77,9 +77,9 @@ jobs:
           grep -Eiq '^content-security-policy:.*frame-ancestors .none.' /tmp/headers
           grep -Eiq '^content-security-policy:.*object-src .none.' /tmp/headers
           grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
-          grep -Fq 'site-locales-v10.js?v=13' /tmp/home
-          grep -Fq 'i18n-runtime-v3.js?v=4' /tmp/home
-          grep -Fq 'mobile-android-shell-v1.js?v=2' /tmp/home
+          grep -Fq 'site-locales-v10.js?v=14' /tmp/home
+          grep -Fq 'i18n-runtime-v3.js?v=6' /tmp/home
+          grep -Fq 'mobile-android-shell-v1.js?v=5' /tmp/home
 
           code=$(curl -sS -o /tmp/cross.json -w '%{http_code}' -X POST \
             -H 'Origin: https://evil.example' \

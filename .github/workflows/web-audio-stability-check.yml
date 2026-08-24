@@ -41,7 +41,7 @@ jobs:
           set -euo pipefail
           grep -Fq '/audio-stability-v1.js?v=2' web/_worker.js
           grep -Fq '/audio-stability-v1.js?v=2' web/sw.js
-          grep -Fq "lullaby-scene-site-v50" web/sw.js
+          grep -Fq "lullaby-scene-site-v61" web/sw.js
           grep -Fq "event.request.destination==='audio'" web/sw.js
           ! sed -n '3p' web/sw.js | grep -Fq '/audio/'
           grep -Fq "createDynamicsCompressor" web/audio-stability-v1.js

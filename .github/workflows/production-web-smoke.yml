@@ -37,7 +37,7 @@ jobs:
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=7&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=8&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=6&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=11&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/spacecraft.mp4?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.mp4 \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/train_journey/train_journey_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/train-bed.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/ferry_journey/ferry_journey_arrival_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/ferry.ogg \
@@ -47,7 +47,7 @@ jobs:
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
                 && grep -q 'train-journey-v1.js?v=7' /tmp/player.html \
                 && grep -q 'remaining-journeys-v1.js?v=8' /tmp/player.html \
-                && grep -q 'journey-background-v1.js?v=6' /tmp/player.html \
+                && grep -q 'journey-background-v1.js?v=11' /tmp/player.html \
                 && grep -q "TRAIN_ID='train_journey'" /tmp/train.js \
                 && grep -q 'ferry_journey' /tmp/remaining.js \
                 && grep -q 'spacecraft_journey' /tmp/remaining.js \
