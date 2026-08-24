@@ -38,7 +38,7 @@ jobs:
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=8&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=12&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=13&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
-              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/spacecraft.mp4?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.mp4 \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/spacecraft.webp?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.webp \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/train_journey/train_journey_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/train-bed.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/ferry_journey/ferry_journey_arrival_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/ferry.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/spacecraft_journey/spacecraft_journey_transition_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.ogg \
@@ -53,7 +53,8 @@ jobs:
                 && grep -q 'spacecraft_journey' /tmp/remaining.js \
                 && grep -q 'submarine_journey' /tmp/remaining.js \
                 && grep -q 'spacecraft_journey' /tmp/background.js \
-                && test "$(wc -c < /tmp/spacecraft.mp4)" -gt 90000 \
+                && test "$(wc -c < /tmp/spacecraft.webp)" -gt 10000 \
+                && test "$(head -c 4 /tmp/spacecraft.webp)" = 'RIFF' \
                 && echo '3f4bfe13db2e8a74a6313defb4aee67fab6240a309d0a568f03c1be9ff5d309f  /tmp/train-bed.ogg' | sha256sum -c - \
                 && echo '6439ec0e9029126670bcf94b576261e0dbf40e304300b27221e6268b58a51932  /tmp/ferry.ogg' | sha256sum -c - \
                 && echo '33f2897080646f6febdd92fc3d5fbc5ca210117e4ba7952186bbdadc2d120a20  /tmp/spacecraft.ogg' | sha256sum -c - \
