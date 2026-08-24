@@ -27,6 +27,7 @@ object Commands {
     const val SET_SCENE_ARC = "com.scene.ambience.cmd.set_scene_arc"
     const val SEEK_SCENE = "com.scene.ambience.cmd.seek_scene"
     const val STEP_SCENE_PHASE = "com.scene.ambience.cmd.step_scene_phase"
+    const val SET_SCENE_RANDOM_EVENTS = "com.scene.ambience.cmd.set_scene_random_events"
 
     const val EXTRA_SNAPSHOT = "ambience.snapshot"
     const val EXTRA_SCENE_SNAPSHOT = "ambience.scene_snapshot"
@@ -53,6 +54,7 @@ object Commands {
     const val EXTRA_MACRO_VALUE = "macro_value"
     const val EXTRA_ELAPSED_MS = "elapsed_ms"
     const val EXTRA_DIRECTION = "direction"
+    const val EXTRA_ENABLED = "enabled"
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -143,6 +145,9 @@ object Commands {
     fun stepScenePhase(direction: Int): SessionCommand =
         SessionCommand(STEP_SCENE_PHASE, Bundle().apply { putInt(EXTRA_DIRECTION, if (direction < 0) -1 else 1) })
 
+    fun setSceneRandomEvents(enabled: Boolean): SessionCommand =
+        SessionCommand(SET_SCENE_RANDOM_EVENTS, Bundle().apply { putBoolean(EXTRA_ENABLED, enabled) })
+
     val sessionCommands: List<SessionCommand> = listOf(
         SessionCommand(SET_MASTER_VOLUME, Bundle()),
         SessionCommand(SET_MASTER_MUTED, Bundle()),
@@ -161,6 +166,7 @@ object Commands {
         SessionCommand(SET_SCENE_ARC, Bundle()),
         SessionCommand(SEEK_SCENE, Bundle()),
         SessionCommand(STEP_SCENE_PHASE, Bundle()),
+        SessionCommand(SET_SCENE_RANDOM_EVENTS, Bundle()),
     )
 
     fun snapshotBundle(

@@ -16,6 +16,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.random.Random
 
 /** Service-owned living-scene runtime. */
 class SceneOrchestrator(
@@ -32,18 +33,22 @@ class SceneOrchestrator(
     private var trainTimeline: TrainJourneyTimeline? = null
     private var ambientTimeline: AmbientJourneyTimeline? = null
     private var ambientProfile: AmbientJourneyProfile? = null
+    private var hoodEventJob: Job? = null
+    private var hoodTrafficJob: Job? = null
+    private var hoodLabelJob: Job? = null
     private var scheduleSeed: Long = 0L
 
     fun start(sceneId: String, totalDurationMinutes: Int): Boolean = when (sceneId) {
         PASSENGER_AIRCRAFT -> startAircraft(totalDurationMinutes)
         TRAIN_JOURNEY -> startTrain(totalDurationMinutes)
-        FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY -> startAmbientJourney(sceneId, totalDurationMinutes)
+        FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> startAmbientJourney(sceneId, totalDurationMinutes)
         else -> false
     }
 
     private fun startAircraft(totalDurationMinutes: Int): Boolean {
         if (!isSourceAvailable(SOURCE_AIRCRAFT)) return false
 
+        clearManualEvents()
         job?.cancel()
         trainTimeline = null
         ambientTimeline = null
@@ -87,6 +92,7 @@ class SceneOrchestrator(
     private fun startTrain(totalDurationMinutes: Int): Boolean {
         if (!TRAIN_SOURCES.all(isSourceAvailable)) return false
 
+        clearManualEvents()
         job?.cancel()
         timeline = null
         ambientTimeline = null
@@ -124,6 +130,7 @@ class SceneOrchestrator(
     private fun startAmbientJourney(sceneId: String, totalDurationMinutes: Int): Boolean {
         val profile = AMBIENT_PROFILES[sceneId] ?: return false
         if (!profile.requiredSources.all(isSourceAvailable)) return false
+        clearManualEvents()
         job?.cancel()
         timeline = null
         trainTimeline = null
@@ -137,10 +144,12 @@ class SceneOrchestrator(
             activeEventId = "${sceneId}_departure",
             macros = profile.defaultMacros,
         )
+        profile.manualEvents.keys.forEach { engine.setManualEventSource(it, true) }
         val initial = profile.requiredSources.associateWith { sourceId ->
             val volume = when (sourceId) {
                 profile.departureSource -> profile.departureVolume
                 profile.eventSource -> profile.eventVolume
+                in profile.manualEvents -> profile.manualEvents.getValue(sourceId)
                 else -> 0f
             }
             SourceState(sourceId, enabled = volume > 0f, volume = volume)
@@ -148,10 +157,12 @@ class SceneOrchestrator(
         engine.applyMix(MixState(masterVolume = profile.masterVolume, sources = initial), presetId = null)
         engine.play()
         job = scope.launch { runSceneClock() }
+        if (sceneId == HOOD_JOURNEY && _state.value.randomEventsEnabled) startHoodEvents()
         return true
     }
 
     fun stopScene() {
+        clearManualEvents()
         job?.cancel()
         job = null
         engine.stop()
@@ -163,6 +174,20 @@ class SceneOrchestrator(
         restoreUserEq()
     }
 
+    fun setRandomEventsEnabled(enabled: Boolean) {
+        val current = _state.value
+        if (!current.active || current.randomEventsEnabled == enabled) return
+        _state.value = current.copy(randomEventsEnabled = enabled, activeEventId = null)
+        if (current.sceneId == HOOD_JOURNEY) {
+            if (enabled) startHoodEvents() else {
+                hoodEventJob?.cancel()
+                hoodEventJob = null
+                hoodTrafficJob?.cancel()
+                hoodTrafficJob = null
+            }
+        }
+    }
+
     fun release() = stopScene()
 
     fun setDurationMinutes(minutes: Int) {
@@ -172,7 +197,7 @@ class SceneOrchestrator(
         val endMs = when (current.sceneId) {
             PASSENGER_AIRCRAFT -> AircraftJourneyTimelineBuilder.build(duration, scheduleSeed).also { timeline = it }.journeyEndMs
             TRAIN_JOURNEY -> TrainJourneyTimelineBuilder.build(duration).also { trainTimeline = it }.journeyEndMs
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY -> ambientProfile?.buildTimeline(duration)?.also { ambientTimeline = it }?.journeyEndMs
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientProfile?.buildTimeline(duration)?.also { ambientTimeline = it }?.journeyEndMs
             else -> return
         } ?: return
         _state.value = current.copy(
@@ -189,7 +214,7 @@ class SceneOrchestrator(
         val endMs = when (current.sceneId) {
             PASSENGER_AIRCRAFT -> timeline?.journeyEndMs
             TRAIN_JOURNEY -> trainTimeline?.journeyEndMs
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY -> ambientTimeline?.journeyEndMs
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientTimeline?.journeyEndMs
             else -> null
         } ?: return
         val target = elapsedMs.coerceIn(0L, endMs)
@@ -220,13 +245,13 @@ class SceneOrchestrator(
                 STATE_TRAIN_ARRIVAL to plan.arrivalStartMs,
                 STATE_ARRIVED to plan.journeyEndMs,
             ) }
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY -> ambientTimeline?.phaseSteps()
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientTimeline?.phaseSteps()
             else -> null
         } ?: return
         val phase = when (current.sceneId) {
             PASSENGER_AIRCRAFT -> timeline?.phaseAt(current.elapsedMs)
             TRAIN_JOURNEY -> trainTimeline?.phaseAt(current.elapsedMs)
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY -> ambientTimeline?.phaseAt(current.elapsedMs)
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientTimeline?.phaseAt(current.elapsedMs)
             else -> null
         } ?: return
         val index = phases.indexOfFirst { it.first == phase }.coerceAtLeast(0)
@@ -250,6 +275,87 @@ class SceneOrchestrator(
         applyFrame()
     }
 
+    private fun clearManualEvents() {
+        hoodEventJob?.cancel()
+        hoodEventJob = null
+        hoodTrafficJob?.cancel()
+        hoodTrafficJob = null
+        hoodLabelJob?.cancel()
+        hoodLabelJob = null
+        ambientProfile?.manualEvents?.keys?.forEach { engine.setManualEventSource(it, false) }
+    }
+
+    private fun startHoodEvents() {
+        hoodEventJob?.cancel()
+        hoodTrafficJob?.cancel()
+        val random = Random(System.nanoTime())
+        val trafficRandom = Random(System.nanoTime() xor 0x5A17C4E9L)
+        hoodEventJob = scope.launch {
+            while (isActive && _state.value.sceneId == HOOD_JOURNEY) {
+                delay(random.nextLong(65_000L, 190_001L))
+                val snapshot = _state.value
+                if (!snapshot.randomEventsEnabled || engine.snapshot().playbackState != PlaybackState.PLAYING) continue
+                val phase = ambientTimeline?.phaseAt(snapshot.elapsedMs)
+                if (phase !in listOf(STATE_HOOD_AFTER_HOURS, STATE_HOOD_DEEP_NIGHT, STATE_HOOD_STREET_STIRRING)) continue
+                val incidentChance = 0.38f + 0.28f * snapshot.macros.turbulence
+                if (random.nextFloat() < incidentChance) {
+                    val distance = random.nextFloat().coerceIn(0f, 1f)
+                    triggerHoodEvent(SOURCE_HOOD_GUNSHOT, EVENT_HOOD_GUNSHOT, distance, random)
+                    if (random.nextFloat() < 0.28f * snapshot.macros.turbulence) {
+                        delay(random.nextLong(450L, 1_801L))
+                        triggerHoodEvent(SOURCE_HOOD_GUNSHOT, EVENT_HOOD_GUNSHOT, (distance + random.nextFloat() * .24f - .12f).coerceIn(0f, 1f), random)
+                    }
+                    if (random.nextFloat() < .74f) {
+                        delay(random.nextLong(2_800L, 24_001L))
+                        triggerHoodEvent(SOURCE_HOOD_SHOUT, EVENT_HOOD_SHOUT, (distance + random.nextFloat() * .42f - .18f).coerceIn(0f, 1f), random)
+                    }
+                    if (random.nextFloat() < .88f) {
+                        delay(random.nextLong(18_000L, 115_001L))
+                        triggerHoodEvent(SOURCE_HOOD_SIREN, EVENT_HOOD_SIREN, random.nextFloat() * .70f + .12f, random)
+                    }
+                } else {
+                    val calm = listOf(
+                        SOURCE_HOOD_FOOTSTEPS to EVENT_HOOD_FOOTSTEPS,
+                        SOURCE_HOOD_CAR_DOOR to EVENT_HOOD_CAR_DOOR,
+                        SOURCE_HOOD_DOG to EVENT_HOOD_DOG,
+                        SOURCE_HOOD_HELICOPTER to EVENT_HOOD_HELICOPTER,
+                        SOURCE_HOOD_GLASS to EVENT_HOOD_GLASS,
+                    ).random(random)
+                    triggerHoodEvent(calm.first, calm.second, random.nextFloat() * .75f + .25f, random)
+                }
+            }
+        }
+        hoodTrafficJob = scope.launch {
+            delay(trafficRandom.nextLong(45_000L, 120_001L))
+            while (isActive && _state.value.sceneId == HOOD_JOURNEY) {
+                val snapshot = _state.value
+                val phase = ambientTimeline?.phaseAt(snapshot.elapsedMs)
+                if (snapshot.randomEventsEnabled && engine.snapshot().playbackState == PlaybackState.PLAYING && phase in listOf(STATE_HOOD_AFTER_HOURS, STATE_HOOD_DEEP_NIGHT, STATE_HOOD_STREET_STIRRING)) {
+                    triggerHoodEvent(SOURCE_HOOD_CAR_PASS, EVENT_HOOD_CAR_PASS, trafficRandom.nextFloat() * .76f + .12f, trafficRandom)
+                }
+                delay(trafficRandom.nextLong(75_000L, 260_001L))
+            }
+        }
+    }
+
+    private fun triggerHoodEvent(sourceId: String, eventId: String, distance: Float, random: Random) {
+        if (_state.value.sceneId != HOOD_JOURNEY || !_state.value.randomEventsEnabled) return
+        val close = 1f - distance.coerceIn(0f, 1f)
+        val scale = when (sourceId) {
+            SOURCE_HOOD_GUNSHOT -> .65f + close * .85f
+            SOURCE_HOOD_SIREN -> .62f + close * .72f
+            else -> .55f + close * .65f
+        }
+        if (engine.triggerEventNow(sourceId, scale, random.nextFloat() * 1.7f - .85f)) {
+            _state.value = _state.value.copy(activeEventId = eventId)
+            hoodLabelJob?.cancel()
+            hoodLabelJob = scope.launch {
+                delay(if (sourceId == SOURCE_HOOD_SIREN) 12_000L else 4_000L)
+                if (_state.value.activeEventId == eventId) _state.value = _state.value.copy(activeEventId = null)
+            }
+        }
+    }
+
     private suspend fun runSceneClock() {
         while (kotlin.coroutines.coroutineContext.isActive && _state.value.active) {
             delay(TICK_MS)
@@ -257,7 +363,7 @@ class SceneOrchestrator(
             val endMs = when (_state.value.sceneId) {
                 PASSENGER_AIRCRAFT -> timeline?.journeyEndMs
                 TRAIN_JOURNEY -> trainTimeline?.journeyEndMs
-                FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY -> ambientTimeline?.journeyEndMs
+                FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientTimeline?.journeyEndMs
                 else -> null
             } ?: return
             val current = _state.value
@@ -276,14 +382,14 @@ class SceneOrchestrator(
         when (current.sceneId) {
             PASSENGER_AIRCRAFT -> applyAircraftFrame(current)
             TRAIN_JOURNEY -> applyTrainFrame(current)
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY -> applyAmbientFrame(current)
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> applyAmbientFrame(current)
         }
     }
 
     private fun applyAircraftFrame(current: SceneRuntimeSnapshot) {
         val plan = timeline ?: return
         val phase = plan.phaseAt(current.elapsedMs)
-        val activeEvent = plan.activeEventsAt(current.elapsedMs).firstOrNull()
+        val activeEvent = if (current.randomEventsEnabled) plan.activeEventsAt(current.elapsedMs).firstOrNull() else null
         val beltOn = plan.seatbeltSignOnAt(current.elapsedMs)
         val frame = passengerAircraftFrame(current, phase, activeEvent)
 
@@ -302,7 +408,7 @@ class SceneOrchestrator(
     private fun applyTrainFrame(current: SceneRuntimeSnapshot) {
         val plan = trainTimeline ?: return
         val phase = plan.phaseAt(current.elapsedMs)
-        val event = plan.activeEventAt(current.elapsedMs)
+        val event = if (current.randomEventsEnabled) plan.activeEventAt(current.elapsedMs) else null
         if (phase != current.stateId || event != current.activeEventId) {
             _state.value = current.copy(stateId = phase, activeEventId = event)
         }
@@ -327,10 +433,12 @@ class SceneOrchestrator(
         val plan = ambientTimeline ?: return
         val profile = ambientProfile ?: return
         val phase = plan.phaseAt(current.elapsedMs)
-        val event = when (phase) {
-            profile.phases[0] -> "${profile.sceneId}_departure"
-            profile.phases[4] -> "${profile.sceneId}_arrival"
-            profile.phases[2] -> profile.eventSource
+        val event = when {
+            !current.randomEventsEnabled -> null
+            current.sceneId == HOOD_JOURNEY && current.activeEventId?.startsWith("hood_event_") == true -> current.activeEventId
+            phase == profile.phases[0] -> "${profile.sceneId}_departure"
+            phase == profile.phases[4] -> "${profile.sceneId}_arrival"
+            phase == profile.phases[2] -> profile.eventSource
             else -> null
         }
         if (phase != current.stateId || event != current.activeEventId) {
@@ -345,12 +453,19 @@ class SceneOrchestrator(
         val desired = profile.requiredSources.associateWith { 0f }.toMutableMap()
         val departureFade = journeyCrossfade(current.elapsedMs, plan.departureEndMs)
         val arrivalFade = journeyCrossfade(current.elapsedMs, plan.arrivalStartMs)
-        desired[profile.departureSource] = profile.departureVolume * departureFade.first
+        desired[profile.departureSource] = maxOf(desired[profile.departureSource] ?: 0f, profile.departureVolume * departureFade.first)
         profile.bedSources.forEach { (source, base) ->
-            desired[source] = (base * presence * activity * texture * night).coerceIn(0.18f, 0.68f) * departureFade.second * arrivalFade.first
+            desired[source] = maxOf(desired[source] ?: 0f, (base * presence * activity * texture * night).coerceIn(0.18f, 0.68f) * departureFade.second * arrivalFade.first)
         }
         desired[profile.arrivalSource] = maxOf(desired[profile.arrivalSource] ?: 0f, profile.arrivalVolume * arrivalFade.second)
-        profile.eventSource?.let { desired[it] = (profile.eventVolume * (0.65f + 0.35f * m.cabinActivity) * night).coerceAtLeast(0.03f) }
+        profile.eventSource?.let {
+            desired[it] = if (current.randomEventsEnabled) {
+                (profile.eventVolume * (0.65f + 0.35f * m.cabinActivity) * night).coerceAtLeast(0.03f)
+            } else {
+                0f
+            }
+        }
+        profile.manualEvents.forEach { (source, base) -> desired[source] = base * (0.72f + 0.42f * m.cabinActivity) }
         desired.forEach(::setVolumeIfChanged)
     }
 
@@ -406,6 +521,7 @@ class SceneOrchestrator(
         val bedSources: Map<String, Float>,
         val arrivalSource: String,
         val eventSource: String? = null,
+        val manualEvents: Map<String, Float> = emptyMap(),
         val phases: List<String>,
         val departureMs: Long,
         val arrivalMs: Long,
@@ -417,7 +533,7 @@ class SceneOrchestrator(
         val eventVolume: Float = 0.10f,
         val defaultMacros: SceneMacroState = SceneMacroState(),
     ) {
-        val requiredSources: List<String> = (listOf(departureSource, arrivalSource) + bedSources.keys + listOfNotNull(eventSource)).distinct()
+        val requiredSources: List<String> = (listOf(departureSource, arrivalSource) + bedSources.keys + listOfNotNull(eventSource) + manualEvents.keys).distinct()
 
         fun buildTimeline(minutes: Int) = AmbientJourneyTimelineBuilder.build(
             totalDurationMinutes = minutes,
@@ -461,6 +577,7 @@ class SceneOrchestrator(
         const val FERRY_JOURNEY = "ferry_journey"
         const val SPACECRAFT_JOURNEY = "spacecraft_journey"
         const val SUBMARINE_JOURNEY = "submarine_journey"
+        const val HOOD_JOURNEY = "hood_journey"
         const val SOURCE_AIRCRAFT = "aircraft_cabin"
         const val SOURCE_VENTILATION = "ventilation" // kept for recipe/protocol compatibility
         const val SOURCE_TRAIN_DEPARTURE = "train_journey_departure"
@@ -477,6 +594,16 @@ class SceneOrchestrator(
         const val SOURCE_SUBMARINE_WATER = "submarine_journey_water_bed"
         const val SOURCE_SUBMARINE_ARRIVAL = "submarine_journey_arrival"
         const val SOURCE_SUBMARINE_SONAR = "submarine_sonar"
+        const val SOURCE_HOOD_BED = "hood_journey_bed"
+        const val SOURCE_HOOD_GUNSHOT = "hood_gunshot"
+        const val SOURCE_HOOD_SIREN = "hood_siren"
+        const val SOURCE_HOOD_GLASS = "hood_glass"
+        const val SOURCE_HOOD_SHOUT = "hood_shout"
+        const val SOURCE_HOOD_FOOTSTEPS = "hood_footsteps"
+        const val SOURCE_HOOD_CAR_PASS = "hood_car_pass"
+        const val SOURCE_HOOD_CAR_DOOR = "hood_car_door"
+        const val SOURCE_HOOD_HELICOPTER = "hood_helicopter"
+        const val SOURCE_HOOD_DOG = "hood_dog"
 
         const val MACRO_ENGINE_PRESENCE = "engine_presence"
         const val MACRO_CABIN_ACTIVITY = "cabin_activity"
@@ -510,6 +637,20 @@ class SceneOrchestrator(
         const val STATE_SUBMARINE_DEEP_CRUISE = "submarine_deep_cruise"
         const val STATE_SUBMARINE_ASCENT = "submarine_ascent"
         const val STATE_SUBMARINE_SURFACE = "submarine_surface"
+        const val STATE_HOOD_SETTLING = "hood_settling"
+        const val STATE_HOOD_AFTER_HOURS = "hood_after_hours"
+        const val STATE_HOOD_DEEP_NIGHT = "hood_deep_night"
+        const val STATE_HOOD_STREET_STIRRING = "hood_street_stirring"
+        const val STATE_HOOD_FIRST_LIGHT = "hood_first_light"
+        const val EVENT_HOOD_GUNSHOT = "hood_event_gunshot"
+        const val EVENT_HOOD_SIREN = "hood_event_siren"
+        const val EVENT_HOOD_GLASS = "hood_event_glass"
+        const val EVENT_HOOD_SHOUT = "hood_event_shout"
+        const val EVENT_HOOD_FOOTSTEPS = "hood_event_footsteps"
+        const val EVENT_HOOD_CAR_PASS = "hood_event_car_pass"
+        const val EVENT_HOOD_CAR_DOOR = "hood_event_car_door"
+        const val EVENT_HOOD_HELICOPTER = "hood_event_helicopter"
+        const val EVENT_HOOD_DOG = "hood_event_dog"
         const val STATE_ARRIVED = "arrived"
 
         private val AMBIENT_PROFILES = listOf(
@@ -548,6 +689,32 @@ class SceneOrchestrator(
                 approachMinutes = 8,
                 eventVolume = .08f,
                 defaultMacros = SceneMacroState(enginePresence = .50f, cabinActivity = .10f, turbulence = .28f, nightDepth = .90f),
+            ),
+            AmbientJourneyProfile(
+                sceneId = HOOD_JOURNEY,
+                departureSource = SOURCE_HOOD_BED,
+                bedSources = mapOf(SOURCE_HOOD_BED to .52f),
+                arrivalSource = SOURCE_HOOD_BED,
+                manualEvents = mapOf(
+                    SOURCE_HOOD_GUNSHOT to .28f,
+                    SOURCE_HOOD_SIREN to .24f,
+                    SOURCE_HOOD_GLASS to .20f,
+                    SOURCE_HOOD_SHOUT to .18f,
+                    SOURCE_HOOD_FOOTSTEPS to .14f,
+                    SOURCE_HOOD_CAR_PASS to .18f,
+                    SOURCE_HOOD_CAR_DOOR to .16f,
+                    SOURCE_HOOD_HELICOPTER to .14f,
+                    SOURCE_HOOD_DOG to .14f,
+                ),
+                phases = listOf(STATE_HOOD_SETTLING, STATE_HOOD_AFTER_HOURS, STATE_HOOD_DEEP_NIGHT, STATE_HOOD_STREET_STIRRING, STATE_HOOD_FIRST_LIGHT),
+                departureMs = 45_000L,
+                arrivalMs = 45_000L,
+                settleMinutes = 10,
+                approachMinutes = 10,
+                masterVolume = .80f,
+                departureVolume = .48f,
+                arrivalVolume = .42f,
+                defaultMacros = SceneMacroState(enginePresence = .58f, cabinActivity = .46f, turbulence = .55f, nightDepth = .72f),
             ),
         ).associateBy { it.sceneId }
 

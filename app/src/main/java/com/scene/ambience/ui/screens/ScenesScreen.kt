@@ -1,6 +1,8 @@
 package com.scene.ambience.ui.screens
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.filled.DirectionsBoat
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.Waves
+import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,6 +42,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -61,6 +67,7 @@ fun ScenesScreen(
     val scene by viewModel.sceneState.collectAsStateWithLifecycle()
     var selectedSceneId by rememberSaveable { mutableStateOf(scene.sceneId ?: SceneOrchestrator.PASSENGER_AIRCRAFT) }
     val active = scene.sceneId == selectedSceneId
+    val hoodGold = Color(0xFFD8B35F)
     val isAircraft = selectedSceneId == SceneOrchestrator.PASSENGER_AIRCRAFT
     val available = SceneOrchestrator.requiredSourcesFor(selectedSceneId).all { state.library.manifestFor(it) != null }
     var selectedDuration by remember { mutableIntStateOf(if (active) scene.totalDurationMinutes else 480) }
@@ -91,9 +98,10 @@ fun ScenesScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 JOURNEY_IDS.forEach { journeyId ->
                     FilterChip(
+                        modifier = if (journeyId == SceneOrchestrator.HOOD_JOURNEY) Modifier.border(1.dp, hoodGold.copy(alpha = if (selectedSceneId == journeyId) .92f else .46f), RoundedCornerShape(8.dp)) else Modifier,
                         selected = selectedSceneId == journeyId,
                         onClick = { if (!scene.active) selectedSceneId = journeyId },
-                        label = { Text(context.getString(sceneShortNameRes(journeyId))) },
+                        label = { Text(context.getString(sceneShortNameRes(journeyId)), color = if (journeyId == SceneOrchestrator.HOOD_JOURNEY) hoodGold else Color.Unspecified) },
                     )
                 }
             }
@@ -102,6 +110,7 @@ fun ScenesScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
+                border = if (selectedSceneId == SceneOrchestrator.HOOD_JOURNEY) BorderStroke(1.dp, hoodGold.copy(alpha = .56f)) else null,
                 colors = CardDefaults.cardColors(
                     containerColor = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                 ),
@@ -117,14 +126,17 @@ fun ScenesScreen(
                                 SceneOrchestrator.FERRY_JOURNEY -> Icons.Filled.DirectionsBoat
                                 SceneOrchestrator.SPACECRAFT_JOURNEY -> Icons.Filled.RocketLaunch
                                 SceneOrchestrator.SUBMARINE_JOURNEY -> Icons.Filled.Waves
+                                SceneOrchestrator.HOOD_JOURNEY -> Icons.Filled.LocationCity
                                 else -> Icons.Filled.Flight
                             },
                             contentDescription = null,
+                            tint = if (selectedSceneId == SceneOrchestrator.HOOD_JOURNEY) hoodGold else Color.Unspecified,
                         )
                         Column(modifier = Modifier.padding(start = 12.dp)) {
                             Text(
                                 context.getString(sceneNameRes(selectedSceneId)),
                                 style = MaterialTheme.typography.titleLarge,
+                                color = if (selectedSceneId == SceneOrchestrator.HOOD_JOURNEY) hoodGold else Color.Unspecified,
                             )
                             Text(
                                 context.getString(sceneDescriptionRes(selectedSceneId)),
@@ -239,13 +251,34 @@ fun ScenesScreen(
                                     TrainJourneyTimeline.EVENT_DEPARTURE -> context.getString(R.string.scene_event_train_departure)
                                     TrainJourneyTimeline.EVENT_ARRIVAL -> context.getString(R.string.scene_event_train_arrival)
                                     SceneOrchestrator.SOURCE_SUBMARINE_SONAR -> context.getString(R.string.scene_event_submarine_sonar)
-                                    "${SceneOrchestrator.FERRY_JOURNEY}_departure", "${SceneOrchestrator.SPACECRAFT_JOURNEY}_departure", "${SceneOrchestrator.SUBMARINE_JOURNEY}_departure" -> context.getString(R.string.scene_event_departure)
-                                    "${SceneOrchestrator.FERRY_JOURNEY}_arrival", "${SceneOrchestrator.SPACECRAFT_JOURNEY}_arrival", "${SceneOrchestrator.SUBMARINE_JOURNEY}_arrival" -> context.getString(R.string.scene_event_arrival)
+                                    SceneOrchestrator.EVENT_HOOD_GUNSHOT -> context.getString(R.string.scene_event_hood_gunshot)
+                                    SceneOrchestrator.EVENT_HOOD_SIREN -> context.getString(R.string.scene_event_hood_siren)
+                                    SceneOrchestrator.EVENT_HOOD_GLASS -> context.getString(R.string.scene_event_hood_glass)
+                                    SceneOrchestrator.EVENT_HOOD_SHOUT -> context.getString(R.string.scene_event_hood_shout)
+                                    SceneOrchestrator.EVENT_HOOD_FOOTSTEPS -> context.getString(R.string.scene_event_hood_footsteps)
+                                    SceneOrchestrator.EVENT_HOOD_CAR_PASS -> context.getString(R.string.scene_event_hood_car_pass)
+                                    SceneOrchestrator.EVENT_HOOD_CAR_DOOR -> context.getString(R.string.scene_event_hood_car_door)
+                                    SceneOrchestrator.EVENT_HOOD_HELICOPTER -> context.getString(R.string.scene_event_hood_helicopter)
+                                    SceneOrchestrator.EVENT_HOOD_DOG -> context.getString(R.string.scene_event_hood_dog)
+                                    "${SceneOrchestrator.FERRY_JOURNEY}_departure", "${SceneOrchestrator.SPACECRAFT_JOURNEY}_departure", "${SceneOrchestrator.SUBMARINE_JOURNEY}_departure", "${SceneOrchestrator.HOOD_JOURNEY}_departure" -> context.getString(R.string.scene_event_departure)
+                                    "${SceneOrchestrator.FERRY_JOURNEY}_arrival", "${SceneOrchestrator.SPACECRAFT_JOURNEY}_arrival", "${SceneOrchestrator.SUBMARINE_JOURNEY}_arrival", "${SceneOrchestrator.HOOD_JOURNEY}_arrival" -> context.getString(R.string.scene_event_arrival)
                                     else -> eventId
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.tertiary,
                             )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(context.getString(R.string.scene_random_events), style = MaterialTheme.typography.titleSmall)
+                                Text(context.getString(R.string.scene_random_events_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(checked = scene.randomEventsEnabled, onCheckedChange = viewModel::setSceneRandomEvents)
                         }
 
                         Text(context.getString(R.string.scene_duration_title), style = MaterialTheme.typography.titleSmall)
@@ -409,6 +442,7 @@ private val JOURNEY_IDS = listOf(
     SceneOrchestrator.SPACECRAFT_JOURNEY,
     SceneOrchestrator.FERRY_JOURNEY,
     SceneOrchestrator.SUBMARINE_JOURNEY,
+    SceneOrchestrator.HOOD_JOURNEY,
 )
 
 private fun sceneShortNameRes(id: String) = when (id) {
@@ -416,6 +450,7 @@ private fun sceneShortNameRes(id: String) = when (id) {
     SceneOrchestrator.FERRY_JOURNEY -> R.string.scene_ferry_short_name
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_short_name
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_short_name
+    SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_short_name
     else -> R.string.scene_aircraft_short_name
 }
 
@@ -424,6 +459,7 @@ private fun sceneNameRes(id: String) = when (id) {
     SceneOrchestrator.FERRY_JOURNEY -> R.string.scene_ferry_name
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_name
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_name
+    SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_name
     else -> R.string.scene_aircraft_name
 }
 
@@ -432,6 +468,7 @@ private fun sceneDescriptionRes(id: String) = when (id) {
     SceneOrchestrator.FERRY_JOURNEY -> R.string.scene_ferry_description
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_description
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_description
+    SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_description
     else -> R.string.scene_aircraft_description
 }
 
@@ -440,6 +477,7 @@ private fun sceneUnavailableRes(id: String) = when (id) {
     SceneOrchestrator.FERRY_JOURNEY -> R.string.scene_ferry_asset_unavailable
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_asset_unavailable
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_asset_unavailable
+    SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_asset_unavailable
     else -> R.string.scene_asset_unavailable
 }
 
@@ -448,6 +486,7 @@ private fun sceneSpatialHintRes(id: String) = when (id) {
     SceneOrchestrator.FERRY_JOURNEY -> R.string.scene_ferry_spatial_hint
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_spatial_hint
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_spatial_hint
+    SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_spatial_hint
     else -> R.string.scene_spatial_hint
 }
 
@@ -472,6 +511,11 @@ private fun sceneMacroRes(id: String, index: Int, description: Boolean): Int {
             R.string.macro_submarine_engine to R.string.macro_submarine_engine_desc,
             R.string.macro_crew_activity to R.string.macro_crew_activity_desc,
             R.string.macro_water_pressure to R.string.macro_water_pressure_desc,
+        )
+        SceneOrchestrator.HOOD_JOURNEY -> listOf(
+            R.string.macro_street_presence to R.string.macro_street_presence_desc,
+            R.string.macro_night_activity to R.string.macro_night_activity_desc,
+            R.string.macro_incident_intensity to R.string.macro_incident_intensity_desc,
         )
         else -> listOf(
             R.string.macro_engine_presence to R.string.macro_engine_presence_desc,
@@ -532,6 +576,11 @@ private fun sceneStateLabel(id: String?, context: android.content.Context): Stri
     SceneOrchestrator.STATE_SUBMARINE_DEEP_CRUISE -> context.getString(R.string.scene_state_submarine_deep_cruise)
     SceneOrchestrator.STATE_SUBMARINE_ASCENT -> context.getString(R.string.scene_state_submarine_ascent)
     SceneOrchestrator.STATE_SUBMARINE_SURFACE -> context.getString(R.string.scene_state_submarine_surface)
+    SceneOrchestrator.STATE_HOOD_SETTLING -> context.getString(R.string.scene_state_hood_settling)
+    SceneOrchestrator.STATE_HOOD_AFTER_HOURS -> context.getString(R.string.scene_state_hood_after_hours)
+    SceneOrchestrator.STATE_HOOD_DEEP_NIGHT -> context.getString(R.string.scene_state_hood_deep_night)
+    SceneOrchestrator.STATE_HOOD_STREET_STIRRING -> context.getString(R.string.scene_state_hood_street_stirring)
+    SceneOrchestrator.STATE_HOOD_FIRST_LIGHT -> context.getString(R.string.scene_state_hood_first_light)
     SceneOrchestrator.STATE_ARRIVED -> context.getString(R.string.scene_state_arrived)
     else -> context.getString(R.string.scene_state_cruise)
 }

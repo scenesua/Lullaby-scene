@@ -21,7 +21,7 @@ for(const match of mapping.matchAll(/:'(\/assets\/(?:simple-scenes|journeys)\/[^
 for(const marker of ['createAnalyser()','smoothingTimeConstant=.94','lullaby-preset-applied','--scene-light']){
   if(!`${player}\n${background}\n${css}`.includes(marker))throw new Error(`Missing audio-reactive marker ${marker}`);
 }
-for(const marker of ['data-i18n="sleepJourneys"','mobile-scene-display-button','stopJourneyPlayback','stopJourney:stopJourneyPlayback','R.stopJourney?.()','brightness(calc(.78 + var(--scene-light)*.7))']){
+for(const marker of ['data-i18n="sleepJourneys"','mobile-scene-display-button','stopJourneyPlayback','stopJourney:stopJourneyPlayback','R.stopJourney?.()','brightness(calc(.8 + var(--scene-light)*.9))','journey-hood-active','hood-siren-light']){
   if(!`${html}\n${player}\n${background}\n${bridge}\n${interaction}\n${css}`.includes(marker))throw new Error(`Missing mobile playback marker ${marker}`);
 }
 console.log(`scene visuals smoke passed: ${presetIds.length} presets`);

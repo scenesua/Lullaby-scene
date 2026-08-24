@@ -25,6 +25,20 @@ for(const [assetId,[scene,kind,duration,hash]] of Object.entries(expected)){
   if(androidHash!==hash||webHash!==hash||androidHash!==webHash)throw new Error(`${assetId} platform hash mismatch`);
 }
 
+const hoodAssets={
+  hood_journey_bed_001:['continuous',106652],hood_gunshot_event_001:['events',3324],hood_siren_event_001:['events',9007],hood_glass_event_001:['events',817],hood_shout_event_001:['events',3207],hood_footsteps_event_001:['events',9007],hood_car_pass_event_001:['events',6477],hood_car_door_event_001:['events',9007],hood_helicopter_event_001:['events',9007],hood_dog_event_001:['events',8007],
+};
+for(const [assetId,[kind,duration]] of Object.entries(hoodAssets)){
+  const source=manifest.sources.find(item=>item[kind]?.some(asset=>asset.asset_id===assetId));
+  if(!source)throw new Error(`Android HOOD manifest missing ${assetId}`);
+  const asset=source[kind].find(item=>item.asset_id===assetId);
+  if(asset.duration_ms!==duration)throw new Error(`${assetId} duration mismatch: ${asset.duration_ms}`);
+  const android=`app/src/main/assets/${asset.path}`;
+  const web=`web/audio/scenes/hood_journey/${assetId}.ogg`;
+  if(!existsSync(android)||statSync(android).size<4000)throw new Error(`Android HOOD asset missing or empty: ${android}`);
+  if(!existsSync(web)||statSync(web).size<8000)throw new Error(`Web HOOD asset missing or empty: ${web}`);
+}
+
 const kotlin=text('app/src/main/java/com/scene/ambience/media/TrainJourneyTimeline.kt');
 const web=text('web/train-journey-v1.js');
 for(const marker of ['35183','32236','480000'])if(!web.includes(marker))throw new Error(`Web timeline missing ${marker}`);
@@ -33,18 +47,20 @@ for(const phase of ['train_departure','train_leaving_city','train_night_run','tr
   if(!text('app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt').includes(phase))throw new Error(`Android phase missing ${phase}`);
 }
 if(!text('web/player/index.html').includes('/train-journey-v1.js?v=8'))throw new Error('Web player does not load Train Journey runtime');
-if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=10'))throw new Error('Web player does not load remaining Journey runtime');
+if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=11'))throw new Error('Web player does not load remaining Journey runtime');
 for(const file of['web/audio/scenes/aircraft_cabin/aircraft_chime_event_001.ogg','web/audio/scenes/train_journey/train_rail_event_001.ogg','web/audio/scenes/ferry_journey/ferry_wave_event_001.ogg','web/audio/scenes/spacecraft_journey/spacecraft_servo_event_001.ogg','web/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg'])if(!existsSync(file)||statSync(file).size<8000)throw new Error(`Journey random-event asset missing or empty: ${file}`);
-if(!text('web/player/index.html').includes('/journey-background-v1.js?v=11'))throw new Error('Web player does not load Journey backgrounds');
+if(!text('web/player/index.html').includes('/journey-background-v1.js?v=12'))throw new Error('Web player does not load Journey backgrounds');
 if(!text('web/journey-background-v1.js').includes("screen.orientation.lock('landscape')"))throw new Error('Mobile Journey display does not request landscape orientation');
 if(!text('web/journey-background-v1.js').includes('const motionVideoEnabled=false'))throw new Error('Journey backgrounds must remain still-only until approved motion assets exist');
-for(const scene of['aircraft','train','spacecraft','ferry','submarine']){
+for(const scene of['aircraft','train','spacecraft','ferry','submarine','hood']){
   const poster=read(`web/assets/journeys/${scene}.webp`);
   if(poster.length<10000||poster.subarray(0,4).toString()!=='RIFF')throw new Error(`${scene} Journey poster is invalid`);
 }
 const orchestrator=text('app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt'),remaining=text('web/remaining-journeys-v1.js'),strings=text('app/src/main/res/values/scene_strings.xml'),sw=text('web/sw.js');
-for(const [id,title] of Object.entries({ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage'})){
+for(const [id,title] of Object.entries({ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage',hood_journey:'HOOD Night'})){
   if(!orchestrator.includes(`"${id}"`)||!remaining.includes(`${id}:`)||!strings.includes(title))throw new Error(`${id} platform definition mismatch`);
 }
+for(const marker of ['SOURCE_HOOD_GUNSHOT','SOURCE_HOOD_SIREN','SOURCE_HOOD_CAR_PASS','EVENT_HOOD_SHOUT','setRandomEventsEnabled'])if(!orchestrator.includes(marker))throw new Error(`Android HOOD runtime missing ${marker}`);
+for(const marker of ["playHoodEvent('gunshot'","playHoodEvent('shout'","playHoodEvent('siren'","playHoodEvent('carPass'",'lullaby-hood-siren'])if(!remaining.includes(marker)&&!text('web/journey-background-v1.js').includes(marker))throw new Error(`Web HOOD runtime missing ${marker}`);
 if(!sw.includes("event.request.destination==='audio'"))throw new Error('Web audio is not isolated from service-worker shell caching');
-console.log('All five Journey Android/Web asset and timeline parity passed');
+console.log('All six Journey Android/Web asset and timeline parity passed');

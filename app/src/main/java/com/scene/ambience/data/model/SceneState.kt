@@ -25,6 +25,7 @@ data class SceneRuntimeSnapshot(
     val elapsedMs: Long = 0L,
     val seatbeltSignOn: Boolean = true,
     val activeEventId: String? = null,
+    val randomEventsEnabled: Boolean = true,
     val macros: SceneMacroState = SceneMacroState(),
 ) {
     val active: Boolean get() = sceneId != null

@@ -17,7 +17,7 @@ await page.waitForSelector('#builtInPresets [data-preset="preset_rainy_cafe"]',{
 await page.addStyleTag({url:'http://127.0.0.1:4173/mobile-android-shell-v1.css?v=3'});
 await page.addStyleTag({url:'http://127.0.0.1:4173/display-tools-v1.css?v=3'});
 for(const src of[
-  '/site-locales-v10.js?v=14',
+  '/site-locales-v10.js?v=15',
   '/player-runtime-bridge-v12.js?v=13',
   '/mixer-interaction-v14.js?v=16',
   '/simple-scene-quick-mixer-v12.js?v=13',

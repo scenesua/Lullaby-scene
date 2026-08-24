@@ -199,6 +199,7 @@ class AmbiencePlaybackService : MediaSessionService() {
             Commands.SET_SCENE_ARC -> sceneOrchestrator.setDurationMinutes(args.getInt(Commands.EXTRA_ARC_MINUTES, 480))
             Commands.SEEK_SCENE -> sceneOrchestrator.seekToElapsedMs(args.getLong(Commands.EXTRA_ELAPSED_MS, 0L))
             Commands.STEP_SCENE_PHASE -> sceneOrchestrator.stepPhase(args.getInt(Commands.EXTRA_DIRECTION, 1))
+            Commands.SET_SCENE_RANDOM_EVENTS -> sceneOrchestrator.setRandomEventsEnabled(args.getBoolean(Commands.EXTRA_ENABLED, true))
             else -> return SessionResult(SessionResult.RESULT_ERROR_UNKNOWN)
         }
         return SessionResult(SessionResult.RESULT_SUCCESS)
