@@ -134,10 +134,11 @@ jobs:
           node - <<'NODE'
           const fs=require('fs'),crypto=require('crypto');
           const data=JSON.parse(fs.readFileSync('web/mixer-sources.json','utf8'));
+          const webPath=url=>'web'+url.split('?')[0];
           if(data.sources.length!==40) throw new Error(`expected 40 mixer sources, got ${data.sources.length}`);
           for(const s of data.sources){
-            if(s.kind==='continuous' && !fs.existsSync('web'+s.url)) throw new Error(`missing ${s.id}: web${s.url}`);
-            if(s.kind==='event' && !fs.existsSync('web'+s.url)) throw new Error(`missing event ${s.id}: web${s.url}`);
+            if(s.kind==='continuous' && !fs.existsSync(webPath(s.url))) throw new Error(`missing ${s.id}: ${webPath(s.url)}`);
+            if(s.kind==='event' && !fs.existsSync(webPath(s.url))) throw new Error(`missing event ${s.id}: ${webPath(s.url)}`);
           }
           const required=['rain','thunder','wind','ocean','stream','fire','forest','birds','crickets','snowy_night','cafe','city','train','lighthouse','aircraft_cabin','fan','ventilation','water','singing_bowl','bamboo_forest','white_noise','pink_noise','brown_noise'];
           const ids=new Set(data.sources.map(s=>s.id));
@@ -148,14 +149,14 @@ jobs:
             if(!source||!web) throw new Error(`platform catalog missing ${id}`);
             const androidPath='app/src/main/assets/'+source.continuous[0].path;
             const digest=path=>crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex');
-            if(digest(androidPath)!==digest('web'+web.url)) throw new Error(`${id} Android/Web asset mismatch`);
+            if(digest(androidPath)!==digest(webPath(web.url))) throw new Error(`${id} Android/Web asset mismatch`);
           }
           const scenes=JSON.parse(fs.readFileSync('app/src/main/assets/ambience/manifest/scene_sources.json','utf8'));
           for(const source of scenes.sources.filter(s=>s.id!=='aircraft_cabin')){
             const web=data.sources.find(s=>s.id===source.id),asset=source.continuous[0]||source.events[0];
             if(!web||!asset) throw new Error(`Journey mixer source missing ${source.id}`);
             const androidPath='app/src/main/assets/'+asset.path;
-            if(digest(androidPath)!==digest('web'+web.url)) throw new Error(`${source.id} Journey mixer asset mismatch`);
+            if(digest(androidPath)!==digest(webPath(web.url))) throw new Error(`${source.id} Journey mixer asset mismatch`);
           }
           NODE
 
