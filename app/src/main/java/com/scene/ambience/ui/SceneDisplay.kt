@@ -6,12 +6,15 @@ import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.graphics.BitmapFactory
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,8 +23,10 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -31,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -43,12 +49,16 @@ import com.scene.ambience.R
 import com.scene.ambience.media.SceneOrchestrator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.sin
 
 @Composable
 fun SceneDisplayDialog(
     sceneId: String?,
     presetId: String?,
     playing: Boolean,
+    activeEventId: String? = null,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -71,6 +81,14 @@ fun SceneDisplayDialog(
         label = "scene-light-level",
     )
     val light = if (playing) animatedLight else 0.3f
+    val siren = remember { Animatable(0f) }
+    val sirenDirection = remember(activeEventId) { if ((System.nanoTime() and 1L) == 0L) 1f else -1f }
+    LaunchedEffect(activeEventId) {
+        if (activeEventId == SceneOrchestrator.EVENT_HOOD_SIREN) {
+            siren.snapTo(0f)
+            siren.animateTo(1f, tween(9_000, easing = LinearEasing))
+        }
+    }
     val activity = context.findActivity()
 
     DisposableEffect(activity) {
@@ -97,20 +115,33 @@ fun SceneDisplayDialog(
                     bitmap = bitmap,
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
-                    colorFilter = brightnessFilter(0.82f + light * 0.24f),
+                    colorFilter = brightnessFilter(0.84f + light * 0.48f),
                     modifier = Modifier.fillMaxSize(),
                 )
                 Image(
                     bitmap = bitmap,
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
-                    colorFilter = brightnessFilter(1.22f),
+                    colorFilter = brightnessFilter(1.42f),
                     modifier = Modifier
                         .fillMaxSize()
-                        .scale(1.04f)
-                        .blur(28.dp)
-                        .alpha(0.08f + light * 0.22f),
+                        .scale(1.10f)
+                        .blur(48.dp)
+                        .alpha(0.10f + light * 0.40f),
                 )
+                if (sceneId == SceneOrchestrator.HOOD_JOURNEY && siren.value in 0.001f..0.999f) {
+                    Canvas(
+                        Modifier.fillMaxSize().blur(52.dp).graphicsLayer(alpha = 0.92f)
+                    ) {
+                        val directionProgress = if (sirenDirection > 0f) siren.value else 1f - siren.value
+                        val envelope = sin(PI.toFloat() * siren.value).coerceAtLeast(0f)
+                        val redPulse = (.35f + .65f * abs(sin(siren.value * PI.toFloat() * 12f))) * envelope
+                        val bluePulse = (.35f + .65f * abs(sin(siren.value * PI.toFloat() * 12f + PI.toFloat() / 2f))) * envelope
+                        val radius = size.maxDimension * .46f
+                        drawCircle(Color(0xFFFF2638).copy(alpha = .42f * redPulse), radius, androidx.compose.ui.geometry.Offset(size.width * (-.20f + 1.40f * directionProgress), size.height * .48f))
+                        drawCircle(Color(0xFF2768FF).copy(alpha = .46f * bluePulse), radius, androidx.compose.ui.geometry.Offset(size.width * (-.38f + 1.52f * directionProgress), size.height * .54f))
+                    }
+                }
             } ?: Text(
                 text = context.getString(R.string.scene_display_unavailable),
                 color = Color.White,
@@ -136,6 +167,7 @@ private fun visualAsset(sceneId: String?, presetId: String?): String {
         SceneOrchestrator.FERRY_JOURNEY -> "ferry"
         SceneOrchestrator.SPACECRAFT_JOURNEY -> "spacecraft"
         SceneOrchestrator.SUBMARINE_JOURNEY -> "submarine"
+        SceneOrchestrator.HOOD_JOURNEY -> "hood"
         SceneOrchestrator.PASSENGER_AIRCRAFT -> "aircraft"
         else -> null
     }

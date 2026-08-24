@@ -51,6 +51,7 @@ class AmbienceEngine(
 
     private val continuousPlayers = mutableMapOf<String, ContinuousSourcePlayer>()
     private val eventPlayers = mutableMapOf<String, EventSourcePlayer>()
+    private val manualEventSources = mutableSetOf<String>()
 
     private val soundPool: SoundPool = SoundPool.Builder()
         .setMaxStreams(MAX_EVENT_STREAMS)
@@ -177,7 +178,7 @@ class AmbienceEngine(
         playback = PlaybackState.PLAYING
         sources.keys.forEach { id ->
             continuousPlayers[id]?.resume()
-            eventPlayers[id]?.start()
+            if (id !in manualEventSources) eventPlayers[id]?.start()
         }
         publish()
     }
@@ -214,6 +215,21 @@ class AmbienceEngine(
 
     fun clearMessage() {
         publish(message = null)
+    }
+
+    fun setManualEventSource(id: String, manual: Boolean) {
+        if (manual) {
+            manualEventSources += id
+            eventPlayers[id]?.stopScheduling()
+        } else {
+            manualEventSources -= id
+            if (playback == PlaybackState.PLAYING) eventPlayers[id]?.start()
+        }
+    }
+
+    fun triggerEventNow(id: String, volumeScale: Float, pan: Float): Boolean {
+        if (!ensurePlayer(id)) return false
+        return eventPlayers[id]?.triggerNow(volumeScale.coerceIn(0f, 1.5f), pan.coerceIn(-1f, 1f)) == true
     }
 
     // -------- equalizer + internal FX rack ------------------------------------
@@ -543,7 +559,7 @@ class AmbienceEngine(
         val playable = ensurePlayer(id)
         if (!hadPlayer && playable) {
             continuousPlayers[id]?.resume()
-            eventPlayers[id]?.start()
+            if (id !in manualEventSources) eventPlayers[id]?.start()
         }
     }
 
@@ -625,6 +641,7 @@ class AmbienceEngine(
         eventPlayers.values.forEach { it.release() }
         continuousPlayers.clear()
         eventPlayers.clear()
+        manualEventSources.clear()
         noisyReceiver.unregister()
         wakelockController.release()
         focusController.abandon()

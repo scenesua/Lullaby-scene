@@ -17,7 +17,7 @@ await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js
 await page.addScriptTag({url:'http://127.0.0.1:4173/aircraft-source-v15.js?v=15'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=16'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=13'});
-await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===40);
+await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===50);
 
 await page.locator('[data-view="mixer"]').first().click();await page.waitForTimeout(120);
 const wind='#mixerGrid [data-source="wind"]';

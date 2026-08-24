@@ -1,5 +1,5 @@
 {
-  "version": 9,
+  "version": 10,
   "sources": [
     {
       "id": "aircraft_cabin",
@@ -107,6 +107,46 @@
     {
       "id": "submarine_sonar", "category": "travel", "display_name_key": "source_submarine_sonar", "default_volume": 0.08, "loop_mode": "event",
       "continuous": [], "events": [{"asset_id": "submarine_sonar_event_001", "path": "ambience/submarine_journey/events/submarine_sonar_event_001.ogg", "duration_ms": 5006, "role": "event", "tags": ["submarine", "sonar", "sleep_safe", "stereo"], "provenance_id": "freesound_breviceps_493162", "event_weight": 1.0, "cooldown_ms": 180000}]
+    },
+    {
+      "id":"hood_journey_bed","category":"travel","display_name_key":"source_hood_journey_bed","default_volume":0.52,"loop_mode":"seamless",
+      "continuous":[{"asset_id":"hood_journey_bed_001","path":"ambience/hood_journey/continuous/hood_journey_bed_001.ogg","duration_ms":106652,"crossfade_ms":8000,"role":"bed","tags":["hood","inner_city","night","traffic","stereo"],"provenance_id":"freesound_risto_alcinov_371250"}],"events":[]
+    },
+    {
+      "id":"hood_gunshot","category":"travel","display_name_key":"source_hood_gunshot","default_volume":0.28,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"hood_gunshot_event_001","path":"ambience/hood_journey/events/hood_gunshot_event_001.ogg","duration_ms":3324,"role":"event","tags":["hood","gunshot","distance_variable"],"provenance_id":"freesound_resaural_541164","cooldown_ms":480000}]
+    },
+    {
+      "id":"hood_siren","category":"travel","display_name_key":"source_hood_siren","default_volume":0.24,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"hood_siren_event_001","path":"ambience/hood_journey/events/hood_siren_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","police","siren","passing"],"provenance_id":"freesound_chimerical_385867","cooldown_ms":420000}]
+    },
+    {
+      "id":"hood_glass","category":"travel","display_name_key":"source_hood_glass","default_volume":0.20,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"hood_glass_event_001","path":"ambience/hood_journey/events/hood_glass_event_001.ogg","duration_ms":817,"role":"event","tags":["hood","glass","impact"],"provenance_id":"freesound_c_rogers_203377","cooldown_ms":720000}]
+    },
+    {
+      "id":"hood_shout","category":"travel","display_name_key":"source_hood_shout","default_volume":0.18,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"hood_shout_event_001","path":"ambience/hood_journey/events/hood_shout_event_001.ogg","duration_ms":3207,"role":"event","tags":["hood","street","shouting"],"provenance_id":"freesound_yottasounds_174645","cooldown_ms":240000}]
+    },
+    {
+      "id":"hood_footsteps","category":"travel","display_name_key":"source_hood_footsteps","default_volume":0.14,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"hood_footsteps_event_001","path":"ambience/hood_journey/events/hood_footsteps_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","pavement","footsteps"],"provenance_id":"freesound_craigsmith_438183","cooldown_ms":90000}]
+    },
+    {
+      "id":"hood_car_pass","category":"travel","display_name_key":"source_hood_car_pass","default_volume":0.18,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"hood_car_pass_event_001","path":"ambience/hood_journey/events/hood_car_pass_event_001.ogg","duration_ms":6477,"role":"event","tags":["hood","car","pass_by","street","doppler"],"provenance_id":"freesound_colorscrimsontears_538687","cooldown_ms":75000}]
+    },
+    {
+      "id":"hood_car_door","category":"travel","display_name_key":"source_hood_car_door","default_volume":0.16,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"hood_car_door_event_001","path":"ambience/hood_journey/events/hood_car_door_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","car","door","street"],"provenance_id":"freesound_sduggysounds_721619","cooldown_ms":120000}]
+    },
+    {
+      "id":"hood_helicopter","category":"travel","display_name_key":"source_hood_helicopter","default_volume":0.14,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"hood_helicopter_event_001","path":"ambience/hood_journey/events/hood_helicopter_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","helicopter","distant"],"provenance_id":"freesound_nox_sound_546805","cooldown_ms":480000}]
+    },
+    {
+      "id":"hood_dog","category":"travel","display_name_key":"source_hood_dog","default_volume":0.14,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"hood_dog_event_001","path":"ambience/hood_journey/events/hood_dog_event_001.ogg","duration_ms":8007,"role":"event","tags":["hood","dog","neighborhood"],"provenance_id":"freesound_wateenfotos_749352","cooldown_ms":180000}]
     }
   ]
 }

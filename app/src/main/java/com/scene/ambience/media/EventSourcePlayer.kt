@@ -99,6 +99,21 @@ class EventSourcePlayer(
         this.baseGain = baseGain.coerceIn(0f, 1f)
     }
 
+    /** Play one loaded event immediately for scene-authored causal sequences. */
+    fun triggerNow(volumeScale: Float = 1f, pan: Float = 0f): Boolean {
+        if (released || !isActive()) return false
+        val sample = samples.randomOrNull(random) ?: return false
+        val volume = (baseGain * volumeScale).coerceIn(0f, 1f)
+        if (volume <= 0f) return false
+        val (left, right) = panVolumes(volume, pan)
+        val streamId = soundPool.play(sample.sampleId, left, right, 1, 0, 1f)
+        if (streamId != 0) {
+            lastPlayedAtMs[sample.asset.assetId] = SystemClock.elapsedRealtime()
+            return true
+        }
+        return false
+    }
+
     private suspend fun run() {
         while (currentCoroutineContext().isActive) {
             delay(EventScheduler.nextDelayMs(config.minIntervalMs, config.maxIntervalMs, random))

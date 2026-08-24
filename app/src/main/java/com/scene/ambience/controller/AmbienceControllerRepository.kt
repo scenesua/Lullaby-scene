@@ -184,6 +184,7 @@ class AmbienceControllerRepository(
     fun setSceneDuration(minutes: Int) = dispatch(Commands.setSceneDuration(minutes))
     fun seekScene(elapsedMs: Long) = dispatch(Commands.seekScene(elapsedMs))
     fun stepScenePhase(direction: Int) = dispatch(Commands.stepScenePhase(direction))
+    fun setSceneRandomEvents(enabled: Boolean) = dispatch(Commands.setSceneRandomEvents(enabled))
 
     fun dispatchQuietly(command: SessionCommand) {
         val future = dispatch(command) ?: return

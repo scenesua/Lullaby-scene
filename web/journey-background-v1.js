@@ -8,7 +8,8 @@
     train_journey:'train',
     spacecraft_journey:'spacecraft',
     ferry_journey:'ferry',
-    submarine_journey:'submarine'
+    submarine_journey:'submarine',
+    hood_journey:'hood'
   };
   const presetScenes=window.LullabyPresetVisuals||{};
   const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
@@ -18,6 +19,7 @@
   const visual=host.querySelector('.journey-visual');
   const layers=[...visual.querySelectorAll('.journey-visual-layer')];
   const exit=document.createElement('div');
+  const siren=document.createElement('div');siren.className='hood-siren-light';siren.innerHTML='<i class="hood-siren-red"></i><i class="hood-siren-blue"></i>';visual.appendChild(siren);
   let activeIndex=-1,generation=0,currentId='',currentKey='',currentImage='',currentPreset='preset_rainy_cafe',sceneMode='journey',controlsTimer=null,ambientEnabled=true,orientationLocked=false,orientationTimer=null,frame=0,lastFrame=0,envelope=0,energy=0;
   try{ambientEnabled=localStorage.getItem('lullabyJourneyBackground')!=='off'}catch{}
   document.body.prepend(visual);document.body.classList.add('journey-ambient');
@@ -61,12 +63,14 @@
     localize();
   }
   function injectAmbientToggle(){const actions=viewActions();if(!actions||actions.querySelector('[data-journey-background-toggle]'))return;const button=document.createElement('button');button.type='button';button.className='journey-background-toggle';button.dataset.journeyBackgroundToggle='';button.addEventListener('click',toggleAmbient);actions.appendChild(button);localize()}
-  function animate(now){frame=requestAnimationFrame(animate);if(document.hidden||!ambientEnabled)return;if(now-lastFrame<33)return;const dt=Math.min(.12,Math.max(.016,(now-lastFrame)/1000||.033));lastFrame=now;const analyser=window.LullabyAudioReactive?.analyser,context=window.LullabyAudioReactive?.context;let target=0;if(analyser&&context?.state==='running'){const bins=new Uint8Array(analyser.frequencyBinCount);analyser.getByteFrequencyData(bins);let total=0,count=Math.min(28,bins.length);for(let i=1;i<count;i++)total+=bins[i];energy=total/Math.max(1,count-1)/255;target=Math.min(1,Math.max(0,(energy-.008)*7))}else energy=0;const seconds=target>envelope?1.35:3.2;envelope+=(target-envelope)*(1-Math.exp(-dt/seconds));const breath=(Math.sin(now/1900)+1)/2,scale=reduceMotion.matches?.85:1;const light=Math.min(1,.08+envelope*.55+breath*(.34+envelope*.2)*scale);visual.style.setProperty('--scene-light',light.toFixed(3))}
+  function flashSiren(detail={}){if(journeyId()!=='hood_journey'||!ambientEnabled)return;const distance=Math.max(0,Math.min(1,Number(detail.distance)||0)),duration=Math.max(3000,Number(detail.durationMs)||12000),direction=Number(detail.direction)<0?-1:1;siren.style.setProperty('--hood-siren-strength',(1-distance*.58).toFixed(3));siren.style.setProperty('--hood-siren-blur',`${Math.round(46+distance*72)}px`);siren.style.setProperty('--hood-siren-duration',`${duration}ms`);siren.classList.remove('active');siren.classList.toggle('reverse',direction<0);void siren.offsetWidth;siren.classList.add('active');setTimeout(()=>siren.classList.remove('active'),duration+250)}
+  function animate(now){frame=requestAnimationFrame(animate);if(document.hidden||!ambientEnabled)return;if(now-lastFrame<33)return;const dt=Math.min(.12,Math.max(.016,(now-lastFrame)/1000||.033));lastFrame=now;const analyser=window.LullabyAudioReactive?.analyser,context=window.LullabyAudioReactive?.context;let target=0;if(analyser&&context?.state==='running'){const bins=new Uint8Array(analyser.frequencyBinCount);analyser.getByteFrequencyData(bins);let total=0,count=Math.min(28,bins.length);for(let i=1;i<count;i++)total+=bins[i];energy=total/Math.max(1,count-1)/255;target=Math.min(1,Math.max(0,(energy-.008)*7))}else energy=0;const seconds=target>envelope?1.35:3.2;envelope+=(target-envelope)*(1-Math.exp(-dt/seconds));const breath=(Math.sin(now/1900)+1)/2,scale=reduceMotion.matches?.85:1;const light=Math.min(1,.08+envelope*.68+breath*(.44+envelope*.24)*scale);visual.style.setProperty('--scene-light',light.toFixed(3))}
   document.addEventListener('click',event=>{if(event.target.closest('#journeySelector [data-journey]'))setTimeout(refresh)},true);
   document.addEventListener('lullaby-journey-changed',event=>void show(event.detail?.id));
   document.addEventListener('lullaby-preset-applied',event=>void showPreset(event.detail?.id,event.detail?.image));
   document.addEventListener('lullaby-scene-mode-changed',event=>{sceneMode=event.detail?.mode==='simple'?'simple':'journey';if(sceneMode==='simple')void showPreset();else void show(journeyId())});
   document.addEventListener('lullaby-language-changed',localize);
+  document.addEventListener('lullaby-hood-siren',event=>flashSiren(event.detail));
   document.addEventListener('pointerdown',event=>{if(document.body.classList.contains('journey-display-mode')&&!event.target.closest('.journey-display-exit'))showControls()});
   document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('journey-display-mode'))exitDisplay()});
   addEventListener('resize',syncDisplayOrientation);
@@ -74,6 +78,6 @@
   document.addEventListener('visibilitychange',()=>{const active=layers[activeIndex];if(!active)return;if(document.hidden)active.pause();else if(motionVideoEnabled&&(ambientEnabled||document.body.classList.contains('journey-display-mode'))&&!reduceMotion.matches&&!saveData)void active.play().catch(()=>{})});
   addEventListener('pagehide',()=>{cancelAnimationFrame(frame);layers.forEach(layer=>layer.pause())});
   try{const saved=localStorage.getItem('lullabyLastPresetVisual');if(presetScenes[saved])currentPreset=saved}catch{}
-  window.LullabyJourneyBackground={show,showPreset,enterDisplay,exitDisplay,toggleAmbient,get active(){return currentKey},get image(){return currentImage},get audioEnergy(){return energy},get audioEnvelope(){return envelope},get ambientEnabled(){return ambientEnabled},get displayMode(){return document.body.classList.contains('journey-display-mode')}};
+  window.LullabyJourneyBackground={show,showPreset,enterDisplay,exitDisplay,toggleAmbient,flashSiren,get active(){return currentKey},get image(){return currentImage},get audioEnergy(){return energy},get audioEnvelope(){return envelope},get ambientEnabled(){return ambientEnabled},get displayMode(){return document.body.classList.contains('journey-display-mode')}};
   visual.style.setProperty('--scene-light','.08');frame=requestAnimationFrame(animate);show();injectAmbientToggle();localize();setTimeout(injectDisplayButtons,300);setTimeout(injectDisplayButtons,1000);setTimeout(injectDisplayButtons,1800);
 })();

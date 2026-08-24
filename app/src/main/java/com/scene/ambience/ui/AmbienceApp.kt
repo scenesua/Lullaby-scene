@@ -89,6 +89,9 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
     val activeSceneId by remember(viewModel) {
         viewModel.sceneState.map { it.sceneId }.distinctUntilChanged()
     }.collectAsStateWithLifecycle(initialValue = null)
+    val activeSceneEventId by remember(viewModel) {
+        viewModel.sceneState.map { it.activeEventId }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = null)
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -328,6 +331,7 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
             sceneId = activeSceneId,
             presetId = state.snapshot?.activePresetId,
             playing = state.snapshot?.playbackState == PlaybackState.PLAYING,
+            activeEventId = activeSceneEventId,
             onDismiss = { showSceneDisplay = false },
         )
     }
