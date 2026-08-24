@@ -113,6 +113,18 @@ class ManifestParsingTest {
     }
 
     @Test
+    fun hoodIncidentHasDistantGunAndVoiceVariety() {
+        val manifest = json.decodeFromString<SoundLibraryManifest>(manifestFile("scene_sources.json").readText())
+        val guns = manifest.sources.first { it.id == "hood_gunshot" }.events
+        val voices = manifest.sources.first { it.id == "hood_shout" }.events
+        assertTrue("HOOD has at least five gun recordings", guns.size >= 5)
+        assertTrue("HOOD has at least four shout or scream recordings", voices.size >= 4)
+        (guns + voices).forEach { asset ->
+            assertTrue("${asset.assetId} is authored as distant", "distant" in asset.tags)
+        }
+    }
+
+    @Test
     fun everyBuiltInPresetReferencesExistingSourcesAndSaneVolumes() {
         val manifest = json.decodeFromString<SoundLibraryManifest>(manifestFile("sound_library.json").readText())
         val sceneManifest = json.decodeFromString<SoundLibraryManifest>(manifestFile("scene_sources.json").readText())

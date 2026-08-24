@@ -17,9 +17,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -59,6 +65,8 @@ fun SceneDisplayDialog(
     presetId: String?,
     playing: Boolean,
     activeEventId: String? = null,
+    brightness: Float = 1f,
+    onBrightnessChange: (Float) -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -115,19 +123,19 @@ fun SceneDisplayDialog(
                     bitmap = bitmap,
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
-                    colorFilter = brightnessFilter(0.84f + light * 0.48f),
+                    colorFilter = brightnessFilter((0.84f + light * 0.48f) * brightness),
                     modifier = Modifier.fillMaxSize(),
                 )
                 Image(
                     bitmap = bitmap,
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
-                    colorFilter = brightnessFilter(1.42f),
+                    colorFilter = brightnessFilter(1.42f * brightness),
                     modifier = Modifier
                         .fillMaxSize()
                         .scale(1.10f)
                         .blur(48.dp)
-                        .alpha(0.10f + light * 0.40f),
+                        .alpha(((0.10f + light * 0.40f) * brightness).coerceIn(0f, .72f)),
                 )
                 if (sceneId == SceneOrchestrator.HOOD_JOURNEY && siren.value in 0.001f..0.999f) {
                     Canvas(
@@ -147,11 +155,29 @@ fun SceneDisplayDialog(
                 color = Color.White,
                 modifier = Modifier.align(Alignment.Center),
             )
-            FilledTonalButton(
-                onClick = onDismiss,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp),
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(20.dp)
+                    .fillMaxWidth()
+                    .widthIn(max = 440.dp)
+                    .background(Color.Black.copy(alpha = .62f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                Text(context.getString(R.string.scene_display_close))
+                Row(Modifier.fillMaxWidth()) {
+                    Text(context.getString(R.string.scene_display_brightness), color = Color.White, modifier = Modifier.weight(1f))
+                    Text("${(brightness * 100).toInt()}%", color = Color(0xFFD8B35F))
+                }
+                Slider(
+                    value = brightness,
+                    onValueChange = onBrightnessChange,
+                    valueRange = .35f..1.45f,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                FilledTonalButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    Text(context.getString(R.string.scene_display_close))
+                }
             }
         }
     }

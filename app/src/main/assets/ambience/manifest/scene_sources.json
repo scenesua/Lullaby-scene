@@ -114,10 +114,16 @@
     },
     {
       "id":"hood_gunshot","category":"travel","display_name_key":"source_hood_gunshot","default_volume":0.28,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_gunshot_event_001","path":"ambience/hood_journey/events/hood_gunshot_event_001.ogg","duration_ms":3324,"role":"event","tags":["hood","gunshot","distance_variable"],"provenance_id":"freesound_resaural_541164","cooldown_ms":480000}]
+      "events":[
+        {"asset_id":"hood_gunshot_event_001","path":"ambience/hood_journey/events/hood_gunshot_event_001.ogg","duration_ms":3324,"role":"event","tags":["hood","gunshot","distant"],"provenance_id":"freesound_resaural_541164","cooldown_ms":480000},
+        {"asset_id":"hood_gunshot_rifle_event_002","path":"ambience/hood_journey/events/hood_gunshot_rifle_event_002.ogg","duration_ms":490,"role":"event","tags":["hood","rifle","burst","distant"],"provenance_id":"freesound_qubodup_482120","cooldown_ms":480000},
+        {"asset_id":"hood_gunshot_pistol_event_003","path":"ambience/hood_journey/events/hood_gunshot_pistol_event_003.ogg","duration_ms":656,"role":"event","tags":["hood","pistol","distant"],"provenance_id":"freesound_lemudcrab_163456","cooldown_ms":480000},
+        {"asset_id":"hood_gunshot_shotgun_event_004","path":"ambience/hood_journey/events/hood_gunshot_shotgun_event_004.ogg","duration_ms":2436,"role":"event","tags":["hood","shotgun","distant"],"provenance_id":"freesound_moosegravy_431822","cooldown_ms":480000},
+        {"asset_id":"hood_gunshot_burst_event_005","path":"ambience/hood_journey/events/hood_gunshot_burst_event_005.ogg","duration_ms":2396,"role":"event","tags":["hood","burst","distant"],"provenance_id":"freesound_adrilahan_337241","cooldown_ms":480000}
+      ]
     },
     {
-      "id":"hood_siren","category":"travel","display_name_key":"source_hood_siren","default_volume":0.24,"loop_mode":"event","continuous":[],
+      "id":"hood_siren","category":"travel","display_name_key":"source_hood_siren","default_volume":0.34,"loop_mode":"event","continuous":[],
       "events":[{"asset_id":"hood_siren_event_001","path":"ambience/hood_journey/events/hood_siren_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","police","siren","passing"],"provenance_id":"freesound_chimerical_385867","cooldown_ms":420000}]
     },
     {
@@ -126,7 +132,12 @@
     },
     {
       "id":"hood_shout","category":"travel","display_name_key":"source_hood_shout","default_volume":0.18,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_shout_event_001","path":"ambience/hood_journey/events/hood_shout_event_001.ogg","duration_ms":3207,"role":"event","tags":["hood","street","shouting"],"provenance_id":"freesound_yottasounds_174645","cooldown_ms":240000}]
+      "events":[
+        {"asset_id":"hood_shout_event_001","path":"ambience/hood_journey/events/hood_shout_event_001.ogg","duration_ms":3207,"role":"event","tags":["hood","street","shouting","distant"],"provenance_id":"freesound_yottasounds_174645","cooldown_ms":240000},
+        {"asset_id":"hood_shout_male_event_002","path":"ambience/hood_journey/events/hood_shout_male_event_002.ogg","duration_ms":6506,"role":"event","tags":["hood","male","scream","distant"],"provenance_id":"freesound_dinsfire_169628","cooldown_ms":240000},
+        {"asset_id":"hood_scream_short_event_003","path":"ambience/hood_journey/events/hood_scream_short_event_003.ogg","duration_ms":2356,"role":"event","tags":["hood","scream","distant"],"provenance_id":"freesound_ericnorcross81_575675","cooldown_ms":240000},
+        {"asset_id":"hood_scream_crowd_event_004","path":"ambience/hood_journey/events/hood_scream_crowd_event_004.ogg","duration_ms":7906,"role":"event","tags":["hood","crowd","scream","distant"],"provenance_id":"freesound_craigsmith_479894","cooldown_ms":240000}
+      ]
     },
     {
       "id":"hood_footsteps","category":"travel","display_name_key":"source_hood_footsteps","default_volume":0.14,"loop_mode":"event","continuous":[],
