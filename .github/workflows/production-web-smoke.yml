@@ -35,9 +35,9 @@ jobs:
             if curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" > /tmp/player.html \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=4&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=7&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=8&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=12&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=8&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=12&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=13&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/spacecraft.mp4?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.mp4 \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/train_journey/train_journey_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/train-bed.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/ferry_journey/ferry_journey_arrival_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/ferry.ogg \
@@ -45,9 +45,9 @@ jobs:
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg; then
               if grep -q 'display-tools-v1.js?v=4' /tmp/player.html \
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
-                && grep -q 'train-journey-v1.js?v=7' /tmp/player.html \
-                && grep -q 'remaining-journeys-v1.js?v=8' /tmp/player.html \
-                && grep -q 'journey-background-v1.js?v=12' /tmp/player.html \
+                && grep -q 'train-journey-v1.js?v=8' /tmp/player.html \
+                && grep -q 'remaining-journeys-v1.js?v=12' /tmp/player.html \
+                && grep -q 'journey-background-v1.js?v=13' /tmp/player.html \
                 && grep -q "TRAIN_ID='train_journey'" /tmp/train.js \
                 && grep -q 'ferry_journey' /tmp/remaining.js \
                 && grep -q 'spacecraft_journey' /tmp/remaining.js \
