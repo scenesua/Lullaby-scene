@@ -55,9 +55,9 @@ jobs:
                 && grep -q 'spacecraft_journey' /tmp/background.js \
                 && test "$(wc -c < /tmp/spacecraft.webp)" -gt 10000 \
                 && test "$(head -c 4 /tmp/spacecraft.webp)" = 'RIFF' \
-                && echo '3f4bfe13db2e8a74a6313defb4aee67fab6240a309d0a568f03c1be9ff5d309f  /tmp/train-bed.ogg' | sha256sum -c - \
+                && echo 'eb19517370cebb7921a15bd29764f16406cc442f011fa14ce01940312e743a72  /tmp/train-bed.ogg' | sha256sum -c - \
                 && echo '6439ec0e9029126670bcf94b576261e0dbf40e304300b27221e6268b58a51932  /tmp/ferry.ogg' | sha256sum -c - \
-                && echo '33f2897080646f6febdd92fc3d5fbc5ca210117e4ba7952186bbdadc2d120a20  /tmp/spacecraft.ogg' | sha256sum -c - \
+                && echo 'b0eacd4243ab44f934c14884750b021dea9beb891bdf456a7b3c14ae3d1b19b0  /tmp/spacecraft.ogg' | sha256sum -c - \
                 && echo '2b2c9089ce20af23fae721d5b3007c5e579f26b5f3c1623df1b9329d020c41f7  /tmp/submarine.ogg' | sha256sum -c - \
                 && grep -q '_resetBlackoutSlider' /tmp/display.js \
                 && grep -q 'openPendingWindow' /tmp/display.js \
