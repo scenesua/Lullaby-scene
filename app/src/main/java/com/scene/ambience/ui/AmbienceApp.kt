@@ -86,6 +86,7 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
     val navController = rememberNavController()
     var showSceneDisplay by rememberSaveable { mutableStateOf(false) }
+    var sceneDisplayBrightness by rememberSaveable { mutableStateOf(1f) }
     val activeSceneId by remember(viewModel) {
         viewModel.sceneState.map { it.sceneId }.distinctUntilChanged()
     }.collectAsStateWithLifecycle(initialValue = null)
@@ -332,6 +333,8 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
             presetId = state.snapshot?.activePresetId,
             playing = state.snapshot?.playbackState == PlaybackState.PLAYING,
             activeEventId = activeSceneEventId,
+            brightness = sceneDisplayBrightness,
+            onBrightnessChange = { sceneDisplayBrightness = it.coerceIn(.35f, 1.45f) },
             onDismiss = { showSceneDisplay = false },
         )
     }
