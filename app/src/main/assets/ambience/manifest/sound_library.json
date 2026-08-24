@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "sources": [
     {
       "id": "bamboo_forest",
@@ -218,6 +218,22 @@
       "events": []
     },
     {
+      "id": "lighthouse",
+      "category": "travel",
+      "display_name_key": "source_lighthouse",
+      "default_volume": 0.26,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "lighthouse_loop_001",
+          "path": "ambience/lighthouse/continuous/lighthouse_loop_001.ogg",
+          "duration_ms": 178727,
+          "crossfade_ms": 10000
+        }
+      ],
+      "events": []
+    },
+    {
       "id": "ocean",
       "category": "nature",
       "display_name_key": "source_ocean",
@@ -283,6 +299,22 @@
           "path": "ambience/singing_bowl/continuous/singing_bowl_loop_001.ogg",
           "duration_ms": 77000,
           "crossfade_ms": 12000
+        }
+      ],
+      "events": []
+    },
+    {
+      "id": "snowy_night",
+      "category": "nature",
+      "display_name_key": "source_snowy_night",
+      "default_volume": 0.32,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "snowy_night_loop_001",
+          "path": "ambience/snowy_night/continuous/snowy_night_loop_001.ogg",
+          "duration_ms": 269737,
+          "crossfade_ms": 10000
         }
       ],
       "events": []

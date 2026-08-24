@@ -19,7 +19,7 @@
 
     <!-- navigation -->
     <string name="nav_mixer">Mixer</string>
-    <string name="nav_presets">Presets</string>
+    <string name="nav_presets">Ready-made</string>
     <string name="nav_settings">Settings</string>
     <string name="timer_title">Sleep timer</string>
 
@@ -40,6 +40,14 @@
     <string name="preset_rainy_night">Rainy Night</string>
     <string name="preset_fan_room">Fan Room</string>
     <string name="preset_cafe_focus">Café Focus</string>
+    <string name="preset_simple_aircraft">Aircraft Cabin · Simple</string>
+    <string name="preset_simple_train">Night Train · Simple</string>
+    <string name="preset_simple_ferry">Night Ferry · Simple</string>
+    <string name="preset_simple_spacecraft">Spacecraft Drift · Simple</string>
+    <string name="preset_simple_submarine">Submarine Voyage · Simple</string>
+    <string name="preset_winter_lighthouse">Winter Lighthouse</string>
+    <string name="preset_harbor_cabin">Harbor Cabin</string>
+    <string name="preset_polar_night_train">Polar Night Train</string>
     <string name="preset_section_default">기본 프리셋</string>
     <string name="preset_section_custom">커스텀 프리셋</string>
     <string name="preset_section_empty_custom">저장된 커스텀 프리셋이 없습니다</string>
@@ -71,6 +79,8 @@
     <string name="source_ventilation">Ventilation</string>
     <string name="source_city">City</string>
     <string name="source_train">Train</string>
+    <string name="source_lighthouse">Lighthouse</string>
+    <string name="source_snowy_night">Snowy Night</string>
     <string name="source_water">Water</string>
     <string name="source_singing_bowl">Singing Bowl</string>
     <string name="source_white_noise">White Noise</string>

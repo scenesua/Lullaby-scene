@@ -2,7 +2,7 @@
   const R=window.LullabyPlayerRuntime;
   if(!R||!document.getElementById('webPlayer'))return;
   const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-  const ko=()=>window.LullabyI18n?.language!=='en';
+  const ko=()=>(window.LullabyI18n?.language||document.documentElement.lang)==='ko';
   let activeId=null;
 
   const copy=()=>ko()?{

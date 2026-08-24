@@ -2,7 +2,7 @@
   const R=window.LullabyPlayerRuntime;
   if(!R||!document.getElementById('webPlayer'))return;
   const desired=new Map(),starting=new Map(),latestPercent=new Map(),lastNonZero=new Map(),rafById=new Map();
-  const clampPercent=v=>Math.max(0,Math.min(100,Math.round(Number(v)||0)));
+  const clampPercent=v=>Math.max(0,Math.min(100,Math.round(Number(v)||0))),english=()=>(window.LullabyI18n?.language||document.documentElement.lang)!=='ko';
   const source=id=>R.sourceById[id]||R.catalog.find(item=>item.id===id)||null;
 
   function actualState(id){
@@ -34,7 +34,7 @@
       setClass(row,'is-on',state.on);setClass(row,'is-off',!state.on);
       const range=row.querySelector(`[data-quick-volume="${CSS.escape(id)}"]`);if(range&&document.activeElement!==range&&range.value!==String(state.volume))range.value=String(state.volume);
       const output=row.querySelector(`[data-quick-output="${CSS.escape(id)}"]`);setText(output,`${state.volume}%`);
-      const button=row.querySelector(`[data-quick-toggle="${CSS.escape(id)}"]`);if(button){setText(button,state.on?(window.LullabyI18n?.language==='en'?'Off':'끔'):(window.LullabyI18n?.language==='en'?'On':'켬'));setAttr(button,'aria-pressed',String(state.on))}
+      const button=row.querySelector(`[data-quick-toggle="${CSS.escape(id)}"]`);if(button){setText(button,state.on?(english()?'Off':'끔'):(english()?'On':'켬'));setAttr(button,'aria-pressed',String(state.on))}
     });
   }
 
@@ -82,7 +82,7 @@
       R.updateNowPlaying();
     })().catch(error=>{
       console.error(error);setDesired(id,0);
-      R.setStatus?.(window.LullabyI18n?.language==='en'?'Could not start this sound.':'이 소리를 시작하지 못했습니다.');
+      R.setStatus?.(english()?'Could not start this sound.':'이 소리를 시작하지 못했습니다.');
     }).finally(()=>starting.delete(id));
     starting.set(id,task);return task;
   }
@@ -91,6 +91,7 @@
     const def=source(id);if(!def)return Promise.resolve();
     const value=clampPercent(percent);setDesired(id,value);
     if(value===0){disable(id);return Promise.resolve()}
+    R.stopJourney?.();
     if(def.kind==='event'){
       if(!R.eventState[id]?.enabled)R.startEventLayer(def);
       if(R.eventState[id]){R.eventState[id].enabled=true;R.eventState[id].volume=value/100}

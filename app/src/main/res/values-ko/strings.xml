@@ -19,7 +19,7 @@
 
     <!-- navigation -->
     <string name="nav_mixer">믹서</string>
-    <string name="nav_presets">프리셋</string>
+    <string name="nav_presets">준비된 장면</string>
     <string name="nav_settings">설정</string>
     <string name="timer_title">취침 타이머</string>
 
@@ -34,6 +34,14 @@
     <string name="preset_forest_morning">숲의 아침</string>
     <string name="preset_bamboo_meditation">대나무 숲 명상</string>
     <string name="preset_deep_focus">깊은 집중</string>
+    <string name="preset_simple_aircraft">여객기 객실 · 심플</string>
+    <string name="preset_simple_train">야간 열차 · 심플</string>
+    <string name="preset_simple_ferry">야간 페리 · 심플</string>
+    <string name="preset_simple_spacecraft">우주선 표류 · 심플</string>
+    <string name="preset_simple_submarine">잠수함 항해 · 심플</string>
+    <string name="preset_winter_lighthouse">겨울 등대</string>
+    <string name="preset_harbor_cabin">항구의 선실</string>
+    <string name="preset_polar_night_train">설야 열차</string>
     <string name="save_current_mix">현재 믹스 저장</string>
     <string name="preset_name_hint">프리셋 이름</string>
     <string name="save">저장</string>
@@ -62,6 +70,8 @@
     <string name="source_ventilation">환풍기</string>
     <string name="source_city">도시</string>
     <string name="source_train">기차</string>
+    <string name="source_lighthouse">등대 부두</string>
+    <string name="source_snowy_night">눈 내리는 겨울밤</string>
     <string name="source_water">물</string>
     <string name="source_singing_bowl">싱잉볼</string>
     <string name="source_white_noise">화이트 노이즈</string>

@@ -144,6 +144,14 @@ class AmbiencePlaybackService : MediaSessionService() {
             "preset_rainy_night" -> getString(R.string.preset_rainy_night)
             "preset_fan_room" -> getString(R.string.preset_fan_room)
             "preset_cafe_focus" -> getString(R.string.preset_cafe_focus)
+            "preset_simple_aircraft" -> getString(R.string.preset_simple_aircraft)
+            "preset_simple_train" -> getString(R.string.preset_simple_train)
+            "preset_simple_ferry" -> getString(R.string.preset_simple_ferry)
+            "preset_simple_spacecraft" -> getString(R.string.preset_simple_spacecraft)
+            "preset_simple_submarine" -> getString(R.string.preset_simple_submarine)
+            "preset_winter_lighthouse" -> getString(R.string.preset_winter_lighthouse)
+            "preset_harbor_cabin" -> getString(R.string.preset_harbor_cabin)
+            "preset_polar_night_train" -> getString(R.string.preset_polar_night_train)
             else -> getString(R.string.app_name)
         }
     }

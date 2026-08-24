@@ -102,8 +102,9 @@ class ManifestParsingTest {
     @Test
     fun sourcesMatchCatalogIds() {
         val manifest = json.decodeFromString<SoundLibraryManifest>(manifestFile("sound_library.json").readText())
+        val sceneManifest = json.decodeFromString<SoundLibraryManifest>(manifestFile("scene_sources.json").readText())
         val catalogIds = SourceId.entries.map { it.id }.toSet()
-        manifest.sources.forEach { source ->
+        (manifest.sources + sceneManifest.sources).forEach { source ->
             assertTrue(
                 "unexpected source id ${source.id} (catalog: $catalogIds)",
                 source.id in catalogIds,
@@ -114,7 +115,8 @@ class ManifestParsingTest {
     @Test
     fun everyBuiltInPresetReferencesExistingSourcesAndSaneVolumes() {
         val manifest = json.decodeFromString<SoundLibraryManifest>(manifestFile("sound_library.json").readText())
-        val ids = manifest.sources.map { it.id }.toSet()
+        val sceneManifest = json.decodeFromString<SoundLibraryManifest>(manifestFile("scene_sources.json").readText())
+        val ids = (manifest.sources + sceneManifest.sources).map { it.id }.toSet()
         val presetIds = BuiltInPresets.createAll().map { it.id }
         assertEquals("unique preset ids", presetIds.size, presetIds.toSet().size)
         BuiltInPresets.createAll().forEach { preset ->

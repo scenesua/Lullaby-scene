@@ -3,7 +3,7 @@
   if(!R||!document.getElementById('webPlayer'))return;
   const SCHEMA='lullaby.scene.recipe';
   const VERSION=1;
-  const ko=()=>window.LullabyI18n?.language!=='en';
+  const ko=()=>(window.LullabyI18n?.language||document.documentElement.lang)==='ko';
   const clamp=v=>Math.max(0,Math.min(1,Number(v)||0));
   const source=id=>R.sourceById[id]||R.catalog.find(item=>item.id===id)||null;
   const text={
