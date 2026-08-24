@@ -114,7 +114,7 @@ await page.locator('button[data-journey="passenger_aircraft_cabin"]').click();
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 const mobile=await browser.newPage({viewport:{width:390,height:844},locale:'ko-KR'});
 await mobile.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await mobile.waitForFunction(()=>document.querySelector('.journey-view-actions [data-journey-display-placement="mobile"]'));
+await mobile.waitForFunction(()=>document.querySelector('.android-top-actions [data-journey-display-placement="mobile"]'));
 const mobileStages=await mobile.evaluate(()=>({bar:getComputedStyle(document.getElementById('journeyStageBar')).display,select:getComputedStyle(document.querySelector('.journey-stage-select')).display,options:document.querySelectorAll('#journeyStageSelect option').length}));
 if(mobileStages.bar!=='none'||mobileStages.select==='none'||mobileStages.options!==9)throw new Error(`Mobile stage dropdown failed: ${JSON.stringify(mobileStages)}`);
 await mobile.locator('[data-journey-display-placement="mobile"]').click();
@@ -124,5 +124,5 @@ const mobileDisplay=await mobile.evaluate(()=>{
   const visualStyle=getComputedStyle(visual),rect=visual?.getBoundingClientRect();
   return{mode:document.body.classList.contains('journey-display-mode'),fallback:document.body.classList.contains('journey-display-landscape-fallback'),buttonParent:button?.parentElement?.className,canvasWidth:Math.round(parseFloat(visualStyle.width)||0),canvasHeight:Math.round(parseFloat(visualStyle.height)||0),rectWidth:Math.round(rect?.width||0),rectHeight:Math.round(rect?.height||0),fit:getComputedStyle(layer).objectFit};
 });
-if(!mobileDisplay.mode||!mobileDisplay.fallback||mobileDisplay.buttonParent!=='journey-view-actions'||mobileDisplay.canvasWidth!==844||mobileDisplay.canvasHeight!==390||mobileDisplay.rectWidth!==390||mobileDisplay.rectHeight!==844||mobileDisplay.fit!=='contain')throw new Error(`Mobile landscape scene display failed: ${JSON.stringify(mobileDisplay)}`);
+if(!mobileDisplay.mode||!mobileDisplay.fallback||mobileDisplay.buttonParent!=='android-top-actions'||mobileDisplay.canvasWidth!==844||mobileDisplay.canvasHeight!==390||mobileDisplay.rectWidth!==390||mobileDisplay.rectHeight!==844||mobileDisplay.fit!=='contain')throw new Error(`Mobile landscape scene display failed: ${JSON.stringify(mobileDisplay)}`);
 await mobile.close();await browser.close();console.log('Web Aircraft, Train, Ferry, Spacecraft and Submarine journey routing passed');
