@@ -134,7 +134,7 @@ jobs:
           node - <<'NODE'
           const fs=require('fs'),crypto=require('crypto');
           const data=JSON.parse(fs.readFileSync('web/mixer-sources.json','utf8'));
-          if(data.sources.length!==36) throw new Error(`expected 36 mixer sources, got ${data.sources.length}`);
+          if(data.sources.length!==40) throw new Error(`expected 40 mixer sources, got ${data.sources.length}`);
           for(const s of data.sources){
             if(s.kind==='continuous' && !fs.existsSync('web'+s.url)) throw new Error(`missing ${s.id}: web${s.url}`);
             if(s.kind==='event' && !fs.existsSync('web'+s.url)) throw new Error(`missing event ${s.id}: web${s.url}`);
