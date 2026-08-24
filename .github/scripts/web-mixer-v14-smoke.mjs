@@ -13,11 +13,11 @@ page.on('console',message=>{if(message.type()==='error')errors.push(message.text
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.addStyleTag({url:'http://127.0.0.1:4173/mixer-controls-v14.css?v=14'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js?v=12'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js?v=13'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/aircraft-source-v15.js?v=15'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=14'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=12'});
-await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===36);
+await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=16'});
+await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=13'});
+await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===40);
 
 await page.locator('[data-view="mixer"]').first().click();await page.waitForTimeout(120);
 const wind='#mixerGrid [data-source="wind"]';
