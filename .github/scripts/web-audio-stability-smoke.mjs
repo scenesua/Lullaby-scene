@@ -16,7 +16,7 @@ await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js?v=12'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=14'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/audio-stability-v1.js?v=2'});
-await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window.LullabyPlayerRuntime?.catalog?.length===21);
+await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window.LullabyPlayerRuntime?.catalog?.length===36);
 
 const direct=await page.evaluate(async()=>{
   const R=window.LullabyPlayerRuntime;

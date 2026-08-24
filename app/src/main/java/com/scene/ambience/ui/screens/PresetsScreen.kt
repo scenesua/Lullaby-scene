@@ -284,6 +284,14 @@ private fun stringResFor(id: String): Int = when (id) {
     "preset_rainy_night" -> R.string.preset_rainy_night
     "preset_fan_room" -> R.string.preset_fan_room
     "preset_cafe_focus" -> R.string.preset_cafe_focus
+    "preset_simple_aircraft" -> R.string.preset_simple_aircraft
+    "preset_simple_train" -> R.string.preset_simple_train
+    "preset_simple_ferry" -> R.string.preset_simple_ferry
+    "preset_simple_spacecraft" -> R.string.preset_simple_spacecraft
+    "preset_simple_submarine" -> R.string.preset_simple_submarine
+    "preset_winter_lighthouse" -> R.string.preset_winter_lighthouse
+    "preset_harbor_cabin" -> R.string.preset_harbor_cabin
+    "preset_polar_night_train" -> R.string.preset_polar_night_train
     else -> R.string.preset_rainy_cafe
 }
 

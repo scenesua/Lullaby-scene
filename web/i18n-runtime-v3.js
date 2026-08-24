@@ -90,12 +90,16 @@
     const phase=document.getElementById('phaseLabel');if(phase){const raw=rawPhase(phase.textContent);phase.dataset.phaseKey=raw;setText(phase,PHASES[language()]?.[raw]||PHASES.en[raw]||raw)}
     const currentRemaining=window.LullabyRemainingJourneys?.configs?.[window.LullabyRemainingJourneys.active];
     if(!currentRemaining&&!window.LullabyTrainJourney?.active){const aircraft=sourceName('aircraft_cabin','Passenger Aircraft Cabin');document.querySelectorAll('.aircraft-title-row h3,[data-inspector-mode="journey"] .inspector-section h3').forEach(el=>setText(el,aircraft))}
+    document.querySelectorAll('#journeyStageBar button b').forEach(el=>{const raw=rawPhase(el.textContent);setText(el,PHASES[language()]?.[raw]||PHASES.en[raw]||raw)});
+    document.querySelectorAll('#journeyStageSelect option').forEach((option,index)=>{const raw=rawPhase(option.textContent.replace(/^\d+\.\s*/,'')),label=PHASES[language()]?.[raw]||PHASES.en[raw]||raw;setText(option,`${index+1}. ${label}`)});
+    const status=document.getElementById('playerStatus');if(status&&['재생 버튼을 누르면 브라우저 오디오가 활성화됩니다.','Press play to enable browser audio.'].includes(status.textContent.trim()))setText(status,language()==='ko'?'재생 버튼을 누르면 브라우저 오디오가 활성화됩니다.':'Press play to enable browser audio.');
     setText(document.getElementById('journeyPrevPhase'),term('previousPhase','◀ Previous phase'));setText(document.getElementById('journeyNextPhase'),term('nextPhase','Next phase ▶'));document.querySelector('.journey-track')?.setAttribute('aria-label',term('journeyPosition','Journey position'));
     const event=document.getElementById('eventLabel');if(event&&['None','없음','なし','无','無','Нет','Aucun','Ninguno','Nenhum','ไม่มี','Wala','कोई नहीं','Không có'].includes(event.textContent.trim()))setText(event,term('none','None'));
   }
 
   let queued=false;
-  function apply(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;localizeRuntimeData();localizeMixer();localizeQuickMixer();localizePresets();localizeJourney()})}
+  function reveal(){clearTimeout(window.__lullabyLocaleRevealTimer);document.documentElement.classList.remove('i18n-pending');document.documentElement.dataset.i18nReady='1'}
+  function apply(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;localizeRuntimeData();localizeMixer();localizeQuickMixer();localizePresets();localizeJourney();reveal()})}
   function watchDirect(selector){const root=document.querySelector(selector);if(!root)return;new MutationObserver(apply).observe(root,{childList:true})}
 
   document.addEventListener('lullaby-language-changed',apply);document.addEventListener('lullaby-locales-applied',apply);document.addEventListener('lullaby-view-changed',apply);document.addEventListener('lullaby-scene-mode-changed',apply);

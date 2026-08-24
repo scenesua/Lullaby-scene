@@ -24,6 +24,20 @@ object AmbienceStrings {
             "preset_forest_morning" -> context.getString(R.string.preset_forest_morning)
             "preset_bamboo_meditation" -> context.getString(R.string.preset_bamboo_meditation)
             "preset_deep_focus" -> context.getString(R.string.preset_deep_focus)
+            "preset_quiet_night" -> context.getString(R.string.preset_quiet_night)
+            "preset_morning_birds" -> context.getString(R.string.preset_morning_birds)
+            "preset_ocean_waves" -> context.getString(R.string.preset_ocean_waves)
+            "preset_rainy_night" -> context.getString(R.string.preset_rainy_night)
+            "preset_fan_room" -> context.getString(R.string.preset_fan_room)
+            "preset_cafe_focus" -> context.getString(R.string.preset_cafe_focus)
+            "preset_simple_aircraft" -> context.getString(R.string.preset_simple_aircraft)
+            "preset_simple_train" -> context.getString(R.string.preset_simple_train)
+            "preset_simple_ferry" -> context.getString(R.string.preset_simple_ferry)
+            "preset_simple_spacecraft" -> context.getString(R.string.preset_simple_spacecraft)
+            "preset_simple_submarine" -> context.getString(R.string.preset_simple_submarine)
+            "preset_winter_lighthouse" -> context.getString(R.string.preset_winter_lighthouse)
+            "preset_harbor_cabin" -> context.getString(R.string.preset_harbor_cabin)
+            "preset_polar_night_train" -> context.getString(R.string.preset_polar_night_train)
             else -> presetId
         }
     }

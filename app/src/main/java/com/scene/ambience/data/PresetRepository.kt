@@ -15,6 +15,16 @@ object BuiltInPresets {
 
     fun createAll(): List<AmbiencePreset> {
         fun s(id: String, volume: Float) = SourceState(id = id, enabled = volume > 0f, volume = volume)
+        fun preset(id: String, master: Float, density: String, vararg sources: Pair<String, Float>) =
+            AmbiencePreset(
+                id = id,
+                name = id,
+                mix = MixState(
+                    masterVolume = master,
+                    sources = sources.associate { (sourceId, volume) -> sourceId to s(sourceId, volume) },
+                ),
+                eventDensity = density,
+            )
 
         return listOf(
             AmbiencePreset(
@@ -214,6 +224,28 @@ object BuiltInPresets {
                     ),
                 ),
                 eventDensity = "low",
+            ),
+            preset("preset_simple_aircraft", 0.65f, "low", "aircraft_cabin" to 0.5f),
+            preset("preset_simple_train", 0.65f, "low", "train_journey_bed" to 0.5f),
+            preset("preset_simple_ferry", 0.65f, "low", "ferry_journey_bed" to 0.46f),
+            preset("preset_simple_spacecraft", 0.62f, "low", "spacecraft_journey_bed" to 0.48f),
+            preset(
+                "preset_simple_submarine", 0.62f, "low",
+                "submarine_journey_engine_bed" to 0.32f,
+                "submarine_journey_water_bed" to 0.34f,
+                "submarine_sonar" to 0.08f,
+            ),
+            preset(
+                "preset_winter_lighthouse", 0.65f, "low",
+                "snowy_night" to 0.38f, "lighthouse" to 0.25f, "wind" to 0.1f,
+            ),
+            preset(
+                "preset_harbor_cabin", 0.65f, "low",
+                "ferry_journey_bed" to 0.35f, "ocean" to 0.22f, "lighthouse" to 0.14f,
+            ),
+            preset(
+                "preset_polar_night_train", 0.65f, "low",
+                "train_journey_bed" to 0.38f, "snowy_night" to 0.28f, "brown_noise" to 0.1f,
             ),
         )
     }

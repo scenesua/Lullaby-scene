@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -40,6 +41,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -62,6 +66,8 @@ import com.scene.ambience.ui.screens.ScenesScreen
 import com.scene.ambience.ui.screens.SettingsScreen
 import com.scene.ambience.ui.screens.TimerScreen
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 const val ROUTE_SCENES = "scenes"
 const val ROUTE_MIXER = "mixer"
@@ -79,6 +85,10 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val navController = rememberNavController()
+    var showSceneDisplay by rememberSaveable { mutableStateOf(false) }
+    val activeSceneId by remember(viewModel) {
+        viewModel.sceneState.map { it.sceneId }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = null)
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -211,6 +221,11 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                     }
                 },
                 actions = {
+                    if (currentRoute == ROUTE_SCENES || currentRoute == ROUTE_PRESETS) {
+                        IconButton(onClick = { showSceneDisplay = true }) {
+                            Icon(Icons.Filled.Landscape, contentDescription = context.getString(R.string.scene_display))
+                        }
+                    }
                     FilledIconButton(onClick = viewModel::togglePlayPause) {
                         val playing = state.snapshot?.playbackState == PlaybackState.PLAYING
                         Icon(
@@ -306,6 +321,15 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
             }
             composable(ROUTE_LICENSES) { LicensesScreen(state) }
         }
+    }
+
+    if (showSceneDisplay) {
+        SceneDisplayDialog(
+            sceneId = activeSceneId,
+            presetId = state.snapshot?.activePresetId,
+            playing = state.snapshot?.playbackState == PlaybackState.PLAYING,
+            onDismiss = { showSceneDisplay = false },
+        )
     }
 }
 

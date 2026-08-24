@@ -2,7 +2,7 @@
   const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
   const R=window.LullabyPlayerRuntime;
   if(!R){console.error('LullabyPlayerRuntime is unavailable');return}
-  const isEnglish=()=>window.LullabyI18n?.language==='en';
+  const isEnglish=()=>(window.LullabyI18n?.language||document.documentElement.lang)!=='ko';
   let activePreset=null,interactionActive=false,renderPending=false;
   const starting=new Map(),volumeTasks=new Map();
   const sourceDef=id=>R.sourceById[id]||R.catalog.find(source=>source.id===id)||null;

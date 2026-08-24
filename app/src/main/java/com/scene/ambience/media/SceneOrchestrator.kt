@@ -516,7 +516,7 @@ class SceneOrchestrator(
             AmbientJourneyProfile(
                 sceneId = FERRY_JOURNEY,
                 departureSource = SOURCE_FERRY_DEPARTURE,
-                bedSources = mapOf(SOURCE_FERRY_BED to 0.52f),
+                bedSources = mapOf(SOURCE_FERRY_BED to 0.48f),
                 arrivalSource = SOURCE_FERRY_ARRIVAL,
                 phases = listOf(STATE_FERRY_CAST_OFF, STATE_FERRY_LEAVING_HARBOR, STATE_FERRY_NIGHT_CROSSING, STATE_FERRY_HARBOR_APPROACH, STATE_FERRY_ARRIVAL),
                 departureMs = 128_667L,
@@ -558,7 +558,7 @@ class SceneOrchestrator(
         }
 
         private const val TICK_MS = 1_000L
-        internal const val JOURNEY_CROSSFADE_MS = 5_000L
+        internal const val JOURNEY_CROSSFADE_MS = 8_000L
     }
 }
 

@@ -20,6 +20,7 @@
     ensureContext,
     makeSourceNode,
     renderMixer,
-    updateNowPlaying
+    updateNowPlaying,
+    stopJourney:stopJourneyPlayback
   };
 })();

@@ -17,7 +17,7 @@ await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js
 await page.addScriptTag({url:'http://127.0.0.1:4173/aircraft-source-v15.js?v=15'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=14'});
 await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=12'});
-await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===21);
+await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===36);
 
 await page.locator('[data-view="mixer"]').first().click();await page.waitForTimeout(120);
 const wind='#mixerGrid [data-source="wind"]';
@@ -53,10 +53,10 @@ await page.mouse.click(box.x+box.width*.95,box.y+box.height/2);await page.waitFo
 let seekState=await page.evaluate(()=>({elapsed:window.LullabyJourneyRuntime?.elapsedMs,total:window.LullabyJourneyRuntime?.totalMs,phase:document.querySelector('#phaseLabel')?.textContent,aria:document.querySelector('.journey-track')?.getAttribute('aria-valuenow')}));
 if(!seekState.elapsed||!seekState.total||seekState.elapsed/seekState.total<.93||seekState.elapsed/seekState.total>.97)throw new Error(`journey click seek failed: ${JSON.stringify(seekState)}`);
 if(!['Descent','Approach'].includes(seekState.phase))throw new Error(`journey seek did not advance phase: ${JSON.stringify(seekState)}`);
-await page.locator('#journeyPrevPhase').click();await page.waitForTimeout(60);
+await page.locator('#journeyPrevPhase').click();await page.waitForTimeout(350);
 const prevState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
 if(prevState.phase!=='Cruise'||prevState.ratio<.05||prevState.ratio>.07)throw new Error(`previous phase button failed: ${JSON.stringify(prevState)}`);
-await page.locator('#journeyNextPhase').click();await page.waitForTimeout(60);
+await page.locator('#journeyNextPhase').click();await page.waitForTimeout(350);
 const nextState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
 if(nextState.phase!=='Descent'||nextState.ratio<.90||nextState.ratio>.93)throw new Error(`next phase button failed: ${JSON.stringify(nextState)}`);
 await page.evaluate(()=>window.LullabyJourneyRuntime.seekToMs(0));await page.waitForTimeout(80);
@@ -67,7 +67,7 @@ let audioState=await page.evaluate(()=>({phase:window.LullabyJourneyAudio?.phase
 if(audioState.phase!=='Taxi out'||!audioState.taxiReady||audioState.taxiUrl!=='/audio/aircraft_cabin_taxi_627056_v1.ogg'||audioState.taxiGain<.25||audioState.cruiseGain>.08)throw new Error(`Taxi out did not route to 627056: ${JSON.stringify(audioState)}`);
 await page.locator('#journeyNextPhase').click();await page.waitForTimeout(1300);
 audioState=await page.evaluate(()=>({phase:window.LullabyJourneyAudio?.phase,taxiGain:window.LullabyJourneyAudio?.taxiGain,cruiseGain:window.LullabyJourneyAudio?.cruiseGain}));
-if(audioState.phase!=='Takeoff'||audioState.taxiGain>.08||audioState.cruiseGain<.25)throw new Error(`Takeoff did not leave taxi bed: ${JSON.stringify(audioState)}`);
+if(audioState.phase!=='Takeoff'||audioState.taxiGain>.12||audioState.cruiseGain<.25)throw new Error(`Takeoff did not crossfade away from taxi bed: ${JSON.stringify(audioState)}`);
 await page.locator('#scenePlay').click();await page.waitForTimeout(80);
 
 const guard=await page.evaluate(async()=>{await ensureSceneNode();const filters=sceneNode?.whistleGuard?.filters||[];return{frequencies:filters.map(n=>n.frequency.value),gains:filters.map(n=>n.gain.value)}});

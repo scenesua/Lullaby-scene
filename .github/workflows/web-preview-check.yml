@@ -11,6 +11,10 @@ on:
       - 'tools/materialize_aircraft_taxi.py'
       - 'tools/materialize_train_journey.py'
       - 'tools/materialize_remaining_journeys.py'
+      - 'tools/materialize_unused_mixer_sources.py'
+      - 'app/src/main/assets/ambience/lighthouse/**'
+      - 'app/src/main/assets/ambience/snowy_night/**'
+      - 'app/src/main/assets/ambience/manifest/sound_library.json'
       - 'app/src/main/assets/ambience/*_journey/**'
       - 'app/src/main/assets/ambience/manifest/scene_sources.json'
       - 'app/src/main/java/com/scene/ambience/media/TrainJourneyTimeline.kt'
@@ -107,11 +111,14 @@ jobs:
           grep -q '/visitor-count-v1.js?v=2' web/sw.js
           grep -q '/visitor-count-v1.js?v=2' web/_worker.js
           grep -q 'api.counterapi.dev/v1' web/visitor-count-v1.js
-          grep -q 'lullaby-scene-site-v40' web/sw.js
+          grep -q 'lullaby-scene-site-v50' web/sw.js
           grep -q "event.request.destination==='audio'" web/sw.js
           ! sed -n '3p' web/sw.js | grep -q '/audio/'
-          grep -q '/train-journey-v1.js?v=2' web/sw.js
-          grep -q '/remaining-journeys-v1.js?v=3' web/sw.js
+          grep -q '/train-journey-v1.js?v=7' web/sw.js
+          grep -q '/remaining-journeys-v1.js?v=8' web/sw.js
+          grep -q '/journey-background-v1.js?v=6' web/sw.js
+          test -s web/assets/journeys/spacecraft.mp4
+          test -s web/assets/journeys/submarine.webp
           grep -q '/aircraft-source-v15.js?v=15' web/_worker.js
           grep -q '/mixer-interaction-v14.js?v=14' web/_worker.js
           grep -q '/mixer-controls-v14.css?v=14' web/_worker.js
@@ -125,16 +132,31 @@ jobs:
       - name: Validate full mixer catalog
         run: |
           node - <<'NODE'
-          const fs=require('fs');
+          const fs=require('fs'),crypto=require('crypto');
           const data=JSON.parse(fs.readFileSync('web/mixer-sources.json','utf8'));
-          if(data.sources.length!==21) throw new Error(`expected 21 mixer sources, got ${data.sources.length}`);
+          if(data.sources.length!==36) throw new Error(`expected 36 mixer sources, got ${data.sources.length}`);
           for(const s of data.sources){
             if(s.kind==='continuous' && !fs.existsSync('web'+s.url)) throw new Error(`missing ${s.id}: web${s.url}`);
             if(s.kind==='event' && !fs.existsSync('web'+s.url)) throw new Error(`missing event ${s.id}: web${s.url}`);
           }
-          const required=['rain','thunder','wind','ocean','stream','fire','forest','birds','crickets','cafe','city','train','aircraft_cabin','fan','ventilation','water','singing_bowl','bamboo_forest','white_noise','pink_noise','brown_noise'];
+          const required=['rain','thunder','wind','ocean','stream','fire','forest','birds','crickets','snowy_night','cafe','city','train','lighthouse','aircraft_cabin','fan','ventilation','water','singing_bowl','bamboo_forest','white_noise','pink_noise','brown_noise'];
           const ids=new Set(data.sources.map(s=>s.id));
           for(const id of required) if(!ids.has(id)) throw new Error(`catalog missing ${id}`);
+          const android=JSON.parse(fs.readFileSync('app/src/main/assets/ambience/manifest/sound_library.json','utf8'));
+          for(const id of ['lighthouse','snowy_night']){
+            const source=android.sources.find(s=>s.id===id),web=data.sources.find(s=>s.id===id);
+            if(!source||!web) throw new Error(`platform catalog missing ${id}`);
+            const androidPath='app/src/main/assets/'+source.continuous[0].path;
+            const digest=path=>crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex');
+            if(digest(androidPath)!==digest('web'+web.url)) throw new Error(`${id} Android/Web asset mismatch`);
+          }
+          const scenes=JSON.parse(fs.readFileSync('app/src/main/assets/ambience/manifest/scene_sources.json','utf8'));
+          for(const source of scenes.sources.filter(s=>s.id!=='aircraft_cabin')){
+            const web=data.sources.find(s=>s.id===source.id),asset=source.continuous[0]||source.events[0];
+            if(!web||!asset) throw new Error(`Journey mixer source missing ${source.id}`);
+            const androidPath='app/src/main/assets/'+asset.path;
+            if(digest(androidPath)!==digest('web'+web.url)) throw new Error(`${source.id} Journey mixer asset mismatch`);
+          }
           NODE
 
       - name: Validate mixer interaction and Scene Recipe wiring

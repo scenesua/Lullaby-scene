@@ -13,7 +13,7 @@ from pathlib import Path
 
 ASSETS = {
     "ferry_journey_departure_001.ogg": ("ferry_journey", "continuous", "74916__mrmayo__back-of-ferry-boat.wav", None),
-    "ferry_journey_bed_001.ogg": ("ferry_journey", "continuous", "338035__alcappuccino__cruiseship-inside-crew-area-near-the-engine.wav", None),
+    "ferry_journey_bed_001.ogg": ("ferry_journey", "continuous", "74916__mrmayo__back-of-ferry-boat.wav", None),
     "ferry_journey_arrival_001.ogg": ("ferry_journey", "continuous", "758917__hajohansen__ferry-boat-in-northern-norway-senja-brensholmen-botnhamn-waves.wav", None),
     "spacecraft_journey_transition_001.ogg": ("spacecraft_journey", "continuous", "221570__alaskarobotics__ambient-spacecraft-hum.wav", None),
     "spacecraft_journey_bed_001.ogg": ("spacecraft_journey", "continuous", "256269__jmayoff__space-ship-atmosphere.wav", None),

@@ -43,10 +43,10 @@ jobs:
           grep -Fq "'Strict-Transport-Security':'max-age=31536000'" web/_worker.js
           grep -Fq "fetchSite==='cross-site'" web/_worker.js
           grep -Fq "startsWith('application/json')" web/_worker.js
-          grep -Fq '/site-locales-v10.js?v=11' web/_worker.js
+          grep -Fq '/site-locales-v10.js?v=13' web/_worker.js
           grep -Fq '/i18n-runtime-v3.js?v=4' web/_worker.js
           grep -Fq '/mobile-android-shell-v1.js?v=2' web/_worker.js
-          grep -Fq '/site-locales-v10.js?v=11' web/sw.js
+          grep -Fq '/site-locales-v10.js?v=13' web/sw.js
           grep -Fq '/i18n-runtime-v3.js?v=4' web/sw.js
           grep -Fq '/mobile-android-shell-v1.js?v=2' web/sw.js
           ! grep -Fq 'i18n-catalog-v2.js' web/_worker.js
@@ -77,7 +77,7 @@ jobs:
           grep -Eiq '^content-security-policy:.*frame-ancestors .none.' /tmp/headers
           grep -Eiq '^content-security-policy:.*object-src .none.' /tmp/headers
           grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
-          grep -Fq 'site-locales-v10.js?v=11' /tmp/home
+          grep -Fq 'site-locales-v10.js?v=13' /tmp/home
           grep -Fq 'i18n-runtime-v3.js?v=4' /tmp/home
           grep -Fq 'mobile-android-shell-v1.js?v=2' /tmp/home
 

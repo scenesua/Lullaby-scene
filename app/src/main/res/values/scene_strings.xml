@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="nav_scenes">Scenes</string>
+    <string name="nav_scenes">Journey</string>
+    <string name="scene_display">Scene screen</string>
+    <string name="scene_display_close">Exit scene screen</string>
+    <string name="scene_display_unavailable">Scene background unavailable</string>
     <string name="source_aircraft_cabin">Aircraft Cabin</string>
     <string name="source_train_journey_departure">Train departure</string>
     <string name="source_train_journey_bed">Overnight train</string>
     <string name="source_train_journey_arrival">Train arrival</string>
-    <string name="source_ferry_journey_departure">Ferry departure</string><string name="source_ferry_journey_bed">Night ferry engine</string><string name="source_ferry_journey_arrival">Ferry arrival</string>
+    <string name="source_ferry_journey_departure">Ferry departure</string><string name="source_ferry_journey_bed">Night ferry wake</string><string name="source_ferry_journey_arrival">Ferry arrival</string>
     <string name="source_spacecraft_journey_transition">Spacecraft transition</string><string name="source_spacecraft_journey_bed">Spacecraft drift</string>
     <string name="source_submarine_journey_departure">Submarine dive</string><string name="source_submarine_journey_engine_bed">Submarine engine room</string><string name="source_submarine_journey_water_bed">Underwater ambience</string><string name="source_submarine_journey_arrival">Submarine surface</string><string name="source_submarine_sonar">Distant sonar</string>
 

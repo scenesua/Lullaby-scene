@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="nav_scenes">씬</string>
+    <string name="nav_scenes">여정</string>
+    <string name="scene_display">장면 화면</string>
+    <string name="scene_display_close">장면 화면 나가기</string>
+    <string name="scene_display_unavailable">장면 배경을 불러올 수 없습니다</string>
     <string name="source_aircraft_cabin">여객기 기내</string>
     <string name="source_train_journey_departure">기차 출발</string>
     <string name="source_train_journey_bed">야간 열차</string>
     <string name="source_train_journey_arrival">기차 도착</string>
-    <string name="source_ferry_journey_departure">페리 출항</string><string name="source_ferry_journey_bed">야간 페리 엔진</string><string name="source_ferry_journey_arrival">페리 도착</string>
+    <string name="source_ferry_journey_departure">페리 출항</string><string name="source_ferry_journey_bed">야간 페리 항해음</string><string name="source_ferry_journey_arrival">페리 도착</string>
     <string name="source_spacecraft_journey_transition">우주선 전환음</string><string name="source_spacecraft_journey_bed">우주선 표류</string>
     <string name="source_submarine_journey_departure">잠수함 잠항</string><string name="source_submarine_journey_engine_bed">잠수함 기관실</string><string name="source_submarine_journey_water_bed">수중 환경음</string><string name="source_submarine_journey_arrival">잠수함 부상</string><string name="source_submarine_sonar">먼 소나</string>
 

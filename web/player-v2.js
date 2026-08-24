@@ -2,7 +2,7 @@ const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s
 document.getElementById('year').textContent=new Date().getFullYear();
 
 const AudioCtx=window.AudioContext||window.webkitAudioContext;
-let ctx=null,master=null,masterValue=+(localStorage.getItem('lullaby-master')||70)/100;
+let ctx=null,master=null,visualAnalyser=null,masterValue=+(localStorage.getItem('lullaby-master')||70)/100;
 const nodes={};const eventState={};let catalog=[];let sourceById={};let currentFilter='all';let aircraftObjectUrl=null;
 let sceneNode=null,sceneTimer=null,sceneStartedAt=0,pausedAt=0,scenePlaying=false,durationMinutes=480,sceneEvents=[],activeJourneyId='passenger_aircraft_cabin';
 const macro={engine:.55,activity:.22,turbulence:.12,night:.68};
@@ -25,14 +25,38 @@ const builtinPresets=[
  {id:'preset_ocean_waves',name:'Ocean Waves',master:.7,mix:{ocean:.45,white_noise:.12}},
  {id:'preset_rainy_night',name:'Rainy Night',master:.7,mix:{rain:.5,brown_noise:.2}},
  {id:'preset_fan_room',name:'Fan Room',master:.65,mix:{fan:.45,pink_noise:.2}},
- {id:'preset_cafe_focus',name:'Cafe Focus',master:.65,mix:{cafe:.35,pink_noise:.2}}
+ {id:'preset_cafe_focus',name:'Cafe Focus',master:.65,mix:{cafe:.35,pink_noise:.2}},
+ {id:'preset_simple_aircraft',name:'Aircraft Cabin · Simple',master:.65,mix:{aircraft_cabin:.5}},
+ {id:'preset_simple_train',name:'Night Train · Simple',master:.65,mix:{train_journey_bed:.5}},
+ {id:'preset_simple_ferry',name:'Night Ferry · Simple',master:.65,mix:{ferry_journey_bed:.46}},
+ {id:'preset_simple_spacecraft',name:'Spacecraft Drift · Simple',master:.62,mix:{spacecraft_journey_bed:.48}},
+ {id:'preset_simple_submarine',name:'Submarine Voyage · Simple',master:.62,mix:{submarine_journey_engine_bed:.32,submarine_journey_water_bed:.34,submarine_sonar:.08}},
+ {id:'preset_winter_lighthouse',name:'Winter Lighthouse',master:.65,mix:{snowy_night:.38,lighthouse:.25,wind:.1}},
+ {id:'preset_harbor_cabin',name:'Harbor Cabin',master:.65,mix:{ferry_journey_bed:.35,ocean:.22,lighthouse:.14}},
+ {id:'preset_polar_night_train',name:'Polar Night Train',master:.65,mix:{train_journey_bed:.38,snowy_night:.28,brown_noise:.1}}
 ];
+
+const presetVisuals={
+ preset_rainy_cafe:'/assets/simple-scenes/rainy-cafe.webp',preset_cafe_focus:'/assets/simple-scenes/rainy-cafe.webp',
+ preset_forest_night:'/assets/simple-scenes/forest-night.webp',preset_quiet_night:'/assets/simple-scenes/forest-night.webp',
+ preset_beach:'/assets/simple-scenes/ocean-night.webp',preset_ocean_waves:'/assets/simple-scenes/ocean-night.webp',
+ preset_cozy_fireplace:'/assets/simple-scenes/cozy-fireplace.webp',preset_city_night:'/assets/simple-scenes/city-night.webp',
+ preset_thunderstorm:'/assets/simple-scenes/thunderstorm.webp',preset_rainy_night:'/assets/simple-scenes/thunderstorm.webp',
+ preset_forest_morning:'/assets/simple-scenes/forest-morning.webp',preset_morning_birds:'/assets/simple-scenes/forest-morning.webp',
+ preset_bamboo_meditation:'/assets/simple-scenes/bamboo-meditation.webp',preset_deep_focus:'/assets/simple-scenes/deep-focus.webp',
+ preset_fan_room:'/assets/simple-scenes/fan-room.webp',preset_winter_lighthouse:'/assets/simple-scenes/winter-lighthouse.webp',
+ preset_train_journey:'/assets/journeys/train.webp',preset_simple_train:'/assets/journeys/train.webp',preset_polar_night_train:'/assets/journeys/train.webp',
+ preset_simple_aircraft:'/assets/journeys/aircraft.webp',preset_simple_ferry:'/assets/journeys/ferry.webp',preset_harbor_cabin:'/assets/journeys/ferry.webp',
+ preset_simple_spacecraft:'/assets/journeys/spacecraft.webp',preset_simple_submarine:'/assets/journeys/submarine.webp'
+};
+window.LullabyPresetVisuals=presetVisuals;
 
 function setStatus(text){const el=$('#playerStatus');if(el)el.textContent=text}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function rand(a,b){return a+Math.random()*(b-a)}
 function fmt(ms,compact=false){ms=Math.max(0,ms);const sec=Math.floor(ms/1000),h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;if(compact&&h===0)return`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
-async function ensureContext(){if(!AudioCtx)throw new Error('Web Audio API unavailable');if(!ctx){ctx=new AudioCtx();master=ctx.createGain();master.gain.value=masterValue;master.connect(ctx.destination)}if(ctx.state==='suspended')await ctx.resume();return ctx}
+async function ensureContext(){if(!AudioCtx)throw new Error('Web Audio API unavailable');if(!ctx){ctx=new AudioCtx();master=ctx.createGain();visualAnalyser=ctx.createAnalyser();visualAnalyser.fftSize=128;visualAnalyser.smoothingTimeConstant=.94;master.gain.value=masterValue;master.connect(visualAnalyser).connect(ctx.destination)}if(ctx.state==='suspended')await ctx.resume();return ctx}
+window.LullabyAudioReactive={get analyser(){return visualAnalyser},get context(){return ctx}};
 function setMaster(value,fromTimer=false){masterValue=clamp(+value,0,1);if(!fromTimer)localStorage.setItem('lullaby-master',String(Math.round(masterValue*100)));$$('.master-volume').forEach(r=>r.value=Math.round(masterValue*100));if(master&&ctx){const timerScale=sleepTimerEnd?clamp((sleepTimerEnd-Date.now())/(sleepFadeSeconds*1000),0,1):1;master.gain.setTargetAtTime(masterValue*timerScale,ctx.currentTime,.05)}}
 $$('.master-volume').forEach(r=>{r.value=Math.round(masterValue*100);r.addEventListener('input',e=>setMaster(+e.target.value/100))});
 
@@ -44,13 +68,14 @@ async function loadCatalog(){const res=await fetch('/mixer-sources.json',{cache:
 function renderMixerFilters(){const labels={all:'All',nature:'Nature',indoor:'Indoor',travel:'Travel',other:'Other'};$('#mixerFilters').innerHTML=Object.entries(labels).map(([id,label])=>`<button type="button" data-filter="${id}" class="${currentFilter===id?'active':''}">${label}</button>`).join('');$$('[data-filter]').forEach(b=>b.addEventListener('click',()=>{currentFilter=b.dataset.filter;renderMixerFilters();renderMixer()}))}
 function renderMixer(){const list=currentFilter==='all'?catalog:catalog.filter(s=>s.category===currentFilter);$('#mixerGrid').innerHTML=list.map(def=>{const st=getMixerUiState(def.id);const kind=def.kind==='event'?'event layer':'continuous';return`<article class="mixer-source ${st.on?'on':''}" data-source="${def.id}"><div><strong>${def.name}</strong><span>${def.category} · ${kind}</span></div><button type="button" data-source-toggle="${def.id}">${st.on?'On':'Off'}</button><input data-source-volume="${def.id}" type="range" min="0" max="100" value="${st.volume}" aria-label="${def.name} volume"></article>`}).join('');$$('[data-source-toggle]').forEach(b=>b.addEventListener('click',()=>toggleMixer(b.dataset.sourceToggle)));$$('[data-source-volume]').forEach(r=>r.addEventListener('input',e=>setSourceVolume(e.target.dataset.sourceVolume,+e.target.value/100)))}
 function getMixerUiState(id){const def=sourceById[id]||{};if(def.kind==='event')return{on:!!eventState[id]?.enabled,volume:Math.round((eventState[id]?.volume??(def.defaultVolume||30)/100)*100)};const n=nodes[id];return{on:!!n&&!n.el.paused,volume:Math.round((n?.gain?.gain?.value??(def.defaultVolume||30)/100)*100)}}
-async function toggleMixer(id){try{const def=sourceById[id];if(!def)return;if(def.kind==='event'){if(eventState[id]?.enabled)stopEventLayer(id);else startEventLayer(def);renderMixer();return}await ensureContext();if(!nodes[id])nodes[id]=await makeSourceNode(def);const n=nodes[id];if(n.el.paused){n.gain.gain.value=(def.defaultVolume||30)/100;const slider=$(`[data-source-volume="${id}"]`);if(slider)n.gain.gain.value=+slider.value/100;await n.el.play()}else n.el.pause();renderMixer();updateNowPlaying()}catch(err){console.error(err);setStatus(`${sourceById[id]?.name||id} 오디오를 시작하지 못했습니다.`)}}
+async function toggleMixer(id){try{const def=sourceById[id];if(!def)return;if(def.kind==='event'){if(eventState[id]?.enabled)stopEventLayer(id);else{stopJourneyPlayback();startEventLayer(def)}renderMixer();return}await ensureContext();if(!nodes[id])nodes[id]=await makeSourceNode(def);const n=nodes[id];if(n.el.paused){stopJourneyPlayback();n.gain.gain.value=(def.defaultVolume||30)/100;const slider=$(`[data-source-volume="${id}"]`);if(slider)n.gain.gain.value=+slider.value/100;await n.el.play()}else n.el.pause();renderMixer();updateNowPlaying()}catch(err){console.error(err);setStatus(`${sourceById[id]?.name||id} 오디오를 시작하지 못했습니다.`)}}
 function setSourceVolume(id,value){const def=sourceById[id];if(def?.kind==='event'){eventState[id]=eventState[id]||{};eventState[id].volume=value;return}const n=nodes[id];if(n&&ctx)n.gain.gain.setTargetAtTime(value,ctx.currentTime,.05)}
 function startEventLayer(def){eventState[def.id]={enabled:true,volume:(def.defaultVolume||30)/100,timer:null};scheduleEvent(def.id,100)}
 function stopEventLayer(id){const st=eventState[id];if(!st)return;st.enabled=false;if(st.timer)clearTimeout(st.timer);st.timer=null;updateNowPlaying()}
 function scheduleEvent(id,delayMs=null){const st=eventState[id],def=sourceById[id];if(!st?.enabled||!def)return;const wait=delayMs??rand((def.eventMinSeconds||2)*1000,(def.eventMaxSeconds||12)*1000);st.timer=setTimeout(async()=>{if(!st.enabled)return;try{await ensureContext();const node=makeMediaNode(def.url,{loop:false});node.gain.gain.value=st.volume??.35;node.el.addEventListener('ended',()=>{try{node.src.disconnect();node.filter.disconnect();node.gain.disconnect()}catch{}});await node.el.play()}catch(err){console.error(err)}finally{if(st.enabled)scheduleEvent(id)}},wait)}
 function stopAllMixer(){Object.values(nodes).forEach(n=>{n.el.pause();n.el.currentTime=0});Object.keys(eventState).forEach(stopEventLayer);renderMixer();updateNowPlaying()}
 $('#stopAllMixer')?.addEventListener('click',stopAllMixer);
+$('#scenePlay')?.addEventListener('click',()=>{if(!scenePlaying){const stopSimple=window.LullabyControls?.simple?.stop;if(stopSimple)stopSimple();else stopAllMixer()}},true);
 
 function phaseFor(ms,total){const m=ms/60000,t=total/60000;if(m<12)return['Taxi out',true];if(m<13.2)return['Takeoff',true];if(m<27)return['Climb',true];if(m<t-42)return['Cruise',false];if(m<t-15)return['Descent',true];if(m<t-7)return['Approach',true];if(m<t-6)return['Touchdown',true];if(m<t)return['Taxi in',true];return['Arrived',false]}
 function currentElapsed(){return scenePlaying?pausedAt+(performance.now()-sceneStartedAt):pausedAt}
@@ -62,6 +87,7 @@ function updateSceneUi(){const elapsed=currentElapsed(),total=durationMinutes*60
 async function startScene(){try{await ensureSceneNode();if(scenePlaying){pauseScene();return}sceneStartedAt=performance.now();scenePlaying=true;await sceneNode.el.play();$('#scenePlay').textContent='Ⅱ 일시정지';setStatus('Passenger Aircraft Cabin 재생 중');clearInterval(sceneTimer);sceneTimer=setInterval(updateSceneUi,1000);updateSceneUi()}catch(err){console.error(err);setStatus('Aircraft 오디오를 시작하지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.')}}
 function pauseScene(){if(!scenePlaying)return;pausedAt=currentElapsed();scenePlaying=false;sceneNode?.el.pause();clearInterval(sceneTimer);$('#scenePlay').textContent='▶ 계속 재생';setStatus('일시정지됨');updateNowPlaying()}
 function stopScene(arrived=false){scenePlaying=false;pausedAt=0;clearInterval(sceneTimer);if(sceneNode){sceneNode.el.pause();sceneNode.el.currentTime=0;sceneNode.gain.gain.value=.55}$('#scenePlay').textContent='▶ 장면 시작';$('#phaseLabel').textContent=arrived?'Arrived':'Ready';$('#elapsedLabel').textContent='00:00';$('#remainingLabel').textContent=fmt(durationMinutes*60000);$('#seatbeltLabel').textContent='—';$('#journeyProgress').style.width='0';$('#eventLabel').textContent='None';setStatus(arrived?'여정이 종료되었습니다.':'정지됨');updateNowPlaying()}
+function stopJourneyPlayback(){if(scenePlaying||pausedAt>0)stopScene(false)}
 $('#scenePlay')?.addEventListener('click',startScene);$('#sceneStop')?.addEventListener('click',()=>stopScene(false));
 function setDuration(v){durationMinutes=clamp(+v,240,720);$('#durationSlider').value=durationMinutes;$('#durationOutput').textContent=durationMinutes%60?`${Math.floor(durationMinutes/60)}h ${durationMinutes%60}m`:`${durationMinutes/60}h`;$$('[data-duration]').forEach(b=>b.classList.toggle('active',+b.dataset.duration===durationMinutes));buildSceneEvents();if(!scenePlaying&&pausedAt===0)$('#remainingLabel').textContent=fmt(durationMinutes*60000);else updateSceneUi()}
 $('#durationSlider')?.addEventListener('input',e=>setDuration(e.target.value));$$('[data-duration]').forEach(b=>b.addEventListener('click',()=>setDuration(b.dataset.duration)));
@@ -69,8 +95,8 @@ $$('[data-macro]').forEach(input=>input.addEventListener('input',e=>{const k=e.t
 
 function updateNowPlaying(){const active=[],journeyNames={train_journey:'Overnight Train Journey',ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage'};if(scenePlaying)active.push(journeyNames[activeJourneyId]||'Passenger Aircraft Cabin');catalog.forEach(s=>{const st=getMixerUiState(s.id);if(st.on)active.push(s.name)});$('#railNowPlaying').textContent=active.length?`${active.length} active`:'Stopped'}
 
-function renderPresets(){if(!$('#builtInPresets'))return;$('#builtInPresets').innerHTML=builtinPresets.map(p=>`<button class="preset-card" data-preset="${p.id}" type="button"><strong>${p.name}</strong><span>${Object.keys(p.mix).length} sources</span></button>`).join('');$$('[data-preset]').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));renderUserPresets()}
-async function applyPreset(id){const p=builtinPresets.find(x=>x.id===id)||loadUserPresets().find(x=>x.id===id);if(!p)return;try{await ensureContext();stopScene(false);stopAllMixer();setMaster(p.master);for(const [sourceId,volume] of Object.entries(p.mix)){const def=sourceById[sourceId];if(!def)continue;if(def.kind==='event'){startEventLayer(def);eventState[sourceId].volume=volume}else{if(!nodes[sourceId])nodes[sourceId]=await makeSourceNode(def);nodes[sourceId].gain.gain.value=volume;await nodes[sourceId].el.play()}}renderMixer();updateNowPlaying();setStatus(`${p.name} 프리셋 적용됨`);switchView('mixer')}catch(err){console.error(err);setStatus('프리셋을 적용하지 못했습니다.')}}
+function renderPresets(){if(!$('#builtInPresets'))return;$('#builtInPresets').innerHTML=builtinPresets.map(p=>`<button class="preset-card preset-card-visual" data-preset="${p.id}" type="button"><strong>${p.name}</strong><span>${Object.keys(p.mix).length} sources</span></button>`).join('');$$('#builtInPresets [data-preset]').forEach(b=>{b.style.setProperty('--preset-image',`url("${presetVisuals[b.dataset.preset]}")`);b.addEventListener('click',()=>applyPreset(b.dataset.preset))});renderUserPresets()}
+async function applyPreset(id){const p=builtinPresets.find(x=>x.id===id)||loadUserPresets().find(x=>x.id===id);if(!p)return;try{await ensureContext();stopJourneyPlayback();stopAllMixer();setMaster(p.master);for(const [sourceId,volume] of Object.entries(p.mix)){const def=sourceById[sourceId];if(!def)continue;if(def.kind==='event'){startEventLayer(def);eventState[sourceId].volume=volume}else{if(!nodes[sourceId])nodes[sourceId]=await makeSourceNode(def);nodes[sourceId].gain.gain.value=volume;await nodes[sourceId].el.play()}}renderMixer();updateNowPlaying();setStatus(`${p.name} 프리셋 적용됨`);if(presetVisuals[id])document.dispatchEvent(new CustomEvent('lullaby-preset-applied',{detail:{id,image:presetVisuals[id]}}));switchView('mixer')}catch(err){console.error(err);setStatus('프리셋을 적용하지 못했습니다.')}}
 function snapshotMix(){const mix={};catalog.forEach(s=>{const st=getMixerUiState(s.id);if(st.on)mix[s.id]=st.volume/100});return mix}
 function loadUserPresets(){try{return JSON.parse(localStorage.getItem('lullaby-user-presets')||'[]')}catch{return[]}}
 function saveUserPresets(list){localStorage.setItem('lullaby-user-presets',JSON.stringify(list));renderUserPresets()}

@@ -10,7 +10,7 @@
     const copyright=footer.querySelector('.copyright');if(copyright)copyright.insertAdjacentElement('beforebegin',root);else footer.appendChild(root);
   }
 
-  const english=()=>window.LullabyI18n?.language==='en';
+  const english=()=>(window.LullabyI18n?.language||document.documentElement.lang)!=='ko';
   function localize(){
     const today=root.querySelector('[data-visitor-today-label]'),total=root.querySelector('[data-visitor-total-label]');
     if(today)today.textContent=english()?'Views today':'오늘 조회수';

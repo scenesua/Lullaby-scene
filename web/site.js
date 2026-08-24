@@ -40,6 +40,7 @@ const I18N={
     privacy:'Privacy',terms:'Terms',footer:'Living soundscapes for sleep.'
   }
 };
+const hasLocaleBootstrap=document.documentElement.dataset.localeBoot==='1';
 let language=localStorage.getItem('lullaby-language')||((navigator.language||'').toLowerCase().startsWith('ko')?'ko':'en');
 function t(key){return I18N[language]?.[key]??I18N.ko[key]??key}
 function applyLanguage(){
@@ -50,9 +51,12 @@ function applyLanguage(){
   document.dispatchEvent(new CustomEvent('lullaby-language-changed',{detail:{language}}));
 }
 function setLanguage(next){language=next==='en'?'en':'ko';localStorage.setItem('lullaby-language',language);applyLanguage()}
-document.addEventListener('click',e=>{const btn=e.target.closest('.language-toggle');if(btn)setLanguage(language==='ko'?'en':'ko')});
-window.LullabyI18n={get language(){return language},t,setLanguage,apply:applyLanguage};
-applyLanguage();
+if(!hasLocaleBootstrap){
+  document.addEventListener('click',e=>{const btn=e.target.closest('.language-toggle');if(btn)setLanguage(language==='ko'?'en':'ko')});
+  window.LullabyI18n={get language(){return language},t,setLanguage,apply:applyLanguage};
+  applyLanguage();
+}
+document.addEventListener('lullaby-language-changed',event=>{if(event.detail?.language)language=event.detail.language});
 
 document.querySelectorAll('[data-year]').forEach(el=>el.textContent=new Date().getFullYear());
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(console.error));
