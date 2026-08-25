@@ -36,7 +36,7 @@
   async function ensureTaxiNode(){
     if(taxiNode)return taxiNode;
     if(typeof getAircraftTaxiUrl!=='function')throw new Error('Aircraft taxi source unavailable');
-    await ensureContext();taxiNode=makeMediaNode(await getAircraftTaxiUrl());
+    await ensureContext();taxiNode=makeCrossfadeLoopNode(await getAircraftTaxiUrl(),{durationSeconds:window.LullabyAircraftTaxiSource?.durationSeconds||180,fadeSeconds:4});
     taxiNode.el.loop=true;taxiNode.el.preload='auto';taxiNode.filter.Q.value=.08;taxiNode.filter.frequency.value=20000;taxiNode.gain.gain.value=0;
     return taxiNode;
   }

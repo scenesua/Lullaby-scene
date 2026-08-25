@@ -60,7 +60,7 @@ class ContinuousSourcePlayer(
     private val handler = Handler(sharedLooper)
     private val picker = FilePicker()
     private val failedFiles = mutableSetOf<String>()
-    private val playerCount = if (loopMode == "seamless" && files.size == 1) 1 else 2
+    private val playerCount = continuousPlayerCount(files, loopMode)
     private val envelopes = FloatArray(playerCount) { index -> if (index == 0) 1f else 0f }
 
     private var players: Array<ExoPlayer>? = null
@@ -276,3 +276,6 @@ class ContinuousSourcePlayer(
         private val sharedDispatcher = sharedHandler.asCoroutineDispatcher()
     }
 }
+
+internal fun continuousPlayerCount(files: List<AudioAssetManifest>, loopMode: String): Int =
+    if (loopMode == "seamless" && files.size == 1 && files.single().crossfadeMs <= 0L) 1 else 2

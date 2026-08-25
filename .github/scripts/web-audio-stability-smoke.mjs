@@ -42,6 +42,22 @@ const aircraft=await page.evaluate(async()=>{
 });
 if(!aircraft.direct||aircraft.hasWebAudioSource||!aircraft.url)throw new Error(`aircraft mixer source still routed through WebAudio: ${JSON.stringify(aircraft)}`);
 
+const loopCrossfade=await page.evaluate(async()=>{
+  const api=window.LullabyLoopCrossfade;
+  await window.LullabyPlayerRuntime.ensureContext();
+  const midpoint=api.gains(.5);
+  const node=api.makeNode('/audio/scenes/hood_journey/hood_journey_bed_001.ogg',{durationSeconds:.8,fadeSeconds:.2});
+  node.gain.gain.value=.001;
+  await node.el.play();
+  await new Promise(resolve=>setTimeout(resolve,1200));
+  const playingVoices=node.voices.filter(voice=>!voice.el.paused).length;
+  const state={enabled:node.__lullabyCrossfadeLoop,voices:node.voices.length,playingVoices,loopCount:node.loopCount,power:midpoint[0]**2+midpoint[1]**2,paused:node.el.paused};
+  node.el.pause();
+  state.stopped=node.voices.every(voice=>voice.el.paused);
+  return state;
+});
+if(!loopCrossfade.enabled||loopCrossfade.voices!==2||loopCrossfade.loopCount<1||loopCrossfade.playingVoices<1||loopCrossfade.paused||!loopCrossfade.stopped||Math.abs(loopCrossfade.power-1)>.001)throw new Error(`equal-power loop crossfade failed: ${JSON.stringify(loopCrossfade)}`);
+
 const timer=await page.evaluate(()=>{
   const R=window.LullabyPlayerRuntime;
   delete R.nodes.rain;

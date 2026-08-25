@@ -341,7 +341,7 @@ class SceneOrchestrator(
         val rightPan = random.nextFloat() * .48f + .30f
         val basicShotCount = when {
             intensity >= .78f -> random.nextInt(6, 9)
-            intensity >= .52f -> random.nextInt(4, 7)
+            intensity >= .52f -> random.nextInt(3, 7)
             else -> random.nextInt(3, 6)
         }
         val shotgunCount = when {
