@@ -58,7 +58,7 @@
   }
   async function ensureNodes(){
     const cfg=config();if(!cfg)return;await ensureContext();media[cfg.title[0]]??={};const bucket=media[cfg.title[0]];
-    for(const [key,[url]] of Object.entries(cfg.nodes))if(!bucket[key]){const node=makeMediaNode(url,{loop:key!=='departure'&&key!=='arrival'&&key!=='transition',preload:'auto'});node.gain.gain.value=0;bucket[key]=node}
+    for(const [key,[url,duration]] of Object.entries(cfg.nodes))if(!bucket[key]){const loop=key!=='departure'&&key!=='arrival'&&key!=='transition',node=loop?makeCrossfadeLoopNode(url,{durationSeconds:duration,fadeSeconds:8}):makeMediaNode(url,{loop:false,preload:'auto'});node.gain.gain.value=0;bucket[key]=node}
     if(cfg.event&&!eventNodes[activeJourneyId]){
       const bucket={};
       if(cfg.event.sources)for(const[key,[url]]of Object.entries(cfg.event.sources)){

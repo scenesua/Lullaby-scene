@@ -44,7 +44,7 @@ jobs:
           set -euo pipefail
           grep -Fq '/audio-stability-v1.js?v=2' web/player/index.html
           grep -Fq '/audio-stability-v1.js?v=2' web/sw.js
-          grep -Fq "lullaby-scene-site-v65" web/sw.js
+          grep -Fq "lullaby-scene-site-v66" web/sw.js
           grep -Fq "event.request.destination==='audio'" web/sw.js
           ! sed -n '3p' web/sw.js | grep -Fq '/audio/'
           grep -Fq "createDynamicsCompressor" web/audio-stability-v1.js
@@ -54,6 +54,7 @@ jobs:
           grep -Fq "ctx.suspend" web/audio-stability-v1.js
           grep -Fq "BACKGROUND_EVENT_MIN_MS" web/audio-stability-v1.js
           grep -Fq "mediaSession.playbackState" web/audio-stability-v1.js
+          grep -Fq "makeCrossfadeLoopNode" web/player-v2.js
 
       - name: Install browser dependency
         run: npm install --no-save playwright-core@1.55.0
