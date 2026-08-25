@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - work/lullaby-web-foundation
+      - main
     paths:
       - 'web/**'
       - '.github/scripts/web-i18n-security-smoke.mjs'
@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 7
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
 
@@ -34,18 +34,28 @@ jobs:
           node --check web/i18n-runtime-v3.js
           node --check web/mobile-android-shell-v1.js
           node --check web/legal-language-v9.js
+          node --check web/site.js
+          node --check web/player-controls-v11.js
+          node --check web/scene-recipe-v1.js
           node --check web/_worker.js
           grep -Fq "frame-ancestors 'none'" web/_worker.js
           grep -Fq "'X-Frame-Options':'DENY'" web/_worker.js
           grep -Fq "script-src 'self'; script-src-attr 'none'" web/_worker.js
           grep -Fq "object-src 'none'" web/_worker.js
           grep -Fq "frame-src 'none'" web/_worker.js
-          grep -Fq "'Strict-Transport-Security':'max-age=31536000'" web/_worker.js
-          grep -Fq "fetchSite==='cross-site'" web/_worker.js
+          grep -Fq "'Strict-Transport-Security':'max-age=31536000; includeSubDomains'" web/_worker.js
+          grep -Fq "fetchSite&&fetchSite!=='same-origin'" web/_worker.js
+          grep -Fq "origin!==ownOrigin" web/_worker.js
+          grep -Fq "!rawLength" web/_worker.js
           grep -Fq "startsWith('application/json')" web/_worker.js
-          grep -Fq '/site-locales-v10.js?v=15' web/_worker.js
-          grep -Fq '/i18n-runtime-v3.js?v=6' web/_worker.js
-          grep -Fq '/mobile-android-shell-v1.js?v=5' web/_worker.js
+          ! grep -Fq 'HTMLRewriter' web/_worker.js
+          ! grep -Fq 'eval(' web/player-controls-v11.js
+          node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/api/*\"]'||r.exclude.length)process.exit(1)"
+          for page in web/index.html web/player/index.html web/download/index.html web/privacy/index.html web/terms/index.html web/blackout/index.html web/404.html; do
+            grep -Fq '/site-locales-v10.js?v=15' "$page"
+            grep -Fq '/i18n-runtime-v3.js?v=6' "$page"
+            grep -Fq '/mobile-android-shell-v1.js?v=5' "$page"
+          done
           grep -Fq '/site-locales-v10.js?v=15' web/sw.js
           grep -Fq '/i18n-runtime-v3.js?v=6' web/sw.js
           grep -Fq '/mobile-android-shell-v1.js?v=5' web/sw.js
@@ -80,11 +90,26 @@ jobs:
           grep -Fq 'site-locales-v10.js?v=15' /tmp/home
           grep -Fq 'i18n-runtime-v3.js?v=6' /tmp/home
           grep -Fq 'mobile-android-shell-v1.js?v=5' /tmp/home
+          curl -fsS http://127.0.0.1:4174/.well-known/security.txt | grep -Fq 'mailto:scenesuastudio@gmail.com'
 
           code=$(curl -sS -o /tmp/cross.json -w '%{http_code}' -X POST \
             -H 'Origin: https://evil.example' \
             -H 'Content-Type: application/json' \
             --data '{"day":"'"$(date -u +%F)"'"}' \
+            http://127.0.0.1:4174/api/visitors)
+          test "$code" = '403'
+
+          code=$(curl -sS -o /tmp/no-origin.json -w '%{http_code}' -X POST \
+            -H 'Content-Type: application/json' \
+            --data '{"day":"'"$(date -u +%F)"'"}' \
+            http://127.0.0.1:4174/api/visitors)
+          test "$code" = '403'
+
+          code=$(curl --http1.1 -sS -o /tmp/chunked.json -w '%{http_code}' -X POST \
+            -H 'Origin: http://127.0.0.1:4174' \
+            -H 'Content-Type: application/json' \
+            -H 'Transfer-Encoding: chunked' \
+            --data-binary '{"day":"'"$(date -u +%F)"'"}' \
             http://127.0.0.1:4174/api/visitors)
           test "$code" = '403'
 

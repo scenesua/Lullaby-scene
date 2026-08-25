@@ -80,9 +80,10 @@ document.addEventListener('click',async e=>{
 async function wireLatestAndroid(){
   const link=document.getElementById('androidLatest');if(!link)return;
   try{
-    const res=await fetch('https://api.github.com/repos/scenesua/Lullaby-scene/releases',{headers:{Accept:'application/vnd.github+json'}});if(!res.ok)throw new Error('release api');
-    const releases=await res.json(),installable=a=>a.name.toLowerCase().endsWith('.apk')&&!a.name.toLowerCase().includes('unsigned');const release=releases.find(r=>!r.draft&&r.assets?.some(installable));if(!release)return;
-    const apk=release.assets.find(installable);link.href=apk.browser_download_url;
+    const res=await fetch('https://api.github.com/repos/scenesua/Lullaby-scene/releases/latest',{headers:{Accept:'application/vnd.github+json'}});if(!res.ok)throw new Error('release api');
+    const release=await res.json(),tag=String(release.tag_name||'');if(release.draft||release.prerelease||!/^v\d+\.\d+\.\d+$/.test(tag))throw new Error('invalid stable release');
+    const expected=`Lullaby-Scene-${tag}.apk`,assets=Array.isArray(release.assets)?release.assets:[],apk=assets.find(asset=>asset.name===expected),checksum=assets.find(asset=>asset.name===`${expected}.sha256`);if(!apk||!checksum)throw new Error('verified release assets missing');
+    link.href=apk.browser_download_url;
     const version=document.getElementById('androidVersion');if(version)version.textContent=release.tag_name;
   }catch(err){console.warn('Latest Android release lookup failed',err)}
 }

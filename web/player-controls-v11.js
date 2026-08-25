@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-  const call=(name,...args)=>{const fn=window[name];if(typeof fn==='function')return fn(...args);try{const fallback=eval(`typeof ${name}==='function'?${name}:null`);if(fallback)return fallback(...args)}catch{}return undefined};
+  const call=(name,...args)=>typeof window[name]==='function'?window[name](...args):undefined;
   const JOURNEY_DURATION_PROFILES={aircraft:{fixedDurations:[360,480,600],fixedMinMinutes:360,sliderMinMinutes:1,sliderMaxMinutes:720,sliderStepMinutes:1}};
   window.LullabyJourneyDurationProfiles=JOURNEY_DURATION_PROFILES;
   const activeProfile=()=>JOURNEY_DURATION_PROFILES.aircraft;

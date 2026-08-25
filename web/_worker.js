@@ -13,7 +13,7 @@ const SECURITY_HEADERS={
   'Cross-Origin-Resource-Policy':'same-origin',
   'Origin-Agent-Cluster':'?1',
   'X-Permitted-Cross-Domain-Policies':'none',
-  'Strict-Transport-Security':'max-age=31536000'
+  'Strict-Transport-Security':'max-age=31536000; includeSubDomains'
 };
 
 function secureResponse(response,request){
@@ -35,9 +35,9 @@ function boundedDay(value){
 function pageviewMutationAllowed(request){
   if(request.method!=='POST')return true;
   const type=(request.headers.get('content-type')||'').toLowerCase();if(!type.startsWith('application/json'))return false;
-  const length=Number(request.headers.get('content-length')||0);if(Number.isFinite(length)&&length>MAX_PAGEVIEW_BODY)return false;
-  const ownOrigin=new URL(request.url).origin,origin=request.headers.get('origin');if(origin&&origin!==ownOrigin)return false;
-  const fetchSite=(request.headers.get('sec-fetch-site')||'').toLowerCase();if(fetchSite==='cross-site')return false;
+  const rawLength=request.headers.get('content-length'),length=Number(rawLength);if(!rawLength||!Number.isSafeInteger(length)||length<1||length>MAX_PAGEVIEW_BODY)return false;
+  const ownOrigin=new URL(request.url).origin,origin=request.headers.get('origin');if(origin!==ownOrigin)return false;
+  const fetchSite=(request.headers.get('sec-fetch-site')||'').toLowerCase();if(fetchSite&&fetchSite!=='same-origin')return false;
   return true;
 }
 async function requestDay(request){
@@ -91,15 +91,10 @@ async function pageviews(request,env){
   return pageviewsPublic(request,day);
 }
 
-class HeadInjector{element(element){element.append('<link rel="stylesheet" href="/site-runtime-v12.css?v=13"><link rel="stylesheet" href="/mixer-controls-v14.css?v=14"><link rel="stylesheet" href="/mobile-android-shell-v1.css?v=3"><link rel="stylesheet" href="/display-tools-v1.css?v=3"><link rel="icon" href="/assets/icon-webapp-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/assets/icon-webapp-192.png"><meta name="application-name" content="Lullaby Scene"><meta name="apple-mobile-web-app-title" content="Lullaby Scene"><script src="/locale-boot-v1.js?v=1"></script>',{html:true})}}
-class BodyInjector{element(element){element.append('<script src="/site-locales-v10.js?v=15"></script><script src="/visitor-count-v1.js?v=8"></script><script src="/player-runtime-bridge-v12.js?v=13"></script><script src="/aircraft-source-v15.js?v=15"></script><script src="/mixer-interaction-v14.js?v=16"></script><script src="/simple-scene-quick-mixer-v12.js?v=13"></script><script src="/saved-scenes-v13.js?v=14"></script><script src="/scene-recipe-v1.js?v=2"></script><script src="/i18n-runtime-v3.js?v=6"></script><script src="/mobile-android-shell-v1.js?v=5"></script><script src="/display-tools-v1.js?v=4"></script><script src="/audio-stability-v1.js?v=2"></script>',{html:true})}}
 export default{
   async fetch(request,env){
     const url=new URL(request.url);
     if(url.pathname==='/api/visitors')return secureResponse(await pageviews(request,env),request);
-    const asset=await env.ASSETS.fetch(request),type=asset.headers.get('content-type')||'';
-    if(!type.includes('text/html'))return secureResponse(asset,request);
-    const transformed=new HTMLRewriter().on('head',new HeadInjector()).on('body',new BodyInjector()).transform(asset);
-    return secureResponse(transformed,request);
+    return secureResponse(await env.ASSETS.fetch(request),request);
   }
 };

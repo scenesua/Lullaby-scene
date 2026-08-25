@@ -13,13 +13,14 @@ concurrency:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    environment: android-release
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           ref: main
           fetch-depth: 0
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
         with:
           distribution: temurin
           java-version: '17'
@@ -65,7 +66,7 @@ jobs:
           mkdir -p dist
           cp "$APK" dist/Lullaby-Scene-v1.1.4.apk
           sha256sum dist/Lullaby-Scene-v1.1.4.apk > dist/Lullaby-Scene-v1.1.4.apk.sha256
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: Lullaby-Scene-v1.1.4
           path: dist/*
@@ -78,12 +79,11 @@ jobs:
           TAG='v1.1.4'
           SHA="$(git rev-parse HEAD)"
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" dist/* --clobber
-            gh release edit "$TAG" --title 'Lullaby Scene v1.1.4' --notes-file RELEASE_NOTES_1.1.4.md --latest
-          else
-            gh release create "$TAG" dist/* \
-              --target "$SHA" \
-              --title 'Lullaby Scene v1.1.4' \
-              --notes-file RELEASE_NOTES_1.1.4.md \
-              --latest
+            echo "::error::Release $TAG already exists; published releases are never overwritten."
+            exit 1
           fi
+          gh release create "$TAG" dist/* \
+            --target "$SHA" \
+            --title 'Lullaby Scene v1.1.4' \
+            --notes-file RELEASE_NOTES_1.1.4.md \
+            --latest

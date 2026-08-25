@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - work/lullaby-web-foundation
     paths:
       - 'web/_worker.js'
       - 'web/display-tools-v1.js'

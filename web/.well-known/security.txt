@@ -1,0 +1,6 @@
+Contact: mailto:scenesuastudio@gmail.com
+Contact: https://github.com/scenesua/Lullaby-scene/security/advisories/new
+Expires: 2027-08-24T00:00:00.000Z
+Preferred-Languages: ko, en
+Canonical: https://lullabyscene.com/.well-known/security.txt
+Policy: https://github.com/scenesua/Lullaby-scene/security/policy

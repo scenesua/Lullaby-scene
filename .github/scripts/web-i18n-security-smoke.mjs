@@ -11,21 +11,10 @@ const page=await context.newPage();
 const errors=[];
 page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
+await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
 await page.waitForSelector('#builtInPresets [data-preset="preset_rainy_cafe"]',{state:'attached'});
-await page.addStyleTag({url:'http://127.0.0.1:4173/mobile-android-shell-v1.css?v=3'});
-await page.addStyleTag({url:'http://127.0.0.1:4173/display-tools-v1.css?v=3'});
-for(const src of[
-  '/site-locales-v10.js?v=15',
-  '/player-runtime-bridge-v12.js?v=13',
-  '/mixer-interaction-v14.js?v=16',
-  '/simple-scene-quick-mixer-v12.js?v=13',
-  '/saved-scenes-v13.js?v=14',
-  '/i18n-runtime-v3.js?v=6',
-  '/mobile-android-shell-v1.js?v=5',
-  '/display-tools-v1.js?v=4'
-])await page.addScriptTag({url:`http://127.0.0.1:4173${src}`});
 await page.waitForSelector('[data-quick-source="rain"]',{state:'attached'});
 await page.waitForTimeout(450);
 

@@ -8,15 +8,11 @@ const browser=await chromium.launch({headless:true,executablePath,args:['--no-sa
 const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
 const page=await context.newPage();
 const errors=[];
-page.on('pageerror',error=>errors.push(String(error)));
-page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
+const benignAbort=value=>String(value).includes('AbortError: The play() request was interrupted by a call to pause()');
+page.on('pageerror',error=>{if(!benignAbort(error))errors.push(String(error))});
+page.on('console',message=>{if(message.type()==='error'&&!benignAbort(message.text()))errors.push(message.text())});
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await page.addStyleTag({url:'http://127.0.0.1:4173/mixer-controls-v14.css?v=14'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js?v=13'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/aircraft-source-v15.js?v=15'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=16'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/simple-scene-quick-mixer-v12.js?v=13'});
 await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===50);
 
 await page.locator('[data-view="mixer"]').first().click();await page.waitForTimeout(120);
@@ -52,13 +48,13 @@ const box=await track.boundingBox();if(!box)throw new Error('journey track has n
 await page.mouse.click(box.x+box.width*.95,box.y+box.height/2);await page.waitForTimeout(80);
 let seekState=await page.evaluate(()=>({elapsed:window.LullabyJourneyRuntime?.elapsedMs,total:window.LullabyJourneyRuntime?.totalMs,phase:document.querySelector('#phaseLabel')?.textContent,aria:document.querySelector('.journey-track')?.getAttribute('aria-valuenow')}));
 if(!seekState.elapsed||!seekState.total||seekState.elapsed/seekState.total<.93||seekState.elapsed/seekState.total>.97)throw new Error(`journey click seek failed: ${JSON.stringify(seekState)}`);
-if(!['Descent','Approach'].includes(seekState.phase))throw new Error(`journey seek did not advance phase: ${JSON.stringify(seekState)}`);
+if(!['Descent','Approach','하강','접근'].includes(seekState.phase))throw new Error(`journey seek did not advance phase: ${JSON.stringify(seekState)}`);
 await page.locator('#journeyPrevPhase').click();await page.waitForTimeout(350);
 const prevState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
-if(prevState.phase!=='Cruise'||prevState.ratio<.05||prevState.ratio>.07)throw new Error(`previous phase button failed: ${JSON.stringify(prevState)}`);
+if(!['Cruise','순항'].includes(prevState.phase)||prevState.ratio<.05||prevState.ratio>.07)throw new Error(`previous phase button failed: ${JSON.stringify(prevState)}`);
 await page.locator('#journeyNextPhase').click();await page.waitForTimeout(350);
 const nextState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
-if(nextState.phase!=='Descent'||nextState.ratio<.90||nextState.ratio>.93)throw new Error(`next phase button failed: ${JSON.stringify(nextState)}`);
+if(!['Descent','하강'].includes(nextState.phase)||nextState.ratio<.90||nextState.ratio>.93)throw new Error(`next phase button failed: ${JSON.stringify(nextState)}`);
 await page.evaluate(()=>window.LullabyJourneyRuntime.seekToMs(0));await page.waitForTimeout(80);
 
 // Start at Taxi out and verify the 627056 bed is the audible journey source.

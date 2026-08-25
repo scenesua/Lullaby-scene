@@ -10,7 +10,7 @@ on:
       - '.github/workflows/web-audio-stability-check.yml'
   push:
     branches:
-      - work/lullaby-web-foundation
+      - main
     paths:
       - 'web/audio-stability-v1.js'
       - 'web/_worker.js'
@@ -23,8 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
 
@@ -39,9 +39,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '/audio-stability-v1.js?v=2' web/_worker.js
+          grep -Fq '/audio-stability-v1.js?v=2' web/player/index.html
           grep -Fq '/audio-stability-v1.js?v=2' web/sw.js
-          grep -Fq "lullaby-scene-site-v64" web/sw.js
+          grep -Fq "lullaby-scene-site-v65" web/sw.js
           grep -Fq "event.request.destination==='audio'" web/sw.js
           ! sed -n '3p' web/sw.js | grep -Fq '/audio/'
           grep -Fq "createDynamicsCompressor" web/audio-stability-v1.js
