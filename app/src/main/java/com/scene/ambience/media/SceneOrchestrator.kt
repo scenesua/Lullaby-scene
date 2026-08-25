@@ -31,6 +31,7 @@ class SceneOrchestrator(
         val eventId: String,
         val distance: Float,
         val pan: Float? = null,
+        val assetId: String? = null,
     )
 
     private val _state = MutableStateFlow(SceneRuntimeSnapshot())
@@ -334,54 +335,132 @@ class SceneOrchestrator(
     }
 
     private suspend fun runHoodIncident(random: Random, intensity: Float) {
-        val durationMs = random.nextLong(10_000L, 45_001L)
         val leftDistance = random.nextFloat() * .36f + .58f
         val rightDistance = random.nextFloat() * .38f + .58f
         val leftPan = -(random.nextFloat() * .48f + .30f)
         val rightPan = random.nextFloat() * .48f + .30f
+        val basicShotCount = when {
+            intensity >= .78f -> random.nextInt(6, 9)
+            intensity >= .52f -> random.nextInt(4, 7)
+            else -> random.nextInt(3, 6)
+        }
+        val shotgunCount = when {
+            intensity >= .78f -> random.nextInt(1, 4)
+            intensity >= .52f -> random.nextInt(1, 3)
+            else -> 1
+        }
         val cues = mutableListOf<HoodCue>()
-        var elapsedMs = random.nextLong(80L, 501L)
+        var elapsedMs = random.nextLong(120L, 481L)
+        var basicRemaining = basicShotCount
+        var shotgunRemaining = shotgunCount
         var volley = 0
-        while (elapsedMs < durationMs - 900L) {
+
+        while (basicRemaining > 0) {
             val leftSide = volley++ % 2 == 0
             val distance = if (leftSide) leftDistance else rightDistance
             val pan = if (leftSide) leftPan else rightPan
-            val maxShots = if (intensity > .72f) 4 else 3
-            repeat(random.nextInt(1, maxShots + 1)) {
-                if (elapsedMs >= durationMs - 350L) return@repeat
-                cues += HoodCue(elapsedMs, SOURCE_HOOD_GUNSHOT, EVENT_HOOD_GUNSHOT, (distance + random.nextFloat() * .12f - .04f).coerceIn(.58f, 1f), (pan + random.nextFloat() * .24f - .12f).coerceIn(-1f, 1f))
-                elapsedMs += random.nextLong(170L, 521L)
+            val groupSize = random.nextInt(1, minOf(3, basicRemaining) + 1)
+            repeat(groupSize) {
+                cues += HoodCue(
+                    atMs = elapsedMs,
+                    sourceId = SOURCE_HOOD_GUNSHOT,
+                    eventId = EVENT_HOOD_GUNSHOT,
+                    distance = (distance + random.nextFloat() * .12f - .04f).coerceIn(.58f, 1f),
+                    pan = (pan + random.nextFloat() * .20f - .10f).coerceIn(-1f, 1f),
+                    assetId = ASSET_HOOD_GUNSHOT_BASIC,
+                )
+                basicRemaining--
+                if (basicRemaining > 0) elapsedMs += random.nextLong(260L, 561L)
             }
-            if (random.nextFloat() < .60f) {
-                cues += HoodCue((elapsedMs + random.nextLong(120L, 851L)).coerceAtMost(durationMs - 250L), SOURCE_HOOD_SHOUT, EVENT_HOOD_SHOUT, random.nextFloat() * .38f + .62f, random.nextFloat() * 1.44f - .72f)
+
+            if (shotgunRemaining > 0 && (random.nextFloat() < .58f || basicRemaining == 0)) {
+                elapsedMs += random.nextLong(520L, 1_101L)
+                cues += HoodCue(
+                    atMs = elapsedMs,
+                    sourceId = SOURCE_HOOD_GUNSHOT,
+                    eventId = EVENT_HOOD_GUNSHOT,
+                    distance = (distance + random.nextFloat() * .10f).coerceIn(.58f, 1f),
+                    pan = (pan + random.nextFloat() * .18f - .09f).coerceIn(-1f, 1f),
+                    assetId = ASSET_HOOD_GUNSHOT_SHOTGUN,
+                )
+                shotgunRemaining--
             }
-            elapsedMs += random.nextLong(900L, 3_801L)
+
+            if (basicRemaining > 0) elapsedMs += random.nextLong(900L, 2_201L)
         }
-        if (random.nextFloat() < .52f) {
-            cues += HoodCue(random.nextLong(1_000L, (durationMs - 399L).coerceAtLeast(1_101L)), SOURCE_HOOD_GLASS, EVENT_HOOD_GLASS, random.nextFloat() * .38f + .62f, random.nextFloat() * 1.52f - .76f)
+
+        while (shotgunRemaining > 0) {
+            elapsedMs += random.nextLong(900L, 1_901L)
+            val leftSide = volley++ % 2 == 0
+            cues += HoodCue(
+                atMs = elapsedMs,
+                sourceId = SOURCE_HOOD_GUNSHOT,
+                eventId = EVENT_HOOD_GUNSHOT,
+                distance = if (leftSide) leftDistance else rightDistance,
+                pan = if (leftSide) leftPan else rightPan,
+                assetId = ASSET_HOOD_GUNSHOT_SHOTGUN,
+            )
+            shotgunRemaining--
         }
+
+        val lastGunshotMs = elapsedMs
+        if (random.nextFloat() < .60f) {
+            cues += HoodCue(
+                atMs = (lastGunshotMs + random.nextLong(450L, 1_801L)),
+                sourceId = SOURCE_HOOD_SHOUT,
+                eventId = EVENT_HOOD_SHOUT,
+                distance = random.nextFloat() * .38f + .62f,
+                pan = random.nextFloat() * 1.44f - .72f,
+            )
+        }
+        if (random.nextFloat() < .42f) {
+            cues += HoodCue(
+                atMs = (lastGunshotMs + random.nextLong(700L, 2_801L)),
+                sourceId = SOURCE_HOOD_GLASS,
+                eventId = EVENT_HOOD_GLASS,
+                distance = random.nextFloat() * .38f + .62f,
+                pan = random.nextFloat() * 1.52f - .76f,
+            )
+        }
+
         repeat(random.nextInt(1, 4)) {
-            cues += HoodCue(random.nextLong(18_000L, 115_001L), SOURCE_HOOD_SIREN, EVENT_HOOD_SIREN, random.nextFloat() * .58f + .10f)
+            cues += HoodCue(
+                atMs = lastGunshotMs + random.nextLong(18_000L, 115_001L),
+                sourceId = SOURCE_HOOD_SIREN,
+                eventId = EVENT_HOOD_SIREN,
+                distance = random.nextFloat() * .48f + .18f,
+            )
         }
+
         var previousMs = 0L
         for (cue in cues.sortedBy { it.atMs }) {
             delay((cue.atMs - previousMs).coerceAtLeast(0L))
-            triggerHoodEvent(cue.sourceId, cue.eventId, cue.distance, random, cue.pan)
+            triggerHoodEvent(cue.sourceId, cue.eventId, cue.distance, random, cue.pan, cue.assetId)
             previousMs = cue.atMs
         }
     }
 
-    private fun triggerHoodEvent(sourceId: String, eventId: String, distance: Float, random: Random, pan: Float? = null) {
+    private fun triggerHoodEvent(
+        sourceId: String,
+        eventId: String,
+        distance: Float,
+        random: Random,
+        pan: Float? = null,
+        assetId: String? = null,
+    ) {
         if (_state.value.sceneId != HOOD_JOURNEY || !_state.value.randomEventsEnabled) return
         val minimumDistance = if (sourceId in listOf(SOURCE_HOOD_GUNSHOT, SOURCE_HOOD_SHOUT, SOURCE_HOOD_GLASS)) .58f else 0f
         val close = 1f - distance.coerceIn(minimumDistance, 1f)
         val scale = when (sourceId) {
             SOURCE_HOOD_GUNSHOT -> .42f + close * .40f
             SOURCE_HOOD_SHOUT -> .42f + close * .36f
-            SOURCE_HOOD_SIREN -> 1.08f + close * .42f
+            SOURCE_HOOD_SIREN -> 1.22f + close * .28f
             else -> .55f + close * .65f
         }
-        if (engine.triggerEventNow(sourceId, scale, pan ?: (random.nextFloat() * 1.7f - .85f))) {
+        if (assetId != null) ManualEventAssetSelection.select(sourceId, assetId)
+        val triggered = engine.triggerEventNow(sourceId, scale, pan ?: (random.nextFloat() * 1.7f - .85f))
+        if (!triggered && assetId != null) ManualEventAssetSelection.consume(sourceId)
+        if (triggered) {
             _state.value = _state.value.copy(activeEventId = eventId)
             hoodLabelJob?.cancel()
             hoodLabelJob = scope.launch {
@@ -639,6 +718,8 @@ class SceneOrchestrator(
         const val SOURCE_HOOD_CAR_DOOR = "hood_car_door"
         const val SOURCE_HOOD_HELICOPTER = "hood_helicopter"
         const val SOURCE_HOOD_DOG = "hood_dog"
+        const val ASSET_HOOD_GUNSHOT_BASIC = "hood_gunshot_event_001"
+        const val ASSET_HOOD_GUNSHOT_SHOTGUN = "hood_gunshot_shotgun_event_004"
 
         const val MACRO_ENGINE_PRESENCE = "engine_presence"
         const val MACRO_CABIN_ACTIVITY = "cabin_activity"
@@ -732,7 +813,7 @@ class SceneOrchestrator(
                 arrivalSource = SOURCE_HOOD_BED,
                 manualEvents = mapOf(
                     SOURCE_HOOD_GUNSHOT to .28f,
-                    SOURCE_HOOD_SIREN to .34f,
+                    SOURCE_HOOD_SIREN to .46f,
                     SOURCE_HOOD_GLASS to .20f,
                     SOURCE_HOOD_SHOUT to .18f,
                     SOURCE_HOOD_FOOTSTEPS to .14f,
