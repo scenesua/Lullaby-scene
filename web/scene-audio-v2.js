@@ -166,5 +166,11 @@
   window.LullabyJourneyStageControl={render:renderStageControl,sync:syncStageControl,transitionToMs:transitionSceneToMs,transitionProfileAt};
   window.LullabyJourneyRuntime={seekToMs:seekSceneToMs,transitionToMs:transitionSceneToMs,previousPhase:()=>stepScenePhase(-1),nextPhase:()=>stepScenePhase(1),get elapsedMs(){return currentElapsed()},get totalMs(){return durationMinutes*60000}};
   window.LullabyJourneyEvents={get enabled(){return journeyEventsEnabled},setEnabled:setJourneyEventsEnabled};
-  window.LullabyJourneyAudio={get phase(){return audiblePhase},get taxiReady(){return!!taxiNode},get taxiUrl(){return taxiNode?.url||window.LullabyAircraftTaxiSource?.url||null},get cruiseUrl(){return sceneNode?.url||window.LullabyAircraftSource?.url||null},get taxiGain(){return taxiNode?.gain?.gain?.value??0},get cruiseGain(){return sceneNode?.gain?.gain?.value??0}};
+  async function debugTriggerAircraftEvent(){
+    if(!journeyEventsEnabled)setJourneyEventsEnabled(true);
+    if(!scenePlaying)await startScene();else await ensureJourneyNodes();
+    aircraftEventNode.el.currentTime=0;aircraftEventLabelUntil=performance.now()+3200;await aircraftEventNode.el.play();updateSceneUi();
+    return'Cabin chime';
+  }
+  window.LullabyJourneyAudio={get phase(){return audiblePhase},get taxiReady(){return!!taxiNode},get taxiUrl(){return taxiNode?.url||window.LullabyAircraftTaxiSource?.url||null},get cruiseUrl(){return sceneNode?.url||window.LullabyAircraftSource?.url||null},get taxiGain(){return taxiNode?.gain?.gain?.value??0},get cruiseGain(){return sceneNode?.gain?.gain?.value??0},get nodes(){return{cruise:sceneNode,taxi:taxiNode}},ensureNodes:ensureJourneyNodes,triggerEvent:debugTriggerAircraftEvent};
 })();

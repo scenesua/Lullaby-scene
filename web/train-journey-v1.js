@@ -180,5 +180,11 @@
   injectSelector();
   document.addEventListener('lullaby-language-changed',()=>queueMicrotask(renderJourney));
   document.addEventListener('lullaby-journey-events-changed',event=>{if(!event.detail?.enabled)pauseTrainEvent();else if(scenePlaying&&isTrain())scheduleTrainEvent();if(isTrain()){if(scenePlaying)updateTrainUi();else{const label=document.getElementById('eventLabel');if(label)label.textContent=event.detail?.enabled?copy().none:(isEnglish()?'Off':'꺼짐')}}});
-  window.LullabyTrainJourney={phaseFor:trainPhaseFor,boundaries:trainBoundaries,stagePoints:trainStagePoints,transitionProfile:trainTransitionProfile,sources:SOURCES,get active(){return isTrain()},get audibleRole(){return audibleRole}};renderJourney();
+  async function debugTriggerTrainEvent(){
+    if(!window.LullabyJourneyEvents?.enabled)window.LullabyJourneyEvents?.setEnabled(true);
+    if(!scenePlaying)await startTrain();else await ensureTrainNodes();
+    eventNode.el.currentTime=0;eventLabelUntil=performance.now()+1500;await eventNode.el.play();updateTrainUi();
+    return'Distant rail joint';
+  }
+  window.LullabyTrainJourney={phaseFor:trainPhaseFor,boundaries:trainBoundaries,stagePoints:trainStagePoints,transitionProfile:trainTransitionProfile,sources:SOURCES,get active(){return isTrain()},get audibleRole(){return audibleRole},get nodes(){return trainNodes},ensureNodes:ensureTrainNodes,triggerEvent:debugTriggerTrainEvent};renderJourney();
 })();
