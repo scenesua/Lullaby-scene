@@ -94,6 +94,7 @@ async function pageviews(request,env){
 export default{
   async fetch(request,env){
     const url=new URL(request.url);
+    if(url.hostname.endsWith('.pages.dev'))return secureResponse(new Response('Not found',{status:404}),request);
     if(url.pathname==='/api/visitors')return secureResponse(await pageviews(request,env),request);
     return secureResponse(await env.ASSETS.fetch(request),request);
   }
