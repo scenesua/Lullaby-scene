@@ -25,6 +25,7 @@
 
   const isTrain=()=>activeJourneyId===TRAIN_ID;
   const isEnglish=()=>(window.LullabyI18n?.language||document.documentElement.lang||'en')!=='ko';
+  const phaseName=key=>window.LullabyCatalogI18n?.phaseName?.(key)||(isEnglish()?key:null);
   const copy=()=>isEnglish()?{
     aircraft:'Passenger Aircraft Cabin',train:'Overnight Train Journey',
     aircraftDesc:'Ground roll, takeoff, a long cruise, descent, and arrival on a night flight.',
@@ -49,12 +50,12 @@
   }
   function trainPhaseFor(ms,total){
     const b=trainBoundaries(total);
-    if(ms<b.departure)return['Departing',false];
-    if(ms<b.leaving)return['Leaving city',false];
-    if(ms<b.approach)return['Night run',false];
-    if(ms<b.arrival)return['Approach',false];
-    if(ms<total)return['Arriving',false];
-    return['Arrived',false];
+    if(ms<b.departure)return[phaseName('Departing')||'출발',false];
+    if(ms<b.leaving)return[phaseName('Leaving city')||'도시 이탈',false];
+    if(ms<b.approach)return[phaseName('Night run')||'야간 운행',false];
+    if(ms<b.arrival)return[phaseName('Approach')||'접근',false];
+    if(ms<total)return[phaseName('Arriving')||'도착',false];
+    return[phaseName('Arrived')||'도착',false];
   }
   function roleFor(ms,total){
     if(ms>=total)return null;
@@ -64,8 +65,8 @@
     return'departure';
   }
   function trainPhaseIndex(ms,total){const b=trainBoundaries(total);if(ms<b.departure)return 0;if(ms<b.leaving)return 1;if(ms<b.approach)return 2;if(ms<b.arrival)return 3;return ms<total?4:5}
-  function trainStagePoints(total){const b=trainBoundaries(total);return[
-    {label:['Departing','출발'],ms:0},{label:['Leaving city','도시 이탈'],ms:b.departure},{label:['Night run','야간 운행'],ms:b.leaving},{label:['Approach','접근'],ms:b.approach},{label:['Arriving','도착'],ms:b.arrival}
+  function trainStagePoints(total){const b=trainBoundaries(total),label=(key,ko)=>[phaseName(key)||ko,phaseName(key)||ko];return[
+    {label:label('Departing','출발'),ms:0},{label:label('Leaving city','도시 이탈'),ms:b.departure},{label:label('Night run','야간 운행'),ms:b.leaving},{label:label('Approach','접근'),ms:b.approach},{label:label('Arriving','도착'),ms:b.arrival}
   ]}
   function trainTransitionProfile(ms,total){return TRAIN_FX[Math.min(4,trainPhaseIndex(ms,total))]}
   function offsetFor(role,ms,total){
