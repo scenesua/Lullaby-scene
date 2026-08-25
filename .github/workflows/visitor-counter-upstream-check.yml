@@ -3,6 +3,9 @@ name: Verify visitor counter upstream
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   countapi:
     runs-on: ubuntu-latest

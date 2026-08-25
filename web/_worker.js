@@ -81,7 +81,7 @@ async function pageviewsPublic(request,day){
     ]);
     if(increment&&(today<1||total<1))throw new Error('CountAPI page-view increment was not confirmed');
     return json({available:true,backend:'countapi.mileshilliard-v1',mode:'pageviews',version:10,day,today,total,incremented:increment});
-  }catch(error){return json({available:false,error:'Page-view counter backend unavailable',detail:String(error?.message||error)},503)}
+  }catch{return json({available:false,error:'Page-view counter backend unavailable'},503)}
 }
 async function pageviews(request,env){
   if(request.method!=='POST'&&request.method!=='GET')return json({available:false,error:'Method not allowed'},405);
