@@ -28,6 +28,9 @@ on:
       - '.github/scripts/train-journey-parity-smoke.mjs'
       - '.github/scripts/web-train-journey-smoke.mjs'
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest

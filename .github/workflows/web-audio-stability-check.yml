@@ -18,6 +18,9 @@ on:
       - '.github/scripts/web-audio-stability-smoke.mjs'
       - '.github/workflows/web-audio-stability-check.yml'
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
