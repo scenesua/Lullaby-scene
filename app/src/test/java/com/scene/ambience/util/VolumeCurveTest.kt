@@ -81,6 +81,17 @@ class VolumeCurveTest {
     }
 
     @Test
+    fun eventGain_keepsOneShotSourceControlLinearAndUnnormalized() {
+        val gain = VolumeCurve.eventGain(
+            sourceVolume = 0.25f,
+            sourceMuted = false,
+            masterVolume = 0.8f,
+            masterMuted = false,
+        )
+        assertEquals(0.25f * VolumeCurve.linearToGain(0.8f), gain, 1e-4f)
+    }
+
+    @Test
     fun percentConversions() {
         assertEquals(0f, VolumeCurve.percentToLinear(0f), 0f)
         assertEquals(0.5f, VolumeCurve.percentToLinear(50f), 1e-6f)

@@ -385,7 +385,7 @@ class SceneOrchestrator(
             _state.value = _state.value.copy(activeEventId = eventId)
             hoodLabelJob?.cancel()
             hoodLabelJob = scope.launch {
-                delay(if (sourceId == SOURCE_HOOD_SIREN) 12_000L else 4_000L)
+                delay(if (sourceId == SOURCE_HOOD_SIREN) 15_000L else 4_000L)
                 if (_state.value.activeEventId == eventId) _state.value = _state.value.copy(activeEventId = null)
             }
         }

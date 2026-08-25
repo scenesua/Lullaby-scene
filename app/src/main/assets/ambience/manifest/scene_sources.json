@@ -124,7 +124,7 @@
     },
     {
       "id":"hood_siren","category":"travel","display_name_key":"source_hood_siren","default_volume":0.34,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_siren_event_001","path":"ambience/hood_journey/events/hood_siren_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","police","siren","passing"],"provenance_id":"freesound_chimerical_385867","cooldown_ms":420000}]
+      "events":[{"asset_id":"hood_siren_event_001","path":"ambience/hood_journey/events/hood_siren_event_001.ogg","duration_ms":15000,"role":"event","tags":["hood","police","siren","passing","clean"],"provenance_id":"freesound_titankaempfer_746302","cooldown_ms":420000}]
     },
     {
       "id":"hood_glass","category":"travel","display_name_key":"source_hood_glass","default_volume":0.20,"loop_mode":"event","continuous":[],

@@ -611,10 +611,25 @@ class AmbienceEngine(
         return (baseGain * trimGain).coerceAtMost(1f)
     }
 
+    private fun manualEventGain(id: String): Float {
+        val s = sources[id] ?: return 0f
+        val baseGain = VolumeCurve.eventGain(
+            sourceVolume = s.volume,
+            sourceMuted = s.muted,
+            masterVolume = masterVolume,
+            masterMuted = masterMuted,
+            sleepFade = sleepFade,
+            focusDuck = duckFactor,
+        )
+        return (baseGain * (library.manifestFor(id)?.trimGain ?: 1f)).coerceAtMost(1f)
+    }
+
     private fun recomputeVolumes() {
         val gains = sources.keys.associateWith { sourceGain(it) }
         continuousPlayers.forEach { (id, p) -> p.applyBaseVolume(gains[id] ?: 0f) }
-        eventPlayers.forEach { (id, p) -> p.applyBaseVolume(gains[id] ?: 0f) }
+        eventPlayers.forEach { (id, p) ->
+            p.applyBaseVolume(if (id in manualEventSources) manualEventGain(id) else gains[id] ?: 0f)
+        }
     }
 
     // -------- state publication ------------------------------------------------

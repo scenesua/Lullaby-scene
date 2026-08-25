@@ -59,6 +59,22 @@ object VolumeCurve {
         return base * crossfadeEnvelope * sleepFade * focusDuck
     }
 
+    /** One-shot scene events are never simultaneous mix beds, so keep their source control linear. */
+    fun eventGain(
+        sourceVolume: Float,
+        sourceMuted: Boolean,
+        masterVolume: Float,
+        masterMuted: Boolean,
+        sleepFade: Float = 1f,
+        focusDuck: Float = 1f,
+    ): Float {
+        if (sourceMuted || masterMuted) return 0f
+        return sourceVolume.coerceIn(0f, 1f) *
+            linearToGain(masterVolume) *
+            sleepFade.coerceIn(0f, 1f) *
+            focusDuck.coerceIn(0f, 1f)
+    }
+
     /** Master-only output scale (used for master fade / duck without source state). */
     fun masterGain(masterVolume: Float, masterMuted: Boolean): Float =
         if (masterMuted) 0f else linearToGain(masterVolume)
