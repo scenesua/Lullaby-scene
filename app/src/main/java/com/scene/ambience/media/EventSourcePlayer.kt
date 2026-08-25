@@ -65,6 +65,7 @@ class EventSourcePlayer(
     private val lastPlayedAtMs = mutableMapOf<String, Long>()
     private var job: Job? = null
     private var loadJob: Job? = null
+    private val movingJobs = CopyOnWriteArrayList<Job>()
     private var lastSample = -1
 
     @Volatile private var baseGain = volumeProvider().coerceIn(0f, 1f)
@@ -106,6 +107,8 @@ class EventSourcePlayer(
         stopScheduling()
         loadJob?.cancel()
         loadJob = null
+        movingJobs.forEach { it.cancel() }
+        movingJobs.clear()
         samples.forEach { runCatching { soundPool.unload(it.sampleId) } }
         samples.clear()
         lastPlayedAtMs.clear()
@@ -117,28 +120,51 @@ class EventSourcePlayer(
     }
 
     /** Play one loaded event immediately for scene-authored causal sequences. */
-    fun triggerNow(volumeScale: Float = 1f, pan: Float = 0f): Boolean {
-        if (released || !isActive()) return false
+    private fun playNow(volumeScale: Float, pan: Float): Int {
+        if (released || !isActive()) return 0
         val preferredAssetId = ManualEventAssetSelection.consume(sourceId)
         val sampleIndex = if (preferredAssetId != null) {
             samples.indexOfFirst { it.asset.assetId == preferredAssetId }
                 .takeIf { it >= 0 }
-                ?: return false
+                ?: return 0
         } else {
             val choices = samples.indices.filterNot { samples.size > 1 && it == lastSample }
-            choices.randomOrNull(random) ?: return false
+            choices.randomOrNull(random) ?: return 0
         }
         val sample = samples[sampleIndex]
         val volume = (baseGain * volumeScale).coerceIn(0f, 1f)
-        if (volume <= 0f) return false
+        if (volume <= 0f) return 0
         val (left, right) = panVolumes(volume, pan)
         val streamId = soundPool.play(sample.sampleId, left, right, 1, 0, 1f)
         if (streamId != 0) {
             lastSample = sampleIndex
             lastPlayedAtMs[sample.asset.assetId] = SystemClock.elapsedRealtime()
-            return true
+            return streamId
         }
-        return false
+        return 0
+    }
+
+    fun triggerNow(volumeScale: Float = 1f, pan: Float = 0f): Boolean = playNow(volumeScale, pan) != 0
+
+    fun triggerMoving(startVolumeScale: Float, startPan: Float, endVolumeScale: Float, endPan: Float, durationMs: Long): Boolean {
+        val streamId = playNow(startVolumeScale, startPan)
+        if (streamId == 0) return false
+        lateinit var motion: Job
+        motion = scope.launch {
+            val startedAt = SystemClock.elapsedRealtime()
+            while (currentCoroutineContext().isActive && !released) {
+                val progress = ((SystemClock.elapsedRealtime() - startedAt).toFloat() / durationMs).coerceIn(0f, 1f)
+                val pan = startPan + (endPan - startPan) * progress
+                val scale = startVolumeScale + (endVolumeScale - startVolumeScale) * progress
+                val (left, right) = panVolumes((baseGain * scale).coerceIn(0f, 1f), pan)
+                runCatching { soundPool.setVolume(streamId, left, right) }
+                if (progress >= 1f) break
+                delay(100L)
+            }
+        }
+        movingJobs += motion
+        motion.invokeOnCompletion { movingJobs.remove(motion) }
+        return true
     }
 
     private suspend fun run() {

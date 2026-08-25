@@ -232,6 +232,14 @@ class AmbienceEngine(
         return eventPlayers[id]?.triggerNow(volumeScale.coerceIn(0f, 1.5f), pan.coerceIn(-1f, 1f)) == true
     }
 
+    fun triggerMovingEventNow(id: String, startVolumeScale: Float, startPan: Float, endVolumeScale: Float, endPan: Float, durationMs: Long): Boolean {
+        if (!ensurePlayer(id)) return false
+        return eventPlayers[id]?.triggerMoving(
+            startVolumeScale.coerceIn(0f, 1.5f), startPan.coerceIn(-1f, 1f),
+            endVolumeScale.coerceIn(0f, 1.5f), endPan.coerceIn(-1f, 1f), durationMs.coerceAtLeast(1L),
+        ) == true
+    }
+
     // -------- equalizer + internal FX rack ------------------------------------
 
     @Suppress("DEPRECATION")
