@@ -24,7 +24,6 @@ await page.route('**/api/visitors',async route=>{
 
 async function loadCounter(){
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
-  await page.addScriptTag({url:'http://127.0.0.1:4173/visitor-count-v1.js?v=7'});
   await page.waitForFunction(()=>document.querySelector('[data-visitor-total]')?.textContent!=='—');
   return page.evaluate(()=>({
     today:document.querySelector('[data-visitor-today]')?.textContent?.trim(),
@@ -44,6 +43,7 @@ await page.evaluate(()=>{
   localStorage.setItem('lullaby-visitor-day-counted-v4','2099-01-01');
   localStorage.setItem('lullaby-visitor-id','old-visitor-id-that-must-not-matter');
 });
+requests.length=0;
 
 let state=await loadCounter();
 if(state.today!=='1'||state.total!=='1'||state.todayLabel!=='오늘 조회수'||state.totalLabel!=='총 조회수'||state.backend!=='countapi.mileshilliard-v1'||state.version!=='7'||state.mode!=='pageviews')throw new Error(`page-view first load failed: ${JSON.stringify(state)}`);

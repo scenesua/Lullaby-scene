@@ -13,9 +13,6 @@ page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/player-runtime-bridge-v12.js?v=13'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/mixer-interaction-v14.js?v=16'});
-await page.addScriptTag({url:'http://127.0.0.1:4173/audio-stability-v1.js?v=2'});
 await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window.LullabyPlayerRuntime?.catalog?.length===50);
 
 const direct=await page.evaluate(async()=>{

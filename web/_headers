@@ -3,12 +3,12 @@
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), browsing-topics=(), accelerometer=(), gyroscope=(), magnetometer=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), browsing-topics=(), accelerometer=(), gyroscope=(), magnetometer=(), window-management=(self)
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Origin-Agent-Cluster: ?1
   X-Permitted-Cross-Domain-Policies: none
-  Strict-Transport-Security: max-age=31536000
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 /assets/*
   Cache-Control: public, max-age=604800, stale-while-revalidate=86400
@@ -17,7 +17,7 @@
   Cache-Control: public, max-age=604800, stale-while-revalidate=86400
 
 /sw.js
-  Cache-Control: no-cache
+  Cache-Control: no-cache, no-store, must-revalidate
 
 /manifest.webmanifest
   Cache-Control: no-cache
