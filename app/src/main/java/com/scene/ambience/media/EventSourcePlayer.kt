@@ -6,6 +6,7 @@ import android.os.SystemClock
 import com.scene.ambience.data.model.AudioAssetManifest
 import com.scene.ambience.data.model.CategoryPresetConfig
 import com.scene.ambience.util.EventScheduler
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,21 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
+
+/**
+ * Optional one-shot selection used by scene-authored causal sequences that need
+ * a specific asset from a multi-variant event source. A missing requested asset
+ * fails the trigger instead of silently falling back to an unrelated variant.
+ */
+internal object ManualEventAssetSelection {
+    private val pendingAssetIds = ConcurrentHashMap<String, String>()
+
+    fun select(sourceId: String, assetId: String) {
+        pendingAssetIds[sourceId] = assetId
+    }
+
+    fun consume(sourceId: String): String? = pendingAssetIds.remove(sourceId)
+}
 
 /**
  * Short one-shot event player. Asset descriptors are opened on Dispatchers.IO,
@@ -93,6 +109,7 @@ class EventSourcePlayer(
         samples.forEach { runCatching { soundPool.unload(it.sampleId) } }
         samples.clear()
         lastPlayedAtMs.clear()
+        ManualEventAssetSelection.consume(sourceId)
     }
 
     fun applyBaseVolume(baseGain: Float) {
@@ -102,8 +119,15 @@ class EventSourcePlayer(
     /** Play one loaded event immediately for scene-authored causal sequences. */
     fun triggerNow(volumeScale: Float = 1f, pan: Float = 0f): Boolean {
         if (released || !isActive()) return false
-        val choices = samples.indices.filterNot { samples.size > 1 && it == lastSample }
-        val sampleIndex = choices.randomOrNull(random) ?: return false
+        val preferredAssetId = ManualEventAssetSelection.consume(sourceId)
+        val sampleIndex = if (preferredAssetId != null) {
+            samples.indexOfFirst { it.asset.assetId == preferredAssetId }
+                .takeIf { it >= 0 }
+                ?: return false
+        } else {
+            val choices = samples.indices.filterNot { samples.size > 1 && it == lastSample }
+            choices.randomOrNull(random) ?: return false
+        }
         val sample = samples[sampleIndex]
         val volume = (baseGain * volumeScale).coerceIn(0f, 1f)
         if (volume <= 0f) return false
