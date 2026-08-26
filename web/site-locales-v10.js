@@ -76,6 +76,8 @@
     hi:{all:'सभी',nature:'प्रकृति',indoor:'इनडोर',travel:'यात्रा',other:'अन्य',on:'चालू',off:'बंद',currentScene:'मौजूदा दृश्य',continuous:'लगातार',event:'घटना',sources:'स्रोत',quickMixer:'क्विक मिक्सर',fx:'FX',presets:'तैयार दृश्य',ready:'तैयार',arrived:'पहुँच गया',none:'कोई नहीं',previousPhase:'◀ पिछला चरण',nextPhase:'अगला चरण ▶',journeyPosition:'यात्रा स्थिति',pause:'रोकें',resume:'जारी रखें',stopped:'रुका हुआ'},
     vi:{all:'Tất cả',nature:'Thiên nhiên',indoor:'Trong nhà',travel:'Di chuyển',other:'Khác',on:'Bật',off:'Tắt',currentScene:'Cảnh hiện tại',continuous:'liên tục',event:'sự kiện',sources:'nguồn',quickMixer:'Trộn nhanh',fx:'FX',presets:'Cảnh dựng sẵn',ready:'Sẵn sàng',arrived:'Đã đến',none:'Không có',previousPhase:'◀ Giai đoạn trước',nextPhase:'Giai đoạn sau ▶',journeyPosition:'Vị trí hành trình',pause:'Tạm dừng',resume:'Tiếp tục',stopped:'Đã dừng'}
   };
+  const JOURNEY_EVENT_TERMS={ko:'여정 이벤트',en:'Journey events',ja:'旅のイベント','zh-CN':'旅程事件','zh-TW':'旅程事件',ru:'События путешествия',fr:'Événements du voyage',es:'Eventos del viaje',pt:'Eventos da jornada',th:'เหตุการณ์ระหว่างการเดินทาง',tl:'Mga event sa biyahe',hi:'यात्रा की घटनाएँ',vi:'Sự kiện hành trình'};
+  Object.entries(JOURNEY_EVENT_TERMS).forEach(([code,label])=>{TERMS[code].journeyEvents=label});
   function normalize(value){
     const raw=String(value||'').toLowerCase();if(raw.startsWith('zh'))return /tw|hk|hant/.test(raw)?'zh-TW':'zh-CN';
     const base=raw.split('-')[0];return LANGS.some(([code])=>code.toLowerCase()===raw)?LANGS.find(([code])=>code.toLowerCase()===raw)[0]:LANGS.some(([code])=>code===base)?base:'en';

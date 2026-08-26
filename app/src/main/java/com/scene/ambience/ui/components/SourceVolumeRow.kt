@@ -49,6 +49,7 @@ fun SourceVolumeRow(
     onVolumeChangeFinished: (Float) -> Unit,
     onToggleMuted: () -> Unit,
     modifier: Modifier = Modifier,
+    accentColor: Color? = null,
 ) {
     var localVolume by remember { mutableFloatStateOf(volume) }
     var dragging by remember { mutableStateOf(false) }
@@ -56,6 +57,7 @@ fun SourceVolumeRow(
         if (!dragging) localVolume = volume
     }
     val active = enabled && volume > 0f && !muted
+    val accent = accentColor ?: MaterialTheme.colorScheme.primary
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -71,7 +73,7 @@ fun SourceVolumeRow(
         },
         border = BorderStroke(
             width = 1.dp,
-            color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+            color = when { accentColor != null -> accent.copy(alpha = if (active) 1f else .72f); active -> accent; else -> MaterialTheme.colorScheme.outlineVariant },
         ),
     ) {
         Column(
@@ -87,21 +89,22 @@ fun SourceVolumeRow(
                     Icon(
                         imageVector = if (muted) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp,
                         contentDescription = null,
-                        tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = if (active || accentColor != null) accent else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleSmall,
+                    color = accentColor ?: MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(start = 10.dp).weight(1f),
                 )
-                ActiveDot(active)
+                ActiveDot(active, color = accent)
                 Text(
                     text = "${(localVolume * 100).roundToInt()}%",
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (active || accentColor != null) accent else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Slider(
@@ -117,8 +120,8 @@ fun SourceVolumeRow(
                 enabled = available,
                 modifier = Modifier.fillMaxWidth().height(36.dp),
                 colors = SliderDefaults.colors(
-                    activeTrackColor = MaterialTheme.colorScheme.primary,
-                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = accent,
+                    thumbColor = accent,
                     inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
                 ),
             )
@@ -135,7 +138,7 @@ fun SourceVolumeRow(
 
 /** Active-source indicator dot used next to source names. */
 @Composable
-fun ActiveDot(active: Boolean, modifier: Modifier = Modifier) {
+fun ActiveDot(active: Boolean, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
     if (active) {
         Row(
             modifier = modifier.padding(end = 4.dp),
@@ -144,7 +147,7 @@ fun ActiveDot(active: Boolean, modifier: Modifier = Modifier) {
             Surface(
                 modifier = Modifier.width(8.dp).height(8.dp),
                 shape = RoundedCornerShape(4.dp),
-                color = MaterialTheme.colorScheme.primary,
+                color = color,
             ) {}
         }
     }

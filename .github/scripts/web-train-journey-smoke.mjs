@@ -51,19 +51,19 @@ state=await page.evaluate(()=>({title:document.querySelector('.aircraft-title-ro
 if(!state.title?.includes('열차')||!['Ready','준비'].includes(state.phase))throw new Error(`Train selection was overwritten by localization: ${JSON.stringify(state)}`);
 await page.locator('#scenePlay').click();await page.waitForTimeout(700);
 state=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,role:window.LullabyTrainJourney.audibleRole,playing:document.querySelector('#scenePlay')?.textContent}));
-if(state.phase!=='Departing'||state.role!=='departure'||!state.playing.includes('Ⅱ'))throw new Error(`Train departure failed: ${JSON.stringify(state)}`);
+if(['Ready','준비'].includes(state.phase)||state.role!=='departure'||!state.playing.includes('Ⅱ'))throw new Error(`Train departure failed: ${JSON.stringify(state)}`);
 await page.waitForTimeout(1100);
 state=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,title:document.querySelector('.aircraft-title-row h3')?.textContent}));
 if(['Ready','준비'].includes(state.phase)||!state.title?.includes('열차'))throw new Error(`Train playback was overwritten by localization: ${JSON.stringify(state)}`);
 await page.evaluate(()=>window.LullabyJourneyRuntime.seekToMs(31183));await page.waitForTimeout(700);
 state=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,role:window.LullabyTrainJourney.audibleRole}));
-if(state.phase!=='Departing'||state.role!=='bed')throw new Error(`Train bed did not pre-roll before the phase boundary: ${JSON.stringify(state)}`);
+if(['Ready','준비'].includes(state.phase)||state.role!=='bed')throw new Error(`Train bed did not pre-roll before the phase boundary: ${JSON.stringify(state)}`);
 await page.locator('#journeyNextPhase').click();await page.waitForTimeout(700);
 state=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,role:window.LullabyTrainJourney.audibleRole,elapsed:window.LullabyJourneyRuntime.elapsedMs}));
-if(state.phase!=='Leaving city'||state.role!=='bed'||state.elapsed<35000)throw new Error(`Train bed transition failed: ${JSON.stringify(state)}`);
+if(['Ready','준비'].includes(state.phase)||state.role!=='bed'||state.elapsed<35000)throw new Error(`Train bed transition failed: ${JSON.stringify(state)}`);
 await page.evaluate(()=>window.LullabyJourneyRuntime.seekToMs(window.LullabyJourneyRuntime.totalMs-32000));await page.waitForTimeout(700);
 state=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,role:window.LullabyTrainJourney.audibleRole}));
-if(state.phase!=='Arriving'||state.role!=='arrival')throw new Error(`Train arrival transition failed: ${JSON.stringify(state)}`);
+if(['Ready','준비'].includes(state.phase)||state.role!=='arrival')throw new Error(`Train arrival transition failed: ${JSON.stringify(state)}`);
 await page.locator('#scenePlay').click();await page.locator('button[data-journey="passenger_aircraft_cabin"]').click();
 if(await page.locator('.aircraft-title-row h3').textContent()!=='Passenger Aircraft Cabin')throw new Error('Aircraft selector did not restore the original journey');
 

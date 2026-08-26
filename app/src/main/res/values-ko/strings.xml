@@ -81,6 +81,7 @@
     <string name="category_indoor">실내</string>
     <string name="category_travel">여행</string>
     <string name="category_other">기타</string>
+    <string name="category_journey_events">여정 이벤트</string>
     <string name="sources_title">소리 소스 (%1$d개 활성)</string>
     <string name="master_volume">마스터 볼륨</string>
     <string name="no_active_sources_hint">아래에서 소리 소스를 켜면 믹싱을 시작할 수 있어요</string>
