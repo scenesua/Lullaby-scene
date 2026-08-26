@@ -38,7 +38,7 @@ jobs:
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/spacecraft_journey/spacecraft_journey_transition_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-heart.ogg \
-              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/forest.ogg?v=2&deploycheck=${GITHUB_SHA}" > /tmp/forest.ogg \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/forest.ogg?v=2&deploycheck=${GITHUB_SHA}&attempt=${i}" > /tmp/forest.ogg \
               && curl -sS --max-time 10 -D /tmp/api.headers -o /tmp/api.json -H 'Cache-Control: no-cache' "https://lullabyscene.com/api/visitors?deploycheck=${GITHUB_SHA}"; then
               if grep -q 'display-tools-v1.js?v=4' /tmp/player.html \
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
