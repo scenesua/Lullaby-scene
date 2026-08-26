@@ -482,11 +482,11 @@ class SceneOrchestrator(
             val endClose = 1f - (endDistance ?: 1f).coerceIn(.62f, 1f)
             engine.triggerPassingEventNow(
                 sourceId,
-                .24f + close * 1.45f,
+                .22f + close * .65f,
                 startPan,
-                .24f + targetClose * 1.45f,
+                .28f + targetClose * 1.85f,
                 targetPan,
-                .18f + endClose * .30f,
+                .10f + endClose * .25f,
                 endPan,
                 15_000L,
             )
