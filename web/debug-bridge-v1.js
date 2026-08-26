@@ -10,6 +10,10 @@
   addEventListener('unhandledrejection',event=>record('error',event.reason));
 
   const provider=()=>activeJourneyId==='passenger_aircraft_cabin'?window.LullabyJourneyAudio:activeJourneyId==='train_journey'?window.LullabyTrainJourney:window.LullabyRemainingJourneys;
+  const EVENT_OPTIONS={
+    passenger_aircraft_cabin:[['primary','객실 차임']],train_journey:[['primary','먼 레일 이음매']],spacecraft_journey:[['primary','캐빈 서보']],ferry_journey:[['primary','선체를 스치는 파도']],submarine_journey:[['primary','먼 소나']],
+    hood_journey:[['random','HOOD 랜덤 이벤트'],['fight','총격전 전체'],['gunshot','기본 총성'],['gunShotgun','산탄총'],['siren','경찰차 통과'],['carPass','일반 차량 통과'],['glass','유리 파손'],['shoutMale','먼 고함'],['screamCrowd','먼 비명'],['dog','동네 개 짖는 소리'],['footsteps','보도 위 발소리'],['carDoor','차 문'],['helicopter','먼 헬리콥터']]
+  };
   const nodes=()=>{const value=provider()?.nodes??provider()?.activeNodes??{};return Object.fromEntries(Object.entries(value||{}).filter(([,node])=>node))};
   const describeNode=([name,node])=>({
     name,url:node.url||'',paused:!!node.el?.paused,currentTime:Number(node.el?.currentTime||0),duration:Number(node.loopDurationSeconds||node.el?.duration||0),gain:Number(node.gain?.gain?.value||0),filterHz:Number(node.filter?.frequency?.value||0),crossfade:!!node.__lullabyCrossfadeLoop,fadeSeconds:Number(node.loopFadeSeconds||0),loopCount:Number(node.loopCount||0),voices:(node.voices||[]).map((voice,index)=>({index,paused:voice.el.paused,currentTime:Number(voice.el.currentTime||0),gain:Number(voice.envelope.gain.value||0)}))
@@ -31,7 +35,7 @@
   }
   function snapshot(){
     const elapsed=Number(window.LullabyJourneyRuntime?.elapsedMs||0),total=Number(window.LullabyJourneyRuntime?.totalMs||0);
-    return{journeyId:activeJourneyId,playing:!!scenePlaying,elapsedMs:elapsed,totalMs:total,progress:total?elapsed/total:0,phase:document.getElementById('phaseLabel')?.textContent||'',event:document.getElementById('eventLabel')?.textContent||'',eventsEnabled:!!window.LullabyJourneyEvents?.enabled,audioContext:ctx?.state||'not-created',master:Number(masterValue||0),visibility:document.visibilityState,nodes:Object.entries(nodes()).map(describeNode),logs:[...logs]};
+    return{journeyId:activeJourneyId,eventOptions:EVENT_OPTIONS[activeJourneyId]||[],playing:!!scenePlaying,elapsedMs:elapsed,totalMs:total,progress:total?elapsed/total:0,phase:document.getElementById('phaseLabel')?.textContent||'',event:document.getElementById('eventLabel')?.textContent||'',eventsEnabled:!!window.LullabyJourneyEvents?.enabled,audioContext:ctx?.state||'not-created',master:Number(masterValue||0),visibility:document.visibilityState,nodes:Object.entries(nodes()).map(describeNode),logs:[...logs]};
   }
   window.LullabyDebug={
     snapshot,selectJourney,triggerEvent,jumpBeforeLoop,

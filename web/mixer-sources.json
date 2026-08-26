@@ -45,7 +45,7 @@
     {"id":"hood_car_pass","name":"Passing Street Car","category":"travel","kind":"event","url":"/audio/scenes/hood_journey/hood_car_pass_event_001.ogg","defaultVolume":18,"eventMinSeconds":75,"eventMaxSeconds":260},
     {"id":"hood_car_door","name":"Street Car Door","category":"travel","kind":"event","url":"/audio/scenes/hood_journey/hood_car_door_event_001.ogg","defaultVolume":16,"eventMinSeconds":180,"eventMaxSeconds":600},
     {"id":"hood_helicopter","name":"Distant Helicopter","category":"travel","kind":"event","url":"/audio/scenes/hood_journey/hood_helicopter_event_001.ogg","defaultVolume":14,"eventMinSeconds":600,"eventMaxSeconds":1800},
-    {"id":"hood_dog","name":"Neighborhood Dog","category":"travel","kind":"event","url":"/audio/scenes/hood_journey/hood_dog_event_001.ogg","defaultVolume":14,"eventMinSeconds":240,"eventMaxSeconds":720},
+    {"id":"hood_dog","name":"Neighborhood Dog","category":"travel","kind":"event","url":"/audio/scenes/hood_journey/hood_dog_event_001.ogg?v=2","defaultVolume":22,"eventMinSeconds":240,"eventMaxSeconds":720},
     {"id":"water","name":"Water","category":"other","kind":"event","url":"/audio/water-event.ogg","defaultVolume":35,"eventMinSeconds":2,"eventMaxSeconds":12},
     {"id":"singing_bowl","name":"Singing Bowl","category":"other","kind":"continuous","url":"/audio/singing_bowl.ogg","defaultVolume":30},
     {"id":"white_noise","name":"White Noise","category":"other","kind":"continuous","url":"/audio/white_noise.ogg","defaultVolume":30},

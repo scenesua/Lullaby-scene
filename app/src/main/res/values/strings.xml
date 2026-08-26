@@ -90,6 +90,7 @@
     <string name="category_indoor">Indoor</string>
     <string name="category_travel">Travel</string>
     <string name="category_other">Other</string>
+    <string name="category_journey_events">Journey events</string>
     <string name="sources_title">Sound sources (%1$d active)</string>
     <string name="master_volume">Master volume</string>
     <string name="no_active_sources_hint">Enable a sound source below to start mixing</string>
