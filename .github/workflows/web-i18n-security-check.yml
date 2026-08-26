@@ -8,6 +8,7 @@ on:
     paths:
       - 'web/**'
       - '.github/scripts/web-i18n-security-smoke.mjs'
+      - '.github/scripts/web-sw-security-smoke.mjs'
       - '.github/workflows/web-i18n-security-check.yml'
 
 permissions:
@@ -38,6 +39,7 @@ jobs:
           node --check web/player-controls-v11.js
           node --check web/scene-recipe-v1.js
           node --check web/_worker.js
+          node .github/scripts/web-sw-security-smoke.mjs
           grep -Fq "frame-ancestors 'none'" web/_worker.js
           grep -Fq "'X-Frame-Options':'DENY'" web/_worker.js
           grep -Fq "script-src 'self'; script-src-attr 'none'" web/_worker.js

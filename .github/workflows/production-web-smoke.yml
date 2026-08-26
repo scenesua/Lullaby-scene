@@ -5,6 +5,8 @@ on:
     branches:
       - main
     paths:
+      - 'web/_headers'
+      - 'web/_routes.json'
       - 'web/_worker.js'
       - 'web/display-tools-v1.js'
       - 'web/display-tools-v1.css'
@@ -32,7 +34,7 @@ jobs:
           set -euo pipefail
           ok=0
           for i in {1..36}; do
-            if curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" > /tmp/player.html \
+            if curl -fsS --max-time 10 -D /tmp/player.headers -o /tmp/player.html -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=4&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=17&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
@@ -44,7 +46,8 @@ jobs:
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/train_journey/train_journey_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/train-bed.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/ferry_journey/ferry_journey_arrival_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/ferry.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/spacecraft_journey/spacecraft_journey_transition_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.ogg \
-              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg; then
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg \
+              && curl -sS --max-time 10 -D /tmp/api.headers -o /tmp/api.json -H 'Cache-Control: no-cache' "https://lullabyscene.com/api/visitors?deploycheck=${GITHUB_SHA}"; then
               if grep -q 'display-tools-v1.js?v=4' /tmp/player.html \
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
                 && grep -q 'player-v2.js?v=17' /tmp/player.html \
@@ -71,14 +74,32 @@ jobs:
                 && grep -q "window.getScreenDetails()" /tmp/display.js \
                 && grep -q 'top:50%' /tmp/display.css \
                 && grep -q 'translate(-50%,-50%)' /tmp/display.css; then
-                ok=1
-                break
+                if grep -Eqi "^content-security-policy:.*script-src 'self';" /tmp/player.headers \
+                  && grep -Eqi "^content-security-policy:.*script-src-attr 'none';" /tmp/player.headers \
+                  && grep -Eqi "^content-security-policy:.*frame-ancestors 'none';" /tmp/player.headers \
+                  && grep -Eqi "^content-security-policy:.*object-src 'none';" /tmp/player.headers \
+                  && grep -Eqi '^strict-transport-security:.*max-age=31536000.*includeSubDomains' /tmp/player.headers \
+                  && grep -Eqi '^x-frame-options:[[:space:]]*DENY' /tmp/player.headers \
+                  && grep -Eqi '^x-content-type-options:[[:space:]]*nosniff' /tmp/player.headers \
+                  && grep -Eqi '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin' /tmp/player.headers \
+                  && grep -Eqi '^cross-origin-opener-policy:[[:space:]]*same-origin' /tmp/player.headers \
+                  && grep -Eqi '^cross-origin-resource-policy:[[:space:]]*same-origin' /tmp/player.headers \
+                  && grep -Eqi '^permissions-policy:.*camera=\(\).*microphone=\(\).*geolocation=\(\)' /tmp/player.headers \
+                  && grep -Eqi '^cache-control:.*no-store' /tmp/api.headers \
+                  && grep -Eqi '^x-robots-tag:.*noindex.*nofollow' /tmp/api.headers; then
+                  ok=1
+                  break
+                fi
               fi
             fi
             sleep 5
           done
           if [[ "$ok" -ne 1 ]]; then
             echo 'Production did not serve blackout display tools v4 and all Journeys within the retry window.' >&2
+            echo '--- response headers ---' >&2
+            cat /tmp/player.headers 2>/dev/null >&2 || true
+            echo '--- API response headers ---' >&2
+            cat /tmp/api.headers 2>/dev/null >&2 || true
             echo '--- player tail ---' >&2
             tail -n 30 /tmp/player.html 2>/dev/null >&2 || true
             echo '--- display JS relevant lines ---' >&2

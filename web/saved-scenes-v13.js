@@ -89,7 +89,7 @@
       let actions=card.querySelector('.saved-scene-actions');
       if(!actions){
         actions=document.createElement('div');actions.className='saved-scene-actions';
-        actions.innerHTML=`<button type="button" data-saved-load="${id}"></button><button type="button" data-saved-rename="${id}"></button><button type="button" data-saved-overwrite="${id}"></button>`;
+        for(const action of ['load','rename','overwrite']){const button=document.createElement('button');button.type='button';button.dataset[`saved${action[0].toUpperCase()}${action.slice(1)}`]=id;actions.appendChild(button)}
         card.appendChild(actions);
       }
       setText(actions.querySelector('[data-saved-load]'),labels.load);
