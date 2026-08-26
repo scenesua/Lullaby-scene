@@ -26,7 +26,7 @@ for(const [assetId,[scene,kind,duration,hash]] of Object.entries(expected)){
 }
 
 const hoodAssets={
-  hood_journey_bed_001:['continuous',106652],hood_gunshot_event_001:['events',3324],hood_siren_event_001:['events',15000],hood_glass_event_001:['events',817],hood_shout_event_001:['events',3207],hood_footsteps_event_001:['events',9007],hood_car_pass_event_001:['events',6477],hood_car_door_event_001:['events',9007],hood_helicopter_event_001:['events',9007],hood_dog_event_001:['events',8007],
+  hood_journey_bed_001:['continuous',106652],hood_gunshot_event_001:['events',3324],hood_siren_event_001:['events',15000],hood_glass_event_001:['events',817],hood_shout_event_001:['events',3207],hood_footsteps_event_001:['events',9007],hood_car_pass_event_001:['events',6477],hood_car_door_event_001:['events',9007],hood_helicopter_event_001:['events',9007],hood_dog_event_001:['events',10119],
 };
 for(const [assetId,[kind,duration]] of Object.entries(hoodAssets)){
   const source=manifest.sources.find(item=>item[kind]?.some(asset=>asset.asset_id===assetId));
@@ -47,7 +47,7 @@ for(const phase of ['train_departure','train_leaving_city','train_night_run','tr
   if(!text('app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt').includes(phase))throw new Error(`Android phase missing ${phase}`);
 }
 if(!text('web/player/index.html').includes('/train-journey-v1.js?v=11'))throw new Error('Web player does not load Train Journey runtime');
-if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=17'))throw new Error('Web player does not load remaining Journey runtime');
+if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=18'))throw new Error('Web player does not load remaining Journey runtime');
 for(const file of['web/audio/scenes/aircraft_cabin/aircraft_chime_event_001.ogg','web/audio/scenes/train_journey/train_rail_event_001.ogg','web/audio/scenes/ferry_journey/ferry_wave_event_001.ogg','web/audio/scenes/spacecraft_journey/spacecraft_servo_event_001.ogg','web/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg'])if(!existsSync(file)||statSync(file).size<8000)throw new Error(`Journey random-event asset missing or empty: ${file}`);
 if(!text('web/player/index.html').includes('/journey-background-v1.js?v=13'))throw new Error('Web player does not load Journey backgrounds');
 if(!text('web/journey-background-v1.js').includes("screen.orientation.lock('landscape')"))throw new Error('Mobile Journey display does not request landscape orientation');

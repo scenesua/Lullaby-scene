@@ -158,7 +158,7 @@
     },
     {
       "id":"hood_dog","category":"travel","display_name_key":"source_hood_dog","default_volume":0.22,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_dog_event_001","path":"ambience/hood_journey/events/hood_dog_event_001.ogg","duration_ms":8007,"role":"event","tags":["hood","dog","neighborhood"],"provenance_id":"freesound_wateenfotos_749352","cooldown_ms":180000}]
+      "events":[{"asset_id":"hood_dog_event_001","path":"ambience/hood_journey/events/hood_dog_event_001.ogg","duration_ms":10119,"role":"event","tags":["hood","dog","neighborhood"],"provenance_id":"freesound_kinoton_516904","cooldown_ms":180000}]
     }
   ]
 }
