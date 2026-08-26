@@ -47,17 +47,17 @@ for(const phase of ['train_departure','train_leaving_city','train_night_run','tr
   if(!text('app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt').includes(phase))throw new Error(`Android phase missing ${phase}`);
 }
 if(!text('web/player/index.html').includes('/train-journey-v1.js?v=11'))throw new Error('Web player does not load Train Journey runtime');
-if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=20'))throw new Error('Web player does not load remaining Journey runtime');
+if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=21'))throw new Error('Web player does not load remaining Journey runtime');
 for(const file of['web/audio/scenes/aircraft_cabin/aircraft_chime_event_001.ogg','web/audio/scenes/train_journey/train_rail_event_001.ogg','web/audio/scenes/ferry_journey/ferry_wave_event_001.ogg','web/audio/scenes/spacecraft_journey/spacecraft_servo_event_001.ogg','web/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg'])if(!existsSync(file)||statSync(file).size<8000)throw new Error(`Journey random-event asset missing or empty: ${file}`);
-if(!text('web/player/index.html').includes('/journey-background-v1.js?v=13'))throw new Error('Web player does not load Journey backgrounds');
+if(!text('web/player/index.html').includes('/journey-background-v1.js?v=14'))throw new Error('Web player does not load Journey backgrounds');
 if(!text('web/journey-background-v1.js').includes("screen.orientation.lock('landscape')"))throw new Error('Mobile Journey display does not request landscape orientation');
 if(!text('web/journey-background-v1.js').includes('const motionVideoEnabled=false'))throw new Error('Journey backgrounds must remain still-only until approved motion assets exist');
-for(const scene of['aircraft','train','spacecraft','ferry','submarine','hood']){
+for(const scene of['aircraft','train','spacecraft','ferry','submarine','forest-temple','hood']){
   const poster=read(`web/assets/journeys/${scene}.webp`);
   if(poster.length<10000||poster.subarray(0,4).toString()!=='RIFF')throw new Error(`${scene} Journey poster is invalid`);
 }
 const orchestrator=text('app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt'),engine=text('app/src/main/java/com/scene/ambience/media/AmbienceEngine.kt'),remaining=text('web/remaining-journeys-v1.js'),i18n=text('web/i18n-runtime-v3.js'),strings=text('app/src/main/res/values/scene_strings.xml'),sw=text('web/sw.js');
-for(const [id,title] of Object.entries({ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage',hood_journey:'HOOD Night'})){
+for(const [id,title] of Object.entries({ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage',forest_temple_journey:'Forest Temple',hood_journey:'HOOD Night'})){
   if(!orchestrator.includes(`"${id}"`)||!remaining.includes(`${id}:`)||!strings.includes(title))throw new Error(`${id} platform definition mismatch`);
 }
 for(const marker of ['SOURCE_HOOD_GUNSHOT','SOURCE_HOOD_SIREN','SOURCE_HOOD_CAR_PASS','EVENT_HOOD_SHOUT','setRandomEventsEnabled'])if(!orchestrator.includes(marker))throw new Error(`Android HOOD runtime missing ${marker}`);
@@ -69,5 +69,7 @@ for(const marker of ['SOURCE_HOOD_GLASS -> .68f','SOURCE_HOOD_GUNSHOT -> .70f','
 for(const marker of ['triggerPassingEventNow','responseAtMs = lastGunshotMs + random.nextLong(18_000L, 115_001L)','convoyOffsetMs += random.nextLong(900L, 2_601L)'])if(!engine.includes(marker)&&!orchestrator.includes(marker))throw new Error(`Android siren convoy path is missing ${marker}`);
 for(const marker of ['preservesPitch=false','playbackRate=1.08','playbackRate=.93'])if(!remaining.includes(marker))throw new Error(`Web siren Doppler path missing ${marker}`);
 for(const marker of ['playNow(startVolumeScale, startPan, 1.08f)','soundPool.setRate(streamId, rate)'])if(!text('app/src/main/java/com/scene/ambience/media/EventSourcePlayer.kt').includes(marker))throw new Error(`Android siren Doppler path missing ${marker}`);
+for(const marker of ['SOURCE_FOREST_TEMPLE_BOWL','SOURCE_FOREST_TEMPLE_MOKTAK','SOURCE_FOREST_TEMPLE_GRAVEL','SOURCE_FOREST_TEMPLE_HEART_SUTRA','startTempleEvents'])if(!orchestrator.includes(marker))throw new Error(`Android Forest Temple runtime missing ${marker}`);
+for(const marker of ["const templeEventTypes=['moktak','gravel','moktak','gravel','heartSutra']","delete configs.hood_journey;configs.hood_journey=hoodConfig","'forest_temple_journey','hood_journey'"])if(!remaining.includes(marker))throw new Error(`Web Forest Temple order/runtime missing ${marker}`);
 if(!sw.includes("event.request.destination==='audio'"))throw new Error('Web audio is not isolated from service-worker shell caching');
-console.log('All six Journey Android/Web asset and timeline parity passed');
+console.log('All seven Journey Android/Web asset and timeline parity passed');

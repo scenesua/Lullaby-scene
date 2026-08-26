@@ -39,6 +39,7 @@ if(!backgroundState.mode||!backgroundState.exit)throw new Error(`Journey display
 await page.locator('.journey-display-exit button').click();
 const journeyOrder=await page.locator('#journeySelector [data-journey]').evaluateAll(nodes=>nodes.map(node=>node.dataset.journey));
 if(journeyOrder[2]!=='spacecraft_journey')throw new Error(`Spacecraft is not the third Journey: ${JSON.stringify(journeyOrder)}`);
+if(journeyOrder.slice(-2).join(',')!=='forest_temple_journey,hood_journey')throw new Error(`Forest Temple must be directly before the final HOOD Journey: ${JSON.stringify(journeyOrder)}`);
 await page.locator('[data-journey="train_journey"]').click();
 let state=await page.evaluate(()=>({active:window.LullabyTrainJourney.active,title:document.querySelector('.aircraft-title-row h3')?.textContent,phase:document.querySelector('#phaseLabel')?.textContent}));
 if(!state.active||!state.title?.includes('열차')||!['Ready','준비'].includes(state.phase))throw new Error(`Train selection failed: ${JSON.stringify(state)}`);
@@ -70,7 +71,9 @@ if(await page.locator('.aircraft-title-row h3').textContent()!=='Passenger Aircr
 for(const journey of[
   ['ferry_journey','야간 페리 여정',128667],
   ['spacecraft_journey','우주선 표류',17824],
-  ['submarine_journey','잠수함 항해',47282]
+  ['submarine_journey','잠수함 항해',47282],
+  ['forest_temple_journey','숲속 절',90000],
+  ['hood_journey','HOOD 나이트',45000]
 ]){
   const[id,title,departureMs]=journey;
   const immediate=await page.evaluate(id=>{document.querySelector(`button[data-journey="${id}"]`)?.click();return{title:document.querySelector('.aircraft-title-row h3')?.textContent,phase:document.querySelector('#phaseLabel')?.textContent}},id);
@@ -84,10 +87,10 @@ for(const journey of[
   state=await page.evaluate(()=>({title:document.querySelector('.aircraft-title-row h3')?.textContent,phase:document.querySelector('#phaseLabel')?.textContent}));
   if(state.title!==title||!['Ready','준비'].includes(state.phase))throw new Error(`${id} selection was overwritten by localization: ${JSON.stringify(state)}`);
   await page.locator('#scenePlay').click();await page.waitForTimeout(650);
-  state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole,playing:document.querySelector('#scenePlay')?.textContent,eventUrl:window.LullabyRemainingJourneys?.configs?.[window.LullabyRemainingJourneys.active]?.event?.url,eventReady:Boolean(window.LullabyRemainingJourneys?.eventNode)}));
-  if(state.role!=='departure'||!state.playing.includes('Ⅱ')||!state.eventUrl||!state.eventReady)throw new Error(`${id} departure/event setup failed: ${JSON.stringify(state)}`);
+  state=await page.evaluate(()=>{const runtime=window.LullabyRemainingJourneys,cfg=runtime?.configs?.[runtime.active];return{role:runtime?.audibleRole,playing:document.querySelector('#scenePlay')?.textContent,eventConfigured:Boolean(cfg?.event?.url||cfg?.event?.sources),eventReady:Boolean(runtime?.eventNode)}});
+  if(state.role!=='departure'||!state.playing.includes('Ⅱ')||!state.eventConfigured||!state.eventReady)throw new Error(`${id} departure/event setup failed: ${JSON.stringify(state)}`);
   await page.locator('#journeyEventToggle').click();await page.waitForTimeout(60);
-  state=await page.evaluate(()=>({enabled:window.LullabyJourneyEvents.enabled,event:document.getElementById('eventLabel')?.textContent,eventPaused:window.LullabyRemainingJourneys?.eventNode?.el.paused}));
+  state=await page.evaluate(()=>{const entry=window.LullabyRemainingJourneys?.eventNode,nodes=entry?.el?[entry]:Object.values(entry||{}).flatMap(value=>Array.isArray(value)?value:[value]);return{enabled:window.LullabyJourneyEvents.enabled,event:document.getElementById('eventLabel')?.textContent,eventPaused:nodes.length>0&&nodes.every(node=>node?.el?.paused)}});
   if(state.enabled||state.event!=='꺼짐'||!state.eventPaused)throw new Error(`${id} random event did not stop when disabled: ${JSON.stringify(state)}`);
   await page.locator('#journeyEventToggle').click();
   await page.waitForTimeout(1100);
@@ -125,4 +128,4 @@ const mobileDisplay=await mobile.evaluate(()=>{
   return{mode:document.body.classList.contains('journey-display-mode'),fallback:document.body.classList.contains('journey-display-landscape-fallback'),buttonParent:button?.parentElement?.className,canvasWidth:Math.round(parseFloat(visualStyle.width)||0),canvasHeight:Math.round(parseFloat(visualStyle.height)||0),rectWidth:Math.round(rect?.width||0),rectHeight:Math.round(rect?.height||0),fit:getComputedStyle(layer).objectFit};
 });
 if(!mobileDisplay.mode||!mobileDisplay.fallback||!['android-top-actions','mobile-player-top'].includes(mobileDisplay.buttonParent)||mobileDisplay.canvasWidth!==844||mobileDisplay.canvasHeight!==390||mobileDisplay.rectWidth!==390||mobileDisplay.rectHeight!==844||mobileDisplay.fit!=='contain')throw new Error(`Mobile landscape scene display failed: ${JSON.stringify(mobileDisplay)}`);
-await mobile.close();await browser.close();console.log('Web Aircraft, Train, Ferry, Spacecraft and Submarine journey routing passed');
+await mobile.close();await browser.close();console.log('All seven Web Journey routing and ordering checks passed');

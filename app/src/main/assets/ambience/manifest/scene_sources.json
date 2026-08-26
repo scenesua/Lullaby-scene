@@ -110,6 +110,22 @@
       "continuous": [], "events": [{"asset_id": "submarine_sonar_event_001", "path": "ambience/submarine_journey/events/submarine_sonar_event_001.ogg", "duration_ms": 5006, "role": "event", "tags": ["submarine", "sonar", "sleep_safe", "stereo"], "provenance_id": "freesound_breviceps_493162", "event_weight": 1.0, "cooldown_ms": 180000}]
     },
     {
+      "id":"forest_temple_bowl","category":"travel","display_name_key":"source_forest_temple_bowl","default_volume":0.09,"loop_mode":"crossfade",
+      "continuous":[{"asset_id":"forest_temple_bowl_bed_001","path":"ambience/forest_temple_journey/continuous/forest_temple_bowl_bed_001.ogg","duration_ms":77007,"crossfade_ms":8000,"role":"bed","tags":["forest_temple","singing_bowl","temple_right","meditation"],"provenance_id":"derived_singing_bowl_loop_001"}],"events":[]
+    },
+    {
+      "id":"forest_temple_moktak","category":"travel","display_name_key":"source_forest_temple_moktak","default_volume":0.10,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"forest_temple_moktak_event_001","path":"ambience/forest_temple_journey/events/forest_temple_moktak_event_001.ogg","duration_ms":12733,"role":"event","tags":["forest_temple","moktak","temple_right"],"provenance_id":"freesound_jonopodmore_607215","cooldown_ms":210000}]
+    },
+    {
+      "id":"forest_temple_gravel","category":"travel","display_name_key":"source_forest_temple_gravel","default_volume":0.08,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"forest_temple_gravel_event_001","path":"ambience/forest_temple_journey/events/forest_temple_gravel_event_001.ogg","duration_ms":26907,"role":"event","tags":["forest_temple","gravel","slow_footsteps","path"],"provenance_id":"freesound_samuelgremaud_429182","cooldown_ms":210000}]
+    },
+    {
+      "id":"forest_temple_heart_sutra","category":"travel","display_name_key":"source_forest_temple_heart_sutra","default_volume":0.05,"loop_mode":"event","continuous":[],
+      "events":[{"asset_id":"forest_temple_heart_sutra_event_001","path":"ambience/forest_temple_journey/events/forest_temple_heart_sutra_event_001.ogg","duration_ms":132764,"role":"event","tags":["forest_temple","heart_sutra","mandarin","temple_right","distant"],"provenance_id":"commons_nyarlathotep1001_heart_sutra","cooldown_ms":540000}]
+    },
+    {
       "id":"hood_journey_bed","category":"travel","display_name_key":"source_hood_journey_bed","default_volume":0.52,"loop_mode":"crossfade",
       "continuous":[{"asset_id":"hood_journey_bed_001","path":"ambience/hood_journey/continuous/hood_journey_bed_001.ogg","duration_ms":106652,"crossfade_ms":8000,"role":"bed","tags":["hood","inner_city","night","traffic","stereo"],"provenance_id":"freesound_risto_alcinov_371250"}],"events":[]
     },

@@ -5,19 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'web/_headers'
-      - 'web/_routes.json'
-      - 'web/_worker.js'
-      - 'web/display-tools-v1.js'
-      - 'web/display-tools-v1.css'
-      - 'web/visitor-count-v1.js'
-      - 'web/player/index.html'
-      - 'web/player-v2.js'
-      - 'web/scene-audio-v2.js'
-      - 'web/train-journey-v1.js'
-      - 'web/remaining-journeys-v1.js'
-      - 'web/audio/scenes/**'
-      - 'web/sw.js'
+      - 'web/**'
       - '.github/workflows/production-web-smoke.yml'
 
 permissions:
@@ -37,37 +25,47 @@ jobs:
             if curl -fsS --max-time 10 -D /tmp/player.headers -o /tmp/player.html -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=4&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=17&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=18&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/scene-audio-v2.js?v=16&deploycheck=${GITHUB_SHA}" > /tmp/scene-audio.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=11&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=20&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=13&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=21&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=14&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/spacecraft.webp?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.webp \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/forest-temple.webp?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple.webp \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/credits/?deploycheck=${GITHUB_SHA}" > /tmp/credits.html \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/train_journey/train_journey_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/train-bed.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/ferry_journey/ferry_journey_arrival_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/ferry.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/spacecraft_journey/spacecraft_journey_transition_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-heart.ogg \
               && curl -sS --max-time 10 -D /tmp/api.headers -o /tmp/api.json -H 'Cache-Control: no-cache' "https://lullabyscene.com/api/visitors?deploycheck=${GITHUB_SHA}"; then
               if grep -q 'display-tools-v1.js?v=4' /tmp/player.html \
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
-                && grep -q 'player-v2.js?v=17' /tmp/player.html \
+                && grep -q 'player-v2.js?v=18' /tmp/player.html \
                 && grep -q 'scene-audio-v2.js?v=16' /tmp/player.html \
                 && grep -q 'train-journey-v1.js?v=11' /tmp/player.html \
-                && grep -q 'remaining-journeys-v1.js?v=20' /tmp/player.html \
-                && grep -q 'journey-background-v1.js?v=13' /tmp/player.html \
+                && grep -q 'remaining-journeys-v1.js?v=21' /tmp/player.html \
+                && grep -q 'journey-background-v1.js?v=14' /tmp/player.html \
                 && grep -q "TRAIN_ID='train_journey'" /tmp/train.js \
                 && grep -q 'makeCrossfadeLoopNode' /tmp/player.js \
                 && grep -q 'makeCrossfadeLoopNode' /tmp/scene-audio.js \
                 && grep -q 'ferry_journey' /tmp/remaining.js \
                 && grep -q 'spacecraft_journey' /tmp/remaining.js \
                 && grep -q 'submarine_journey' /tmp/remaining.js \
+                && grep -q 'forest_temple_journey' /tmp/remaining.js \
+                && grep -q "'forest_temple_journey','hood_journey'" /tmp/remaining.js \
                 && grep -q 'spacecraft_journey' /tmp/background.js \
+                && grep -q 'forest-temple' /tmp/background.js \
                 && test "$(wc -c < /tmp/spacecraft.webp)" -gt 10000 \
                 && test "$(head -c 4 /tmp/spacecraft.webp)" = 'RIFF' \
+                && test "$(wc -c < /tmp/forest-temple.webp)" -gt 10000 \
+                && test "$(head -c 4 /tmp/forest-temple.webp)" = 'RIFF' \
+                && grep -q 'Audio and Visual Credits' /tmp/credits.html \
                 && echo 'eb19517370cebb7921a15bd29764f16406cc442f011fa14ce01940312e743a72  /tmp/train-bed.ogg' | sha256sum -c - \
                 && echo '6439ec0e9029126670bcf94b576261e0dbf40e304300b27221e6268b58a51932  /tmp/ferry.ogg' | sha256sum -c - \
                 && echo 'b0eacd4243ab44f934c14884750b021dea9beb891bdf456a7b3c14ae3d1b19b0  /tmp/spacecraft.ogg' | sha256sum -c - \
                 && echo '2b2c9089ce20af23fae721d5b3007c5e579f26b5f3c1623df1b9329d020c41f7  /tmp/submarine.ogg' | sha256sum -c - \
+                && echo '5dbc0c735c7066b899408fab7f802d77d72a6e292628ab3bfb6053de3fa7df3d  /tmp/forest-temple-heart.ogg' | sha256sum -c - \
                 && grep -q '_resetBlackoutSlider' /tmp/display.js \
                 && grep -q 'openPendingWindow' /tmp/display.js \
                 && grep -q 'primeScreenDetails' /tmp/display.js \

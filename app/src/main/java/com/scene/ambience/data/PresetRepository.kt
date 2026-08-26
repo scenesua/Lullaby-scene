@@ -236,6 +236,12 @@ object BuiltInPresets {
                 "submarine_sonar" to 0.08f,
             ),
             preset(
+                "preset_simple_forest_temple", 0.62f, "low",
+                "forest" to 0.34f,
+                "birds" to 0.16f,
+                "forest_temple_bowl" to 0.09f,
+            ),
+            preset(
                 "preset_winter_lighthouse", 0.65f, "low",
                 "snowy_night" to 0.38f, "lighthouse" to 0.25f, "wind" to 0.1f,
             ),

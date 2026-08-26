@@ -825,6 +825,19 @@
       "attribution_required": false,
       "original_filename": "335891__yoyodaman234__bamboo-creaking-in-wind.mp3",
       "original_archive": null
+    },
+    {
+      "asset_id": "forest_temple_bowl_bed_001",
+      "source_name": null,
+      "creator": null,
+      "source_page": null,
+      "license": null,
+      "license_status": "unknown",
+      "attribution_required": false,
+      "original_filename": "161478__phluidbox__tibetan-singing-bowls.wav",
+      "original_archive": null,
+      "derived_from": "singing_bowl_loop_001",
+      "transformation": "Right-weighted stereo placement for the visible temple hall; 48 kHz Ogg Opus"
     }
   ]
 }

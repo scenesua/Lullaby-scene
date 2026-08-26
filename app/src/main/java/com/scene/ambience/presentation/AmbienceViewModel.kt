@@ -203,6 +203,8 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
                 SceneOrchestrator.FERRY_JOURNEY -> "scene_ferry_unavailable"
                 SceneOrchestrator.SPACECRAFT_JOURNEY -> "scene_spacecraft_unavailable"
                 SceneOrchestrator.SUBMARINE_JOURNEY -> "scene_submarine_unavailable"
+                SceneOrchestrator.HOOD_JOURNEY -> "scene_hood_unavailable"
+                SceneOrchestrator.FOREST_TEMPLE_JOURNEY -> "scene_forest_temple_unavailable"
                 else -> "scene_aircraft_unavailable"
             }
             _events.tryEmit(AmbienceUiEvent.ShowMessage(message))
