@@ -322,7 +322,7 @@ class SceneOrchestrator(
                         SOURCE_HOOD_HELICOPTER to EVENT_HOOD_HELICOPTER,
                         SOURCE_HOOD_GLASS to EVENT_HOOD_GLASS,
                     ).random(random)
-                    val distance = if (calm.first == SOURCE_HOOD_DOG) random.nextFloat() * .38f + .42f else random.nextFloat() * .75f + .25f
+                    val distance = if (calm.first == SOURCE_HOOD_DOG) random.nextFloat() * .51f + .45f else random.nextFloat() * .75f + .25f
                     triggerHoodEvent(calm.first, calm.second, distance, random)
                 }
             }
@@ -472,7 +472,7 @@ class SceneOrchestrator(
             SOURCE_HOOD_GUNSHOT -> .46f + close * .32f
             SOURCE_HOOD_SHOUT -> .42f + close * .36f
             SOURCE_HOOD_SIREN -> .48f + close * .18f
-            SOURCE_HOOD_DOG -> .72f + close * .60f
+            SOURCE_HOOD_DOG -> .82f + close * .50f
             else -> .55f + close * .65f
         }
         if (assetId != null) ManualEventAssetSelection.select(sourceId, assetId)
