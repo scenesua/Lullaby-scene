@@ -565,8 +565,8 @@ class SceneOrchestrator(
         val texture = 0.96f + 0.05f * m.turbulence
         val night = 1f - 0.10f * m.nightDepth
         val bedVolume = (rhythm * carriage * texture * night).coerceIn(0.30f, 0.68f)
-        val departureFade = journeyCrossfade(current.elapsedMs, plan.departureEndMs)
-        val arrivalFade = journeyCrossfade(current.elapsedMs, plan.arrivalStartMs)
+        val departureFade = journeyCrossfade(current.elapsedMs, plan.departureEndMs, TRAIN_DEPARTURE_CROSSFADE_MS)
+        val arrivalFade = journeyCrossfade(current.elapsedMs, plan.arrivalStartMs, TRAIN_ARRIVAL_CROSSFADE_MS)
         setVolumeIfChanged(SOURCE_TRAIN_DEPARTURE, 0.58f * departureFade.first)
         setVolumeIfChanged(
             SOURCE_TRAIN_BED,
@@ -597,13 +597,19 @@ class SceneOrchestrator(
         val texture = 0.96f + 0.04f * m.turbulence
         val night = 1f - 0.08f * m.nightDepth
         val desired = profile.requiredSources.associateWith { 0f }.toMutableMap()
-        val departureFade = journeyCrossfade(current.elapsedMs, plan.departureEndMs)
-        val arrivalFade = journeyCrossfade(current.elapsedMs, plan.arrivalStartMs)
-        desired[profile.departureSource] = maxOf(desired[profile.departureSource] ?: 0f, profile.departureVolume * departureFade.first)
-        profile.bedSources.forEach { (source, base) ->
-            desired[source] = maxOf(desired[source] ?: 0f, (base * presence * activity * texture * night).coerceIn(0.18f, 0.68f) * departureFade.second * arrivalFade.first)
+        val departureFade = journeyCrossfade(current.elapsedMs, plan.departureEndMs, profile.departureCrossfadeMs)
+        val arrivalFade = journeyCrossfade(current.elapsedMs, plan.arrivalStartMs, profile.arrivalCrossfadeMs)
+        val sharedBedSource = profile.departureSource == profile.arrivalSource && profile.departureSource in profile.bedSources
+        if (!sharedBedSource) {
+            desired[profile.departureSource] = maxOf(desired[profile.departureSource] ?: 0f, profile.departureVolume * departureFade.first)
         }
-        desired[profile.arrivalSource] = maxOf(desired[profile.arrivalSource] ?: 0f, profile.arrivalVolume * arrivalFade.second)
+        profile.bedSources.forEach { (source, base) ->
+            val transitionGain = if (sharedBedSource && source == profile.departureSource) 1f else departureFade.second * arrivalFade.first
+            desired[source] = maxOf(desired[source] ?: 0f, (base * presence * activity * texture * night).coerceIn(0.18f, 0.68f) * transitionGain)
+        }
+        if (!sharedBedSource) {
+            desired[profile.arrivalSource] = maxOf(desired[profile.arrivalSource] ?: 0f, profile.arrivalVolume * arrivalFade.second)
+        }
         profile.eventSource?.let {
             desired[it] = if (current.randomEventsEnabled) {
                 (profile.eventVolume * (0.65f + 0.35f * m.cabinActivity) * night).coerceAtLeast(0.03f)
@@ -671,6 +677,8 @@ class SceneOrchestrator(
         val phases: List<String>,
         val departureMs: Long,
         val arrivalMs: Long,
+        val departureCrossfadeMs: Long,
+        val arrivalCrossfadeMs: Long,
         val settleMinutes: Int = 10,
         val approachMinutes: Int = 10,
         val masterVolume: Float = 0.78f,
@@ -810,6 +818,8 @@ class SceneOrchestrator(
                 phases = listOf(STATE_FERRY_CAST_OFF, STATE_FERRY_LEAVING_HARBOR, STATE_FERRY_NIGHT_CROSSING, STATE_FERRY_HARBOR_APPROACH, STATE_FERRY_ARRIVAL),
                 departureMs = 128_667L,
                 arrivalMs = 98_065L,
+                departureCrossfadeMs = 13_000L,
+                arrivalCrossfadeMs = 11_000L,
                 settleMinutes = 12,
                 approachMinutes = 12,
                 defaultMacros = SceneMacroState(enginePresence = .56f, cabinActivity = .18f, turbulence = .30f, nightDepth = .80f),
@@ -822,6 +832,8 @@ class SceneOrchestrator(
                 phases = listOf(STATE_SPACECRAFT_DEPARTURE, STATE_SPACECRAFT_ORBITAL_SETTLE, STATE_SPACECRAFT_DEEP_DRIFT, STATE_SPACECRAFT_APPROACH, STATE_SPACECRAFT_DOCKING),
                 departureMs = 17_824L,
                 arrivalMs = 17_824L,
+                departureCrossfadeMs = 7_000L,
+                arrivalCrossfadeMs = 8_000L,
                 defaultMacros = SceneMacroState(enginePresence = .48f, cabinActivity = .12f, turbulence = .20f, nightDepth = .88f),
             ),
             AmbientJourneyProfile(
@@ -833,6 +845,8 @@ class SceneOrchestrator(
                 phases = listOf(STATE_SUBMARINE_DIVE, STATE_SUBMARINE_SETTLE, STATE_SUBMARINE_DEEP_CRUISE, STATE_SUBMARINE_ASCENT, STATE_SUBMARINE_SURFACE),
                 departureMs = 47_282L,
                 arrivalMs = 54_232L,
+                departureCrossfadeMs = 16_000L,
+                arrivalCrossfadeMs = 12_000L,
                 settleMinutes = 8,
                 approachMinutes = 8,
                 eventVolume = .14f,
@@ -857,6 +871,8 @@ class SceneOrchestrator(
                 phases = listOf(STATE_HOOD_SETTLING, STATE_HOOD_AFTER_HOURS, STATE_HOOD_DEEP_NIGHT, STATE_HOOD_STREET_STIRRING, STATE_HOOD_FIRST_LIGHT),
                 departureMs = 45_000L,
                 arrivalMs = 45_000L,
+                departureCrossfadeMs = 12_000L,
+                arrivalCrossfadeMs = 14_000L,
                 settleMinutes = 10,
                 approachMinutes = 10,
                 masterVolume = .80f,
@@ -873,6 +889,8 @@ class SceneOrchestrator(
         }
 
         private const val TICK_MS = 1_000L
+        private const val TRAIN_DEPARTURE_CROSSFADE_MS = 12_000L
+        private const val TRAIN_ARRIVAL_CROSSFADE_MS = 10_000L
         internal const val JOURNEY_CROSSFADE_MS = 8_000L
     }
 }
