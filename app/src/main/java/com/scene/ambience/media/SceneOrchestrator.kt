@@ -49,12 +49,13 @@ class SceneOrchestrator(
     private var hoodEventJob: Job? = null
     private var hoodTrafficJob: Job? = null
     private var hoodLabelJob: Job? = null
+    private var templeEventJob: Job? = null
     private var scheduleSeed: Long = 0L
 
     fun start(sceneId: String, totalDurationMinutes: Int): Boolean = when (sceneId) {
         PASSENGER_AIRCRAFT -> startAircraft(totalDurationMinutes)
         TRAIN_JOURNEY -> startTrain(totalDurationMinutes)
-        FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> startAmbientJourney(sceneId, totalDurationMinutes)
+        FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY, FOREST_TEMPLE_JOURNEY -> startAmbientJourney(sceneId, totalDurationMinutes)
         else -> false
     }
 
@@ -171,6 +172,7 @@ class SceneOrchestrator(
         engine.play()
         job = scope.launch { runSceneClock() }
         if (sceneId == HOOD_JOURNEY && _state.value.randomEventsEnabled) startHoodEvents()
+        if (sceneId == FOREST_TEMPLE_JOURNEY && _state.value.randomEventsEnabled) startTempleEvents()
         return true
     }
 
@@ -199,6 +201,12 @@ class SceneOrchestrator(
                 hoodTrafficJob = null
             }
         }
+        if (current.sceneId == FOREST_TEMPLE_JOURNEY) {
+            if (enabled) startTempleEvents() else {
+                templeEventJob?.cancel()
+                templeEventJob = null
+            }
+        }
     }
 
     fun release() = stopScene()
@@ -210,7 +218,7 @@ class SceneOrchestrator(
         val endMs = when (current.sceneId) {
             PASSENGER_AIRCRAFT -> AircraftJourneyTimelineBuilder.build(duration, scheduleSeed).also { timeline = it }.journeyEndMs
             TRAIN_JOURNEY -> TrainJourneyTimelineBuilder.build(duration).also { trainTimeline = it }.journeyEndMs
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientProfile?.buildTimeline(duration)?.also { ambientTimeline = it }?.journeyEndMs
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY, FOREST_TEMPLE_JOURNEY -> ambientProfile?.buildTimeline(duration)?.also { ambientTimeline = it }?.journeyEndMs
             else -> return
         } ?: return
         _state.value = current.copy(
@@ -227,7 +235,7 @@ class SceneOrchestrator(
         val endMs = when (current.sceneId) {
             PASSENGER_AIRCRAFT -> timeline?.journeyEndMs
             TRAIN_JOURNEY -> trainTimeline?.journeyEndMs
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientTimeline?.journeyEndMs
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY, FOREST_TEMPLE_JOURNEY -> ambientTimeline?.journeyEndMs
             else -> null
         } ?: return
         val target = elapsedMs.coerceIn(0L, endMs)
@@ -258,13 +266,13 @@ class SceneOrchestrator(
                 STATE_TRAIN_ARRIVAL to plan.arrivalStartMs,
                 STATE_ARRIVED to plan.journeyEndMs,
             ) }
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientTimeline?.phaseSteps()
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY, FOREST_TEMPLE_JOURNEY -> ambientTimeline?.phaseSteps()
             else -> null
         } ?: return
         val phase = when (current.sceneId) {
             PASSENGER_AIRCRAFT -> timeline?.phaseAt(current.elapsedMs)
             TRAIN_JOURNEY -> trainTimeline?.phaseAt(current.elapsedMs)
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientTimeline?.phaseAt(current.elapsedMs)
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY, FOREST_TEMPLE_JOURNEY -> ambientTimeline?.phaseAt(current.elapsedMs)
             else -> null
         } ?: return
         val index = phases.indexOfFirst { it.first == phase }.coerceAtLeast(0)
@@ -295,6 +303,8 @@ class SceneOrchestrator(
         hoodTrafficJob = null
         hoodLabelJob?.cancel()
         hoodLabelJob = null
+        templeEventJob?.cancel()
+        templeEventJob = null
         ambientProfile?.manualEvents?.keys?.forEach { engine.setManualEventSource(it, false) }
     }
 
@@ -336,6 +346,47 @@ class SceneOrchestrator(
                     triggerHoodEvent(SOURCE_HOOD_CAR_PASS, EVENT_HOOD_CAR_PASS, trafficRandom.nextFloat() * .76f + .12f, trafficRandom)
                 }
                 delay(trafficRandom.nextLong(75_000L, 260_001L))
+            }
+        }
+    }
+
+    /** One queue owns every temple event, so scripture, moktak and footsteps never overlap. */
+    private fun startTempleEvents() {
+        templeEventJob?.cancel()
+        val random = Random(System.nanoTime() xor 0x73A91C2DL)
+        templeEventJob = scope.launch {
+            while (isActive && _state.value.sceneId == FOREST_TEMPLE_JOURNEY) {
+                delay(random.nextLong(210_000L, 540_001L))
+                val snapshot = _state.value
+                if (!snapshot.randomEventsEnabled || engine.snapshot().playbackState != PlaybackState.PLAYING) continue
+                val phase = ambientTimeline?.phaseAt(snapshot.elapsedMs)
+                if (phase !in listOf(STATE_FOREST_TEMPLE_COURTYARD, STATE_FOREST_TEMPLE_MEDITATION, STATE_FOREST_TEMPLE_RETURN)) continue
+                val candidates = listOf(
+                    SOURCE_FOREST_TEMPLE_MOKTAK to EVENT_FOREST_TEMPLE_MOKTAK,
+                    SOURCE_FOREST_TEMPLE_GRAVEL to EVENT_FOREST_TEMPLE_GRAVEL,
+                    SOURCE_FOREST_TEMPLE_MOKTAK to EVENT_FOREST_TEMPLE_MOKTAK,
+                    SOURCE_FOREST_TEMPLE_GRAVEL to EVENT_FOREST_TEMPLE_GRAVEL,
+                    SOURCE_FOREST_TEMPLE_HEART_SUTRA to EVENT_FOREST_TEMPLE_HEART_SUTRA,
+                ).filter { isSourceAvailable(it.first) }
+                if (candidates.isEmpty()) continue
+                val (sourceId, eventId) = candidates.random(random)
+                val fromTemple = sourceId != SOURCE_FOREST_TEMPLE_GRAVEL
+                val scale = when (sourceId) {
+                    SOURCE_FOREST_TEMPLE_MOKTAK -> .90f
+                    SOURCE_FOREST_TEMPLE_GRAVEL -> .72f
+                    else -> .52f
+                }
+                val pan = if (fromTemple) .48f else random.nextFloat() * .56f - .28f
+                if (!engine.triggerEventNow(sourceId, scale, pan)) continue
+                _state.value = _state.value.copy(activeEventId = eventId)
+                val durationMs = when (sourceId) {
+                    SOURCE_FOREST_TEMPLE_MOKTAK -> 12_733L
+                    SOURCE_FOREST_TEMPLE_GRAVEL -> 26_907L
+                    SOURCE_FOREST_TEMPLE_HEART_SUTRA -> 132_764L
+                    else -> 15_000L
+                }
+                delay(durationMs)
+                if (_state.value.activeEventId == eventId) _state.value = _state.value.copy(activeEventId = null)
             }
         }
     }
@@ -509,7 +560,7 @@ class SceneOrchestrator(
             val endMs = when (_state.value.sceneId) {
                 PASSENGER_AIRCRAFT -> timeline?.journeyEndMs
                 TRAIN_JOURNEY -> trainTimeline?.journeyEndMs
-                FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> ambientTimeline?.journeyEndMs
+                FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY, FOREST_TEMPLE_JOURNEY -> ambientTimeline?.journeyEndMs
                 else -> null
             } ?: return
             val current = _state.value
@@ -528,7 +579,7 @@ class SceneOrchestrator(
         when (current.sceneId) {
             PASSENGER_AIRCRAFT -> applyAircraftFrame(current)
             TRAIN_JOURNEY -> applyTrainFrame(current)
-            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY -> applyAmbientFrame(current)
+            FERRY_JOURNEY, SPACECRAFT_JOURNEY, SUBMARINE_JOURNEY, HOOD_JOURNEY, FOREST_TEMPLE_JOURNEY -> applyAmbientFrame(current)
         }
     }
 
@@ -582,6 +633,7 @@ class SceneOrchestrator(
         val event = when {
             !current.randomEventsEnabled -> null
             current.sceneId == HOOD_JOURNEY && current.activeEventId?.startsWith("hood_event_") == true -> current.activeEventId
+            current.sceneId == FOREST_TEMPLE_JOURNEY && current.activeEventId?.startsWith("forest_temple_event_") == true -> current.activeEventId
             phase == profile.phases[0] -> "${profile.sceneId}_departure"
             phase == profile.phases[4] -> "${profile.sceneId}_arrival"
             phase == profile.phases[2] -> profile.eventSource
@@ -732,6 +784,7 @@ class SceneOrchestrator(
         const val SPACECRAFT_JOURNEY = "spacecraft_journey"
         const val SUBMARINE_JOURNEY = "submarine_journey"
         const val HOOD_JOURNEY = "hood_journey"
+        const val FOREST_TEMPLE_JOURNEY = "forest_temple_journey"
         const val SOURCE_AIRCRAFT = "aircraft_cabin"
         const val SOURCE_VENTILATION = "ventilation" // kept for recipe/protocol compatibility
         const val SOURCE_TRAIN_DEPARTURE = "train_journey_departure"
@@ -758,6 +811,12 @@ class SceneOrchestrator(
         const val SOURCE_HOOD_CAR_DOOR = "hood_car_door"
         const val SOURCE_HOOD_HELICOPTER = "hood_helicopter"
         const val SOURCE_HOOD_DOG = "hood_dog"
+        const val SOURCE_FOREST = "forest"
+        const val SOURCE_BIRDS = "birds"
+        const val SOURCE_FOREST_TEMPLE_BOWL = "forest_temple_bowl"
+        const val SOURCE_FOREST_TEMPLE_MOKTAK = "forest_temple_moktak"
+        const val SOURCE_FOREST_TEMPLE_GRAVEL = "forest_temple_gravel"
+        const val SOURCE_FOREST_TEMPLE_HEART_SUTRA = "forest_temple_heart_sutra"
         const val ASSET_HOOD_GUNSHOT_BASIC = "hood_gunshot_event_001"
         const val ASSET_HOOD_GUNSHOT_SHOTGUN = "hood_gunshot_shotgun_event_004"
 
@@ -807,6 +866,14 @@ class SceneOrchestrator(
         const val EVENT_HOOD_CAR_DOOR = "hood_event_car_door"
         const val EVENT_HOOD_HELICOPTER = "hood_event_helicopter"
         const val EVENT_HOOD_DOG = "hood_event_dog"
+        const val EVENT_FOREST_TEMPLE_MOKTAK = "forest_temple_event_moktak"
+        const val EVENT_FOREST_TEMPLE_GRAVEL = "forest_temple_event_gravel"
+        const val EVENT_FOREST_TEMPLE_HEART_SUTRA = "forest_temple_event_heart_sutra"
+        const val STATE_FOREST_TEMPLE_PATH = "forest_temple_path"
+        const val STATE_FOREST_TEMPLE_COURTYARD = "forest_temple_courtyard"
+        const val STATE_FOREST_TEMPLE_MEDITATION = "forest_temple_meditation"
+        const val STATE_FOREST_TEMPLE_RETURN = "forest_temple_return"
+        const val STATE_FOREST_TEMPLE_LEAVE = "forest_temple_leave"
         const val STATE_ARRIVED = "arrived"
 
         private val AMBIENT_PROFILES = listOf(
@@ -880,7 +947,29 @@ class SceneOrchestrator(
                 arrivalVolume = .42f,
                 defaultMacros = SceneMacroState(enginePresence = .58f, cabinActivity = .46f, turbulence = .55f, nightDepth = .72f),
             ),
-        ).associateBy { it.sceneId }
+            AmbientJourneyProfile(
+                sceneId = FOREST_TEMPLE_JOURNEY,
+                departureSource = SOURCE_FOREST,
+                bedSources = mapOf(SOURCE_FOREST to .34f, SOURCE_BIRDS to .16f, SOURCE_FOREST_TEMPLE_BOWL to .09f),
+                arrivalSource = SOURCE_FOREST,
+                manualEvents = mapOf(
+                    SOURCE_FOREST_TEMPLE_MOKTAK to .10f,
+                    SOURCE_FOREST_TEMPLE_GRAVEL to .08f,
+                    SOURCE_FOREST_TEMPLE_HEART_SUTRA to .05f,
+                ),
+                phases = listOf(STATE_FOREST_TEMPLE_PATH, STATE_FOREST_TEMPLE_COURTYARD, STATE_FOREST_TEMPLE_MEDITATION, STATE_FOREST_TEMPLE_RETURN, STATE_FOREST_TEMPLE_LEAVE),
+                departureMs = 90_000L,
+                arrivalMs = 90_000L,
+                departureCrossfadeMs = 14_000L,
+                arrivalCrossfadeMs = 12_000L,
+                settleMinutes = 10,
+                approachMinutes = 10,
+                masterVolume = .76f,
+                departureVolume = .34f,
+                arrivalVolume = .30f,
+                defaultMacros = SceneMacroState(enginePresence = .58f, cabinActivity = .30f, turbulence = .24f, nightDepth = .42f),
+            ),
+        ).sortedBy { it.sceneId == HOOD_JOURNEY }.associateBy { it.sceneId }
 
         fun requiredSourcesFor(sceneId: String): List<String> = when (sceneId) {
             PASSENGER_AIRCRAFT -> listOf(SOURCE_AIRCRAFT)

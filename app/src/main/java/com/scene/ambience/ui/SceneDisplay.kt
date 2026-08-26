@@ -194,6 +194,7 @@ private fun visualAsset(sceneId: String?, presetId: String?): String {
         SceneOrchestrator.SPACECRAFT_JOURNEY -> "spacecraft"
         SceneOrchestrator.SUBMARINE_JOURNEY -> "submarine"
         SceneOrchestrator.HOOD_JOURNEY -> "hood"
+        SceneOrchestrator.FOREST_TEMPLE_JOURNEY -> "forest-temple"
         SceneOrchestrator.PASSENGER_AIRCRAFT -> "aircraft"
         else -> null
     }
@@ -214,6 +215,7 @@ private fun visualAsset(sceneId: String?, presetId: String?): String {
         "preset_simple_ferry", "preset_harbor_cabin" -> "visuals/journeys/ferry.webp"
         "preset_simple_spacecraft" -> "visuals/journeys/spacecraft.webp"
         "preset_simple_submarine" -> "visuals/journeys/submarine.webp"
+        "preset_simple_forest_temple" -> "visuals/journeys/forest-temple.webp"
         else -> "visuals/journeys/aircraft.webp"
     }
 }

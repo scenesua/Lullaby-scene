@@ -75,6 +75,8 @@ object AmbienceStrings {
         "scene_ferry_unavailable" -> context.getString(R.string.scene_ferry_unavailable)
         "scene_spacecraft_unavailable" -> context.getString(R.string.scene_spacecraft_unavailable)
         "scene_submarine_unavailable" -> context.getString(R.string.scene_submarine_unavailable)
+        "scene_hood_unavailable" -> context.getString(R.string.scene_hood_unavailable)
+        "scene_forest_temple_unavailable" -> context.getString(R.string.scene_forest_temple_unavailable)
         else -> null
     }
 

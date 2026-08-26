@@ -9,7 +9,8 @@
     spacecraft_journey:'spacecraft',
     ferry_journey:'ferry',
     submarine_journey:'submarine',
-    hood_journey:'hood'
+    hood_journey:'hood',
+    forest_temple_journey:'forest-temple'
   };
   const presetScenes=window.LullabyPresetVisuals||{};
   const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
