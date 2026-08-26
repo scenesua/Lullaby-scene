@@ -6,7 +6,7 @@
     {"id":"wind","name":"Wind","category":"nature","kind":"continuous","url":"/audio/wind.ogg","defaultVolume":30},
     {"id":"ocean","name":"Ocean","category":"nature","kind":"continuous","url":"/audio/ocean.ogg","defaultVolume":35},
     {"id":"stream","name":"Stream","category":"nature","kind":"continuous","url":"/audio/stream.ogg","defaultVolume":30},
-    {"id":"forest","name":"Forest","category":"nature","kind":"continuous","url":"/audio/forest.ogg","defaultVolume":30},
+    {"id":"forest","name":"Forest","category":"nature","kind":"continuous","url":"/audio/forest.ogg?v=2","defaultVolume":30},
     {"id":"bamboo_forest","name":"Bamboo Forest","category":"nature","kind":"continuous","url":"/audio/bamboo_forest.ogg","defaultVolume":30},
     {"id":"birds","name":"Birds","category":"nature","kind":"continuous","url":"/audio/birds.ogg","defaultVolume":30},
     {"id":"crickets","name":"Crickets","category":"nature","kind":"continuous","url":"/audio/crickets.ogg","defaultVolume":30},
