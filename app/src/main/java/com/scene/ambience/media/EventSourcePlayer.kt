@@ -120,7 +120,7 @@ class EventSourcePlayer(
     }
 
     /** Play one loaded event immediately for scene-authored causal sequences. */
-    private fun playNow(volumeScale: Float, pan: Float): Int {
+    private fun playNow(volumeScale: Float, pan: Float, rate: Float = 1f): Int {
         if (released || !isActive()) return 0
         val preferredAssetId = ManualEventAssetSelection.consume(sourceId)
         val sampleIndex = if (preferredAssetId != null) {
@@ -135,7 +135,7 @@ class EventSourcePlayer(
         val volume = (baseGain * volumeScale).coerceIn(0f, 1f)
         if (volume <= 0f) return 0
         val (left, right) = panVolumes(volume, pan)
-        val streamId = soundPool.play(sample.sampleId, left, right, 1, 0, 1f)
+        val streamId = soundPool.play(sample.sampleId, left, right, 1, 0, rate.coerceIn(.5f, 2f))
         if (streamId != 0) {
             lastSample = sampleIndex
             lastPlayedAtMs[sample.asset.assetId] = SystemClock.elapsedRealtime()
@@ -155,26 +155,29 @@ class EventSourcePlayer(
         endPan: Float,
         durationMs: Long,
     ): Boolean {
-        val streamId = playNow(startVolumeScale, startPan)
+        val streamId = playNow(startVolumeScale, startPan, 1.08f)
         if (streamId == 0) return false
         lateinit var motion: Job
         motion = scope.launch {
             val startedAt = SystemClock.elapsedRealtime()
             while (currentCoroutineContext().isActive && !released) {
                 val progress = ((SystemClock.elapsedRealtime() - startedAt).toFloat() / durationMs).coerceIn(0f, 1f)
-                val (pan, scale) = when {
+                val (pan, scale, rate) = when {
                     progress <= .40f -> {
                         val local = progress / .40f
-                        (startPan + (passPan - startPan) * local) to (startVolumeScale + (passVolumeScale - startVolumeScale) * local)
+                        Triple(startPan + (passPan - startPan) * local, startVolumeScale + (passVolumeScale - startVolumeScale) * local, 1.08f - .08f * local)
                     }
                     progress <= .78f -> {
                         val local = (progress - .40f) / .38f
-                        (passPan + (endPan - passPan) * local) to (passVolumeScale + (endVolumeScale - passVolumeScale) * local)
+                        Triple(passPan + (endPan - passPan) * local, passVolumeScale + (endVolumeScale - passVolumeScale) * local, 1f - .07f * local)
                     }
-                    else -> endPan to endVolumeScale
+                    else -> Triple(endPan, endVolumeScale, .93f)
                 }
                 val (left, right) = panVolumes((baseGain * scale).coerceIn(0f, 1f), pan)
-                runCatching { soundPool.setVolume(streamId, left, right) }
+                runCatching {
+                    soundPool.setVolume(streamId, left, right)
+                    soundPool.setRate(streamId, rate)
+                }
                 if (progress >= 1f) break
                 delay(100L)
             }
