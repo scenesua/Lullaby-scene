@@ -1,12 +1,15 @@
 import fs from 'node:fs';
-import {chromium} from 'playwright-core';
+import {chromium,firefox,webkit} from 'playwright-core';
 
+const browserName=(process.env.BROWSER||'chromium').toLowerCase();
+const browserType={chromium,firefox,webkit}[browserName];
+if(!browserType)throw new Error(`Unsupported browser: ${browserName}`);
 const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].filter(Boolean);
-const executablePath=candidates.find(path=>fs.existsSync(path));
-if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
+const executablePath=browserName==='chromium'?candidates.find(path=>fs.existsSync(path)):undefined;
+if(browserName==='chromium'&&!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
 const baseUrl=(process.env.BASE_URL||'http://127.0.0.1:4173').replace(/\/$/,'');
 
-const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox']});
+const browser=await browserType.launch(browserName==='chromium'?{headless:true,executablePath,args:['--no-sandbox']}:{headless:true});
 const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
 const page=await context.newPage();
 const errors=[];
@@ -160,4 +163,4 @@ if(!await page.locator('[data-panel="settings"]').evaluate(el=>el.classList.cont
 await page.evaluate(()=>window.__mutationObserver?.disconnect());
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log(`13-locale + Android shell + blackout placement + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);
+console.log(`${browserName}: 13-locale + mobile shell + blackout placement + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);
