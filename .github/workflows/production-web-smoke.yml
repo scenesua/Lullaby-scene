@@ -35,10 +35,10 @@ jobs:
             if curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" > /tmp/player.html \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=4&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=16&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/scene-audio-v2.js?v=15&deploycheck=${GITHUB_SHA}" > /tmp/scene-audio.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=9&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=14&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=17&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/scene-audio-v2.js?v=16&deploycheck=${GITHUB_SHA}" > /tmp/scene-audio.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=11&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=20&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=13&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/spacecraft.webp?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.webp \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/train_journey/train_journey_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/train-bed.ogg \
@@ -47,10 +47,10 @@ jobs:
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg; then
               if grep -q 'display-tools-v1.js?v=4' /tmp/player.html \
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
-                && grep -q 'player-v2.js?v=16' /tmp/player.html \
-                && grep -q 'scene-audio-v2.js?v=15' /tmp/player.html \
-                && grep -q 'train-journey-v1.js?v=9' /tmp/player.html \
-                && grep -q 'remaining-journeys-v1.js?v=14' /tmp/player.html \
+                && grep -q 'player-v2.js?v=17' /tmp/player.html \
+                && grep -q 'scene-audio-v2.js?v=16' /tmp/player.html \
+                && grep -q 'train-journey-v1.js?v=11' /tmp/player.html \
+                && grep -q 'remaining-journeys-v1.js?v=20' /tmp/player.html \
                 && grep -q 'journey-background-v1.js?v=13' /tmp/player.html \
                 && grep -q "TRAIN_ID='train_journey'" /tmp/train.js \
                 && grep -q 'makeCrossfadeLoopNode' /tmp/player.js \
