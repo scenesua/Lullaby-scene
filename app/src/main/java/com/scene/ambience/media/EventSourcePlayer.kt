@@ -146,7 +146,15 @@ class EventSourcePlayer(
 
     fun triggerNow(volumeScale: Float = 1f, pan: Float = 0f): Boolean = playNow(volumeScale, pan) != 0
 
-    fun triggerMoving(startVolumeScale: Float, startPan: Float, endVolumeScale: Float, endPan: Float, durationMs: Long): Boolean {
+    fun triggerPassing(
+        startVolumeScale: Float,
+        startPan: Float,
+        passVolumeScale: Float,
+        passPan: Float,
+        endVolumeScale: Float,
+        endPan: Float,
+        durationMs: Long,
+    ): Boolean {
         val streamId = playNow(startVolumeScale, startPan)
         if (streamId == 0) return false
         lateinit var motion: Job
@@ -154,8 +162,17 @@ class EventSourcePlayer(
             val startedAt = SystemClock.elapsedRealtime()
             while (currentCoroutineContext().isActive && !released) {
                 val progress = ((SystemClock.elapsedRealtime() - startedAt).toFloat() / durationMs).coerceIn(0f, 1f)
-                val pan = startPan + (endPan - startPan) * progress
-                val scale = startVolumeScale + (endVolumeScale - startVolumeScale) * progress
+                val (pan, scale) = when {
+                    progress <= .40f -> {
+                        val local = progress / .40f
+                        (startPan + (passPan - startPan) * local) to (startVolumeScale + (passVolumeScale - startVolumeScale) * local)
+                    }
+                    progress <= .78f -> {
+                        val local = (progress - .40f) / .38f
+                        (passPan + (endPan - passPan) * local) to (passVolumeScale + (endVolumeScale - passVolumeScale) * local)
+                    }
+                    else -> endPan to endVolumeScale
+                }
                 val (left, right) = panVolumes((baseGain * scale).coerceIn(0f, 1f), pan)
                 runCatching { soundPool.setVolume(streamId, left, right) }
                 if (progress >= 1f) break

@@ -52,6 +52,7 @@ object AmbienceStrings {
         UiCategory.INDOOR -> context.getString(R.string.category_indoor)
         UiCategory.TRAVEL -> context.getString(R.string.category_travel)
         UiCategory.OTHER -> context.getString(R.string.category_other)
+        UiCategory.JOURNEY_EVENTS -> context.getString(R.string.category_journey_events)
     }
 
     fun densityLabel(context: Context, density: String): String = when (density) {

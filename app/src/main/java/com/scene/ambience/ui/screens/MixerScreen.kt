@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
@@ -42,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.scene.ambience.R
 import com.scene.ambience.data.model.PlaybackState
@@ -243,6 +245,7 @@ private fun CategoryHeader(
                 UiCategory.INDOOR -> Icons.Filled.Home
                 UiCategory.TRAVEL -> Icons.Filled.Train
                 UiCategory.OTHER -> Icons.Filled.MoreHoriz
+                UiCategory.JOURNEY_EVENTS -> Icons.Filled.Star
             },
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
@@ -286,5 +289,6 @@ private fun SourceRow(
         unavailableText = unavailableText,
         onVolumeChangeFinished = { viewModel.setSourceVolume(def.sourceId.id, it) },
         onToggleMuted = { viewModel.setSourceMuted(def.sourceId.id, !muted) },
+        accentColor = if (def.uiCategory == UiCategory.JOURNEY_EVENTS && def.sourceId.id.startsWith("hood_")) Color(0xFFD9AA45) else null,
     )
 }

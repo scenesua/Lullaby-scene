@@ -157,7 +157,7 @@
       "events":[{"asset_id":"hood_helicopter_event_001","path":"ambience/hood_journey/events/hood_helicopter_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","helicopter","distant"],"provenance_id":"freesound_nox_sound_546805","cooldown_ms":480000}]
     },
     {
-      "id":"hood_dog","category":"travel","display_name_key":"source_hood_dog","default_volume":0.14,"loop_mode":"event","continuous":[],
+      "id":"hood_dog","category":"travel","display_name_key":"source_hood_dog","default_volume":0.22,"loop_mode":"event","continuous":[],
       "events":[{"asset_id":"hood_dog_event_001","path":"ambience/hood_journey/events/hood_dog_event_001.ogg","duration_ms":8007,"role":"event","tags":["hood","dog","neighborhood"],"provenance_id":"freesound_wateenfotos_749352","cooldown_ms":180000}]
     }
   ]

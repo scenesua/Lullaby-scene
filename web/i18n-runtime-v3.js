@@ -48,10 +48,11 @@
   function localizeMixer(){
     const R=window.LullabyPlayerRuntime;
     document.querySelectorAll('[data-filter]').forEach(btn=>setText(btn,term(btn.dataset.filter,btn.textContent)));
+    document.querySelectorAll('[data-mixer-group-title]').forEach(el=>setText(el,term('journeyEvents','Journey events')));
     document.querySelectorAll('#mixerGrid [data-source]').forEach(row=>{
       const id=row.dataset.source,def=R?.sourceById?.[id],name=sourceName(id,id),on=row.classList.contains('on');
       setText(row.querySelector('strong'),name);
-      const meta=row.querySelector('span');if(meta&&def)setText(meta,`${term(def.category,def.category)} · ${def.kind==='event'?term('event','event'):term('continuous','continuous')}`);
+      const meta=row.querySelector('span');if(meta&&def)setText(meta,row.classList.contains('journey-event')?term('journeyEvents','Journey events'):`${term(def.category,def.category)} · ${def.kind==='event'?term('event','event'):term('continuous','continuous')}`);
       setText(row.querySelector('[data-source-toggle]'),on?term('on','On'):term('off','Off'));
       row.querySelector('[data-source-volume]')?.setAttribute('aria-label',`${name} ${copy('volume')}`);
     });
@@ -106,5 +107,5 @@
   ['#mixerGrid','#builtInPresets','#userPresets','#simpleQuickMixerList','#inspectorMixerList'].forEach(watchDirect);
   const phaseTimer=setInterval(localizeJourney,1000);window.addEventListener('pagehide',()=>clearInterval(phaseTimer),{once:true});
   apply();setTimeout(apply,120);setTimeout(apply,650);
-  window.LullabyCatalogI18n={sourceName,presetName,apply,phaseName:key=>PHASES[language()]?.[key]||PHASES.en[key]||key};
+  window.LullabyCatalogI18n={sourceName,presetName,term,apply,phaseName:key=>PHASES[language()]?.[key]||PHASES.en[key]||key};
 })();
