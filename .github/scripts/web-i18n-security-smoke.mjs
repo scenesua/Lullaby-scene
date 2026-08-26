@@ -1,22 +1,35 @@
 import fs from 'node:fs';
-import {chromium} from 'playwright-core';
+import {chromium,firefox,webkit} from 'playwright-core';
 
+const browserName=(process.env.BROWSER||'chromium').toLowerCase();
+const browserType={chromium,firefox,webkit}[browserName];
+if(!browserType)throw new Error(`Unsupported browser: ${browserName}`);
 const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].filter(Boolean);
-const executablePath=candidates.find(path=>fs.existsSync(path));
-if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
+const executablePath=browserName==='chromium'?candidates.find(path=>fs.existsSync(path)):undefined;
+if(browserName==='chromium'&&!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
+const baseUrl=(process.env.BASE_URL||'http://127.0.0.1:4173').replace(/\/$/,'');
 
-const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox']});
+const browser=await browserType.launch(browserName==='chromium'?{headless:true,executablePath,args:['--no-sandbox']}:{headless:true});
 const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
 const page=await context.newPage();
 const errors=[];
 page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
+await page.addInitScript(()=>localStorage.setItem('lullaby-user-presets',JSON.stringify([
+  {id:'user_security_test',name:'<img id="preset-xss-probe" src=x onerror=alert(1)>',mix:{}},
+  {id:'user_bad\" autofocus onfocus=alert(1) x=\"',name:'Injected saved scene',mix:{}}
+])));
 
-await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
+await page.goto(`${baseUrl}/player/`,{waitUntil:'networkidle'});
 await page.waitForSelector('#builtInPresets [data-preset="preset_rainy_cafe"]',{state:'attached'});
 await page.waitForSelector('[data-quick-source="rain"]',{state:'attached'});
 await page.waitForTimeout(450);
+
+const savedPresetIds=await page.locator('#userPresets [data-user-preset]').evaluateAll(nodes=>nodes.map(node=>node.dataset.userPreset));
+if(JSON.stringify(savedPresetIds)!==JSON.stringify(['user_security_test']))throw new Error(`unsafe saved preset ID was rendered: ${JSON.stringify(savedPresetIds)}`);
+if(await page.locator('#preset-xss-probe').count())throw new Error('saved preset name was parsed as HTML');
+if(await page.locator('#userPresets [data-user-preset] strong').textContent()!=='<img id="preset-xss-probe" src=x onerror=alert(1)>')throw new Error('saved preset name was not preserved as text');
 
 async function text(selector){return(await page.locator(selector).first().textContent())?.trim()}
 async function expectText(selector,expected){const actual=await text(selector);if(actual!==expected)throw new Error(`${selector}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)}
@@ -150,4 +163,4 @@ if(!await page.locator('[data-panel="settings"]').evaluate(el=>el.classList.cont
 await page.evaluate(()=>window.__mutationObserver?.disconnect());
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log(`13-locale + Android shell + blackout placement + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);
+console.log(`${browserName}: 13-locale + mobile shell + blackout placement + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);

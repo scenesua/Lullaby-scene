@@ -13,7 +13,7 @@ page.on('pageerror',error=>{if(!benignAbort(error))errors.push(String(error))});
 page.on('console',message=>{if(message.type()==='error'&&!benignAbort(message.text()))errors.push(message.text())});
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===50);
+await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===54);
 
 await page.locator('[data-view="mixer"]').first().click();await page.waitForTimeout(120);
 const wind='#mixerGrid [data-source="wind"]';

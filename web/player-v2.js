@@ -8,7 +8,7 @@ let sceneNode=null,sceneTimer=null,sceneStartedAt=0,pausedAt=0,scenePlaying=fals
 const macro={engine:.55,activity:.22,turbulence:.12,night:.68};
 let sleepTimerEnd=0,sleepTimerTick=null,sleepFadeSeconds=30;
 let deferredInstall=null;
-const journeyEventIds=new Set(['aircraft_chime','train_rail_event','ferry_wave_event','spacecraft_servo_event','submarine_sonar','hood_gunshot','hood_siren','hood_glass','hood_shout','hood_footsteps','hood_car_pass','hood_car_door','hood_helicopter','hood_dog']);
+const journeyEventIds=new Set(['aircraft_chime','train_rail_event','ferry_wave_event','spacecraft_servo_event','submarine_sonar','hood_gunshot','hood_siren','hood_glass','hood_shout','hood_footsteps','hood_car_pass','hood_car_door','hood_helicopter','hood_dog','forest_temple_moktak','forest_temple_gravel','forest_temple_heart_sutra']);
 const hoodJourneyEventIds=new Set([...journeyEventIds].filter(id=>id.startsWith('hood_')));
 
 const builtinPresets=[
@@ -33,6 +33,7 @@ const builtinPresets=[
  {id:'preset_simple_ferry',name:'Night Ferry · Simple',master:.65,mix:{ferry_journey_bed:.46}},
  {id:'preset_simple_spacecraft',name:'Spacecraft Drift · Simple',master:.62,mix:{spacecraft_journey_bed:.48}},
  {id:'preset_simple_submarine',name:'Submarine Voyage · Simple',master:.62,mix:{submarine_journey_engine_bed:.32,submarine_journey_water_bed:.34,submarine_sonar:.08}},
+ {id:'preset_simple_forest_temple',name:'Forest Temple · Simple',master:.62,mix:{forest:.34,birds:.16,singing_bowl:.09}},
  {id:'preset_winter_lighthouse',name:'Winter Lighthouse',master:.65,mix:{snowy_night:.38,lighthouse:.25,wind:.1}},
  {id:'preset_harbor_cabin',name:'Harbor Cabin',master:.65,mix:{ferry_journey_bed:.35,ocean:.22,lighthouse:.14}},
  {id:'preset_polar_night_train',name:'Polar Night Train',master:.65,mix:{train_journey_bed:.38,snowy_night:.28,brown_noise:.1}}
@@ -49,7 +50,7 @@ const presetVisuals={
  preset_fan_room:'/assets/simple-scenes/fan-room.webp',preset_winter_lighthouse:'/assets/simple-scenes/winter-lighthouse.webp',
  preset_train_journey:'/assets/journeys/train.webp',preset_simple_train:'/assets/journeys/train.webp',preset_polar_night_train:'/assets/journeys/train.webp',
  preset_simple_aircraft:'/assets/journeys/aircraft.webp',preset_simple_ferry:'/assets/journeys/ferry.webp',preset_harbor_cabin:'/assets/journeys/ferry.webp',
- preset_simple_spacecraft:'/assets/journeys/spacecraft.webp',preset_simple_submarine:'/assets/journeys/submarine.webp'
+ preset_simple_spacecraft:'/assets/journeys/spacecraft.webp',preset_simple_submarine:'/assets/journeys/submarine.webp',preset_simple_forest_temple:'/assets/journeys/forest-temple.webp'
 };
 window.LullabyPresetVisuals=presetVisuals;
 
@@ -122,15 +123,15 @@ function setDuration(v){durationMinutes=clamp(+v,240,720);$('#durationSlider').v
 $('#durationSlider')?.addEventListener('input',e=>setDuration(e.target.value));$$('[data-duration]').forEach(b=>b.addEventListener('click',()=>setDuration(b.dataset.duration)));
 $$('[data-macro]').forEach(input=>input.addEventListener('input',e=>{const k=e.target.dataset.macro,v=+e.target.value/100;macro[k]=v;$$(`[data-output="${k}"]`).forEach(o=>o.textContent=`${Math.round(v*100)}%`);$$(`[data-macro="${k}"]`).forEach(other=>{if(other!==e.target)other.value=e.target.value});updateSceneAudio(currentElapsed())}));
 
-function updateNowPlaying(){const active=[],journeyNames={train_journey:'Overnight Train Journey',ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage'};if(scenePlaying)active.push(journeyNames[activeJourneyId]||'Passenger Aircraft Cabin');catalog.forEach(s=>{const st=getMixerUiState(s.id);if(st.on)active.push(s.name)});$('#railNowPlaying').textContent=active.length?`${active.length} active`:'Stopped'}
+function updateNowPlaying(){const active=[],journeyNames={train_journey:'Overnight Train Journey',ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage',hood_journey:'HOOD Night',forest_temple_journey:'Forest Temple'};if(scenePlaying)active.push(journeyNames[activeJourneyId]||'Passenger Aircraft Cabin');catalog.forEach(s=>{const st=getMixerUiState(s.id);if(st.on)active.push(s.name)});$('#railNowPlaying').textContent=active.length?`${active.length} active`:'Stopped'}
 
 function renderPresets(){if(!$('#builtInPresets'))return;$('#builtInPresets').innerHTML=builtinPresets.map(p=>`<button class="preset-card preset-card-visual" data-preset="${p.id}" type="button"><strong>${p.name}</strong><span>${Object.keys(p.mix).length} sources</span></button>`).join('');$$('#builtInPresets [data-preset]').forEach(b=>{b.style.setProperty('--preset-image',`url("${presetVisuals[b.dataset.preset]}")`);b.addEventListener('click',()=>applyPreset(b.dataset.preset))});renderUserPresets()}
 async function applyPreset(id){const p=builtinPresets.find(x=>x.id===id)||loadUserPresets().find(x=>x.id===id);if(!p)return;try{await ensureContext();stopJourneyPlayback();stopAllMixer();setMaster(p.master);for(const [sourceId,volume] of Object.entries(p.mix)){const def=sourceById[sourceId];if(!def)continue;if(def.kind==='event'){startEventLayer(def);eventState[sourceId].volume=volume}else{if(!nodes[sourceId])nodes[sourceId]=await makeSourceNode(def);nodes[sourceId].gain.gain.value=volume;await nodes[sourceId].el.play()}}renderMixer();updateNowPlaying();setStatus(`${p.name} 프리셋 적용됨`);if(presetVisuals[id])document.dispatchEvent(new CustomEvent('lullaby-preset-applied',{detail:{id,image:presetVisuals[id]}}));switchView('mixer')}catch(err){console.error(err);setStatus('프리셋을 적용하지 못했습니다.')}}
 function snapshotMix(){const mix={};catalog.forEach(s=>{const st=getMixerUiState(s.id);if(st.on)mix[s.id]=st.volume/100});return mix}
-function loadUserPresets(){try{return JSON.parse(localStorage.getItem('lullaby-user-presets')||'[]')}catch{return[]}}
+const USER_PRESET_ID=/^user_[A-Za-z0-9_-]+$/;
+function loadUserPresets(){try{const list=JSON.parse(localStorage.getItem('lullaby-user-presets')||'[]');return Array.isArray(list)?list.filter(p=>p&&typeof p==='object'&&USER_PRESET_ID.test(String(p.id||''))&&p.mix&&typeof p.mix==='object'&&!Array.isArray(p.mix)):[]}catch{return[]}}
 function saveUserPresets(list){localStorage.setItem('lullaby-user-presets',JSON.stringify(list));renderUserPresets()}
-function renderUserPresets(){const root=$('#userPresets');if(!root)return;const list=loadUserPresets();root.innerHTML=list.length?list.map(p=>`<div class="preset-card user"><button data-user-preset="${p.id}" type="button"><strong>${escapeHtml(p.name)}</strong><span>${Object.keys(p.mix).length} sources</span></button><button class="preset-delete" data-delete-preset="${p.id}" aria-label="삭제">×</button></div>`).join(''):'<p class="muted-copy">저장한 프리셋이 없습니다.</p>';$$('[data-user-preset]').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.userPreset)));$$('[data-delete-preset]').forEach(b=>b.addEventListener('click',()=>saveUserPresets(loadUserPresets().filter(p=>p.id!==b.dataset.deletePreset))))}
-function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function renderUserPresets(){const root=$('#userPresets');if(!root)return;const list=loadUserPresets();root.replaceChildren();if(!list.length){const empty=document.createElement('p');empty.className='muted-copy';empty.textContent='저장한 프리셋이 없습니다.';root.appendChild(empty);return}for(const p of list){const card=document.createElement('div');card.className='preset-card user';const open=document.createElement('button');open.type='button';open.dataset.userPreset=p.id;const name=document.createElement('strong');name.textContent=String(p.name??'');const count=document.createElement('span');count.textContent=`${Object.keys(p.mix).length} sources`;open.append(name,count);open.addEventListener('click',()=>applyPreset(p.id));const remove=document.createElement('button');remove.type='button';remove.className='preset-delete';remove.dataset.deletePreset=p.id;remove.setAttribute('aria-label','삭제');remove.textContent='×';remove.addEventListener('click',()=>saveUserPresets(loadUserPresets().filter(item=>item.id!==p.id)));card.append(open,remove);root.appendChild(card)}}
 $('#savePreset')?.addEventListener('click',()=>{const name=prompt('프리셋 이름을 입력하세요.');if(!name?.trim())return;const list=loadUserPresets();list.push({id:`user_${Date.now()}`,name:name.trim(),master:masterValue,mix:snapshotMix()});saveUserPresets(list);setStatus('현재 믹스를 저장했습니다.')});
 
 function startSleepTimer(minutes){minutes=clamp(+minutes,1,1440);sleepTimerEnd=Date.now()+minutes*60000;clearInterval(sleepTimerTick);sleepTimerTick=setInterval(updateSleepTimer,500);updateSleepTimer();switchView('timer')}

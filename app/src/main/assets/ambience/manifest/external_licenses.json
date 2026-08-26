@@ -131,6 +131,54 @@
       "sha256": "5bf543238b39e74777c862a2b41505e16ff9c87ec361e028959dff3fb083056d",
       "original_sha256": "142607ba442a603c09913ccf5efca6243959a1293e0f3d89022d3e8af1682a3f",
       "transformation": "Selected a stable 279.75-second region beginning at 69 seconds; 10-second circular equal-power seam; stereo Ogg Vorbis quality 5"
+    },
+    {
+      "asset_id": "forest_temple_moktak_event_001",
+      "source_name": "Mokugyo.wav",
+      "creator": "jonopodmore",
+      "source_page": "https://freesound.org/people/jonopodmore/sounds/607215/",
+      "license": "CC0-1.0",
+      "license_status": "verified",
+      "attribution_required": false,
+      "original_filename": "607215_541139-hq.mp3",
+      "provenance_id": "freesound_jonopodmore_607215",
+      "sample_rate": 48000,
+      "channels": 2,
+      "duration_ms": 12727,
+      "sha256": "90ec09e14b079d8d8b5ace259d4c3c7696151c152e3d9f2657bc2e9cdb36d14b",
+      "transformation": "Six sparse strikes arranged over 12.7 seconds; high-pass; short fades; 48 kHz stereo Ogg Opus"
+    },
+    {
+      "asset_id": "forest_temple_gravel_event_001",
+      "source_name": "FOOTSTEP IN GRAVEL",
+      "creator": "SamuelGremaud",
+      "source_page": "https://freesound.org/people/SamuelGremaud/sounds/429182/",
+      "license": "CC0-1.0",
+      "license_status": "verified",
+      "attribution_required": false,
+      "original_filename": "429182_8031303-hq.mp3",
+      "provenance_id": "freesound_samuelgremaud_429182",
+      "sample_rate": 48000,
+      "channels": 2,
+      "duration_ms": 26907,
+      "sha256": "f7f703b3a0e137746e8445a17edb9b2d3a9aae21bc20edcad0e210111dd044b2",
+      "transformation": "Three distinct steps sampled and spaced 3.4–5.3 seconds apart; high/low-pass; fade-out; 48 kHz stereo Ogg Opus"
+    },
+    {
+      "asset_id": "forest_temple_heart_sutra_event_001",
+      "source_name": "Bore Xinjing 般若心经 (Heart Sutra) in Mandarin recited by a Chinese Buddhist layperson",
+      "creator": "Nyarlathotep1001",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Bore_Xinjing_%E8%88%AC%E8%8B%A5%E5%BF%83%E7%BB%8F_(Heart_Sutra)_in_Mandarin_recited_by_a_Chinese_Buddhist_layperson.ogg",
+      "license": "CC0-1.0",
+      "license_status": "verified",
+      "attribution_required": false,
+      "original_filename": "Bore Xinjing 般若心经 (Heart Sutra) in Mandarin recited by a Chinese Buddhist layperson.ogg",
+      "provenance_id": "commons_nyarlathotep1001_heart_sutra",
+      "sample_rate": 48000,
+      "channels": 2,
+      "duration_ms": 132764,
+      "sha256": "5dbc0c735c7066b899408fab7f802d77d72a6e292628ab3bfb6053de3fa7df3d",
+      "transformation": "High/low-pass, level reduction and 3/4-second fades; mono duplicated to stereo; 48 kHz Ogg Opus"
     }
   ]
 }

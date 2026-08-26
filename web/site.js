@@ -7,7 +7,7 @@ const I18N={
     playerEyebrow:'Web Player',playerTitle:'브라우저에서도 바로 재생.',playerBody:'모바일은 Android 앱의 흐름을 따르고, PC는 씬·타임라인·믹서를 한 화면에서 보기 쉽게 배치했습니다.',
     downloadEyebrow:'Download',downloadTitle:'원하는 방식으로 Lullaby Scene을 사용하세요.',downloadBody:'설치형 웹 앱(PWA) 또는 Android 앱을 선택할 수 있습니다.',
     pwaTitle:'PWA · Web App',pwaBody:'Windows, macOS, Linux, ChromeOS, Android, iPhone, iPad에서 사용할 수 있습니다. 설치 방식은 브라우저마다 다릅니다.',pwaInstall:'PWA 설치',pwaOpen:'웹 플레이어 열기',
-    androidTitle:'Android',androidBody:'Android 8.0 이상에서 사용할 수 있습니다. 1.1.0 빌드는 GitHub Releases에서 제공합니다.',androidDownload:'최신 APK 다운로드',androidReleases:'GitHub Releases 보기',
+    androidTitle:'Android',androidBody:'Android 8.0 이상에서 사용할 수 있습니다. 최신 안정 빌드는 GitHub Releases에서 제공합니다.',androidDownload:'최신 APK 다운로드',androidReleases:'GitHub Releases 보기',
     scenes:'Scenes',sleepJourneys:'잠의 여정',simpleScenes:'심플 씬',mixer:'Mixer',timer:'취침 타이머',settings:'Settings',
     whereSleep:'어디에서 잠들고 싶나요?',journeyHint:'전체 수면 시간을 정하면 출발부터 도착까지 그 안에 배치됩니다.',available:'AVAILABLE NOW',
     aircraftDesc:'야간 여객기의 지상 이동, 이륙, 긴 순항, 하강과 도착.',flightPhase:'비행 단계',elapsed:'경과',remaining:'남은 시간',seatbelt:'좌석벨트',
@@ -17,7 +17,7 @@ const I18N={
     timerTitle:'취침 타이머',timerBody:'시간이 끝나면 짧게 페이드한 뒤 모든 소리를 정지합니다.',timerOff:'꺼짐',timerNone:'실행 중인 타이머가 없습니다.',cancelTimer:'타이머 취소',customMinutes:'직접 입력 (1~1440분)',start:'시작',
     settingsTitle:'Settings',settingsBody:'웹 전용 설정은 이 브라우저에 저장됩니다.',theme:'테마',themeHint:'시스템 설정 또는 직접 지정',system:'시스템',dark:'다크',light:'라이트',master:'Master volume',masterHint:'씬과 믹서 전체 음량',downloads:'설치 및 다운로드',downloadsHint:'PWA 또는 Android 앱을 설치합니다.',openDownloads:'다운로드 열기',cache:'오디오 캐시 초기화',cacheHint:'저장된 웹 오디오와 서비스 워커 캐시를 삭제합니다.',reset:'초기화',
     sceneControls:'Scene controls',activeRandom:'ACTIVE RANDOM EVENT',sleepProtect:'수면 방해 가능성이 높은 이벤트는 초기 수면 보호 구간에서 억제됩니다.',globalMaster:'GLOBAL MASTER',
-    privacy:'개인정보 처리방침',terms:'이용약관',footer:'Living soundscapes for sleep.'
+    privacy:'개인정보 처리방침',terms:'이용약관',credits:'음원 출처',footer:'Living soundscapes for sleep.'
   },
   en:{
     navHome:'Home',navPlayer:'Web Player',navDownload:'Download',navAbout:'About',
@@ -27,7 +27,7 @@ const I18N={
     playerEyebrow:'Web Player',playerTitle:'Play directly in your browser.',playerBody:'Mobile follows the Android app flow while desktop keeps scenes, timeline and controls visible in a spacious workspace.',
     downloadEyebrow:'Download',downloadTitle:'Use Lullaby Scene your way.',downloadBody:'Choose the installable web app (PWA) or the Android app.',
     pwaTitle:'PWA · Web App',pwaBody:'Available on Windows, macOS, Linux, ChromeOS, Android, iPhone and iPad. Installation steps vary by browser.',pwaInstall:'Install PWA',pwaOpen:'Open Web Player',
-    androidTitle:'Android',androidBody:'Available on Android 8.0 or newer. The 1.1.0 build is distributed through GitHub Releases.',androidDownload:'Download latest APK',androidReleases:'View GitHub Releases',
+    androidTitle:'Android',androidBody:'Available on Android 8.0 or newer. The latest stable build is distributed through GitHub Releases.',androidDownload:'Download latest APK',androidReleases:'View GitHub Releases',
     scenes:'Scenes',sleepJourneys:'Sleep Journeys',simpleScenes:'Simple Scenes',mixer:'Mixer',timer:'Sleep Timer',settings:'Settings',
     whereSleep:'Where do you want to fall asleep?',journeyHint:'Choose the total sleep window and the journey is arranged from departure to arrival inside it.',available:'AVAILABLE NOW',
     aircraftDesc:'An overnight passenger aircraft with taxi, takeoff, long cruise, descent and arrival.',flightPhase:'Flight phase',elapsed:'Elapsed',remaining:'Remaining',seatbelt:'Seatbelt',
@@ -37,7 +37,7 @@ const I18N={
     timerTitle:'Sleep Timer',timerBody:'When the timer ends, all audio fades briefly and stops.',timerOff:'Off',timerNone:'No timer is running.',cancelTimer:'Cancel timer',customMinutes:'Custom (1–1440 min)',start:'Start',
     settingsTitle:'Settings',settingsBody:'Web settings are stored in this browser.',theme:'Theme',themeHint:'Follow the system or choose manually',system:'System',dark:'Dark',light:'Light',master:'Master volume',masterHint:'Overall scene and mixer volume',downloads:'Install & download',downloadsHint:'Install the PWA or Android app.',openDownloads:'Open downloads',cache:'Clear audio cache',cacheHint:'Remove cached web audio and service-worker data.',reset:'Clear',
     sceneControls:'Scene controls',activeRandom:'ACTIVE RANDOM EVENT',sleepProtect:'Potentially disruptive events are suppressed during the early sleep-protection window.',globalMaster:'GLOBAL MASTER',
-    privacy:'Privacy',terms:'Terms',footer:'Living soundscapes for sleep.'
+    privacy:'Privacy',terms:'Terms',credits:'Audio Credits',footer:'Living soundscapes for sleep.'
   }
 };
 const hasLocaleBootstrap=document.documentElement.dataset.localeBoot==='1';
@@ -59,6 +59,7 @@ if(!hasLocaleBootstrap){
 document.addEventListener('lullaby-language-changed',event=>{if(event.detail?.language)language=event.detail.language});
 
 document.querySelectorAll('[data-year]').forEach(el=>el.textContent=new Date().getFullYear());
+document.querySelectorAll('.footer-links').forEach(root=>{if(root.querySelector('a[href="/credits/"]'))return;const link=document.createElement('a');link.href='/credits/';link.dataset.i18n='credits';link.textContent=t('credits');const privacy=root.querySelector('a[href="/privacy/"]');if(privacy)privacy.after(link);else root.prepend(link)});
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(console.error));
 
 let siteDeferredInstall=null;

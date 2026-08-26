@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material.icons.filled.LocationCity
+import androidx.compose.material.icons.filled.Park
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -127,6 +128,7 @@ fun ScenesScreen(
                                 SceneOrchestrator.SPACECRAFT_JOURNEY -> Icons.Filled.RocketLaunch
                                 SceneOrchestrator.SUBMARINE_JOURNEY -> Icons.Filled.Waves
                                 SceneOrchestrator.HOOD_JOURNEY -> Icons.Filled.LocationCity
+                                SceneOrchestrator.FOREST_TEMPLE_JOURNEY -> Icons.Filled.Park
                                 else -> Icons.Filled.Flight
                             },
                             contentDescription = null,
@@ -260,8 +262,11 @@ fun ScenesScreen(
                                     SceneOrchestrator.EVENT_HOOD_CAR_DOOR -> context.getString(R.string.scene_event_hood_car_door)
                                     SceneOrchestrator.EVENT_HOOD_HELICOPTER -> context.getString(R.string.scene_event_hood_helicopter)
                                     SceneOrchestrator.EVENT_HOOD_DOG -> context.getString(R.string.scene_event_hood_dog)
-                                    "${SceneOrchestrator.FERRY_JOURNEY}_departure", "${SceneOrchestrator.SPACECRAFT_JOURNEY}_departure", "${SceneOrchestrator.SUBMARINE_JOURNEY}_departure", "${SceneOrchestrator.HOOD_JOURNEY}_departure" -> context.getString(R.string.scene_event_departure)
-                                    "${SceneOrchestrator.FERRY_JOURNEY}_arrival", "${SceneOrchestrator.SPACECRAFT_JOURNEY}_arrival", "${SceneOrchestrator.SUBMARINE_JOURNEY}_arrival", "${SceneOrchestrator.HOOD_JOURNEY}_arrival" -> context.getString(R.string.scene_event_arrival)
+                                    SceneOrchestrator.EVENT_FOREST_TEMPLE_MOKTAK -> context.getString(R.string.scene_event_forest_temple_moktak)
+                                    SceneOrchestrator.EVENT_FOREST_TEMPLE_GRAVEL -> context.getString(R.string.scene_event_forest_temple_gravel)
+                                    SceneOrchestrator.EVENT_FOREST_TEMPLE_HEART_SUTRA -> context.getString(R.string.scene_event_forest_temple_heart_sutra)
+                                    "${SceneOrchestrator.FERRY_JOURNEY}_departure", "${SceneOrchestrator.SPACECRAFT_JOURNEY}_departure", "${SceneOrchestrator.SUBMARINE_JOURNEY}_departure", "${SceneOrchestrator.HOOD_JOURNEY}_departure", "${SceneOrchestrator.FOREST_TEMPLE_JOURNEY}_departure" -> context.getString(R.string.scene_event_departure)
+                                    "${SceneOrchestrator.FERRY_JOURNEY}_arrival", "${SceneOrchestrator.SPACECRAFT_JOURNEY}_arrival", "${SceneOrchestrator.SUBMARINE_JOURNEY}_arrival", "${SceneOrchestrator.HOOD_JOURNEY}_arrival", "${SceneOrchestrator.FOREST_TEMPLE_JOURNEY}_arrival" -> context.getString(R.string.scene_event_arrival)
                                     else -> eventId
                                 },
                                 style = MaterialTheme.typography.bodySmall,
@@ -442,6 +447,7 @@ private val JOURNEY_IDS = listOf(
     SceneOrchestrator.SPACECRAFT_JOURNEY,
     SceneOrchestrator.FERRY_JOURNEY,
     SceneOrchestrator.SUBMARINE_JOURNEY,
+    SceneOrchestrator.FOREST_TEMPLE_JOURNEY,
     SceneOrchestrator.HOOD_JOURNEY,
 )
 
@@ -451,6 +457,7 @@ private fun sceneShortNameRes(id: String) = when (id) {
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_short_name
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_short_name
     SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_short_name
+    SceneOrchestrator.FOREST_TEMPLE_JOURNEY -> R.string.scene_forest_temple_short_name
     else -> R.string.scene_aircraft_short_name
 }
 
@@ -460,6 +467,7 @@ private fun sceneNameRes(id: String) = when (id) {
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_name
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_name
     SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_name
+    SceneOrchestrator.FOREST_TEMPLE_JOURNEY -> R.string.scene_forest_temple_name
     else -> R.string.scene_aircraft_name
 }
 
@@ -469,6 +477,7 @@ private fun sceneDescriptionRes(id: String) = when (id) {
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_description
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_description
     SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_description
+    SceneOrchestrator.FOREST_TEMPLE_JOURNEY -> R.string.scene_forest_temple_description
     else -> R.string.scene_aircraft_description
 }
 
@@ -478,6 +487,7 @@ private fun sceneUnavailableRes(id: String) = when (id) {
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_asset_unavailable
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_asset_unavailable
     SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_asset_unavailable
+    SceneOrchestrator.FOREST_TEMPLE_JOURNEY -> R.string.scene_forest_temple_asset_unavailable
     else -> R.string.scene_asset_unavailable
 }
 
@@ -487,6 +497,7 @@ private fun sceneSpatialHintRes(id: String) = when (id) {
     SceneOrchestrator.SPACECRAFT_JOURNEY -> R.string.scene_spacecraft_spatial_hint
     SceneOrchestrator.SUBMARINE_JOURNEY -> R.string.scene_submarine_spatial_hint
     SceneOrchestrator.HOOD_JOURNEY -> R.string.scene_hood_spatial_hint
+    SceneOrchestrator.FOREST_TEMPLE_JOURNEY -> R.string.scene_forest_temple_spatial_hint
     else -> R.string.scene_spatial_hint
 }
 
@@ -517,13 +528,20 @@ private fun sceneMacroRes(id: String, index: Int, description: Boolean): Int {
             R.string.macro_night_activity to R.string.macro_night_activity_desc,
             R.string.macro_incident_intensity to R.string.macro_incident_intensity_desc,
         )
+        SceneOrchestrator.FOREST_TEMPLE_JOURNEY -> listOf(
+            R.string.macro_forest_presence to R.string.macro_forest_presence_desc,
+            R.string.macro_bird_activity to R.string.macro_bird_activity_desc,
+            R.string.macro_temple_resonance to R.string.macro_temple_resonance_desc,
+        )
         else -> listOf(
             R.string.macro_engine_presence to R.string.macro_engine_presence_desc,
             R.string.macro_cabin_activity to R.string.macro_cabin_activity_desc,
             R.string.macro_turbulence to R.string.macro_turbulence_desc,
         )
     }
-    if (index == 3) return if (description) R.string.macro_night_depth_desc else R.string.macro_night_depth
+    if (index == 3) return if (id == SceneOrchestrator.FOREST_TEMPLE_JOURNEY) {
+        if (description) R.string.macro_meditation_depth_desc else R.string.macro_meditation_depth
+    } else if (description) R.string.macro_night_depth_desc else R.string.macro_night_depth
     return if (description) pair[index].second else pair[index].first
 }
 
@@ -581,6 +599,11 @@ private fun sceneStateLabel(id: String?, context: android.content.Context): Stri
     SceneOrchestrator.STATE_HOOD_DEEP_NIGHT -> context.getString(R.string.scene_state_hood_deep_night)
     SceneOrchestrator.STATE_HOOD_STREET_STIRRING -> context.getString(R.string.scene_state_hood_street_stirring)
     SceneOrchestrator.STATE_HOOD_FIRST_LIGHT -> context.getString(R.string.scene_state_hood_first_light)
+    SceneOrchestrator.STATE_FOREST_TEMPLE_PATH -> context.getString(R.string.scene_state_forest_temple_path)
+    SceneOrchestrator.STATE_FOREST_TEMPLE_COURTYARD -> context.getString(R.string.scene_state_forest_temple_courtyard)
+    SceneOrchestrator.STATE_FOREST_TEMPLE_MEDITATION -> context.getString(R.string.scene_state_forest_temple_meditation)
+    SceneOrchestrator.STATE_FOREST_TEMPLE_RETURN -> context.getString(R.string.scene_state_forest_temple_return)
+    SceneOrchestrator.STATE_FOREST_TEMPLE_LEAVE -> context.getString(R.string.scene_state_forest_temple_leave)
     SceneOrchestrator.STATE_ARRIVED -> context.getString(R.string.scene_state_arrived)
     else -> context.getString(R.string.scene_state_cruise)
 }

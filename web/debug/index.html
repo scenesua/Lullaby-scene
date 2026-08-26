@@ -11,7 +11,7 @@
   <main class="shell">
     <aside class="console">
       <header class="brand"><div><h1>Lullaby Scene Debug</h1><p>실제 여정 런타임 재현 콘솔</p></div><span class="secure">ACCESS ONLY</span></header>
-      <section class="group"><h2>Target</h2><div class="field"><label for="journeySelect">테스트 여정</label><select id="journeySelect"><option value="passenger_aircraft_cabin">여객기 객실</option><option value="train_journey">야간 열차</option><option value="spacecraft_journey">우주선 표류</option><option value="ferry_journey">야간 페리</option><option value="submarine_journey">잠수함 항해</option><option value="hood_journey">HOOD Night</option></select></div><div class="buttons"><button class="primary" data-command="play">▶ 재생 / 일시정지</button><button class="danger" data-command="stop">■ 완전 정지</button></div></section>
+      <section class="group"><h2>Target</h2><div class="field"><label for="journeySelect">테스트 여정</label><select id="journeySelect"><option value="passenger_aircraft_cabin">여객기 객실</option><option value="train_journey">야간 열차</option><option value="spacecraft_journey">우주선 표류</option><option value="ferry_journey">야간 페리</option><option value="submarine_journey">잠수함 항해</option><option value="forest_temple_journey">숲속 절</option><option value="hood_journey">HOOD Night</option></select></div><div class="buttons"><button class="primary" data-command="play">▶ 재생 / 일시정지</button><button class="danger" data-command="stop">■ 완전 정지</button></div></section>
       <section class="group"><h2>Reproduce</h2><div class="field"><label for="eventType">즉시 발생 이벤트</label><select id="eventType"><option value="primary">객실 차임</option></select></div><button class="primary" data-command="event" style="width:100%">⚡ 선택 이벤트 즉시 발생</button><div class="inline" style="margin-top:8px"><button data-command="loop">↻ 다음 루프 직전으로</button><div class="field" style="margin:0"><label for="loopLead">남은 초</label><select id="loopLead"><option value="0.5">0.5s</option><option value="1.5" selected>1.5s</option><option value="3">3s</option></select></div></div><label class="toggle"><input id="eventEnabled" type="checkbox" checked>랜덤 이벤트 스케줄러 켜기</label></section>
       <section class="group"><h2>Timeline</h2><div class="field"><label for="stageSelect">단계 바로 이동</label><select id="stageSelect"><option value="0">1단계</option><option value="1">2단계</option><option value="2">3단계 / 주 루프</option><option value="3">4단계</option><option value="4">5단계 / 도착</option></select></div><div class="buttons"><button data-command="prev">← 이전 단계</button><button data-command="next">다음 단계 →</button><button data-command="short">5분 압축 여정</button><button data-command="reload">플레이어 재시작</button></div></section>
       <section class="group"><h2>Runtime</h2><div class="state-grid" id="debugState"></div><div class="notice" id="debugNotice">플레이어 연결 대기 중…</div></section>
@@ -21,6 +21,6 @@
     </aside>
     <section class="preview" aria-label="Lullaby Scene player"><iframe id="debugPlayer" src="/player/?debug=1" title="Lullaby Scene debug player" allow="autoplay; fullscreen"></iframe></section>
   </main>
-  <script src="/debug-console-v1.js?v=2"></script>
+  <script src="/debug-console-v1.js?v=3"></script>
 </body>
 </html>
