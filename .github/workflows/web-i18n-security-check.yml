@@ -128,3 +128,29 @@ jobs:
             http://127.0.0.1:4174/api/visitors)
           test "$code" = '200'
           node -e "const x=require('fs').readFileSync('/tmp/ok.json','utf8');const j=JSON.parse(x);if(!j.available||j.mode!=='pageviews'||j.incremented!==true||j.today<1||j.total<1)throw new Error(x)"
+
+  cross-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+
+      - name: Install Firefox and WebKit
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps firefox webkit
+
+      - name: Run the shared browser smoke suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --directory web >/tmp/lullaby-cross-browser.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
+          for browser in firefox webkit; do
+            BROWSER="$browser" timeout 120s node .github/scripts/web-i18n-security-smoke.mjs
+          done
