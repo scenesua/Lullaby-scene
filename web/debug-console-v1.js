@@ -21,6 +21,6 @@
     $('#eventEnabled').addEventListener('change',event=>run('랜덤 이벤트 설정',debug=>debug.setEvents(event.target.checked)));
     $('#stageSelect').addEventListener('change',event=>run('단계 이동',debug=>debug.stage(event.target.value)));
   }
-  frame.addEventListener('load',()=>{const wait=setInterval(()=>{try{player=api();clearInterval(wait);notify('디버그 플레이어 연결됨');clearInterval(timer);timer=setInterval(render,500);render()}catch{}},100);setTimeout(()=>{if(!player){clearInterval(wait);notify('플레이어 연결 시간이 초과되었습니다.',true)}},15000)});
+  frame.addEventListener('load',()=>{eventJourney='';player=null;const wait=setInterval(()=>{try{player=api();clearInterval(wait);notify('디버그 플레이어 연결됨');clearInterval(timer);timer=setInterval(render,500);render()}catch{}},100);setTimeout(()=>{if(!player){clearInterval(wait);notify('플레이어 연결 시간이 초과되었습니다.',true)}},15000)});
   bind();addEventListener('beforeunload',()=>clearInterval(timer));
 })();
