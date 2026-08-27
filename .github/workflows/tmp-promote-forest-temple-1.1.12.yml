@@ -56,42 +56,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-from pathlib import Path
-
-# Android stable version.
-p=Path('app/build.gradle.kts')
-s=p.read_text()
-s=s.replace('versionCode = 20','versionCode = 21',1)
-s=s.replace('versionName = "1.1.11"','versionName = "1.1.12"',1)
-p.write_text(s)
-
-# Production player asset cache-busters.
-p=Path('web/player/index.html')
-s=p.read_text()
-s=s.replace('/player-v2.js?v=18','/player-v2.js?v=19')
-s=s.replace('/remaining-journeys-v1.js?v=24','/remaining-journeys-v1.js?v=25')
-s=s.replace('/site-locales-v10.js?v=18','/site-locales-v10.js?v=20')
-p.write_text(s)
-
-# Every production page that loads locales gets the corrected catalog immediately.
-for p in Path('web').rglob('*.html'):
-    if 'debug' in p.parts:
-        continue
-    s=p.read_text()
-    s2=s.replace('/site-locales-v10.js?v=18','/site-locales-v10.js?v=20')
-    if s2 != s:
-        p.write_text(s2)
-
-# Keep production SW production-named; only bump its asset cache references.
-p=Path('web/sw.js')
-s=p.read_text()
-s=s.replace("const CACHE='lullaby-scene-site-v77'","const CACHE='lullaby-scene-site-v78'",1)
-s=s.replace('/player-v2.js?v=18','/player-v2.js?v=19')
-s=s.replace('/remaining-journeys-v1.js?v=24','/remaining-journeys-v1.js?v=25')
-s=s.replace('/site-locales-v10.js?v=18','/site-locales-v10.js?v=20')
-p.write_text(s)
-PY
+          python3 tools/tmp_promote_forest_temple_1_1_12.py
 
       - name: Validate production web and Android source manifests
         shell: bash
@@ -126,7 +91,7 @@ PY
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm -f .github/workflows/tmp-promote-forest-temple-1.1.12.yml
+          git rm -f .github/workflows/tmp-promote-forest-temple-1.1.12.yml tools/tmp_promote_forest_temple_1_1_12.py
           git add web app RELEASE_NOTES_1.1.12.md .github/workflows/release-1.1.12.yml
           git status --short
           git commit -m 'Release Forest Temple audio parity for web and Android'
