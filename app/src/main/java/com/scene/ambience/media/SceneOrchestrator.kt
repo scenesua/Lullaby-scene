@@ -50,6 +50,7 @@ class SceneOrchestrator(
     private var hoodTrafficJob: Job? = null
     private var hoodLabelJob: Job? = null
     private var templeEventJob: Job? = null
+    private var templeForcedJob: Job? = null
     private var scheduleSeed: Long = 0L
 
     fun start(sceneId: String, totalDurationMinutes: Int): Boolean = when (sceneId) {
@@ -205,6 +206,8 @@ class SceneOrchestrator(
             if (enabled) startTempleEvents() else {
                 templeEventJob?.cancel()
                 templeEventJob = null
+                templeForcedJob?.cancel()
+                templeForcedJob = null
             }
         }
     }
@@ -305,6 +308,8 @@ class SceneOrchestrator(
         hoodLabelJob = null
         templeEventJob?.cancel()
         templeEventJob = null
+        templeForcedJob?.cancel()
+        templeForcedJob = null
         ambientProfile?.manualEvents?.keys?.forEach { engine.setManualEventSource(it, false) }
     }
 
@@ -350,6 +355,24 @@ class SceneOrchestrator(
         }
     }
 
+    private fun forceTempleMeditationSutra() {
+        if (templeForcedJob?.isActive == true) return
+        templeEventJob?.cancel()
+        templeEventJob = null
+        templeForcedJob = scope.launch {
+            val snapshot = _state.value
+            if (snapshot.sceneId == FOREST_TEMPLE_JOURNEY && snapshot.randomEventsEnabled && engine.snapshot().playbackState == PlaybackState.PLAYING) {
+                if (engine.triggerEventNow(SOURCE_FOREST_TEMPLE_HEART_SUTRA_EVENT, 1f, .48f)) {
+                    _state.value = _state.value.copy(activeEventId = EVENT_FOREST_TEMPLE_HEART_SUTRA)
+                    delay(120_196L)
+                    if (_state.value.activeEventId == EVENT_FOREST_TEMPLE_HEART_SUTRA) _state.value = _state.value.copy(activeEventId = null)
+                }
+            }
+            templeForcedJob = null
+            if (_state.value.sceneId == FOREST_TEMPLE_JOURNEY && _state.value.randomEventsEnabled && engine.snapshot().playbackState == PlaybackState.PLAYING) startTempleEvents()
+        }
+    }
+
     /** One queue owns every temple event, so scripture, moktak and footsteps never overlap. */
     private fun startTempleEvents() {
         templeEventJob?.cancel()
@@ -360,29 +383,25 @@ class SceneOrchestrator(
                 val snapshot = _state.value
                 if (!snapshot.randomEventsEnabled || engine.snapshot().playbackState != PlaybackState.PLAYING) continue
                 val phase = ambientTimeline?.phaseAt(snapshot.elapsedMs)
-                if (phase !in listOf(STATE_FOREST_TEMPLE_COURTYARD, STATE_FOREST_TEMPLE_MEDITATION, STATE_FOREST_TEMPLE_RETURN)) continue
+                if (phase !in listOf(STATE_FOREST_TEMPLE_MEDITATION, STATE_FOREST_TEMPLE_RETURN)) continue
                 val candidates = listOf(
                     SOURCE_FOREST_TEMPLE_MOKTAK to EVENT_FOREST_TEMPLE_MOKTAK,
                     SOURCE_FOREST_TEMPLE_GRAVEL to EVENT_FOREST_TEMPLE_GRAVEL,
                     SOURCE_FOREST_TEMPLE_MOKTAK to EVENT_FOREST_TEMPLE_MOKTAK,
                     SOURCE_FOREST_TEMPLE_GRAVEL to EVENT_FOREST_TEMPLE_GRAVEL,
-                    SOURCE_FOREST_TEMPLE_HEART_SUTRA to EVENT_FOREST_TEMPLE_HEART_SUTRA,
+                    SOURCE_FOREST_TEMPLE_HEART_SUTRA_EVENT to EVENT_FOREST_TEMPLE_HEART_SUTRA,
                 ).filter { isSourceAvailable(it.first) }
                 if (candidates.isEmpty()) continue
                 val (sourceId, eventId) = candidates.random(random)
                 val fromTemple = sourceId != SOURCE_FOREST_TEMPLE_GRAVEL
-                val scale = when (sourceId) {
-                    SOURCE_FOREST_TEMPLE_MOKTAK -> .90f
-                    SOURCE_FOREST_TEMPLE_GRAVEL -> .72f
-                    else -> .52f
-                }
+                val scale = 1f
                 val pan = if (fromTemple) .48f else random.nextFloat() * .56f - .28f
                 if (!engine.triggerEventNow(sourceId, scale, pan)) continue
                 _state.value = _state.value.copy(activeEventId = eventId)
                 val durationMs = when (sourceId) {
-                    SOURCE_FOREST_TEMPLE_MOKTAK -> 12_733L
+                    SOURCE_FOREST_TEMPLE_MOKTAK -> 77_165L
                     SOURCE_FOREST_TEMPLE_GRAVEL -> 26_907L
-                    SOURCE_FOREST_TEMPLE_HEART_SUTRA -> 132_764L
+                    SOURCE_FOREST_TEMPLE_HEART_SUTRA_EVENT -> 120_196L
                     else -> 15_000L
                 }
                 delay(durationMs)
@@ -630,6 +649,7 @@ class SceneOrchestrator(
         val plan = ambientTimeline ?: return
         val profile = ambientProfile ?: return
         val phase = plan.phaseAt(current.elapsedMs)
+        val enteredTempleMeditation = current.sceneId == FOREST_TEMPLE_JOURNEY && current.stateId != phase && phase == STATE_FOREST_TEMPLE_MEDITATION
         val event = when {
             !current.randomEventsEnabled -> null
             current.sceneId == HOOD_JOURNEY && current.activeEventId?.startsWith("hood_event_") == true -> current.activeEventId
@@ -670,8 +690,13 @@ class SceneOrchestrator(
                 0f
             }
         }
-        profile.manualEvents.forEach { (source, base) -> desired[source] = base * (0.72f + 0.42f * m.cabinActivity) }
+        profile.manualEvents.forEach { (source, base) -> desired[source] = base }
+        if (current.sceneId == FOREST_TEMPLE_JOURNEY) {
+            desired[SOURCE_FOREST_TEMPLE_BAMBOO] = .121f
+            desired[SOURCE_FOREST_TEMPLE_BOWL] = if (current.elapsedMs >= plan.departureEndMs) .227f else 0f
+        }
         desired.forEach(::setVolumeIfChanged)
+        if (enteredTempleMeditation && current.randomEventsEnabled) forceTempleMeditationSutra()
     }
 
     private fun setVolumeIfChanged(sourceId: String, volume: Float) {
@@ -816,10 +841,12 @@ class SceneOrchestrator(
         const val SOURCE_FOREST = "forest"
         const val SOURCE_BIRDS = "birds"
         const val SOURCE_FOREST_TEMPLE_BOWL = "forest_temple_bowl"
+        const val SOURCE_FOREST_TEMPLE_BAMBOO = "forest_temple_bamboo_bed"
         const val SOURCE_FOREST_TEMPLE_PATH_WALK = "forest_temple_path_walk"
         const val SOURCE_FOREST_TEMPLE_MOKTAK = "forest_temple_moktak"
         const val SOURCE_FOREST_TEMPLE_GRAVEL = "forest_temple_gravel"
         const val SOURCE_FOREST_TEMPLE_HEART_SUTRA = "forest_temple_heart_sutra"
+        const val SOURCE_FOREST_TEMPLE_HEART_SUTRA_EVENT = "forest_temple_heart_sutra_event"
         const val ASSET_HOOD_GUNSHOT_BASIC = "hood_gunshot_event_001"
         const val ASSET_HOOD_GUNSHOT_SHOTGUN = "hood_gunshot_shotgun_event_004"
 
@@ -953,12 +980,12 @@ class SceneOrchestrator(
             AmbientJourneyProfile(
                 sceneId = FOREST_TEMPLE_JOURNEY,
                 departureSource = SOURCE_FOREST_TEMPLE_PATH_WALK,
-                bedSources = mapOf(SOURCE_FOREST to .34f, SOURCE_FOREST_TEMPLE_BOWL to .09f),
-                arrivalSource = SOURCE_FOREST,
+                bedSources = mapOf(SOURCE_FOREST_TEMPLE_BAMBOO to .121f, SOURCE_FOREST_TEMPLE_BOWL to .227f),
+                arrivalSource = SOURCE_FOREST_TEMPLE_BAMBOO,
                 manualEvents = mapOf(
-                    SOURCE_FOREST_TEMPLE_MOKTAK to .10f,
-                    SOURCE_FOREST_TEMPLE_GRAVEL to .08f,
-                    SOURCE_FOREST_TEMPLE_HEART_SUTRA to .05f,
+                    SOURCE_FOREST_TEMPLE_MOKTAK to .09f,
+                    SOURCE_FOREST_TEMPLE_GRAVEL to .075f,
+                    SOURCE_FOREST_TEMPLE_HEART_SUTRA_EVENT to .157f,
                 ),
                 phases = listOf(STATE_FOREST_TEMPLE_PATH, STATE_FOREST_TEMPLE_COURTYARD, STATE_FOREST_TEMPLE_MEDITATION, STATE_FOREST_TEMPLE_RETURN, STATE_FOREST_TEMPLE_LEAVE),
                 departureMs = 90_000L,
@@ -969,8 +996,8 @@ class SceneOrchestrator(
                 settleMinutes = 10,
                 approachMinutes = 10,
                 masterVolume = .76f,
-                departureVolume = .34f,
-                arrivalVolume = .30f,
+                departureVolume = 1f,
+                arrivalVolume = .121f,
                 defaultMacros = SceneMacroState(enginePresence = .58f, cabinActivity = .30f, turbulence = .24f, nightDepth = .42f),
             ),
         ).sortedBy { it.sceneId == HOOD_JOURNEY }.associateBy { it.sceneId }

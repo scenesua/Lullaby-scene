@@ -8,7 +8,7 @@ let sceneNode=null,sceneTimer=null,sceneStartedAt=0,pausedAt=0,scenePlaying=fals
 const macro={engine:.55,activity:.22,turbulence:.12,night:.68};
 let sleepTimerEnd=0,sleepTimerTick=null,sleepFadeSeconds=30;
 let deferredInstall=null;
-const journeyEventIds=new Set(['aircraft_chime','train_rail_event','ferry_wave_event','spacecraft_servo_event','submarine_sonar','hood_gunshot','hood_siren','hood_glass','hood_shout','hood_footsteps','hood_car_pass','hood_car_door','hood_helicopter','hood_dog','forest_temple_moktak','forest_temple_gravel','forest_temple_heart_sutra']);
+const journeyEventIds=new Set(['aircraft_chime','train_rail_event','ferry_wave_event','spacecraft_servo_event','submarine_sonar','hood_gunshot','hood_siren','hood_glass','hood_shout','hood_footsteps','hood_car_pass','hood_car_door','hood_helicopter','hood_dog','forest_temple_moktak','forest_temple_gravel']);
 const hoodJourneyEventIds=new Set([...journeyEventIds].filter(id=>id.startsWith('hood_')));
 
 const builtinPresets=[

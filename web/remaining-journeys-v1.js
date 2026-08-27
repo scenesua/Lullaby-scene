@@ -37,7 +37,7 @@
     forest_temple_journey:{
       icon:'卍',title:['Forest Temple','숲속 절'],description:['A bright forest temple for rest and meditation, with birds, a quiet singing bowl, distant gravel footsteps, and occasional verified sutra readings.','밝은 숲속 절에서 새소리와 잔잔한 싱잉볼, 멀리 자갈을 밟는 발소리, 검증된 경전 낭독을 드물게 듣는 휴식·명상 여정입니다.'],
       durations:[90000,600000,600000,90000],phases:[['Entering the temple path','절길에 들어서는 중'],['Morning courtyard','아침 마당에 머무는 중'],['Forest meditation','숲속 명상 중'],['Returning to the path','절길로 돌아가는 중'],['Leaving quietly','조용히 나서는 중']],
-      nodes:{departure:['/audio/scenes/forest_temple_journey/forest_temple_path_walk_001.ogg?v=1',104.007],forest:['/audio/scenes/forest_temple_journey/forest_temple_bamboo_wide_bed_001.ogg?v=1',94.744],bowl:['/audio/scenes/forest_temple_journey/forest_temple_bowl_distant_bed_001.ogg?v=1',77.007]},roles:{departure:['departure','forest'],bed:['forest','bowl'],arrival:['forest','bowl']},gains:{departure:1,forest:.152,bowl:.227},bedStartsAtPhaseBoundary:true,event:{sequence:'temple',label:['Temple sound','절의 소리'],minMs:210000,maxMs:540000,phases:[2,3],sources:{moktak:['/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg?v=2',77165],gravel:['/audio/scenes/forest_temple_journey/forest_temple_gravel_event_001.ogg?v=2',26907],heartSutra:['/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?v=4',120196]}},
+      nodes:{departure:['/audio/scenes/forest_temple_journey/forest_temple_path_walk_001.ogg?v=1',104.007],forest:['/audio/scenes/forest_temple_journey/forest_temple_bamboo_wide_bed_001.ogg?v=2',94.744],bowl:['/audio/scenes/forest_temple_journey/forest_temple_bowl_distant_bed_001.ogg?v=1',77.007]},roles:{departure:['departure','forest'],bed:['forest','bowl'],arrival:['forest','bowl']},gains:{departure:1,forest:.121,bowl:.227},bedStartsAtPhaseBoundary:true,event:{sequence:'temple',label:['Temple sound','절의 소리'],minMs:210000,maxMs:540000,phases:[2,3],sources:{moktak:['/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg?v=2',77165],gravel:['/audio/scenes/forest_temple_journey/forest_temple_gravel_event_001.ogg?v=2',26907],heartSutra:['/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?v=4',120196]}},
       macros:[['Forest presence','숲의 존재감'],['Bird activity','새의 활동감'],['Temple resonance','절의 울림'],['Meditation depth','명상의 깊이']],detail:['Quiet temple ambience','고요한 절의 기척'],fx:[
         {gain:.92,cutoff:11500,gainSeconds:8,filterSeconds:12,roleFadeSeconds:10,visualMs:900,seekDelayMs:145},{gain:1,cutoff:12500,gainSeconds:12,filterSeconds:18,roleFadeSeconds:14,visualMs:1250,seekDelayMs:200},{gain:.88,cutoff:9200,gainSeconds:20,filterSeconds:30,roleFadeSeconds:20,visualMs:1700,seekDelayMs:270},{gain:.96,cutoff:11000,gainSeconds:14,filterSeconds:21,roleFadeSeconds:16,visualMs:1400,seekDelayMs:225},{gain:.9,cutoff:10500,gainSeconds:10,filterSeconds:15,roleFadeSeconds:12,visualMs:1050,seekDelayMs:170}
       ]
@@ -90,8 +90,33 @@
       else{bucket.primary=makeMediaNode(cfg.event.url,{loop:false,preload:'none'});bucket.primary.gain.gain.value=cfg.event.gain??.08}
       eventNodes[activeJourneyId]=bucket;
     }
+    if(activeJourneyId==='forest_temple_journey')prepareTempleRoomFx();
   }
   function activeNodes(){const cfg=config();return cfg?media[cfg.title[0]]||{}:{}}
+  let templeRoomImpulse=null;
+  function createTempleRoomImpulse(audioCtx,seconds=2.8,decay=2.45){
+    const length=Math.max(1,Math.floor(audioCtx.sampleRate*seconds)),buffer=audioCtx.createBuffer(2,length,audioCtx.sampleRate);
+    for(let channel=0;channel<2;channel++){const data=buffer.getChannelData(channel);for(let i=0;i<length;i++){const t=1-i/length;data[i]=(Math.random()*2-1)*Math.pow(t,decay)*(0.82+0.18*Math.sin(i*0.017+channel))}}
+    return buffer;
+  }
+  function attachTempleRoomFx(node){
+    if(!node||node.__lullabyDebugTempleRoomFx||!ctx||!master)return;
+    templeRoomImpulse??=createTempleRoomImpulse(ctx);
+    const preDelay=ctx.createDelay(.2);preDelay.delayTime.value=.055;
+    const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5000;reverbTone.Q.value=.35;
+    const convolver=ctx.createConvolver();convolver.buffer=templeRoomImpulse;
+    const reverbWet=ctx.createGain();reverbWet.gain.value=.50;
+    const echoDelay=ctx.createDelay(1);echoDelay.delayTime.value=.41;
+    const echoTone=ctx.createBiquadFilter();echoTone.type='lowpass';echoTone.frequency.value=4800;
+    const echoWet=ctx.createGain();echoWet.gain.value=.065;
+    const echoFeedback=ctx.createGain();echoFeedback.gain.value=.10;
+    node.gain.connect(preDelay).connect(reverbTone).connect(convolver).connect(reverbWet).connect(master);
+    node.gain.connect(echoDelay);echoDelay.connect(echoTone).connect(echoWet).connect(master);echoDelay.connect(echoFeedback).connect(echoDelay);
+    node.__lullabyDebugTempleRoomFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback};
+  }
+  function prepareTempleRoomFx(){
+    if(activeJourneyId!=='forest_temple_journey')return;const events=eventNodes[activeJourneyId];attachTempleRoomFx(events?.heartSutra);attachTempleRoomFx(events?.moktak);
+  }
   function pauseEvent(){for(const timer of eventTimers)clearTimeout(timer);eventTimers.clear();eventLabelUntil=0;currentEventLabel=null;for(const bucket of Object.values(eventNodes))for(const entry of Object.values(bucket))for(const node of(Array.isArray(entry)?entry:[entry])){node.el.pause();node.gain.gain.value=0;try{node.el.currentTime=0}catch{}}}
   function pauseNodes(reset=false){pauseEvent();for(const bucket of Object.values(media))for(const node of Object.values(bucket)){node.el.pause();node.gain.gain.value=0;if(reset)try{node.el.currentTime=0}catch{}}}
   function offset(key,role,ms,total,cfg){const b=boundaries(total,cfg),start=role==='arrival'?b.arrival:role==='bed'?b.departure:0;return Math.max(0,(ms-start)/1000)%cfg.nodes[key][1]}

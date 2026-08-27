@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "sources": [
     {
       "id": "rain",
@@ -299,14 +299,6 @@
       "defaultVolume": 34
     },
     {
-      "id": "forest_temple_bowl",
-      "name": "Forest Temple Singing Bowl",
-      "category": "travel",
-      "kind": "continuous",
-      "url": "/audio/scenes/forest_temple_journey/forest_temple_bowl_bed_001.ogg?v=2",
-      "defaultVolume": 9
-    },
-    {
       "id": "forest_temple_moktak",
       "name": "Rhythmic Temple Moktak",
       "category": "travel",
@@ -330,11 +322,9 @@
       "id": "forest_temple_heart_sutra",
       "name": "Heart Sutra · Korean",
       "category": "travel",
-      "kind": "event",
-      "url": "/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?v=4",
-      "defaultVolume": 5,
-      "eventMinSeconds": 900,
-      "eventMaxSeconds": 2100
+      "kind": "continuous",
+      "url": "/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_original_full_001.ogg?v=2",
+      "defaultVolume": 5
     },
     {
       "id": "hood_journey_bed",
