@@ -52,13 +52,14 @@ jobs:
           set -euo pipefail
           chmod +x gradlew
           ./gradlew testDebugUnitTest --no-daemon
-      - name: Commit completed change and remove temporary automation
+      - name: Commit completed change without workflow-file mutations
         shell: bash
         run: |
           set -euo pipefail
           rm -rf .tmp_forest_temple_sources .github/scripts/__pycache__
           rm -f .github/scripts/finish_forest_temple_korean_sutra.py .github/scripts/run_forest_temple_finisher.py
-          rm -f .github/workflows/finish-forest-temple-korean-sutra-v2.yml
+          git restore --source=HEAD -- .github/workflows
+          chmod 644 gradlew
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
