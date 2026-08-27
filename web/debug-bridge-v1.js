@@ -12,14 +12,38 @@
   const provider=()=>activeJourneyId==='passenger_aircraft_cabin'?window.LullabyJourneyAudio:activeJourneyId==='train_journey'?window.LullabyTrainJourney:window.LullabyRemainingJourneys;
   const EVENT_OPTIONS={
     passenger_aircraft_cabin:[['primary','객실 차임']],train_journey:[['primary','먼 레일 이음매']],spacecraft_journey:[['primary','캐빈 서보']],ferry_journey:[['primary','선체를 스치는 파도']],submarine_journey:[['primary','먼 소나']],
-    forest_temple_journey:[['random','숲속 절 랜덤 이벤트'],['moktak','법당 목탁'],['gravel','느린 자갈 발소리'],['heartSutra','반야심경 · 중국어']],
+    forest_temple_journey:[['random','숲속 절 랜덤 이벤트'],['moktak','법당 목탁'],['gravel','느린 자갈 발소리'],['heartSutra','반야심경 · 한국어 독송']],
     hood_journey:[['random','HOOD 랜덤 이벤트'],['fight','총격전 전체'],['gunshot','기본 총성'],['gunShotgun','산탄총'],['siren','경찰차 통과'],['carPass','일반 차량 통과'],['glass','유리 파손'],['shoutMale','먼 고함'],['screamCrowd','먼 비명'],['dog','동네 개 짖는 소리'],['footsteps','보도 위 발소리'],['carDoor','차 문'],['helicopter','먼 헬리콥터']]
   };
   const nodes=()=>{const value=provider()?.nodes??provider()?.activeNodes??{};return Object.fromEntries(Object.entries(value||{}).filter(([,node])=>node))};
   const describeNode=([name,node])=>({
     name,url:node.url||'',paused:!!node.el?.paused,currentTime:Number(node.el?.currentTime||0),duration:Number(node.loopDurationSeconds||node.el?.duration||0),gain:Number(node.gain?.gain?.value||0),filterHz:Number(node.filter?.frequency?.value||0),crossfade:!!node.__lullabyCrossfadeLoop,fadeSeconds:Number(node.loopFadeSeconds||0),loopCount:Number(node.loopCount||0),voices:(node.voices||[]).map((voice,index)=>({index,paused:voice.el.paused,currentTime:Number(voice.el.currentTime||0),gain:Number(voice.envelope.gain.value||0)}))
   });
-  async function ensurePlaying(){if(!scenePlaying)await startScene();if(!scenePlaying)throw new Error('Journey did not start. Check browser audio permission.');await wait(100)}
+  function createTempleImpulse(audioCtx,seconds=2.8,decay=2.45){
+    const length=Math.max(1,Math.floor(audioCtx.sampleRate*seconds)),buffer=audioCtx.createBuffer(2,length,audioCtx.sampleRate);
+    for(let channel=0;channel<2;channel++){const data=buffer.getChannelData(channel);for(let i=0;i<length;i++){const t=1-i/length;data[i]=(Math.random()*2-1)*Math.pow(t,decay)*(0.82+0.18*Math.sin(i*0.017+channel))}}
+    return buffer;
+  }
+  function attachTempleSutraFx(node){
+    if(!node||node.__lullabyDebugTempleFx||!ctx||!master)return;
+    const preDelay=ctx.createDelay(.2);preDelay.delayTime.value=.055;
+    const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5000;reverbTone.Q.value=.35;
+    const convolver=ctx.createConvolver();convolver.buffer=createTempleImpulse(ctx);
+    const reverbWet=ctx.createGain();reverbWet.gain.value=.38;
+    const echoDelay=ctx.createDelay(1);echoDelay.delayTime.value=.41;
+    const echoTone=ctx.createBiquadFilter();echoTone.type='lowpass';echoTone.frequency.value=4200;
+    const echoWet=ctx.createGain();echoWet.gain.value=.075;
+    const echoFeedback=ctx.createGain();echoFeedback.gain.value=.12;
+    node.gain.connect(preDelay).connect(reverbTone).connect(convolver).connect(reverbWet).connect(master);
+    node.gain.connect(echoDelay);echoDelay.connect(echoTone).connect(echoWet).connect(master);echoDelay.connect(echoFeedback).connect(echoDelay);
+    node.__lullabyDebugTempleFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback};
+    record('event','Forest Temple Korean Heart Sutra FX ready · right-temple pan + 2.8s reverb + subtle echo');
+  }
+  async function prepareTempleSutraFx(){
+    if(activeJourneyId!=='forest_temple_journey')return;
+    const target=window.LullabyRemainingJourneys;await target?.ensureNodes?.();attachTempleSutraFx(target?.eventNode?.heartSutra);
+  }
+  async function ensurePlaying(){if(!scenePlaying)await startScene();if(!scenePlaying)throw new Error('Journey did not start. Check browser audio permission.');await wait(100);await prepareTempleSutraFx()}
   async function selectJourney(id){
     const button=document.querySelector(`[data-journey="${CSS.escape(id)}"]`);if(!button)throw new Error(`Unknown Journey: ${id}`);
     if(scenePlaying||pausedAt>0)stopScene(false);button.click();await wait(80);if(activeJourneyId!==id)throw new Error(`Could not select ${id}`);return snapshot();
@@ -40,7 +64,7 @@
   }
   window.LullabyDebug={
     snapshot,selectJourney,triggerEvent,jumpBeforeLoop,
-    async playPause(){await startScene();return snapshot()},
+    async playPause(){await startScene();if(scenePlaying){await wait(80);await prepareTempleSutraFx()}return snapshot()},
     stop(){stopScene(false);return snapshot()},
     stage(index){const button=document.querySelector(`[data-stage-index="${Math.max(0,Math.round(Number(index)||0))}"]`);if(!button)throw new Error('Journey stage is unavailable.');button.click()},
     previousStage(){return window.LullabyJourneyRuntime?.previousPhase?.()},nextStage(){return window.LullabyJourneyRuntime?.nextPhase?.()},
