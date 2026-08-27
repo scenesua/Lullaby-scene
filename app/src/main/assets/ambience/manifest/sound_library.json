@@ -199,20 +199,20 @@
         {
           "asset_id": "forest_loop_001",
           "path": "ambience/forest/continuous/forest_loop_001.ogg",
-          "duration_ms": 24507,
-          "crossfade_ms": 5892
+          "duration_ms": 7857,
+          "crossfade_ms": 2000
         },
         {
           "asset_id": "forest_loop_002",
           "path": "ambience/forest/continuous/forest_loop_002.ogg",
-          "duration_ms": 24507,
-          "crossfade_ms": 5455
+          "duration_ms": 7857,
+          "crossfade_ms": 2000
         },
         {
           "asset_id": "forest_loop_003",
           "path": "ambience/forest/continuous/forest_loop_003.ogg",
-          "duration_ms": 24507,
-          "crossfade_ms": 6401
+          "duration_ms": 7857,
+          "crossfade_ms": 2000
         }
       ],
       "events": []

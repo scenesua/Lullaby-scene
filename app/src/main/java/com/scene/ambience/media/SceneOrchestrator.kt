@@ -950,7 +950,7 @@ class SceneOrchestrator(
             AmbientJourneyProfile(
                 sceneId = FOREST_TEMPLE_JOURNEY,
                 departureSource = SOURCE_FOREST,
-                bedSources = mapOf(SOURCE_FOREST to .34f, SOURCE_BIRDS to .10f, SOURCE_FOREST_TEMPLE_BOWL to .09f),
+                bedSources = mapOf(SOURCE_FOREST to .34f, SOURCE_FOREST_TEMPLE_BOWL to .09f),
                 arrivalSource = SOURCE_FOREST,
                 manualEvents = mapOf(
                     SOURCE_FOREST_TEMPLE_MOKTAK to .10f,
