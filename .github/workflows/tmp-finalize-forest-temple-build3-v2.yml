@@ -43,12 +43,7 @@ jobs:
           head -c 32 "$original" | xxd
           ffprobe -v error -show_entries format=format_name,duration,size -show_entries stream=codec_name,sample_rate,channels -of default=nw=1 "$original"
           duration="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$original")"
-          python3 - "$duration" <<'PY'
-import sys
-v=float(sys.argv[1])
-if not 430 <= v <= 445:
-    raise SystemExit(f'unexpected chant duration: {v}')
-PY
+          python3 -c 'import sys; v=float(sys.argv[1]); assert 430 <= v <= 445, f"unexpected chant duration: {v}"' "$duration"
           mkdir -p web/audio/scenes/forest_temple_journey
           ffmpeg -hide_banner -loglevel error -y -i "$original" -map 0:a:0 -c:a libopus -b:a 96k -vbr on web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_original_full_001.ogg
           ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,sample_rate,channels -of default=nw=1 web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_original_full_001.ogg
