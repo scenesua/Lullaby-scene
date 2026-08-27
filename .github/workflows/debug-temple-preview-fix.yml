@@ -1,0 +1,82 @@
+name: Fix Forest Temple debug previews
+
+on:
+  push:
+    branches:
+      - debug
+    paths:
+      - '.github/workflows/debug-temple-preview-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out debug
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: debug
+          fetch-depth: 0
+
+      - name: Patch Forest Temple debug audition and cache versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          remaining = Path('web/remaining-journeys-v1.js')
+          s = remaining.read_text()
+          old_sched = "node.filter.frequency.setValueAtTime(sutra?5200:type==='gravel'?5200:7200,ctx.currentTime);node.gain.gain.setValueAtTime(sutra?.075:type==='gravel'?.075:.09,ctx.currentTime)"
+          new_sched = "node.filter.frequency.setValueAtTime(sutra?6500:type==='gravel'?5200:7200,ctx.currentTime);node.gain.gain.setValueAtTime(sutra?.11:type==='gravel'?.075:.09,ctx.currentTime)"
+          old_debug = "node.filter.frequency.setValueAtTime(sutra?3900:picked==='gravel'?5200:7200,ctx.currentTime);node.gain.gain.setValueAtTime(sutra?.045:picked==='gravel'?.075:.09,ctx.currentTime)"
+          new_debug = "node.filter.frequency.setValueAtTime(sutra?6800:picked==='gravel'?5200:7200,ctx.currentTime);node.gain.gain.setValueAtTime(sutra?.18:picked==='gravel'?.075:.09,ctx.currentTime)"
+          if old_sched not in s:
+              raise SystemExit('scheduled sutra settings baseline not found')
+          if old_debug not in s:
+              raise SystemExit('debug sutra settings baseline not found')
+          remaining.write_text(s.replace(old_sched,new_sched).replace(old_debug,new_debug))
+
+          player = Path('web/player/index.html')
+          s = player.read_text()
+          s = s.replace('/remaining-journeys-v1.js?v=26','/remaining-journeys-v1.js?v=27')
+          s = s.replace('/debug-bridge-v1.js?v=4','/debug-bridge-v1.js?v=5')
+          player.write_text(s)
+
+          debug = Path('web/debug/index.html')
+          s = debug.read_text().replace('/debug-console-v1.js?v=5','/debug-console-v1.js?v=6')
+          debug.write_text(s)
+
+          sw = Path('web/sw.js')
+          s = sw.read_text()
+          s = s.replace("const CACHE='lullaby-scene-debug-v13'", "const CACHE='lullaby-scene-debug-v14'")
+          s = s.replace('/remaining-journeys-v1.js?v=26','/remaining-journeys-v1.js?v=27')
+          s = s.replace('/debug-console-v1.js?v=5','/debug-console-v1.js?v=6')
+          s = s.replace('/debug-bridge-v1.js?v=4','/debug-bridge-v1.js?v=5')
+          sw.write_text(s)
+          PY
+
+          node --check web/remaining-journeys-v1.js
+          node --check web/debug-bridge-v1.js
+          node --check web/debug-console-v1.js
+          grep -Fq "sutra?6800" web/remaining-journeys-v1.js
+          grep -Fq "sutra?.18" web/remaining-journeys-v1.js
+          grep -Fq "sutra?6500" web/remaining-journeys-v1.js
+          grep -Fq "sutra?.11" web/remaining-journeys-v1.js
+          grep -Fq "debug-bridge-v1.js?v=5" web/player/index.html
+          grep -Fq "debug-console-v1.js?v=6" web/debug/index.html
+          grep -Fq "lullaby-scene-debug-v14" web/sw.js
+
+      - name: Commit debug preview fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/remaining-journeys-v1.js web/player/index.html web/debug/index.html web/sw.js
+          git diff --cached --quiet && exit 0
+          git commit -m 'Fix Forest Temple debug audition and timeline cache'
+          git push origin HEAD:debug
