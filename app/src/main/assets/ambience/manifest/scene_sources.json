@@ -110,6 +110,10 @@
       "continuous": [], "events": [{"asset_id": "submarine_sonar_event_001", "path": "ambience/submarine_journey/events/submarine_sonar_event_001.ogg", "duration_ms": 5006, "role": "event", "tags": ["submarine", "sonar", "sleep_safe", "stereo"], "provenance_id": "freesound_breviceps_493162", "event_weight": 1.0, "cooldown_ms": 180000}]
     },
     {
+      "id":"forest_temple_path_walk","category":"travel","display_name_key":"source_forest_temple_path_walk","default_volume":0.34,"loop_mode":"seamless",
+      "continuous":[{"asset_id":"forest_temple_path_walk_001","path":"ambience/forest_temple_journey/continuous/forest_temple_path_walk_001.ogg","duration_ms":104007,"role":"departure","tags":["forest_temple","gravel","listener_walk","departure"],"provenance_id":"freesound_samuelgremaud_429182"}],"events":[]
+    },
+    {
       "id":"forest_temple_bowl","category":"travel","display_name_key":"source_forest_temple_bowl","default_volume":0.09,"loop_mode":"crossfade",
       "continuous":[{"asset_id":"forest_temple_bowl_bed_001","path":"ambience/forest_temple_journey/continuous/forest_temple_bowl_bed_001.ogg","duration_ms":77007,"crossfade_ms":8000,"role":"bed","tags":["forest_temple","singing_bowl","temple_right","meditation"],"provenance_id":"derived_singing_bowl_loop_001"}],"events":[]
     },

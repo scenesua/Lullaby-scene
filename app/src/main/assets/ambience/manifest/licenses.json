@@ -827,6 +827,18 @@
       "original_archive": null
     },
     {
+      "asset_id": "forest_temple_path_walk_001",
+      "source_name": "FOOTSTEP IN GRAVEL",
+      "creator": "SamuelGremaud",
+      "source_page": "https://freesound.org/people/SamuelGremaud/sounds/429182/",
+      "license": "CC0-1.0",
+      "license_status": "verified",
+      "attribution_required": false,
+      "original_filename": "429182_8031303-hq.mp3",
+      "original_archive": null,
+      "transformation": "Listener-perspective path walk fading to silence during the first journey phase; 48 kHz stereo Ogg Opus"
+    },
+    {
       "asset_id": "forest_temple_bowl_bed_001",
       "source_name": null,
       "creator": null,
