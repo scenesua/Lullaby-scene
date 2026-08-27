@@ -1,8 +1,10 @@
 name: Forest Temple debug build 2
 on:
   push:
-    branches: [debug]
-    paths: ['.github/workflows/debug-temple-stage2.yml']
+    branches:
+      - debug
+    paths:
+      - .github/workflows/debug-temple-stage2.yml
 permissions:
   contents: write
 jobs:
@@ -15,100 +17,21 @@ jobs:
           ref: debug
           fetch-depth: 0
       - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg >/dev/null
+      - name: Prepare build 2
+        run: python3 tools/debug_build2.py
+      - name: Validate build 2
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg >/dev/null
-      - name: Create Forest Temple wide bamboo ambience
-        run: |
-          set -euo pipefail
-          src='web/audio/bamboo_forest.ogg'
-          out='web/audio/scenes/forest_temple_journey/forest_temple_bamboo_wide_bed_001.ogg'
-          test -s "$src"
-          ffmpeg -hide_banner -loglevel error -y -i "$src" \
-            -af 'extrastereo=m=1.35:c=1' \
-            -ar 48000 -ac 2 -c:a libopus -b:a 112k -vbr on "$out"
-          test -s "$out"
-          ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$out"
-      - name: Patch Forest Temple runtime and debug build number
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          def once(text, old, new, label):
-              if old not in text:
-                  raise SystemExit(f'missing patch target: {label}')
-              return text.replace(old, new, 1)
-
-          p=Path('web/remaining-journeys-v1.js')
-          s=p.read_text()
-          s=once(s,"forest:['/audio/bamboo_forest.ogg?v=1',94.744]","forest:['/audio/scenes/forest_temple_journey/forest_temple_bamboo_wide_bed_001.ogg?v=1',94.744]",'wide bamboo source')
-          s=once(s,"gains:{departure:.34,forest:.215,bowl:.227}","gains:{departure:1,forest:.152,bowl:.227}",'stage one footsteps and bamboo level')
-          s=once(s,
-            "const media={},eventNodes={},hoodVoiceCursor={gunshot:0,gunShotgun:0};let audibleRole=null,eventTimers=new Set(),eventLabelUntil=0,currentEventLabel=null,roleGeneration=0;",
-            "const media={},eventNodes={},hoodVoiceCursor={gunshot:0,gunShotgun:0};let audibleRole=null,eventTimers=new Set(),eventLabelUntil=0,currentEventLabel=null,roleGeneration=0,templePhaseIndex=-1,templeStageThreeStarting=false;",
-            'temple phase state')
-
-          marker="  function scheduleTempleEvent(delayMs){"
-          if marker not in s:
-              raise SystemExit('missing temple scheduler marker')
-          helper="""  async function playTempleEventNow(type,{resumeRandom=false}={}){
-    const cfg=config(),id=activeJourneyId,event=cfg?.event;if(id!=='forest_temple_journey'||event?.sequence!=='temple')return false;
-    const node=eventNodes[id]?.[type],source=event.sources[type];if(!node||!source)return false;
-    for(const other of Object.values(eventNodes[id]||{})){other.el.pause();other.gain.gain.cancelScheduledValues(ctx.currentTime);other.gain.gain.setValueAtTime(0,ctx.currentTime);try{other.el.currentTime=0}catch{}}
-    const durationMs=source[1],sutra=type==='heartSutra',fromTemple=sutra||type==='moktak';
-    node.filter.frequency.setValueAtTime(sutra?6100:type==='gravel'?5200:7200,ctx.currentTime);
-    node.gain.gain.setValueAtTime(sutra?.157:type==='gravel'?.075:.09,ctx.currentTime);
-    if(node.panner)node.panner.pan.setValueAtTime(fromTemple?.48:random(-.28,.28),ctx.currentTime);
-    currentEventLabel=templeLabels[type];eventLabelUntil=performance.now()+durationMs;node.el.currentTime=0;await node.el.play();
-    if(resumeRandom&&window.LullabyJourneyEvents?.enabled)later(()=>scheduleTempleEvent(),durationMs);
-    return true;
-  }
-  function forceTempleStageThreeSutra(){
-    if(templeStageThreeStarting||activeJourneyId!=='forest_temple_journey'||!scenePlaying)return;
-    templeStageThreeStarting=true;for(const timer of eventTimers)clearTimeout(timer);eventTimers.clear();
-    void playTempleEventNow('heartSutra',{resumeRandom:true}).catch(error=>console.warn('stage 3 Heart Sutra unavailable',error)).finally(()=>{templeStageThreeStarting=false});
-  }
-"""
-          s=s.replace(marker,helper+marker,1)
-
-          old="""    const cfg=config();if(!cfg||!ctx)return;const total=Math.max(60000,durationMinutes*60000),role=audioRoleFor(ms,total,cfg),roleChanged=role!==audibleRole,fx=transitionProfile(ms,total,cfg),fadeSeconds=role==='bed'?cfg.fx[1].roleFadeSeconds:role==='arrival'?cfg.fx[4].roleFadeSeconds:fx.roleFadeSeconds;void activateRole(role,ms,total,fadeSeconds).catch(console.error);"""
-          new="""    const cfg=config();if(!cfg||!ctx)return;const total=Math.max(60000,durationMinutes*60000),stage=phaseIndex(ms,total,cfg),role=audioRoleFor(ms,total,cfg),roleChanged=role!==audibleRole,fx=transitionProfile(ms,total,cfg),fadeSeconds=role==='bed'?cfg.fx[1].roleFadeSeconds:role==='arrival'?cfg.fx[4].roleFadeSeconds:fx.roleFadeSeconds;
-    if(activeJourneyId==='forest_temple_journey'){const entered=stage!==templePhaseIndex;templePhaseIndex=stage;if(entered&&stage===2&&scenePlaying)forceTempleStageThreeSutra()}else templePhaseIndex=-1;
-    void activateRole(role,ms,total,fadeSeconds).catch(console.error);"""
-          s=once(s,old,new,'stage 3 forced sutra hook')
-          s=once(s,"function stop(arrived=false){scenePlaying=false;pausedAt=0;","function stop(arrived=false){scenePlaying=false;pausedAt=0;templePhaseIndex=-1;templeStageThreeStarting=false;",'reset temple phase state')
-          p.write_text(s)
-
-          p=Path('web/player/index.html')
-          s=p.read_text()
-          if '/remaining-journeys-v1.js?v=31' not in s:
-              raise SystemExit('player remaining-journeys v31 not found')
-          p.write_text(s.replace('/remaining-journeys-v1.js?v=31','/remaining-journeys-v1.js?v=32'))
-
-          p=Path('web/sw.js')
-          s=p.read_text()
-          s=once(s,"const CACHE='lullaby-scene-debug-v18'","const CACHE='lullaby-scene-debug-v19'",'SW cache')
-          s=once(s,'/remaining-journeys-v1.js?v=31','/remaining-journeys-v1.js?v=32','SW remaining journey cache key')
-          p.write_text(s)
-
-          p=Path('web/debug/index.html')
-          s=p.read_text()
-          s=once(s,'DEBUG_BUILD:1','DEBUG_BUILD:2','debug build marker')
-          s=once(s,'현재 디버그 버전 · <strong style="font-size:18px;color:#fff">#1</strong>','현재 디버그 버전 · <strong style="font-size:18px;color:#fff">#2</strong>','debug build banner')
-          p.write_text(s)
-          PY
           node --check web/remaining-journeys-v1.js
           grep -Fq 'forest_temple_bamboo_wide_bed_001.ogg?v=1' web/remaining-journeys-v1.js
           grep -Fq 'gains:{departure:1,forest:.152,bowl:.227}' web/remaining-journeys-v1.js
-          grep -Fq "entered&&stage===2&&scenePlaying" web/remaining-journeys-v1.js
-          grep -Fq "playTempleEventNow('heartSutra',{resumeRandom:true})" web/remaining-journeys-v1.js
+          grep -Fq 'entered&&stage===2&&scenePlaying' web/remaining-journeys-v1.js
           grep -Fq 'DEBUG_BUILD:2' web/debug/index.html
-      - name: Commit debug build 2
+      - name: Commit build 2
         run: |
-          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm -f .github/workflows/debug-analyze-temple-walk.yml .github/workflows/debug-temple-stage2.yml
+          git rm -f .github/workflows/debug-analyze-temple-walk.yml .github/workflows/debug-temple-stage2.yml tools/debug_build2.py
           git add web/audio/scenes/forest_temple_journey/forest_temple_bamboo_wide_bed_001.ogg web/remaining-journeys-v1.js web/player/index.html web/sw.js web/debug/index.html
           git commit -m 'Forest Temple debug build 2: stage audio and sutra cue'
           git fetch origin debug
