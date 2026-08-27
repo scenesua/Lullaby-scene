@@ -1,5 +1,5 @@
 {
-  "version": 10,
+  "version": 12,
   "sources": [
     {
       "id": "aircraft_cabin",
@@ -14,7 +14,16 @@
           "duration_ms": 105006,
           "crossfade_ms": 3500,
           "role": "bed",
-          "tags": ["aircraft", "cabin", "interior", "field_recording", "cruise", "stereo", "long_loop", "whistle_notched"],
+          "tags": [
+            "aircraft",
+            "cabin",
+            "interior",
+            "field_recording",
+            "cruise",
+            "stereo",
+            "long_loop",
+            "whistle_notched"
+          ],
           "provenance_id": "freesound_jasonm911_853735"
         }
       ],
@@ -26,14 +35,22 @@
       "display_name_key": "source_train_journey_departure",
       "default_volume": 0.58,
       "loop_mode": "seamless",
-      "continuous": [{
-        "asset_id": "train_journey_departure_001",
-        "path": "ambience/train_journey/continuous/train_journey_departure_001.ogg",
-        "duration_ms": 35183,
-        "role": "departure",
-        "tags": ["train", "doors", "acceleration", "transition", "stereo"],
-        "provenance_id": "wikimedia_train_departure_public_domain"
-      }],
+      "continuous": [
+        {
+          "asset_id": "train_journey_departure_001",
+          "path": "ambience/train_journey/continuous/train_journey_departure_001.ogg",
+          "duration_ms": 35183,
+          "role": "departure",
+          "tags": [
+            "train",
+            "doors",
+            "acceleration",
+            "transition",
+            "stereo"
+          ],
+          "provenance_id": "wikimedia_train_departure_public_domain"
+        }
+      ],
       "events": []
     },
     {
@@ -42,15 +59,23 @@
       "display_name_key": "source_train_journey_bed",
       "default_volume": 0.54,
       "loop_mode": "crossfade",
-      "continuous": [{
-        "asset_id": "train_journey_bed_001",
-        "path": "ambience/train_journey/continuous/train_journey_bed_001.ogg",
-        "duration_ms": 234671,
-        "crossfade_ms": 8000,
-        "role": "bed",
-        "tags": ["train", "carriage", "wheels", "night", "stereo"],
-        "provenance_id": "wikimedia_ural66_train_wheels"
-      }],
+      "continuous": [
+        {
+          "asset_id": "train_journey_bed_001",
+          "path": "ambience/train_journey/continuous/train_journey_bed_001.ogg",
+          "duration_ms": 234671,
+          "crossfade_ms": 8000,
+          "role": "bed",
+          "tags": [
+            "train",
+            "carriage",
+            "wheels",
+            "night",
+            "stereo"
+          ],
+          "provenance_id": "wikimedia_ural66_train_wheels"
+        }
+      ],
       "events": []
     },
     {
@@ -59,126 +84,764 @@
       "display_name_key": "source_train_journey_arrival",
       "default_volume": 0.56,
       "loop_mode": "seamless",
-      "continuous": [{
-        "asset_id": "train_journey_arrival_001",
-        "path": "ambience/train_journey/continuous/train_journey_arrival_001.ogg",
-        "duration_ms": 32236,
-        "role": "arrival",
-        "tags": ["train", "deceleration", "arrival", "transition", "stereo"],
-        "provenance_id": "wikimedia_e217_e231_deceleration"
-      }],
+      "continuous": [
+        {
+          "asset_id": "train_journey_arrival_001",
+          "path": "ambience/train_journey/continuous/train_journey_arrival_001.ogg",
+          "duration_ms": 32236,
+          "role": "arrival",
+          "tags": [
+            "train",
+            "deceleration",
+            "arrival",
+            "transition",
+            "stereo"
+          ],
+          "provenance_id": "wikimedia_e217_e231_deceleration"
+        }
+      ],
       "events": []
     },
     {
-      "id": "ferry_journey_departure", "category": "travel", "display_name_key": "source_ferry_journey_departure", "default_volume": 0.54, "loop_mode": "seamless",
-      "continuous": [{"asset_id": "ferry_journey_departure_001", "path": "ambience/ferry_journey/continuous/ferry_journey_departure_001.ogg", "duration_ms": 128667, "role": "departure", "tags": ["ferry", "stern", "departure", "stereo"], "provenance_id": "freesound_mrmayo_74916"}], "events": []
+      "id": "ferry_journey_departure",
+      "category": "travel",
+      "display_name_key": "source_ferry_journey_departure",
+      "default_volume": 0.54,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "ferry_journey_departure_001",
+          "path": "ambience/ferry_journey/continuous/ferry_journey_departure_001.ogg",
+          "duration_ms": 128667,
+          "role": "departure",
+          "tags": [
+            "ferry",
+            "stern",
+            "departure",
+            "stereo"
+          ],
+          "provenance_id": "freesound_mrmayo_74916"
+        }
+      ],
+      "events": []
     },
     {
-      "id": "ferry_journey_bed", "category": "travel", "display_name_key": "source_ferry_journey_bed", "default_volume": 0.48, "loop_mode": "crossfade",
-      "continuous": [{"asset_id": "ferry_journey_bed_001", "path": "ambience/ferry_journey/continuous/ferry_journey_bed_001.ogg", "duration_ms": 120666, "crossfade_ms": 8000, "role": "bed", "tags": ["ferry", "stern", "wake", "night", "stereo"], "provenance_id": "freesound_mrmayo_74916"}], "events": []
+      "id": "ferry_journey_bed",
+      "category": "travel",
+      "display_name_key": "source_ferry_journey_bed",
+      "default_volume": 0.48,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "ferry_journey_bed_001",
+          "path": "ambience/ferry_journey/continuous/ferry_journey_bed_001.ogg",
+          "duration_ms": 120666,
+          "crossfade_ms": 8000,
+          "role": "bed",
+          "tags": [
+            "ferry",
+            "stern",
+            "wake",
+            "night",
+            "stereo"
+          ],
+          "provenance_id": "freesound_mrmayo_74916"
+        }
+      ],
+      "events": []
     },
     {
-      "id": "ferry_journey_arrival", "category": "travel", "display_name_key": "source_ferry_journey_arrival", "default_volume": 0.52, "loop_mode": "seamless",
-      "continuous": [{"asset_id": "ferry_journey_arrival_001", "path": "ambience/ferry_journey/continuous/ferry_journey_arrival_001.ogg", "duration_ms": 98065, "role": "arrival", "tags": ["ferry", "waves", "harbor", "arrival", "stereo"], "provenance_id": "freesound_hajohansen_758917"}], "events": []
+      "id": "ferry_journey_arrival",
+      "category": "travel",
+      "display_name_key": "source_ferry_journey_arrival",
+      "default_volume": 0.52,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "ferry_journey_arrival_001",
+          "path": "ambience/ferry_journey/continuous/ferry_journey_arrival_001.ogg",
+          "duration_ms": 98065,
+          "role": "arrival",
+          "tags": [
+            "ferry",
+            "waves",
+            "harbor",
+            "arrival",
+            "stereo"
+          ],
+          "provenance_id": "freesound_hajohansen_758917"
+        }
+      ],
+      "events": []
     },
     {
-      "id": "spacecraft_journey_transition", "category": "travel", "display_name_key": "source_spacecraft_journey_transition", "default_volume": 0.50, "loop_mode": "seamless",
-      "continuous": [{"asset_id": "spacecraft_journey_transition_001", "path": "ambience/spacecraft_journey/continuous/spacecraft_journey_transition_001.ogg", "duration_ms": 17824, "role": "transition", "tags": ["spacecraft", "hum", "transition", "stereo"], "provenance_id": "freesound_alaskarobotics_221570"}], "events": []
+      "id": "spacecraft_journey_transition",
+      "category": "travel",
+      "display_name_key": "source_spacecraft_journey_transition",
+      "default_volume": 0.5,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "spacecraft_journey_transition_001",
+          "path": "ambience/spacecraft_journey/continuous/spacecraft_journey_transition_001.ogg",
+          "duration_ms": 17824,
+          "role": "transition",
+          "tags": [
+            "spacecraft",
+            "hum",
+            "transition",
+            "stereo"
+          ],
+          "provenance_id": "freesound_alaskarobotics_221570"
+        }
+      ],
+      "events": []
     },
     {
-      "id": "spacecraft_journey_bed", "category": "travel", "display_name_key": "source_spacecraft_journey_bed", "default_volume": 0.48, "loop_mode": "crossfade",
-      "continuous": [{"asset_id": "spacecraft_journey_bed_001", "path": "ambience/spacecraft_journey/continuous/spacecraft_journey_bed_001.ogg", "duration_ms": 154007, "crossfade_ms": 8000, "role": "bed", "tags": ["spacecraft", "interior", "reactor", "electronic", "drift", "night", "stereo"], "provenance_id": "freesound_jmayoff_256269"}], "events": []
+      "id": "spacecraft_journey_bed",
+      "category": "travel",
+      "display_name_key": "source_spacecraft_journey_bed",
+      "default_volume": 0.48,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "spacecraft_journey_bed_001",
+          "path": "ambience/spacecraft_journey/continuous/spacecraft_journey_bed_001.ogg",
+          "duration_ms": 154007,
+          "crossfade_ms": 8000,
+          "role": "bed",
+          "tags": [
+            "spacecraft",
+            "interior",
+            "reactor",
+            "electronic",
+            "drift",
+            "night",
+            "stereo"
+          ],
+          "provenance_id": "freesound_jmayoff_256269"
+        }
+      ],
+      "events": []
     },
     {
-      "id": "submarine_journey_departure", "category": "travel", "display_name_key": "source_submarine_journey_departure", "default_volume": 0.54, "loop_mode": "seamless",
-      "continuous": [{"asset_id": "submarine_journey_departure_001", "path": "ambience/submarine_journey/continuous/submarine_journey_departure_001.ogg", "duration_ms": 47282, "role": "departure", "tags": ["submarine", "dive", "movement", "stereo"], "provenance_id": "freesound_tim_verberne_484187"}], "events": []
+      "id": "submarine_journey_departure",
+      "category": "travel",
+      "display_name_key": "source_submarine_journey_departure",
+      "default_volume": 0.54,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "submarine_journey_departure_001",
+          "path": "ambience/submarine_journey/continuous/submarine_journey_departure_001.ogg",
+          "duration_ms": 47282,
+          "role": "departure",
+          "tags": [
+            "submarine",
+            "dive",
+            "movement",
+            "stereo"
+          ],
+          "provenance_id": "freesound_tim_verberne_484187"
+        }
+      ],
+      "events": []
     },
     {
-      "id": "submarine_journey_engine_bed", "category": "travel", "display_name_key": "source_submarine_journey_engine_bed", "default_volume": 0.43, "loop_mode": "crossfade",
-      "continuous": [{"asset_id": "submarine_journey_engine_bed_001", "path": "ambience/submarine_journey/continuous/submarine_journey_engine_bed_001.ogg", "duration_ms": 127038, "crossfade_ms": 8000, "role": "bed", "tags": ["submarine", "engine", "interior", "mono_source"], "provenance_id": "freesound_craigsmith_438726"}], "events": []
+      "id": "submarine_journey_engine_bed",
+      "category": "travel",
+      "display_name_key": "source_submarine_journey_engine_bed",
+      "default_volume": 0.43,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "submarine_journey_engine_bed_001",
+          "path": "ambience/submarine_journey/continuous/submarine_journey_engine_bed_001.ogg",
+          "duration_ms": 127038,
+          "crossfade_ms": 8000,
+          "role": "bed",
+          "tags": [
+            "submarine",
+            "engine",
+            "interior",
+            "mono_source"
+          ],
+          "provenance_id": "freesound_craigsmith_438726"
+        }
+      ],
+      "events": []
     },
     {
-      "id": "submarine_journey_water_bed", "category": "travel", "display_name_key": "source_submarine_journey_water_bed", "default_volume": 0.24, "loop_mode": "crossfade",
-      "continuous": [{"asset_id": "submarine_journey_water_bed_001", "path": "ambience/submarine_journey/continuous/submarine_journey_water_bed_001.ogg", "duration_ms": 114006, "crossfade_ms": 8000, "role": "bed", "tags": ["submarine", "underwater", "ambience", "stereo"], "provenance_id": "freesound_tim_verberne_482167"}], "events": []
+      "id": "submarine_journey_water_bed",
+      "category": "travel",
+      "display_name_key": "source_submarine_journey_water_bed",
+      "default_volume": 0.24,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "submarine_journey_water_bed_001",
+          "path": "ambience/submarine_journey/continuous/submarine_journey_water_bed_001.ogg",
+          "duration_ms": 114006,
+          "crossfade_ms": 8000,
+          "role": "bed",
+          "tags": [
+            "submarine",
+            "underwater",
+            "ambience",
+            "stereo"
+          ],
+          "provenance_id": "freesound_tim_verberne_482167"
+        }
+      ],
+      "events": []
     },
     {
-      "id": "submarine_journey_arrival", "category": "travel", "display_name_key": "source_submarine_journey_arrival", "default_volume": 0.52, "loop_mode": "seamless",
-      "continuous": [{"asset_id": "submarine_journey_arrival_001", "path": "ambience/submarine_journey/continuous/submarine_journey_arrival_001.ogg", "duration_ms": 54232, "role": "arrival", "tags": ["submarine", "interior", "surface", "mono_source"], "provenance_id": "freesound_craigsmith_438724"}], "events": []
+      "id": "submarine_journey_arrival",
+      "category": "travel",
+      "display_name_key": "source_submarine_journey_arrival",
+      "default_volume": 0.52,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "submarine_journey_arrival_001",
+          "path": "ambience/submarine_journey/continuous/submarine_journey_arrival_001.ogg",
+          "duration_ms": 54232,
+          "role": "arrival",
+          "tags": [
+            "submarine",
+            "interior",
+            "surface",
+            "mono_source"
+          ],
+          "provenance_id": "freesound_craigsmith_438724"
+        }
+      ],
+      "events": []
     },
     {
-      "id": "submarine_sonar", "category": "travel", "display_name_key": "source_submarine_sonar", "default_volume": 0.08, "loop_mode": "event",
-      "continuous": [], "events": [{"asset_id": "submarine_sonar_event_001", "path": "ambience/submarine_journey/events/submarine_sonar_event_001.ogg", "duration_ms": 5006, "role": "event", "tags": ["submarine", "sonar", "sleep_safe", "stereo"], "provenance_id": "freesound_breviceps_493162", "event_weight": 1.0, "cooldown_ms": 180000}]
-    },
-    {
-      "id":"forest_temple_path_walk","category":"travel","display_name_key":"source_forest_temple_path_walk","default_volume":0.34,"loop_mode":"seamless",
-      "continuous":[{"asset_id":"forest_temple_path_walk_001","path":"ambience/forest_temple_journey/continuous/forest_temple_path_walk_001.ogg","duration_ms":104007,"role":"departure","tags":["forest_temple","gravel","listener_walk","departure"],"provenance_id":"freesound_samuelgremaud_429182"}],"events":[]
-    },
-    {
-      "id":"forest_temple_bowl","category":"travel","display_name_key":"source_forest_temple_bowl","default_volume":0.09,"loop_mode":"crossfade",
-      "continuous":[{"asset_id":"forest_temple_bowl_bed_001","path":"ambience/forest_temple_journey/continuous/forest_temple_bowl_bed_001.ogg","duration_ms":77007,"crossfade_ms":8000,"role":"bed","tags":["forest_temple","singing_bowl","temple_right","meditation"],"provenance_id":"derived_singing_bowl_loop_001"}],"events":[]
-    },
-    {
-      "id":"forest_temple_moktak","category":"travel","display_name_key":"source_forest_temple_moktak","default_volume":0.10,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"forest_temple_moktak_event_001","path":"ambience/forest_temple_journey/events/forest_temple_moktak_event_001.ogg","duration_ms":12733,"role":"event","tags":["forest_temple","moktak","temple_right"],"provenance_id":"freesound_jonopodmore_607215","cooldown_ms":210000}]
-    },
-    {
-      "id":"forest_temple_gravel","category":"travel","display_name_key":"source_forest_temple_gravel","default_volume":0.08,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"forest_temple_gravel_event_001","path":"ambience/forest_temple_journey/events/forest_temple_gravel_event_001.ogg","duration_ms":26907,"role":"event","tags":["forest_temple","gravel","slow_footsteps","path"],"provenance_id":"freesound_samuelgremaud_429182","cooldown_ms":210000}]
-    },
-    {
-      "id":"forest_temple_heart_sutra","category":"travel","display_name_key":"source_forest_temple_heart_sutra","default_volume":0.05,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"forest_temple_heart_sutra_event_001","path":"ambience/forest_temple_journey/events/forest_temple_heart_sutra_event_001.ogg","duration_ms":132764,"role":"event","tags":["forest_temple","heart_sutra","mandarin","temple_right","distant"],"provenance_id":"commons_nyarlathotep1001_heart_sutra","cooldown_ms":540000}]
-    },
-    {
-      "id":"hood_journey_bed","category":"travel","display_name_key":"source_hood_journey_bed","default_volume":0.52,"loop_mode":"crossfade",
-      "continuous":[{"asset_id":"hood_journey_bed_001","path":"ambience/hood_journey/continuous/hood_journey_bed_001.ogg","duration_ms":106652,"crossfade_ms":8000,"role":"bed","tags":["hood","inner_city","night","traffic","stereo"],"provenance_id":"freesound_risto_alcinov_371250"}],"events":[]
-    },
-    {
-      "id":"hood_gunshot","category":"travel","display_name_key":"source_hood_gunshot","default_volume":0.28,"loop_mode":"event","continuous":[],
-      "events":[
-        {"asset_id":"hood_gunshot_event_001","path":"ambience/hood_journey/events/hood_gunshot_event_001.ogg","duration_ms":3324,"role":"event","tags":["hood","gunshot","distant"],"provenance_id":"freesound_resaural_541164","cooldown_ms":480000},
-        {"asset_id":"hood_gunshot_rifle_event_002","path":"ambience/hood_journey/events/hood_gunshot_rifle_event_002.ogg","duration_ms":490,"role":"event","tags":["hood","rifle","burst","distant"],"provenance_id":"freesound_qubodup_482120","cooldown_ms":480000},
-        {"asset_id":"hood_gunshot_pistol_event_003","path":"ambience/hood_journey/events/hood_gunshot_pistol_event_003.ogg","duration_ms":656,"role":"event","tags":["hood","pistol","distant"],"provenance_id":"freesound_lemudcrab_163456","cooldown_ms":480000},
-        {"asset_id":"hood_gunshot_shotgun_event_004","path":"ambience/hood_journey/events/hood_gunshot_shotgun_event_004.ogg","duration_ms":2436,"role":"event","tags":["hood","shotgun","distant"],"provenance_id":"freesound_moosegravy_431822","cooldown_ms":480000},
-        {"asset_id":"hood_gunshot_burst_event_005","path":"ambience/hood_journey/events/hood_gunshot_burst_event_005.ogg","duration_ms":2396,"role":"event","tags":["hood","burst","distant"],"provenance_id":"freesound_adrilahan_337241","cooldown_ms":480000}
+      "id": "submarine_sonar",
+      "category": "travel",
+      "display_name_key": "source_submarine_sonar",
+      "default_volume": 0.08,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "submarine_sonar_event_001",
+          "path": "ambience/submarine_journey/events/submarine_sonar_event_001.ogg",
+          "duration_ms": 5006,
+          "role": "event",
+          "tags": [
+            "submarine",
+            "sonar",
+            "sleep_safe",
+            "stereo"
+          ],
+          "provenance_id": "freesound_breviceps_493162",
+          "event_weight": 1.0,
+          "cooldown_ms": 180000
+        }
       ]
     },
     {
-      "id":"hood_siren","category":"travel","display_name_key":"source_hood_siren","default_volume":0.34,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_siren_event_001","path":"ambience/hood_journey/events/hood_siren_event_001.ogg","duration_ms":15000,"role":"event","tags":["hood","police","siren","passing","clean"],"provenance_id":"freesound_titankaempfer_746302","cooldown_ms":420000}]
+      "id": "forest_temple_path_walk",
+      "category": "travel",
+      "display_name_key": "source_forest_temple_path_walk",
+      "default_volume": 0.34,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "forest_temple_path_walk_001",
+          "path": "ambience/forest_temple_journey/continuous/forest_temple_path_walk_001.ogg",
+          "duration_ms": 104007,
+          "role": "departure",
+          "tags": [
+            "forest_temple",
+            "gravel",
+            "listener_walk",
+            "departure"
+          ],
+          "provenance_id": "freesound_samuelgremaud_429182"
+        }
+      ],
+      "events": []
     },
     {
-      "id":"hood_glass","category":"travel","display_name_key":"source_hood_glass","default_volume":0.20,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_glass_event_001","path":"ambience/hood_journey/events/hood_glass_event_001.ogg","duration_ms":817,"role":"event","tags":["hood","glass","impact"],"provenance_id":"freesound_c_rogers_203377","cooldown_ms":720000}]
+      "id": "forest_temple_bamboo_bed",
+      "category": "travel",
+      "display_name_key": "source_bamboo_forest",
+      "default_volume": 0.121,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "forest_temple_bamboo_wide_bed_001",
+          "path": "ambience/forest_temple_journey/continuous/forest_temple_bamboo_wide_bed_001.ogg",
+          "duration_ms": 94744,
+          "crossfade_ms": 8000,
+          "role": "bed",
+          "tags": [
+            "forest_temple",
+            "bamboo",
+            "wide",
+            "soft_clipped"
+          ],
+          "provenance_id": "derived_bamboo_forest_wide_001"
+        }
+      ],
+      "events": []
     },
     {
-      "id":"hood_shout","category":"travel","display_name_key":"source_hood_shout","default_volume":0.18,"loop_mode":"event","continuous":[],
-      "events":[
-        {"asset_id":"hood_shout_event_001","path":"ambience/hood_journey/events/hood_shout_event_001.ogg","duration_ms":3207,"role":"event","tags":["hood","street","shouting","distant"],"provenance_id":"freesound_yottasounds_174645","cooldown_ms":240000},
-        {"asset_id":"hood_shout_male_event_002","path":"ambience/hood_journey/events/hood_shout_male_event_002.ogg","duration_ms":6506,"role":"event","tags":["hood","male","scream","distant"],"provenance_id":"freesound_dinsfire_169628","cooldown_ms":240000},
-        {"asset_id":"hood_scream_short_event_003","path":"ambience/hood_journey/events/hood_scream_short_event_003.ogg","duration_ms":2356,"role":"event","tags":["hood","scream","distant"],"provenance_id":"freesound_ericnorcross81_575675","cooldown_ms":240000},
-        {"asset_id":"hood_scream_crowd_event_004","path":"ambience/hood_journey/events/hood_scream_crowd_event_004.ogg","duration_ms":7906,"role":"event","tags":["hood","crowd","scream","distant"],"provenance_id":"freesound_craigsmith_479894","cooldown_ms":240000}
+      "id": "forest_temple_bowl",
+      "category": "travel",
+      "display_name_key": "source_forest_temple_bowl",
+      "default_volume": 0.227,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "forest_temple_bowl_bed_001",
+          "path": "ambience/forest_temple_journey/continuous/forest_temple_bowl_bed_001.ogg",
+          "duration_ms": 77007,
+          "crossfade_ms": 8000,
+          "role": "bed",
+          "tags": [
+            "forest_temple",
+            "singing_bowl",
+            "distant",
+            "meditation"
+          ],
+          "provenance_id": "derived_singing_bowl_loop_001"
+        }
+      ],
+      "events": []
+    },
+    {
+      "id": "forest_temple_moktak",
+      "category": "travel",
+      "display_name_key": "source_forest_temple_moktak",
+      "default_volume": 0.09,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "forest_temple_moktak_event_001",
+          "path": "ambience/forest_temple_journey/events/forest_temple_moktak_event_001.ogg",
+          "duration_ms": 77165,
+          "role": "event",
+          "tags": [
+            "forest_temple",
+            "moktak",
+            "temple_right",
+            "rhythmic"
+          ],
+          "provenance_id": "freesound_jonopodmore_607215",
+          "cooldown_ms": 210000
+        }
       ]
     },
     {
-      "id":"hood_footsteps","category":"travel","display_name_key":"source_hood_footsteps","default_volume":0.14,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_footsteps_event_001","path":"ambience/hood_journey/events/hood_footsteps_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","pavement","footsteps"],"provenance_id":"freesound_craigsmith_438183","cooldown_ms":90000}]
+      "id": "forest_temple_gravel",
+      "category": "travel",
+      "display_name_key": "source_forest_temple_gravel",
+      "default_volume": 0.075,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "forest_temple_gravel_event_001",
+          "path": "ambience/forest_temple_journey/events/forest_temple_gravel_event_001.ogg",
+          "duration_ms": 26907,
+          "role": "event",
+          "tags": [
+            "forest_temple",
+            "gravel",
+            "slow_footsteps",
+            "path"
+          ],
+          "provenance_id": "freesound_samuelgremaud_429182",
+          "cooldown_ms": 210000
+        }
+      ]
     },
     {
-      "id":"hood_car_pass","category":"travel","display_name_key":"source_hood_car_pass","default_volume":0.18,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_car_pass_event_001","path":"ambience/hood_journey/events/hood_car_pass_event_001.ogg","duration_ms":6477,"role":"event","tags":["hood","car","pass_by","street","doppler"],"provenance_id":"freesound_colorscrimsontears_538687","cooldown_ms":75000}]
+      "id": "forest_temple_heart_sutra",
+      "category": "travel",
+      "display_name_key": "source_forest_temple_heart_sutra",
+      "default_volume": 0.05,
+      "loop_mode": "seamless",
+      "continuous": [
+        {
+          "asset_id": "forest_temple_heart_sutra_original_full_001",
+          "path": "ambience/forest_temple_journey/continuous/forest_temple_heart_sutra_original_full_001.ogg",
+          "duration_ms": 120196,
+          "role": "bed",
+          "tags": [
+            "heart_sutra",
+            "korean",
+            "chant",
+            "original_full"
+          ],
+          "provenance_id": "gongu_kim_yongbae_13254274"
+        }
+      ],
+      "events": []
     },
     {
-      "id":"hood_car_door","category":"travel","display_name_key":"source_hood_car_door","default_volume":0.16,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_car_door_event_001","path":"ambience/hood_journey/events/hood_car_door_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","car","door","street"],"provenance_id":"freesound_sduggysounds_721619","cooldown_ms":120000}]
+      "id": "forest_temple_heart_sutra_event",
+      "category": "travel",
+      "display_name_key": "source_forest_temple_heart_sutra",
+      "default_volume": 0.157,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "forest_temple_heart_sutra_event_001",
+          "path": "ambience/forest_temple_journey/events/forest_temple_heart_sutra_event_001.ogg",
+          "duration_ms": 120196,
+          "role": "event",
+          "tags": [
+            "forest_temple",
+            "heart_sutra",
+            "korean",
+            "temple_right",
+            "distant",
+            "processed"
+          ],
+          "provenance_id": "gongu_kim_yongbae_13254274",
+          "cooldown_ms": 210000
+        }
+      ]
     },
     {
-      "id":"hood_helicopter","category":"travel","display_name_key":"source_hood_helicopter","default_volume":0.14,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_helicopter_event_001","path":"ambience/hood_journey/events/hood_helicopter_event_001.ogg","duration_ms":9007,"role":"event","tags":["hood","helicopter","distant"],"provenance_id":"freesound_nox_sound_546805","cooldown_ms":480000}]
+      "id": "hood_journey_bed",
+      "category": "travel",
+      "display_name_key": "source_hood_journey_bed",
+      "default_volume": 0.52,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "hood_journey_bed_001",
+          "path": "ambience/hood_journey/continuous/hood_journey_bed_001.ogg",
+          "duration_ms": 106652,
+          "crossfade_ms": 8000,
+          "role": "bed",
+          "tags": [
+            "hood",
+            "inner_city",
+            "night",
+            "traffic",
+            "stereo"
+          ],
+          "provenance_id": "freesound_risto_alcinov_371250"
+        }
+      ],
+      "events": []
     },
     {
-      "id":"hood_dog","category":"travel","display_name_key":"source_hood_dog","default_volume":0.22,"loop_mode":"event","continuous":[],
-      "events":[{"asset_id":"hood_dog_event_001","path":"ambience/hood_journey/events/hood_dog_event_001.ogg","duration_ms":10119,"role":"event","tags":["hood","dog","neighborhood"],"provenance_id":"freesound_kinoton_516904","cooldown_ms":180000}]
+      "id": "hood_gunshot",
+      "category": "travel",
+      "display_name_key": "source_hood_gunshot",
+      "default_volume": 0.28,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "hood_gunshot_event_001",
+          "path": "ambience/hood_journey/events/hood_gunshot_event_001.ogg",
+          "duration_ms": 3324,
+          "role": "event",
+          "tags": [
+            "hood",
+            "gunshot",
+            "distant"
+          ],
+          "provenance_id": "freesound_resaural_541164",
+          "cooldown_ms": 480000
+        },
+        {
+          "asset_id": "hood_gunshot_rifle_event_002",
+          "path": "ambience/hood_journey/events/hood_gunshot_rifle_event_002.ogg",
+          "duration_ms": 490,
+          "role": "event",
+          "tags": [
+            "hood",
+            "rifle",
+            "burst",
+            "distant"
+          ],
+          "provenance_id": "freesound_qubodup_482120",
+          "cooldown_ms": 480000
+        },
+        {
+          "asset_id": "hood_gunshot_pistol_event_003",
+          "path": "ambience/hood_journey/events/hood_gunshot_pistol_event_003.ogg",
+          "duration_ms": 656,
+          "role": "event",
+          "tags": [
+            "hood",
+            "pistol",
+            "distant"
+          ],
+          "provenance_id": "freesound_lemudcrab_163456",
+          "cooldown_ms": 480000
+        },
+        {
+          "asset_id": "hood_gunshot_shotgun_event_004",
+          "path": "ambience/hood_journey/events/hood_gunshot_shotgun_event_004.ogg",
+          "duration_ms": 2436,
+          "role": "event",
+          "tags": [
+            "hood",
+            "shotgun",
+            "distant"
+          ],
+          "provenance_id": "freesound_moosegravy_431822",
+          "cooldown_ms": 480000
+        },
+        {
+          "asset_id": "hood_gunshot_burst_event_005",
+          "path": "ambience/hood_journey/events/hood_gunshot_burst_event_005.ogg",
+          "duration_ms": 2396,
+          "role": "event",
+          "tags": [
+            "hood",
+            "burst",
+            "distant"
+          ],
+          "provenance_id": "freesound_adrilahan_337241",
+          "cooldown_ms": 480000
+        }
+      ]
+    },
+    {
+      "id": "hood_siren",
+      "category": "travel",
+      "display_name_key": "source_hood_siren",
+      "default_volume": 0.34,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "hood_siren_event_001",
+          "path": "ambience/hood_journey/events/hood_siren_event_001.ogg",
+          "duration_ms": 15000,
+          "role": "event",
+          "tags": [
+            "hood",
+            "police",
+            "siren",
+            "passing",
+            "clean"
+          ],
+          "provenance_id": "freesound_titankaempfer_746302",
+          "cooldown_ms": 420000
+        }
+      ]
+    },
+    {
+      "id": "hood_glass",
+      "category": "travel",
+      "display_name_key": "source_hood_glass",
+      "default_volume": 0.2,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "hood_glass_event_001",
+          "path": "ambience/hood_journey/events/hood_glass_event_001.ogg",
+          "duration_ms": 817,
+          "role": "event",
+          "tags": [
+            "hood",
+            "glass",
+            "impact"
+          ],
+          "provenance_id": "freesound_c_rogers_203377",
+          "cooldown_ms": 720000
+        }
+      ]
+    },
+    {
+      "id": "hood_shout",
+      "category": "travel",
+      "display_name_key": "source_hood_shout",
+      "default_volume": 0.18,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "hood_shout_event_001",
+          "path": "ambience/hood_journey/events/hood_shout_event_001.ogg",
+          "duration_ms": 3207,
+          "role": "event",
+          "tags": [
+            "hood",
+            "street",
+            "shouting",
+            "distant"
+          ],
+          "provenance_id": "freesound_yottasounds_174645",
+          "cooldown_ms": 240000
+        },
+        {
+          "asset_id": "hood_shout_male_event_002",
+          "path": "ambience/hood_journey/events/hood_shout_male_event_002.ogg",
+          "duration_ms": 6506,
+          "role": "event",
+          "tags": [
+            "hood",
+            "male",
+            "scream",
+            "distant"
+          ],
+          "provenance_id": "freesound_dinsfire_169628",
+          "cooldown_ms": 240000
+        },
+        {
+          "asset_id": "hood_scream_short_event_003",
+          "path": "ambience/hood_journey/events/hood_scream_short_event_003.ogg",
+          "duration_ms": 2356,
+          "role": "event",
+          "tags": [
+            "hood",
+            "scream",
+            "distant"
+          ],
+          "provenance_id": "freesound_ericnorcross81_575675",
+          "cooldown_ms": 240000
+        },
+        {
+          "asset_id": "hood_scream_crowd_event_004",
+          "path": "ambience/hood_journey/events/hood_scream_crowd_event_004.ogg",
+          "duration_ms": 7906,
+          "role": "event",
+          "tags": [
+            "hood",
+            "crowd",
+            "scream",
+            "distant"
+          ],
+          "provenance_id": "freesound_craigsmith_479894",
+          "cooldown_ms": 240000
+        }
+      ]
+    },
+    {
+      "id": "hood_footsteps",
+      "category": "travel",
+      "display_name_key": "source_hood_footsteps",
+      "default_volume": 0.14,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "hood_footsteps_event_001",
+          "path": "ambience/hood_journey/events/hood_footsteps_event_001.ogg",
+          "duration_ms": 9007,
+          "role": "event",
+          "tags": [
+            "hood",
+            "pavement",
+            "footsteps"
+          ],
+          "provenance_id": "freesound_craigsmith_438183",
+          "cooldown_ms": 90000
+        }
+      ]
+    },
+    {
+      "id": "hood_car_pass",
+      "category": "travel",
+      "display_name_key": "source_hood_car_pass",
+      "default_volume": 0.18,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "hood_car_pass_event_001",
+          "path": "ambience/hood_journey/events/hood_car_pass_event_001.ogg",
+          "duration_ms": 6477,
+          "role": "event",
+          "tags": [
+            "hood",
+            "car",
+            "pass_by",
+            "street",
+            "doppler"
+          ],
+          "provenance_id": "freesound_colorscrimsontears_538687",
+          "cooldown_ms": 75000
+        }
+      ]
+    },
+    {
+      "id": "hood_car_door",
+      "category": "travel",
+      "display_name_key": "source_hood_car_door",
+      "default_volume": 0.16,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "hood_car_door_event_001",
+          "path": "ambience/hood_journey/events/hood_car_door_event_001.ogg",
+          "duration_ms": 9007,
+          "role": "event",
+          "tags": [
+            "hood",
+            "car",
+            "door",
+            "street"
+          ],
+          "provenance_id": "freesound_sduggysounds_721619",
+          "cooldown_ms": 120000
+        }
+      ]
+    },
+    {
+      "id": "hood_helicopter",
+      "category": "travel",
+      "display_name_key": "source_hood_helicopter",
+      "default_volume": 0.14,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "hood_helicopter_event_001",
+          "path": "ambience/hood_journey/events/hood_helicopter_event_001.ogg",
+          "duration_ms": 9007,
+          "role": "event",
+          "tags": [
+            "hood",
+            "helicopter",
+            "distant"
+          ],
+          "provenance_id": "freesound_nox_sound_546805",
+          "cooldown_ms": 480000
+        }
+      ]
+    },
+    {
+      "id": "hood_dog",
+      "category": "travel",
+      "display_name_key": "source_hood_dog",
+      "default_volume": 0.22,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {
+          "asset_id": "hood_dog_event_001",
+          "path": "ambience/hood_journey/events/hood_dog_event_001.ogg",
+          "duration_ms": 10119,
+          "role": "event",
+          "tags": [
+            "hood",
+            "dog",
+            "neighborhood"
+          ],
+          "provenance_id": "freesound_kinoton_516904",
+          "cooldown_ms": 180000
+        }
+      ]
     }
   ]
 }
