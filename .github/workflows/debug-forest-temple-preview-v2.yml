@@ -1,0 +1,70 @@
+name: Deploy Forest Temple audio to debug v2
+
+on:
+  push:
+    branches:
+      - tmp/debug-forest-temple-preview
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: debug
+          fetch-depth: 0
+      - name: Apply debug-only Forest Temple preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin codex/forest-temple-korean-sutra
+          git checkout origin/codex/forest-temple-korean-sutra -- \
+            web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg \
+            web/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+          replacements=[
+            ("remaining-journeys-v1.js?v=24","remaining-journeys-v1.js?v=25"),
+            ("site-locales-v10.js?v=18","site-locales-v10.js?v=19"),
+            ("forest_temple_moktak_event_001.ogg?v=1',12733","forest_temple_moktak_event_001.ogg?v=2',77165"),
+            ("forest_temple_heart_sutra_event_001.ogg?v=1',132764","forest_temple_heart_sutra_event_001.ogg?v=2',120196"),
+            ("Forest Temple Moktak","Rhythmic Temple Moktak"),
+            ("Temple moktak","Rhythmic temple moktak"),
+            ("Temple Moktak","Rhythmic Temple Moktak"),
+            ("Moktak from the temple hall","Rhythmic moktak from the temple hall"),
+            ("법당에서 들리는 목탁","이어지는 법당 목탁"),
+            ("법당의 목탁","이어지는 법당 목탁"),
+            ("Heart Sutra · Mandarin","Heart Sutra · Korean"),
+            ("Distant Heart Sutra · Mandarin","Distant Heart Sutra · Korean"),
+            ("반야심경 · 중국어 독송","반야심경 · 한국어 독송"),
+            ("멀리 들리는 반야심경 · 중국어","멀리 들리는 반야심경 · 한국어"),
+          ]
+          for path in Path('web').rglob('*'):
+            if not path.is_file() or path.suffix.lower() not in {'.js','.mjs','.html','.json'}: continue
+            text=path.read_text(encoding='utf-8'); new=text
+            for old,repl in replacements: new=new.replace(old,repl)
+            if new!=text: path.write_text(new,encoding='utf-8')
+          mixer=Path('web/mixer-sources.json'); data=json.loads(mixer.read_text(encoding='utf-8')); by_id={x['id']:x for x in data['sources']}
+          by_id['forest_temple_moktak'].update(name='Rhythmic Temple Moktak',url='/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg?v=2')
+          by_id['forest_temple_heart_sutra'].update(name='Heart Sutra · Korean',url='/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?v=2')
+          mixer.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          sw=Path('web/sw.js'); text=sw.read_text(encoding='utf-8'); m=re.search(r"const CACHE='lullaby-scene-debug-v(\d+)'",text)
+          if not m: raise SystemExit('debug service-worker cache version not found')
+          text=text[:m.start(1)]+str(int(m.group(1))+1)+text[m.end(1):]; sw.write_text(text,encoding='utf-8')
+          runtime=Path('web/remaining-journeys-v1.js').read_text(encoding='utf-8')
+          assert "forest_temple_moktak_event_001.ogg?v=2',77165" in runtime
+          assert "forest_temple_heart_sutra_event_001.ogg?v=2',120196" in runtime
+          PY
+          node --check web/remaining-journeys-v1.js
+          node --check web/site-locales-v10.js
+          python3 -m json.tool web/mixer-sources.json >/dev/null
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web
+          git diff --cached --check
+          git commit -m 'Preview Korean Heart Sutra and rhythmic moktak on debug'
+          git push origin HEAD:debug
