@@ -13,7 +13,7 @@
     <string name="source_spacecraft_journey_transition">우주선 전환음</string><string name="source_spacecraft_journey_bed">우주선 표류</string>
     <string name="source_submarine_journey_departure">잠수함 잠항</string><string name="source_submarine_journey_engine_bed">잠수함 기관실</string><string name="source_submarine_journey_water_bed">수중 환경음</string><string name="source_submarine_journey_arrival">잠수함 부상</string><string name="source_submarine_sonar">먼 소나</string>
     <string name="source_hood_journey_bed">HOOD 심야 블록</string><string name="source_hood_gunshot">멀리서 벌어지는 총격</string><string name="source_hood_siren">지나가는 경찰 사이렌</string><string name="source_hood_glass">유리 깨지는 소리</string><string name="source_hood_shout">먼 고함과 비명</string><string name="source_hood_footsteps">보도 위 발소리</string><string name="source_hood_car_pass">지나가는 차량</string><string name="source_hood_car_door">거리의 차 문</string><string name="source_hood_helicopter">먼 헬리콥터</string><string name="source_hood_dog">동네 개 짖는 소리</string>
-    <string name="source_forest_temple_bowl">법당의 싱잉볼</string><string name="source_forest_temple_moktak">법당의 목탁</string><string name="source_forest_temple_gravel">멀리 자갈을 밟는 발소리</string><string name="source_forest_temple_heart_sutra">반야심경 · 중국어 독송</string>
+    <string name="source_forest_temple_bowl">법당의 싱잉볼</string><string name="source_forest_temple_path_walk">숲길을 걷는 발소리</string><string name="source_forest_temple_moktak">법당의 목탁</string><string name="source_forest_temple_gravel">멀리 자갈을 밟는 발소리</string><string name="source_forest_temple_heart_sutra">반야심경 · 중국어 독송</string>
 
     <string name="scenes_question">오늘은 어디에서 쉬고 싶나요?</string>
     <string name="scenes_subtitle">고정된 믹스를 반복하는 대신, 시간이 지나며 천천히 변하는 살아있는 장면입니다.</string>

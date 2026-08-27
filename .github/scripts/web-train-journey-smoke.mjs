@@ -98,7 +98,12 @@ for(const journey of[
   if(['Ready','준비'].includes(state.phase)||state.title!==title)throw new Error(`${id} playback was overwritten by localization: ${JSON.stringify(state)}`);
   await page.evaluate(ms=>window.LullabyJourneyRuntime.seekToMs(ms-4000),departureMs);await page.waitForTimeout(650);
   state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole}));
-  if(state.role!=='bed')throw new Error(`${id} bed did not pre-roll before the phase boundary: ${JSON.stringify(state)}`);
+  const expectedPreBoundaryRole=id==='forest_temple_journey'?'departure':'bed';
+  if(state.role!==expectedPreBoundaryRole)throw new Error(`${id} pre-boundary role was incorrect: ${JSON.stringify({expectedPreBoundaryRole,...state})}`);
+  if(id==='forest_temple_journey'){
+    const templePhaseAudio=await page.evaluate(()=>{const runtime=window.LullabyRemainingJourneys,cfg=runtime.configs.forest_temple_journey,total=window.LullabyJourneyRuntime.totalMs;return{source:cfg.nodes.departure[0],departureRole:cfg.roles.departure,bedRole:cfg.roles.bed,before:runtime.audioRoleFor(89999,total,cfg),at:runtime.audioRoleFor(90000,total,cfg),eventPhases:cfg.event.phases}});
+    if(!templePhaseAudio.source.includes('forest_temple_path_walk_001.ogg')||templePhaseAudio.departureRole.join(',')!=='departure'||templePhaseAudio.bedRole.join(',')!=='forest,bowl'||templePhaseAudio.before!=='departure'||templePhaseAudio.at!=='bed'||templePhaseAudio.eventPhases.includes(0))throw new Error(`Forest Temple phase audio is not isolated: ${JSON.stringify(templePhaseAudio)}`);
+  }
   await page.locator('#journeyNextPhase').click();await page.waitForTimeout(650);
   state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole,elapsed:window.LullabyJourneyRuntime.elapsedMs}));
   if(state.role!=='bed'||state.elapsed<departureMs-1000)throw new Error(`${id} bed transition failed: ${JSON.stringify(state)}`);

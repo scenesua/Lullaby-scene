@@ -149,6 +149,22 @@
       "transformation": "Six sparse strikes arranged over 12.7 seconds; high-pass; short fades; 48 kHz stereo Ogg Opus"
     },
     {
+      "asset_id": "forest_temple_path_walk_001",
+      "source_name": "FOOTSTEP IN GRAVEL",
+      "creator": "SamuelGremaud",
+      "source_page": "https://freesound.org/people/SamuelGremaud/sounds/429182/",
+      "license": "CC0-1.0",
+      "license_status": "verified",
+      "attribution_required": false,
+      "original_filename": "429182_8031303-hq.mp3",
+      "provenance_id": "freesound_samuelgremaud_429182",
+      "sample_rate": 48000,
+      "channels": 2,
+      "duration_ms": 104007,
+      "sha256": "fd78ebd7a17d0d3065661119bed299f7c619475b7eae004484a85bcc50a902a9",
+      "transformation": "Listener-perspective continuous forest-path walk; high/low-pass and level reduction; 0.4-second fade-in, gradual 28-second fade beginning at 18 seconds, then silence through the 90-second departure and its 14-second outgoing crossfade; 48 kHz stereo Ogg Opus"
+    },
+    {
       "asset_id": "forest_temple_gravel_event_001",
       "source_name": "FOOTSTEP IN GRAVEL",
       "creator": "SamuelGremaud",

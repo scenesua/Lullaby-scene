@@ -649,7 +649,8 @@ class SceneOrchestrator(
         val texture = 0.96f + 0.04f * m.turbulence
         val night = 1f - 0.08f * m.nightDepth
         val desired = profile.requiredSources.associateWith { 0f }.toMutableMap()
-        val departureFade = journeyCrossfade(current.elapsedMs, plan.departureEndMs, profile.departureCrossfadeMs)
+        val departureBoundary = plan.departureEndMs + if (profile.bedStartsAtPhaseBoundary) profile.departureCrossfadeMs else 0L
+        val departureFade = journeyCrossfade(current.elapsedMs, departureBoundary, profile.departureCrossfadeMs)
         val arrivalFade = journeyCrossfade(current.elapsedMs, plan.arrivalStartMs, profile.arrivalCrossfadeMs)
         val sharedBedSource = profile.departureSource == profile.arrivalSource && profile.departureSource in profile.bedSources
         if (!sharedBedSource) {
@@ -731,6 +732,7 @@ class SceneOrchestrator(
         val arrivalMs: Long,
         val departureCrossfadeMs: Long,
         val arrivalCrossfadeMs: Long,
+        val bedStartsAtPhaseBoundary: Boolean = false,
         val settleMinutes: Int = 10,
         val approachMinutes: Int = 10,
         val masterVolume: Float = 0.78f,
@@ -814,6 +816,7 @@ class SceneOrchestrator(
         const val SOURCE_FOREST = "forest"
         const val SOURCE_BIRDS = "birds"
         const val SOURCE_FOREST_TEMPLE_BOWL = "forest_temple_bowl"
+        const val SOURCE_FOREST_TEMPLE_PATH_WALK = "forest_temple_path_walk"
         const val SOURCE_FOREST_TEMPLE_MOKTAK = "forest_temple_moktak"
         const val SOURCE_FOREST_TEMPLE_GRAVEL = "forest_temple_gravel"
         const val SOURCE_FOREST_TEMPLE_HEART_SUTRA = "forest_temple_heart_sutra"
@@ -949,7 +952,7 @@ class SceneOrchestrator(
             ),
             AmbientJourneyProfile(
                 sceneId = FOREST_TEMPLE_JOURNEY,
-                departureSource = SOURCE_FOREST,
+                departureSource = SOURCE_FOREST_TEMPLE_PATH_WALK,
                 bedSources = mapOf(SOURCE_FOREST to .34f, SOURCE_FOREST_TEMPLE_BOWL to .09f),
                 arrivalSource = SOURCE_FOREST,
                 manualEvents = mapOf(
@@ -962,6 +965,7 @@ class SceneOrchestrator(
                 arrivalMs = 90_000L,
                 departureCrossfadeMs = 14_000L,
                 arrivalCrossfadeMs = 12_000L,
+                bedStartsAtPhaseBoundary = true,
                 settleMinutes = 10,
                 approachMinutes = 10,
                 masterVolume = .76f,
