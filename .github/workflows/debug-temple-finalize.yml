@@ -1,0 +1,45 @@
+name: Finalize Forest Temple debug audio
+on:
+  push:
+    branches: [debug]
+    paths: ['.github/workflows/debug-temple-finalize.yml']
+permissions:
+  contents: write
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: debug
+          fetch-depth: 0
+      - name: Install Demucs
+        run: |
+          python3 -m pip install demucs==4.0.1
+      - name: Boost chant voice stem only
+        run: |
+          SRC='web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg'
+          rm -rf /tmp/temple-sep
+          python3 -m demucs.separate -n htdemucs --two-stems=vocals --device cpu -o /tmp/temple-sep "$SRC"
+          VOCALS=$(find /tmp/temple-sep -type f -name vocals.wav -print -quit)
+          REST=$(find /tmp/temple-sep -type f -name no_vocals.wav -print -quit)
+          test -s "$VOCALS"
+          test -s "$REST"
+          ffmpeg -hide_banner -loglevel error -y -i "$REST" -i "$VOCALS" -filter_complex '[1:a]volume=2dB[v];[0:a][v]amix=inputs=2:normalize=0:dropout_transition=0[out]' -map '[out]' -ar 48000 -ac 2 -c:a libopus -b:a 80k -vbr on /tmp/sutra.ogg
+          mv /tmp/sutra.ogg "$SRC"
+      - name: Patch debug runtime
+        run: |
+          python3 tools/debug_temple_finalize.py
+          node --check web/remaining-journeys-v1.js
+          node --check web/debug-bridge-v1.js
+          node --check web/debug-console-v1.js
+          grep -Fq "bamboo_forest.ogg?v=1" web/remaining-journeys-v1.js
+          grep -Fq "attachTempleRoomFx(events?.moktak" web/debug-bridge-v1.js
+      - name: Commit debug changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg web/remaining-journeys-v1.js web/mixer-sources.json web/debug-bridge-v1.js web/debug-console-v1.js web/debug/index.html web/player/index.html web/sw.js app/src/main/assets/ambience/manifest/external_licenses.json
+          git commit -m 'Finalize Forest Temple chant and bamboo ambience on debug'
+          git push origin HEAD:debug
