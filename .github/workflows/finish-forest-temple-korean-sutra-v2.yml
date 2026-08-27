@@ -28,14 +28,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m py_compile .github/scripts/finish_forest_temple_korean_sutra.py
+          python3 -m py_compile .github/scripts/finish_forest_temple_korean_sutra.py .github/scripts/run_forest_temple_finisher.py
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg
       - name: Regenerate sources and apply handover changes
         shell: bash
         run: |
           set -euo pipefail
-          python3 .github/scripts/finish_forest_temple_korean_sutra.py
+          python3 .github/scripts/run_forest_temple_finisher.py
       - name: Validate web and metadata
         shell: bash
         run: |
@@ -57,7 +57,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf .tmp_forest_temple_sources .github/scripts/__pycache__
-          rm -f .github/scripts/finish_forest_temple_korean_sutra.py
+          rm -f .github/scripts/finish_forest_temple_korean_sutra.py .github/scripts/run_forest_temple_finisher.py
           rm -f .github/workflows/finish-forest-temple-korean-sutra-v2.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
