@@ -99,9 +99,16 @@
     for(let channel=0;channel<2;channel++){const data=buffer.getChannelData(channel);for(let i=0;i<length;i++){const t=1-i/length;data[i]=(Math.random()*2-1)*Math.pow(t,decay)*(0.82+0.18*Math.sin(i*0.017+channel))}}
     return buffer;
   }
-  function attachTempleRoomFx(node){
+  function attachTempleRoomFx(node,{voicePresence=false}={}){
     if(!node||node.__lullabyDebugTempleRoomFx||!ctx||!master)return;
     templeRoomImpulse??=createTempleRoomImpulse(ctx);
+    let voiceBody=null,voiceClarity=null;
+    if(voicePresence){
+      voiceBody=ctx.createBiquadFilter();voiceBody.type='peaking';voiceBody.frequency.value=1500;voiceBody.Q.value=.85;voiceBody.gain.value=3;
+      voiceClarity=ctx.createBiquadFilter();voiceClarity.type='peaking';voiceClarity.frequency.value=3200;voiceClarity.Q.value=1;voiceClarity.gain.value=2.2;
+      try{node.gain.disconnect(master)}catch{}
+      node.gain.connect(voiceBody).connect(voiceClarity).connect(master);
+    }
     const preDelay=ctx.createDelay(.2);preDelay.delayTime.value=.055;
     const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5000;reverbTone.Q.value=.35;
     const convolver=ctx.createConvolver();convolver.buffer=templeRoomImpulse;
@@ -112,10 +119,10 @@
     const echoFeedback=ctx.createGain();echoFeedback.gain.value=.10;
     node.gain.connect(preDelay).connect(reverbTone).connect(convolver).connect(reverbWet).connect(master);
     node.gain.connect(echoDelay);echoDelay.connect(echoTone).connect(echoWet).connect(master);echoDelay.connect(echoFeedback).connect(echoDelay);
-    node.__lullabyDebugTempleRoomFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback};
+    node.__lullabyDebugTempleRoomFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback,voiceBody,voiceClarity};
   }
   function prepareTempleRoomFx(){
-    if(activeJourneyId!=='forest_temple_journey')return;const events=eventNodes[activeJourneyId];attachTempleRoomFx(events?.heartSutra);attachTempleRoomFx(events?.moktak);
+    if(activeJourneyId!=='forest_temple_journey')return;const events=eventNodes[activeJourneyId];attachTempleRoomFx(events?.heartSutra,{voicePresence:true});attachTempleRoomFx(events?.moktak);
   }
   function pauseEvent(){for(const timer of eventTimers)clearTimeout(timer);eventTimers.clear();eventLabelUntil=0;currentEventLabel=null;for(const bucket of Object.values(eventNodes))for(const entry of Object.values(bucket))for(const node of(Array.isArray(entry)?entry:[entry])){node.el.pause();node.gain.gain.value=0;try{node.el.currentTime=0}catch{}}}
   function pauseNodes(reset=false){pauseEvent();for(const bucket of Object.values(media))for(const node of Object.values(bucket)){node.el.pause();node.gain.gain.value=0;if(reset)try{node.el.currentTime=0}catch{}}}
