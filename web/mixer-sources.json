@@ -36,6 +36,7 @@
     {"id":"submarine_journey_water_bed","name":"Underwater Ambience","category":"travel","kind":"continuous","url":"/audio/scenes/submarine_journey/submarine_journey_water_bed_001.ogg?v=2","defaultVolume":24},
     {"id":"submarine_journey_arrival","name":"Submarine Surface","category":"travel","kind":"continuous","url":"/audio/scenes/submarine_journey/submarine_journey_arrival_001.ogg","defaultVolume":52},
     {"id":"submarine_sonar","name":"Distant Sonar","category":"travel","kind":"event","url":"/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg","defaultVolume":8,"eventMinSeconds":180,"eventMaxSeconds":360},
+    {"id":"forest_temple_path_walk","name":"Forest Path Footsteps","category":"travel","kind":"continuous","url":"/audio/scenes/forest_temple_journey/forest_temple_path_walk_001.ogg?v=1","defaultVolume":34},
     {"id":"forest_temple_bowl","name":"Forest Temple Singing Bowl","category":"travel","kind":"continuous","url":"/audio/scenes/forest_temple_journey/forest_temple_bowl_bed_001.ogg?v=2","defaultVolume":9},
     {"id":"forest_temple_moktak","name":"Forest Temple Moktak","category":"travel","kind":"event","url":"/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg?v=1","defaultVolume":10,"eventMinSeconds":240,"eventMaxSeconds":600},
     {"id":"forest_temple_gravel","name":"Slow Distant Gravel Footsteps","category":"travel","kind":"event","url":"/audio/scenes/forest_temple_journey/forest_temple_gravel_event_001.ogg?v=2","defaultVolume":8,"eventMinSeconds":240,"eventMaxSeconds":600},
