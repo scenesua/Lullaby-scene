@@ -25,11 +25,13 @@
     for(let channel=0;channel<2;channel++){const data=buffer.getChannelData(channel);for(let i=0;i<length;i++){const t=1-i/length;data[i]=(Math.random()*2-1)*Math.pow(t,decay)*(0.82+0.18*Math.sin(i*0.017+channel))}}
     return buffer;
   }
-  function attachTempleSutraFx(node){
-    if(!node||node.__lullabyDebugTempleFx||!ctx||!master)return;
+  let templeRoomImpulse=null;
+  const sharedTempleRoomImpulse=()=>templeRoomImpulse||(templeRoomImpulse=createTempleImpulse(ctx));
+  function attachTempleRoomFx(node,label='Temple event'){
+    if(!node||node.__lullabyDebugTempleRoomFx||!ctx||!master)return;
     const preDelay=ctx.createDelay(.2);preDelay.delayTime.value=.055;
     const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5000;reverbTone.Q.value=.35;
-    const convolver=ctx.createConvolver();convolver.buffer=createTempleImpulse(ctx);
+    const convolver=ctx.createConvolver();convolver.buffer=sharedTempleRoomImpulse();
     const reverbWet=ctx.createGain();reverbWet.gain.value=.50;
     const echoDelay=ctx.createDelay(1);echoDelay.delayTime.value=.41;
     const echoTone=ctx.createBiquadFilter();echoTone.type='lowpass';echoTone.frequency.value=4800;
@@ -37,12 +39,14 @@
     const echoFeedback=ctx.createGain();echoFeedback.gain.value=.10;
     node.gain.connect(preDelay).connect(reverbTone).connect(convolver).connect(reverbWet).connect(master);
     node.gain.connect(echoDelay);echoDelay.connect(echoTone).connect(echoWet).connect(master);echoDelay.connect(echoFeedback).connect(echoDelay);
-    node.__lullabyDebugTempleFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback};
-    record('event','Forest Temple Korean Heart Sutra FX ready · right-temple pan + 2.8s reverb + subtle echo');
+    node.__lullabyDebugTempleRoomFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback};
+    record('event',`${label} FX ready · shared 2.8s temple room + subtle echo`);
   }
-  async function prepareTempleSutraFx(){
+  async function prepareTempleEventFx(){
     if(activeJourneyId!=='forest_temple_journey')return;
-    const target=window.LullabyRemainingJourneys;await target?.ensureNodes?.();attachTempleSutraFx(target?.eventNode?.heartSutra);
+    const target=window.LullabyRemainingJourneys;await target?.ensureNodes?.();const events=target?.eventNode;
+    attachTempleRoomFx(events?.heartSutra,'Forest Temple Korean Heart Sutra');
+    attachTempleRoomFx(events?.moktak,'Forest Temple Moktak');
   }
   async function ensureTempleBowlPreview(){
     await ensureContext();
@@ -51,7 +55,7 @@
     if(panner){node.filter.disconnect();node.filter.connect(panner).connect(node.gain);panner.pan.value=0;node.panner=panner}
     node.filter.frequency.value=4400;node.gain.gain.value=.18;templeBowlPreviewNode=node;return node;
   }
-  async function ensurePlaying(){if(!scenePlaying)await startScene();if(!scenePlaying)throw new Error('Journey did not start. Check browser audio permission.');await wait(100);await prepareTempleSutraFx()}
+  async function ensurePlaying(){if(!scenePlaying)await startScene();if(!scenePlaying)throw new Error('Journey did not start. Check browser audio permission.');await wait(100);await prepareTempleEventFx()}
   async function selectJourney(id){
     const button=document.querySelector(`[data-journey="${CSS.escape(id)}"]`);if(!button)throw new Error(`Unknown Journey: ${id}`);
     if(scenePlaying||pausedAt>0)stopScene(false);button.click();await wait(120);window.LullabyJourneyStageControl?.render?.();if(activeJourneyId!==id)throw new Error(`Could not select ${id}`);return snapshot();
@@ -91,7 +95,7 @@
   }
   window.LullabyDebug={
     snapshot,selectJourney,triggerEvent,jumpBeforeLoop,
-    async playPause(){await startScene();if(scenePlaying){await wait(80);await prepareTempleSutraFx()}return snapshot()},
+    async playPause(){await startScene();if(scenePlaying){await wait(80);await prepareTempleEventFx()}return snapshot()},
     stop(){templeBowlPreviewNode?.el?.pause();stopScene(false);return snapshot()},
     stage:setStage,previousStage(){return moveStage(-1)},nextStage(){return moveStage(1)},
     setEvents(enabled){window.LullabyJourneyEvents?.setEnabled(!!enabled);return!!window.LullabyJourneyEvents?.enabled},

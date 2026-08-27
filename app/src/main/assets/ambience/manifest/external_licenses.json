@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "entries": [
     {
       "asset_id": "aircraft_cabin_cruise_001",
@@ -658,8 +658,8 @@
       "sample_rate": 48000,
       "channels": 2,
       "duration_ms": 120196,
-      "sha256": "6feda3d05a6d61d0fc29eb6f59f149b7f252cabb316da9c36e4925bcfbbd5a5f",
-      "transformation": "Korean recitation from Sharing Yard source 13254274; high/low-pass filtering, voice-presence EQ, fast compression to reduce moktak transient dominance, multi-tap temple reflections from the prior derivative, limiter and edge fades; 48 kHz stereo Ogg Opus 80 kbps VBR"
+      "sha256": "179fe8521e8f98bc8775ce96e43a8eb11a138d8496e176a00b31a01c0423594f",
+      "transformation": "Korean recitation from Sharing Yard source 13254274; high/low-pass filtering, voice-presence EQ, fast compression to reduce moktak transient dominance, multi-tap temple reflections from the prior derivative, limiter and edge fades; 48 kHz stereo Ogg Opus 80 kbps VBR; Demucs two-stem separation on current derivative; vocals stem +2 dB only; unchanged no-vocals stem recombined; 48 kHz stereo Ogg Opus 80 kbps VBR"
     }
   ]
 }
