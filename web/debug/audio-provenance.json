@@ -8,5 +8,16 @@
     "transformation": "HQ preview converted to 48 kHz stereo Ogg Opus; 90 Hz high-pass, 9 kHz low-pass, +10 dB gain; no compressor, limiter, or clipping stage",
     "runtime_gain": 0.121,
     "runtime_crossfade_seconds": 8
+  },
+  "forest_temple_distant_birds_debug_006": {
+    "source_name": "Daytime wind and distant birds in a national park",
+    "creator": "balanced",
+    "source_page": "https://freesound.org/people/balanced/sounds/857824/",
+    "license": "CC0-1.0",
+    "license_status": "verified",
+    "transformation": "60-180 second excerpt from the HQ preview; 260 Hz high-pass, 7.8 kHz low-pass, +7 dB gain; original AB stereo field preserved; 48 kHz stereo Ogg Opus",
+    "runtime_gain": 0.05,
+    "runtime_lowpass_hz": 4800,
+    "runtime_crossfade_seconds": 8
   }
 }
