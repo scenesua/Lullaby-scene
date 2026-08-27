@@ -1,0 +1,308 @@
+name: Finish Forest Temple Korean sutra
+
+on:
+  push:
+    branches:
+      - codex/forest-temple-korean-sutra
+
+permissions:
+  contents: write
+
+jobs:
+  finish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare audio tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          mkdir -p .tmp_forest_temple_sources
+
+      - name: Download verified source recordings
+        shell: bash
+        run: |
+          set -euo pipefail
+          gongu='.tmp_forest_temple_sources/gongu_13254274_yeombul1.wav'
+          curl -fL --retry 3 --retry-delay 2 \
+            -A 'Mozilla/5.0' \
+            -e 'https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=13254274&menuNo=200020' \
+            'https://gongu.copyright.or.kr/gongu/wrt/cmmn/wrtFileDownload.do?wrtSn=13254274&fileSn=1' \
+            -o "$gongu"
+          if ! ffprobe -v error "$gongu" >/dev/null 2>&1; then
+            curl -fL --retry 3 --retry-delay 2 \
+              -A 'Mozilla/5.0' \
+              -e 'https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=13254274&menuNo=200020' \
+              'https://gongu.copyright.or.kr/gongu/wrt/cmmn/wrtFileDownload.do?wrtSn=13254274&fileSn=1&wrtFileTy=01' \
+              -o "$gongu"
+          fi
+          ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$gongu"
+
+          python3 - <<'PY'
+          import html as htmlmod
+          import re
+          import urllib.request
+          from pathlib import Path
+
+          pages = [
+              'https://freesound.org/people/the_very_Real_Horst/sounds/205999/',
+              'https://freesound.org/embed/sound/iframe/205999/simple/small/',
+          ]
+          found = []
+          for page in pages:
+              try:
+                  req = urllib.request.Request(page, headers={'User-Agent':'Mozilla/5.0'})
+                  raw = urllib.request.urlopen(req, timeout=30).read().decode('utf-8', 'ignore')
+              except Exception as exc:
+                  print(f'preview page failed: {page}: {exc}')
+                  continue
+              raw = htmlmod.unescape(raw).replace('\\/','/').replace('\\u002F','/')
+              patterns = [
+                  r'https://cdn\.freesound\.org/previews/[^"\'<> ]+?-hq\.mp3',
+                  r'https://cdn\.freesound\.org/previews/[^"\'<> ]+?\.mp3',
+                  r'https://freesound\.org/data/previews/[^"\'<> ]+?-hq\.mp3',
+                  r'https://freesound\.org/data/previews/[^"\'<> ]+?\.mp3',
+                  r'//cdn\.freesound\.org/previews/[^"\'<> ]+?-hq\.mp3',
+                  r'//cdn\.freesound\.org/previews/[^"\'<> ]+?\.mp3',
+              ]
+              for pattern in patterns:
+                  found.extend(re.findall(pattern, raw))
+          urls=[]
+          for value in found:
+              if value.startswith('//'):
+                  value='https:'+value
+              if '205999_' in value and value not in urls:
+                  urls.append(value)
+          urls.sort(key=lambda u: ('-hq.mp3' not in u, u))
+          if not urls:
+              raise SystemExit('Could not discover Freesound 205999 public preview URL')
+          print('Using Freesound preview:', urls[0])
+          req=urllib.request.Request(urls[0], headers={'User-Agent':'Mozilla/5.0','Referer':pages[0]})
+          data=urllib.request.urlopen(req, timeout=60).read()
+          out=Path('.tmp_forest_temple_sources/moktak_continuous_205999_hq.mp3')
+          out.write_bytes(data)
+          print('Downloaded', len(data), 'bytes')
+          PY
+          ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 .tmp_forest_temple_sources/moktak_continuous_205999_hq.mp3
+
+      - name: Render rhythmic moktak and Korean Heart Sutra
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p web/audio/scenes/forest_temple_journey
+          mkdir -p app/src/main/assets/ambience/forest_temple_journey/events
+
+          ffmpeg -y -hide_banner -loglevel error \
+            -i '.tmp_forest_temple_sources/moktak_continuous_205999_hq.mp3' \
+            -i '.tmp_forest_temple_sources/moktak_continuous_205999_hq.mp3' \
+            -i '.tmp_forest_temple_sources/moktak_continuous_205999_hq.mp3' \
+            -filter_complex '[0:a][1:a]acrossfade=d=1.25:c1=tri:c2=tri[m1];[m1][2:a]acrossfade=d=1.25:c1=tri:c2=tri,highpass=f=110,lowpass=f=6800,aecho=0.8:0.55:95|210:0.08|0.04,volume=3dB,alimiter=limit=0.9,afade=t=in:st=0:d=0.7,afade=t=out:st=75.5:d=1.45[out]' \
+            -map '[out]' -ar 48000 -ac 2 -c:a libopus -b:a 80k -vbr on \
+            'web/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg'
+
+          ffmpeg -y -hide_banner -loglevel error \
+            -i '.tmp_forest_temple_sources/gongu_13254274_yeombul1.wav' \
+            -af 'highpass=f=120,lowpass=f=4300,acompressor=threshold=-34dB:ratio=3:attack=20:release=300:makeup=7dB,aecho=0.8:0.62:180|410|820:0.18|0.11|0.06,volume=8dB,alimiter=limit=0.78,afade=t=in:st=0:d=2,afade=t=out:st=117:d=3' \
+            -ar 48000 -ac 2 -c:a libopus -b:a 72k -vbr on \
+            'web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg'
+
+          cp web/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg \
+             app/src/main/assets/ambience/forest_temple_journey/events/forest_temple_moktak_event_001.ogg
+          cp web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg \
+             app/src/main/assets/ambience/forest_temple_journey/events/forest_temple_heart_sutra_event_001.ogg
+
+          echo 'Rendered assets:'
+          sha256sum web/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg
+          sha256sum web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg
+          ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 web/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg
+          ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg
+
+      - name: Apply code, metadata, attribution and cache updates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import re
+          from pathlib import Path
+
+          root=Path('.')
+          mok_path=root/'web/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg'
+          sutra_path=root/'web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg'
+          mok_sha=hashlib.sha256(mok_path.read_bytes()).hexdigest()
+          sutra_sha=hashlib.sha256(sutra_path.read_bytes()).hexdigest()
+          mok_ms=77165
+          sutra_ms=120196
+
+          licenses_path=root/'app/src/main/assets/ambience/manifest/external_licenses.json'
+          licenses=json.loads(licenses_path.read_text(encoding='utf-8'))
+          old_hashes={}
+          by_asset={entry.get('asset_id'):entry for entry in licenses['entries']}
+          for asset in ('forest_temple_moktak_event_001','forest_temple_heart_sutra_event_001'):
+              if asset not in by_asset:
+                  raise SystemExit(f'Missing license entry: {asset}')
+              old_hashes[asset]=by_asset[asset].get('sha256')
+          by_asset['forest_temple_moktak_event_001'].clear(); by_asset['forest_temple_moktak_event_001'].update({
+              'asset_id':'forest_temple_moktak_event_001',
+              'source_name':'Fischtrommel_Muyu.mp3',
+              'creator':'the_very_Real_Horst',
+              'source_page':'https://freesound.org/people/the_very_Real_Horst/sounds/205999/',
+              'license':'CC-BY-4.0','license_status':'verified','attribution_required':True,
+              'original_filename':'Fischtrommel_Muyu.mp3','provenance_id':'freesound_the_very_real_horst_205999',
+              'original_sample_rate':48000,'sample_rate':48000,'channels':2,'duration_ms':mok_ms,'sha256':mok_sha,
+              'transformation':'Three full continuous wooden-fish performances joined with 1.25-second crossfades; 110 Hz high-pass; 6.8 kHz low-pass; mild 95/210 ms room reflections; +3 dB level adjustment with limiter; click-safe edge fades; 48 kHz stereo Ogg Opus 80 kbps VBR.'
+          })
+          by_asset['forest_temple_heart_sutra_event_001'].clear(); by_asset['forest_temple_heart_sutra_event_001'].update({
+              'asset_id':'forest_temple_heart_sutra_event_001',
+              'source_name':'염불소리1','creator':'김용배',
+              'source_page':'https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=13254274&menuNo=200020',
+              'license':'CC-BY-4.0','license_status':'verified','attribution_required':True,
+              'original_filename':'염불소리1.wav','provenance_id':'gongu_kim_yongbae_13254274',
+              'original_sample_rate':32000,'sample_rate':48000,'channels':2,'duration_ms':sutra_ms,'sha256':sutra_sha,
+              'transformation':'120 Hz high-pass; 4.3 kHz low-pass; dynamic compression; 180/410/820 ms temple reflections; level adjustment with limiter; long fade-in/out; 48 kHz stereo Ogg Opus 72 kbps VBR.'
+          })
+          licenses['version']=max(int(licenses.get('version',0))+1,8)
+          licenses_path.write_text(json.dumps(licenses,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          scene_path=root/'app/src/main/assets/ambience/manifest/scene_sources.json'
+          scene=json.loads(scene_path.read_text(encoding='utf-8'))
+          sources={entry['id']:entry for entry in scene['sources']}
+          mok=sources['forest_temple_moktak']['events'][0]
+          mok['duration_ms']=mok_ms
+          mok['tags']=['forest_temple','moktak','rhythmic','continuous_performance','temple_right']
+          mok['provenance_id']='freesound_the_very_real_horst_205999'
+          sutra=sources['forest_temple_heart_sutra']['events'][0]
+          sutra['duration_ms']=sutra_ms
+          sutra['tags']=['forest_temple','heart_sutra','korean','temple_right','distant']
+          sutra['provenance_id']='gongu_kim_yongbae_13254274'
+          scene['version']=int(scene.get('version',0))+1
+          scene_path.write_text(json.dumps(scene,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          mixer_path=root/'web/mixer-sources.json'
+          mixer=json.loads(mixer_path.read_text(encoding='utf-8'))
+          mix={entry['id']:entry for entry in mixer['sources']}
+          mix['forest_temple_moktak']['name']='Rhythmic Temple Moktak'
+          mix['forest_temple_moktak']['url']='/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg?v=2'
+          mix['forest_temple_heart_sutra']['name']='Heart Sutra · Korean'
+          mix['forest_temple_heart_sutra']['url']='/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?v=2'
+          mixer_path.write_text(json.dumps(mixer,ensure_ascii=False,indent=2,separators=(',', ': '))+'\n',encoding='utf-8')
+
+          text_replacements={
+              'forest_temple_moktak_event_001.ogg?v=1':'forest_temple_moktak_event_001.ogg?v=2',
+              'forest_temple_heart_sutra_event_001.ogg?v=1':'forest_temple_heart_sutra_event_001.ogg?v=2',
+              '12733':'77165',
+              '132764':'120196',
+              'Forest Temple Moktak':'Rhythmic Temple Moktak',
+              'Temple moktak':'Rhythmic temple moktak',
+              'Temple Moktak':'Rhythmic Temple Moktak',
+              'Moktak from the temple hall':'Rhythmic moktak from the temple hall',
+              '법당의 목탁':'이어지는 법당 목탁',
+              '법당에서 들리는 목탁':'이어지는 법당 목탁',
+              'Heart Sutra · Mandarin':'Heart Sutra · Korean',
+              'Distant Heart Sutra · Mandarin':'Distant Heart Sutra · Korean',
+              '반야심경 · 중국어 독송':'반야심경 · 한국어 독송',
+              '멀리 들리는 반야심경 · 중국어':'멀리 들리는 반야심경 · 한국어',
+              'remaining-journeys-v1.js?v=24':'remaining-journeys-v1.js?v=25',
+              'site-locales-v10.js?v=18':'site-locales-v10.js?v=19',
+              'debug-bridge-v1.js?v=3':'debug-bridge-v1.js?v=4',
+          }
+          allowed_suffixes={'.js','.mjs','.json','.xml','.html','.yml','.yaml','.md'}
+          roots=[root/'web',root/'app/src/main',root/'.github']
+          for base in roots:
+              for path in base.rglob('*'):
+                  if not path.is_file() or path.suffix.lower() not in allowed_suffixes:
+                      continue
+                  try: text=path.read_text(encoding='utf-8')
+                  except UnicodeDecodeError: continue
+                  original=text
+                  for old,new in text_replacements.items():
+                      text=text.replace(old,new)
+                  for old,new in ((old_hashes.get('forest_temple_moktak_event_001'),mok_sha),(old_hashes.get('forest_temple_heart_sutra_event_001'),sutra_sha)):
+                      if old: text=text.replace(old,new)
+                  if text!=original:
+                      path.write_text(text,encoding='utf-8')
+
+          remaining=root/'web/remaining-journeys-v1.js'
+          text=remaining.read_text(encoding='utf-8')
+          if 'forest_temple_moktak_event_001.ogg?v=2' not in text or '77165' not in text:
+              raise SystemExit('Remaining journeys moktak URL/duration update missing')
+          if 'forest_temple_heart_sutra_event_001.ogg?v=2' not in text or '120196' not in text:
+              raise SystemExit('Remaining journeys sutra URL/duration update missing')
+
+          sw_path=root/'web/sw.js'
+          sw=sw_path.read_text(encoding='utf-8')
+          m=re.search(r"const CACHE='lullaby-scene-site-v(\d+)'",sw)
+          if not m: raise SystemExit('Could not find production service-worker cache version')
+          old=int(m.group(1)); sw=sw[:m.start(1)]+str(old+1)+sw[m.end(1):]
+          sw_path.write_text(sw,encoding='utf-8')
+
+          credits=root/'web/credits/index.html'
+          text=credits.read_text(encoding='utf-8')
+          ko_old='<section><h2>현재 배포본</h2><p>현재 배포본에는 별도의 저작자 표시가 필요한 CC BY 자료가 없습니다. 향후 CC BY 등 출처표시 의무가 있는 자료를 포함할 경우 이 페이지에 작품명, 저작자, 원문 링크, 라이선스와 수정 여부를 표시합니다.</p></section>'
+          en_old='<section><h2>Current release</h2><p>The current release contains no CC BY material that requires attribution. If a future release includes CC BY or other attribution-required material, this page will list its title, creator, source link, license, and modification notice.</p></section>'
+          ko_new='''<section><h2>현재 배포본 · CC BY 4.0</h2><ul><li><strong>염불소리1</strong> — 김용배 — <a href="https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=13254274&amp;menuNo=200020" rel="noopener">공유마당 원문</a> — <a href="https://creativecommons.org/licenses/by/4.0/deed.ko" rel="noopener">CC BY 4.0</a>. 원본을 필터링하고 리버브·음량 조정·페이드 처리 후 Ogg Opus로 인코딩했습니다.</li><li><strong>Fischtrommel_Muyu.mp3</strong> — the_very_Real_Horst — <a href="https://freesound.org/people/the_very_Real_Horst/sounds/205999/" rel="noopener">Freesound 원문</a> — <a href="https://creativecommons.org/licenses/by/4.0/deed.ko" rel="noopener">CC BY 4.0</a>. 연주를 크로스페이드로 반복하고 필터링·리버브·음량 조정·페이드 처리 후 Ogg Opus로 인코딩했습니다.</li></ul></section>'''
+          en_new='''<section><h2>Current release · CC BY 4.0</h2><ul><li><strong>염불소리1</strong> — 김용배 — <a href="https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=13254274&amp;menuNo=200020" rel="noopener">Sharing Yard source</a> — <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>. Filtered, reverberated, level-adjusted, faded, and encoded to Ogg Opus.</li><li><strong>Fischtrommel_Muyu.mp3</strong> — the_very_Real_Horst — <a href="https://freesound.org/people/the_very_Real_Horst/sounds/205999/" rel="noopener">Freesound source</a> — <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>. Repeated with crossfades, filtered, reverberated, level-adjusted, faded, and encoded to Ogg Opus.</li></ul></section>'''
+          if ko_old not in text or en_old not in text:
+              raise SystemExit('Credits placeholder text changed unexpectedly')
+          text=text.replace(ko_old,ko_new).replace(en_old,en_new)
+          credits.write_text(text,encoding='utf-8')
+
+          prod=root/'.github/workflows/production-web-smoke.yml'
+          p=prod.read_text(encoding='utf-8')
+          heart_curl='''              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-heart.ogg \\\n'''
+          if '/tmp/forest-temple-moktak.ogg' not in p and heart_curl in p:
+              p=p.replace(heart_curl,heart_curl+'''              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-moktak.ogg \\\n''')
+          heart_hash=f"                && echo '{sutra_sha}  /tmp/forest-temple-heart.ogg' | sha256sum -c - \\\n"
+          if heart_hash in p and '/tmp/forest-temple-moktak.ogg' in p and f"{mok_sha}  /tmp/forest-temple-moktak.ogg" not in p:
+              p=p.replace(heart_hash,heart_hash+f"                && echo '{mok_sha}  /tmp/forest-temple-moktak.ogg' | sha256sum -c - \\\n")
+          p=p.replace("                && grep -q 'Attribution Credits' /tmp/credits.html \\\n", "                && grep -q 'Attribution Credits' /tmp/credits.html \\\n                && grep -q 'Fischtrommel_Muyu.mp3' /tmp/credits.html \\\n                && grep -q '염불소리1' /tmp/credits.html \\\n")
+          prod.write_text(p,encoding='utf-8')
+
+          print('moktak sha256',mok_sha)
+          print('sutra sha256',sutra_sha)
+          print('handover expected moktak','c0896a7f3b09c9f5f6aa01dcd2ca11a4c6d44e4454ece58d12499212837c00cd')
+          print('handover expected sutra','db9baecf2ff4473826a0fb96676741097817f74bed49d101d24ba0751263de7a')
+          PY
+
+      - name: Validate changed sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check web/remaining-journeys-v1.js
+          node --check web/site-locales-v10.js
+          node --check web/debug-bridge-v1.js
+          python3 -m json.tool web/mixer-sources.json >/dev/null
+          python3 -m json.tool app/src/main/assets/ambience/manifest/scene_sources.json >/dev/null
+          python3 -m json.tool app/src/main/assets/ambience/manifest/external_licenses.json >/dev/null
+          node .github/scripts/web-debug-smoke.mjs
+          node .github/scripts/train-journey-parity-smoke.mjs
+
+      - name: Run Android manifest tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          ./gradlew testDebugUnitTest --no-daemon
+
+      - name: Commit completed handover work
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/finish-forest-temple-korean-sutra.yml
+          rm -rf .tmp_forest_temple_sources
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git status --short
+          git diff --cached --check
+          git commit -m 'Replace Forest Temple sutra and moktak audio'
+          git push origin HEAD:codex/forest-temple-korean-sutra
