@@ -1,0 +1,59 @@
+name: Sync Forest Temple journey mix with debug reference
+on:
+  push:
+    branches: [debug]
+    paths: ['.github/workflows/debug-sync-temple-mix.yml']
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: debug
+          fetch-depth: 0
+      - name: Match actual Forest Temple mix to debug reference
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('web/remaining-journeys-v1.js')
+          s=p.read_text()
+          patches=[
+            ("gains:{departure:.34,forest:.215,bowl:.113}","gains:{departure:.34,forest:.215,bowl:.227}"),
+            ("gain=on?cfg.gains[key]*(role==='bed'?factor:1)*fx.gain:0;","gain=on?(activeJourneyId==='forest_temple_journey'&&key==='bowl'?cfg.gains[key]:cfg.gains[key]*(role==='bed'?factor:1)*fx.gain):0;"),
+            ("const templeCutoff=key==='birds'?4800:key==='bowl'?6200:fx.cutoff;","const templeCutoff=key==='birds'?4800:key==='bowl'?4400:fx.cutoff;"),
+            ("sutra?5900:type==='gravel'?5200:7200","sutra?6100:type==='gravel'?5200:7200"),
+            ("sutra?.101:type==='gravel'?.075:.09","sutra?.157:type==='gravel'?.075:.09"),
+          ]
+          for old,new in patches:
+              if old not in s: raise SystemExit(f'missing patch target: {old}')
+              s=s.replace(old,new,1)
+          p.write_text(s)
+
+          p=Path('web/player/index.html')
+          s=p.read_text()
+          if '/remaining-journeys-v1.js?v=30' not in s: raise SystemExit('player cache target missing')
+          p.write_text(s.replace('/remaining-journeys-v1.js?v=30','/remaining-journeys-v1.js?v=31'))
+
+          p=Path('web/sw.js')
+          s=p.read_text()
+          if "lullaby-scene-debug-v17" not in s or '/remaining-journeys-v1.js?v=30' not in s: raise SystemExit('sw cache targets missing')
+          s=s.replace("lullaby-scene-debug-v17","lullaby-scene-debug-v18").replace('/remaining-journeys-v1.js?v=30','/remaining-journeys-v1.js?v=31')
+          p.write_text(s)
+          PY
+          node --check web/remaining-journeys-v1.js
+          grep -Fq 'forest:.215,bowl:.227' web/remaining-journeys-v1.js
+          grep -Fq "key==='bowl'?4400" web/remaining-journeys-v1.js
+          grep -Fq "sutra?6100" web/remaining-journeys-v1.js
+          grep -Fq "sutra?.157" web/remaining-journeys-v1.js
+      - name: Commit synced debug mix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/remaining-journeys-v1.js web/player/index.html web/sw.js
+          git commit -m 'Match Forest Temple journey levels to debug reference'
+          git fetch origin debug
+          git rebase origin/debug
+          git push origin HEAD:debug
