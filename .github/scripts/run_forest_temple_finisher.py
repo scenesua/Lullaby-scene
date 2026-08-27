@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+import gzip
 import http.cookiejar
 import importlib.util
+import io
 import urllib.request
+import zipfile
 from pathlib import Path
 
 script = Path(__file__).with_name('finish_forest_temple_korean_sutra.py')
@@ -14,6 +17,22 @@ original_fetch = module.fetch
 cookie_jar = http.cookiejar.CookieJar()
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
 gongu_warmed = False
+
+
+def unwrap_payload(data: bytes) -> bytes:
+    if data.startswith(b'\x1f\x8b\x08'):
+        data = gzip.decompress(data)
+        print('Gongu gzip decompressed:', len(data), data[:16].hex(), flush=True)
+    if data.startswith(b'PK\x03\x04'):
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            members = [name for name in archive.namelist() if not name.endswith('/')]
+            if not members:
+                raise RuntimeError('Gongu ZIP payload contains no files')
+            preferred = next((name for name in members if name.lower().endswith(('.wav','.mp3','.ogg','.flac','.m4a'))), members[0])
+            data = archive.read(preferred)
+            print('Gongu ZIP extracted:', preferred, len(data), data[:16].hex(), flush=True)
+    return data
+
 
 def browser_fetch(url, out, referer=None):
     global gongu_warmed
@@ -34,9 +53,12 @@ def browser_fetch(url, out, referer=None):
         headers['Referer'] = referer
     req = urllib.request.Request(url, headers=headers)
     with opener.open(req, timeout=90) as response:
-        data = response.read()
-        print('Gongu download response:', response.status, response.headers.get('Content-Type'), len(data), data[:16].hex(), flush=True)
+        raw = response.read()
+        print('Gongu download response:', response.status, response.headers.get('Content-Type'), len(raw), raw[:16].hex(), flush=True)
+        data = unwrap_payload(raw)
+        print('Gongu final payload:', len(data), data[:16].hex(), flush=True)
         out.write_bytes(data)
+
 
 module.fetch = browser_fetch
 module.main()
