@@ -1,0 +1,180 @@
+name: Boost temple chant and share room FX on debug
+
+on:
+  push:
+    branches:
+      - debug
+    paths:
+      - '.github/workflows/debug-temple-vocal-room.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out debug
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: debug
+          fetch-depth: 0
+
+      - name: Install audio separation tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --upgrade pip
+          python3 -m pip install demucs==4.0.1
+          command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+          python3 - <<'PY'
+          import torch
+          print('torch', torch.__version__)
+          PY
+
+      - name: Raise chant stem by 2 dB only
+        shell: bash
+        run: |
+          set -euo pipefail
+          src='web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg'
+          test -s "$src"
+          rm -rf /tmp/temple-demucs
+          python3 -m demucs.separate -n htdemucs --two-stems=vocals --device cpu -o /tmp/temple-demucs "$src"
+          vocals="$(find /tmp/temple-demucs -type f -name vocals.wav -print -quit)"
+          rest="$(find /tmp/temple-demucs -type f -name no_vocals.wav -print -quit)"
+          test -s "$vocals"
+          test -s "$rest"
+          tmp='web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.tmp.ogg'
+          ffmpeg -hide_banner -loglevel error -y \
+            -i "$rest" -i "$vocals" \
+            -filter_complex "[1:a]volume=2dB[vocal_plus_2db];[0:a][vocal_plus_2db]amix=inputs=2:normalize=0:dropout_transition=0[out]" \
+            -map '[out]' -ar 48000 -ac 2 -c:a libopus -b:a 80k -vbr on "$tmp"
+          mv "$tmp" "$src"
+          ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$src"
+
+      - name: Share temple room reverb and bump debug caches
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, hashlib
+
+          bridge = Path('web/debug-bridge-v1.js')
+          s = bridge.read_text()
+          old = """  function attachTempleSutraFx(node){
+    if(!node||node.__lullabyDebugTempleFx||!ctx||!master)return;
+    const preDelay=ctx.createDelay(.2);preDelay.delayTime.value=.055;
+    const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5000;reverbTone.Q.value=.35;
+    const convolver=ctx.createConvolver();convolver.buffer=createTempleImpulse(ctx);
+    const reverbWet=ctx.createGain();reverbWet.gain.value=.50;
+    const echoDelay=ctx.createDelay(1);echoDelay.delayTime.value=.41;
+    const echoTone=ctx.createBiquadFilter();echoTone.type='lowpass';echoTone.frequency.value=4800;
+    const echoWet=ctx.createGain();echoWet.gain.value=.065;
+    const echoFeedback=ctx.createGain();echoFeedback.gain.value=.10;
+    node.gain.connect(preDelay).connect(reverbTone).connect(convolver).connect(reverbWet).connect(master);
+    node.gain.connect(echoDelay);echoDelay.connect(echoTone).connect(echoWet).connect(master);echoDelay.connect(echoFeedback).connect(echoDelay);
+    node.__lullabyDebugTempleFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback};
+    record('event','Forest Temple Korean Heart Sutra FX ready · right-temple pan + 2.8s reverb + subtle echo');
+  }
+  async function prepareTempleSutraFx(){
+    if(activeJourneyId!=='forest_temple_journey')return;
+    const target=window.LullabyRemainingJourneys;await target?.ensureNodes?.();attachTempleSutraFx(target?.eventNode?.heartSutra);
+  }
+"""
+          new = """  let templeRoomImpulse=null;
+  const sharedTempleRoomImpulse=()=>templeRoomImpulse||(templeRoomImpulse=createTempleImpulse(ctx));
+  function attachTempleRoomFx(node,label='Temple event'){
+    if(!node||node.__lullabyDebugTempleRoomFx||!ctx||!master)return;
+    const preDelay=ctx.createDelay(.2);preDelay.delayTime.value=.055;
+    const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5000;reverbTone.Q.value=.35;
+    const convolver=ctx.createConvolver();convolver.buffer=sharedTempleRoomImpulse();
+    const reverbWet=ctx.createGain();reverbWet.gain.value=.50;
+    const echoDelay=ctx.createDelay(1);echoDelay.delayTime.value=.41;
+    const echoTone=ctx.createBiquadFilter();echoTone.type='lowpass';echoTone.frequency.value=4800;
+    const echoWet=ctx.createGain();echoWet.gain.value=.065;
+    const echoFeedback=ctx.createGain();echoFeedback.gain.value=.10;
+    node.gain.connect(preDelay).connect(reverbTone).connect(convolver).connect(reverbWet).connect(master);
+    node.gain.connect(echoDelay);echoDelay.connect(echoTone).connect(echoWet).connect(master);echoDelay.connect(echoFeedback).connect(echoDelay);
+    node.__lullabyDebugTempleRoomFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback};
+    record('event',`${label} FX ready · shared 2.8s temple room + subtle echo`);
+  }
+  async function prepareTempleEventFx(){
+    if(activeJourneyId!=='forest_temple_journey')return;
+    const target=window.LullabyRemainingJourneys;await target?.ensureNodes?.();const events=target?.eventNode;
+    attachTempleRoomFx(events?.heartSutra,'Forest Temple Korean Heart Sutra');
+    attachTempleRoomFx(events?.moktak,'Forest Temple Moktak');
+  }
+"""
+          if old not in s:
+              raise SystemExit('temple FX baseline not found')
+          s = s.replace(old, new)
+          s = s.replace('await prepareTempleSutraFx()', 'await prepareTempleEventFx()')
+          bridge.write_text(s)
+
+          remaining = Path('web/remaining-journeys-v1.js')
+          s = remaining.read_text().replace('forest_temple_heart_sutra_event_001.ogg?v=3', 'forest_temple_heart_sutra_event_001.ogg?v=4')
+          remaining.write_text(s)
+
+          mixer = Path('web/mixer-sources.json')
+          s = mixer.read_text().replace('forest_temple_heart_sutra_event_001.ogg?v=2', 'forest_temple_heart_sutra_event_001.ogg?v=4')
+          mixer.write_text(s)
+
+          player = Path('web/player/index.html')
+          s = player.read_text().replace('/remaining-journeys-v1.js?v=28','/remaining-journeys-v1.js?v=29').replace('/debug-bridge-v1.js?v=6','/debug-bridge-v1.js?v=7')
+          player.write_text(s)
+
+          console = Path('web/debug-console-v1.js')
+          s = console.read_text()
+          s = s.replace('lullabyDebugBridgeForceV6', 'lullabyDebugBridgeForceV7')
+          s = s.replace("['lullabyDebugBridgeForceV5','lullabyDebugBridgeForceV4']", "['lullabyDebugBridgeForceV6','lullabyDebugBridgeForceV5','lullabyDebugBridgeForceV4']")
+          s = s.replace('/debug-bridge-v1.js?v=6&force=', '/debug-bridge-v1.js?v=7&force=')
+          s = s.replace('최신 브리지 v6', '최신 브리지 v7')
+          console.write_text(s)
+
+          debug = Path('web/debug/index.html')
+          debug.write_text(debug.read_text().replace('/debug-console-v1.js?v=7','/debug-console-v1.js?v=8'))
+
+          sw = Path('web/sw.js')
+          s = sw.read_text().replace("const CACHE='lullaby-scene-debug-v15'", "const CACHE='lullaby-scene-debug-v16'")
+          s = s.replace('/remaining-journeys-v1.js?v=28','/remaining-journeys-v1.js?v=29').replace('/debug-console-v1.js?v=7','/debug-console-v1.js?v=8').replace('/debug-bridge-v1.js?v=6','/debug-bridge-v1.js?v=7')
+          sw.write_text(s)
+
+          meta = Path('app/src/main/assets/ambience/manifest/external_licenses.json')
+          data = json.loads(meta.read_text())
+          target = next(e for e in data['entries'] if e.get('asset_id') == 'forest_temple_heart_sutra_event_001')
+          audio = Path('web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg')
+          target['sha256'] = hashlib.sha256(audio.read_bytes()).hexdigest()
+          target['transformation'] = target.get('transformation','') + '; Demucs two-stem separation on the current derivative, vocals stem +2 dB only, recombined with unchanged no-vocals stem; 48 kHz stereo Ogg Opus 80 kbps VBR'
+          data['version'] = max(int(data.get('version',1)), 9)
+          meta.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+          PY
+
+          node --check web/debug-bridge-v1.js
+          node --check web/remaining-journeys-v1.js
+          node --check web/debug-console-v1.js
+          grep -Fq "attachTempleRoomFx(events?.moktak" web/debug-bridge-v1.js
+          grep -Fq "forest_temple_heart_sutra_event_001.ogg?v=4" web/remaining-journeys-v1.js
+          grep -Fq "/debug-bridge-v1.js?v=7" web/player/index.html
+
+      - name: Commit debug-only temple audio update
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg \
+            web/debug-bridge-v1.js \
+            web/remaining-journeys-v1.js \
+            web/mixer-sources.json \
+            web/player/index.html \
+            web/debug-console-v1.js \
+            web/debug/index.html \
+            web/sw.js \
+            app/src/main/assets/ambience/manifest/external_licenses.json
+          git status --short
+          git diff --cached --quiet && exit 0
+          git commit -m 'Raise chant stem and share temple room FX on debug'
+          git push origin HEAD:debug
