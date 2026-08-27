@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
       - name: Install Demucs
         run: |
-          python3 -m pip install demucs==4.0.1
+          python3 -m pip install demucs==4.0.1 torchcodec
       - name: Boost chant voice stem only
         run: |
           SRC='web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg'
