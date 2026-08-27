@@ -61,7 +61,7 @@ jobs:
                 && test "$(head -c 4 /tmp/spacecraft.webp)" = 'RIFF' \
                 && test "$(wc -c < /tmp/forest-temple.webp)" -gt 10000 \
                 && test "$(head -c 4 /tmp/forest-temple.webp)" = 'RIFF' \
-                && grep -q 'Audio and Visual Credits' /tmp/credits.html \
+                && grep -q 'Attribution Credits' /tmp/credits.html \
                 && echo 'eb19517370cebb7921a15bd29764f16406cc442f011fa14ce01940312e743a72  /tmp/train-bed.ogg' | sha256sum -c - \
                 && echo '6439ec0e9029126670bcf94b576261e0dbf40e304300b27221e6268b58a51932  /tmp/ferry.ogg' | sha256sum -c - \
                 && echo 'b0eacd4243ab44f934c14884750b021dea9beb891bdf456a7b3c14ae3d1b19b0  /tmp/spacecraft.ogg' | sha256sum -c - \
