@@ -1,0 +1,12 @@
+{
+  "forest_temple_forest_bed_debug_004": {
+    "source_name": "Quiet Forest, Single Bird",
+    "creator": "HECKFRICKER",
+    "source_page": "https://freesound.org/people/HECKFRICKER/sounds/730301/",
+    "license": "CC0-1.0",
+    "license_status": "verified",
+    "transformation": "HQ preview converted to 48 kHz stereo Ogg Opus; 90 Hz high-pass, 9 kHz low-pass, +10 dB gain; no compressor, limiter, or clipping stage",
+    "runtime_gain": 0.121,
+    "runtime_crossfade_seconds": 8
+  }
+}
