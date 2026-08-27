@@ -7,6 +7,14 @@
   let eventJourney='';
   const syncEventOptions=data=>{if(eventJourney===data.journeyId)return;eventJourney=data.journeyId;const select=$('#eventType'),previous=select.value,options=data.eventOptions||[];select.innerHTML=options.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');if(options.some(([value])=>value===previous))select.value=previous};
   const api=()=>{const value=frame.contentWindow?.LullabyDebug;if(!value)throw new Error('플레이어 디버그 브리지가 아직 준비되지 않았습니다.');return value};
+  function patchKoreanSutraLabel(){
+    const win=frame.contentWindow,doc=frame.contentDocument,locales=win?.LullabyLocales;if(!win||!doc||!locales||typeof locales.sourceName!=='function'||locales.__debugKoreanSutraPatched)return;
+    const baseSourceName=locales.sourceName.bind(locales);locales.sourceName=(id,fallback=id)=>id==='forest_temple_heart_sutra'&&((win.LullabyI18n?.language||doc.documentElement.lang||'en')==='ko')?'반야심경 · 한국어 독송':baseSourceName(id,fallback);locales.__debugKoreanSutraPatched=true;
+    try{doc.dispatchEvent(new win.CustomEvent('lullaby-language-changed',{detail:{language:win.LullabyI18n?.language||doc.documentElement.lang||'ko'}}))}catch{}
+  }
+  function installFreshBridge(){
+    return new Promise((resolve,reject)=>{const doc=frame.contentDocument;if(!doc?.body){reject(new Error('디버그 플레이어 문서를 열 수 없습니다.'));return}doc.getElementById('lullabyDebugBridgeForceV4')?.remove();const script=doc.createElement('script');script.id='lullabyDebugBridgeForceV4';script.src=`/debug-bridge-v1.js?v=4&force=${Date.now()}`;script.onload=()=>{patchKoreanSutraLabel();resolve()};script.onerror=()=>reject(new Error('최신 디버그 브리지를 불러오지 못했습니다.'));doc.body.appendChild(script)})
+  }
   async function run(label,action){if(busy)return;busy=true;document.body.dataset.busy='true';try{const result=await action(api());notify(`${label} 완료${typeof result==='string'?` · ${result}`:''}`)}catch(error){console.error(error);notify(error.message||String(error),true)}finally{busy=false;document.body.dataset.busy='false';render()}}
   function render(){
     if(!player)return;let data;try{data=api().snapshot()}catch{return}
@@ -21,6 +29,6 @@
     $('#eventEnabled').addEventListener('change',event=>run('랜덤 이벤트 설정',debug=>debug.setEvents(event.target.checked)));
     $('#stageSelect').addEventListener('change',event=>run('단계 이동',debug=>debug.stage(event.target.value)));
   }
-  frame.addEventListener('load',()=>{eventJourney='';player=null;const wait=setInterval(()=>{try{player=api();clearInterval(wait);notify('디버그 플레이어 연결됨');clearInterval(timer);timer=setInterval(render,500);render()}catch{}},100);setTimeout(()=>{if(!player){clearInterval(wait);notify('플레이어 연결 시간이 초과되었습니다.',true)}},15000)});
+  frame.addEventListener('load',async()=>{eventJourney='';player=null;try{await installFreshBridge()}catch(error){console.error(error);notify(error.message||String(error),true)}const wait=setInterval(()=>{try{player=api();clearInterval(wait);patchKoreanSutraLabel();notify('디버그 플레이어 연결됨 · 최신 브리지 v4');clearInterval(timer);timer=setInterval(render,500);render()}catch{}},100);setTimeout(()=>{if(!player){clearInterval(wait);notify('플레이어 연결 시간이 초과되었습니다.',true)}},15000)});
   bind();addEventListener('beforeunload',()=>clearInterval(timer));
 })();
