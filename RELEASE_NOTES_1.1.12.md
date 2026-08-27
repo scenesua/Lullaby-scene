@@ -15,6 +15,7 @@
 
 - Android 버전: 1.1.12 (versionCode 21)
 - 기존 1.1.x와 동일한 지속형 Android 릴리즈 키로 서명되어 기존 앱 위에 업데이트할 수 있습니다.
+- 프로덕션 승격 전 웹 패리티 검사와 Android 단위 테스트를 다시 검증합니다.
 
 ---
 
@@ -33,3 +34,4 @@
 
 - Android version: 1.1.12 (versionCode 21)
 - Signed with the same persistent Android release key used by existing 1.1.x releases for in-place updates.
+- Production promotion re-verifies web parity checks and Android unit tests before merge.
