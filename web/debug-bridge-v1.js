@@ -53,7 +53,7 @@
     if(templeBowlPreviewNode)return templeBowlPreviewNode;
     const node=makeMediaNode('/audio/scenes/forest_temple_journey/forest_temple_bowl_distant_bed_001.ogg?v=1',{loop:false,preload:'auto'}),panner=ctx.createStereoPanner?.();
     if(panner){node.filter.disconnect();node.filter.connect(panner).connect(node.gain);panner.pan.value=0;node.panner=panner}
-    node.filter.frequency.value=4400;node.gain.gain.value=.18;templeBowlPreviewNode=node;return node;
+    node.filter.frequency.value=4400;node.gain.gain.value=.227;templeBowlPreviewNode=node;return node;
   }
   async function ensurePlaying(){if(!scenePlaying)await startScene();if(!scenePlaying)throw new Error('Journey did not start. Check browser audio permission.');await wait(100);await prepareTempleEventFx()}
   async function selectJourney(id){
@@ -78,7 +78,7 @@
   async function triggerEvent(type='random'){
     await ensurePlaying();
     if(activeJourneyId==='forest_temple_journey'&&type==='bowl'){
-      const node=await ensureTempleBowlPreview();node.el.pause();try{node.el.currentTime=0}catch{}node.filter.frequency.setValueAtTime(4400,ctx.currentTime);node.gain.gain.setValueAtTime(.18,ctx.currentTime);if(node.panner)node.panner.pan.setValueAtTime(0,ctx.currentTime);await node.el.play();record('event','싱잉볼 · 먼 법당');return'싱잉볼 · 먼 법당';
+      const node=await ensureTempleBowlPreview();node.el.pause();try{node.el.currentTime=0}catch{}node.filter.frequency.setValueAtTime(4400,ctx.currentTime);node.gain.gain.setValueAtTime(.227,ctx.currentTime);if(node.panner)node.panner.pan.setValueAtTime(0,ctx.currentTime);await node.el.play();record('event','싱잉볼 · 먼 법당');return'싱잉볼 · 먼 법당';
     }
     const target=provider();if(typeof target?.triggerEvent!=='function')throw new Error('This Journey has no debug event adapter.');const label=await target.triggerEvent(type);record('event',label);return label;
   }
