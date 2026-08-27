@@ -1,0 +1,23 @@
+name: Inspect Gongu source
+
+on:
+  push:
+    branches:
+      - tmp-mixer-chant-3
+    paths:
+      - '.github/workflows/tmp-inspect-gongu.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect page source
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?menuNo=200196&wrtSn=13254274'
+          curl -L --fail --retry 3 -A 'Mozilla/5.0' "$url" -o /tmp/page.html
+          echo '=== lines containing 13254274 / wav / download / file ==='
+          grep -Ein '13254274|염불소리1|\.wav|download|down|file|atch|wrtFile' /tmp/page.html | tail -n 120 || true
+          echo '=== script src ==='
+          grep -Eo '<script[^>]+src="[^"]+"' /tmp/page.html | tail -n 40 || true
