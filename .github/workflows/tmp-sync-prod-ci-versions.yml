@@ -1,0 +1,51 @@
+name: Sync production CI cache expectations
+
+on:
+  push:
+    branches:
+      - release/forest-temple-1.1.12
+    paths:
+      - '.github/workflows/tmp-sync-prod-ci-versions.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: release/forest-temple-1.1.12
+          fetch-depth: 0
+      - name: Align CI expectations with production cache versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/web-preview-check.yml')
+          s=p.read_text()
+          s=s.replace('lullaby-scene-site-v77','lullaby-scene-site-v78')
+          s=s.replace('/player-v2.js?v=18','/player-v2.js?v=19')
+          s=s.replace('/remaining-journeys-v1.js?v=24','/remaining-journeys-v1.js?v=25')
+          p.write_text(s)
+
+          p=Path('.github/workflows/web-i18n-security-check.yml')
+          s=p.read_text().replace('/site-locales-v10.js?v=18','/site-locales-v10.js?v=20').replace('site-locales-v10.js?v=18','site-locales-v10.js?v=20')
+          p.write_text(s)
+          PY
+          grep -Fq 'lullaby-scene-site-v78' .github/workflows/web-preview-check.yml
+          grep -Fq '/player-v2.js?v=19' .github/workflows/web-preview-check.yml
+          grep -Fq '/remaining-journeys-v1.js?v=25' .github/workflows/web-preview-check.yml
+          grep -Fq '/site-locales-v10.js?v=20' .github/workflows/web-i18n-security-check.yml
+      - name: Commit CI expectation sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f .github/workflows/tmp-sync-prod-ci-versions.yml
+          git add .github/workflows/web-preview-check.yml .github/workflows/web-i18n-security-check.yml
+          git commit -m 'Sync production CI cache expectations'
+          git push origin HEAD:release/forest-temple-1.1.12
