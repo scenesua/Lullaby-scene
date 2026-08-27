@@ -28,9 +28,9 @@
   function attachTempleSutraFx(node){
     if(!node||node.__lullabyDebugTempleFx||!ctx||!master)return;
     const preDelay=ctx.createDelay(.2);preDelay.delayTime.value=.055;
-    const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5600;reverbTone.Q.value=.35;
+    const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5000;reverbTone.Q.value=.35;
     const convolver=ctx.createConvolver();convolver.buffer=createTempleImpulse(ctx);
-    const reverbWet=ctx.createGain();reverbWet.gain.value=.34;
+    const reverbWet=ctx.createGain();reverbWet.gain.value=.50;
     const echoDelay=ctx.createDelay(1);echoDelay.delayTime.value=.41;
     const echoTone=ctx.createBiquadFilter();echoTone.type='lowpass';echoTone.frequency.value=4800;
     const echoWet=ctx.createGain();echoWet.gain.value=.065;
@@ -48,7 +48,7 @@
     await ensureContext();
     if(templeBowlPreviewNode)return templeBowlPreviewNode;
     const node=makeMediaNode('/audio/scenes/forest_temple_journey/forest_temple_bowl_distant_bed_001.ogg?v=1',{loop:false,preload:'auto'}),panner=ctx.createStereoPanner?.();
-    if(panner){node.filter.disconnect();node.filter.connect(panner).connect(node.gain);panner.pan.value=.48;node.panner=panner}
+    if(panner){node.filter.disconnect();node.filter.connect(panner).connect(node.gain);panner.pan.value=0;node.panner=panner}
     node.filter.frequency.value=4400;node.gain.gain.value=.18;templeBowlPreviewNode=node;return node;
   }
   async function ensurePlaying(){if(!scenePlaying)await startScene();if(!scenePlaying)throw new Error('Journey did not start. Check browser audio permission.');await wait(100);await prepareTempleSutraFx()}
@@ -74,7 +74,7 @@
   async function triggerEvent(type='random'){
     await ensurePlaying();
     if(activeJourneyId==='forest_temple_journey'&&type==='bowl'){
-      const node=await ensureTempleBowlPreview();node.el.pause();try{node.el.currentTime=0}catch{}node.filter.frequency.setValueAtTime(4400,ctx.currentTime);node.gain.gain.setValueAtTime(.18,ctx.currentTime);if(node.panner)node.panner.pan.setValueAtTime(.48,ctx.currentTime);await node.el.play();record('event','싱잉볼 · 먼 법당');return'싱잉볼 · 먼 법당';
+      const node=await ensureTempleBowlPreview();node.el.pause();try{node.el.currentTime=0}catch{}node.filter.frequency.setValueAtTime(4400,ctx.currentTime);node.gain.gain.setValueAtTime(.18,ctx.currentTime);if(node.panner)node.panner.pan.setValueAtTime(0,ctx.currentTime);await node.el.play();record('event','싱잉볼 · 먼 법당');return'싱잉볼 · 먼 법당';
     }
     const target=provider();if(typeof target?.triggerEvent!=='function')throw new Error('This Journey has no debug event adapter.');const label=await target.triggerEvent(type);record('event',label);return label;
   }
