@@ -1,99 +1,91 @@
 from pathlib import Path
-import json, hashlib
 
-# Forest Temple: use bamboo forest from the very first stage, keep temple random events from stage 3.
+
+def replace_once(text: str, old: str, new: str, label: str) -> str:
+    if old not in text:
+        raise SystemExit(f'missing patch target: {label}')
+    return text.replace(old, new, 1)
+
+
+# Forest Temple mix: bamboo forest -4 dB, singing bowl +2 dB,
+# chant event +1 dB while retaining the existing vocal-stem +2 dB derivative.
 remaining = Path('web/remaining-journeys-v1.js')
 s = remaining.read_text()
-s = s.replace("forest:['/audio/forest.ogg?v=3',7.857]", "forest:['/audio/bamboo_forest.ogg?v=1',94.744]")
-s = s.replace('forest_temple_heart_sutra_event_001.ogg?v=3', 'forest_temple_heart_sutra_event_001.ogg?v=4')
+s = replace_once(
+    s,
+    "gains:{departure:.34,forest:.34,bowl:.09}",
+    "gains:{departure:.34,forest:.215,bowl:.113}",
+    'Forest Temple gains',
+)
+
+# Locale-safe journey phase naming. Korean uses the explicit Korean label,
+# English uses the canonical English label, and every other locale asks the
+# catalog for the active-language translation before falling back to English.
+old_locale = """  const korean=()=>((window.LullabyI18n?.language||document.documentElement.lang||'en')==='ko');
+  const local=value=>value[korean()?1:0];
+  const phaseName=value=>window.LullabyCatalogI18n?.phaseName?.(value[0])||local(value);"""
+new_locale = """  const language=()=>String(window.LullabyI18n?.language||document.documentElement.lang||'en').trim();
+  const languageBase=()=>language().toLowerCase().split('-')[0];
+  const korean=()=>languageBase()==='ko';
+  const local=value=>value[korean()?1:0];
+  const phaseName=value=>{
+    if(!Array.isArray(value))return String(value??'');
+    const lang=language(),base=languageBase();
+    if(base==='ko')return value[1]||value[0]||'';
+    if(base==='en')return value[0]||value[1]||'';
+    const translated=window.LullabyCatalogI18n?.phaseName?.(value[0],lang);
+    return translated||value[0]||value[1]||'';
+  };"""
+s = replace_once(s, old_locale, new_locale, 'journey phase locale resolver')
+s = replace_once(s, "sutra?.09:type==='gravel'?.075:.09", "sutra?.101:type==='gravel'?.075:.09", 'scheduled chant +1 dB')
+s = replace_once(s, "sutra?.14:picked==='gravel'?.075:.09", "sutra?.157:picked==='gravel'?.075:.09", 'debug chant +1 dB')
 remaining.write_text(s)
 
-# Mixer source cache key for the newly separated/recombined chant derivative.
-mixer = Path('web/mixer-sources.json')
-s = mixer.read_text().replace('forest_temple_heart_sutra_event_001.ogg?v=2', 'forest_temple_heart_sutra_event_001.ogg?v=4')
-mixer.write_text(s)
-
-# Share exactly one temple-room impulse between the chant and standalone moktak event.
+# Debug singing-bowl preview should track the same +2 dB adjustment.
 bridge = Path('web/debug-bridge-v1.js')
 s = bridge.read_text()
-old = """  function attachTempleSutraFx(node){
-    if(!node||node.__lullabyDebugTempleFx||!ctx||!master)return;
-    const preDelay=ctx.createDelay(.2);preDelay.delayTime.value=.055;
-    const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5000;reverbTone.Q.value=.35;
-    const convolver=ctx.createConvolver();convolver.buffer=createTempleImpulse(ctx);
-    const reverbWet=ctx.createGain();reverbWet.gain.value=.50;
-    const echoDelay=ctx.createDelay(1);echoDelay.delayTime.value=.41;
-    const echoTone=ctx.createBiquadFilter();echoTone.type='lowpass';echoTone.frequency.value=4800;
-    const echoWet=ctx.createGain();echoWet.gain.value=.065;
-    const echoFeedback=ctx.createGain();echoFeedback.gain.value=.10;
-    node.gain.connect(preDelay).connect(reverbTone).connect(convolver).connect(reverbWet).connect(master);
-    node.gain.connect(echoDelay);echoDelay.connect(echoTone).connect(echoWet).connect(master);echoDelay.connect(echoFeedback).connect(echoDelay);
-    node.__lullabyDebugTempleFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback};
-    record('event','Forest Temple Korean Heart Sutra FX ready · right-temple pan + 2.8s reverb + subtle echo');
-  }
-  async function prepareTempleSutraFx(){
-    if(activeJourneyId!=='forest_temple_journey')return;
-    const target=window.LullabyRemainingJourneys;await target?.ensureNodes?.();attachTempleSutraFx(target?.eventNode?.heartSutra);
-  }
-"""
-new = """  let templeRoomImpulse=null;
-  const sharedTempleRoomImpulse=()=>templeRoomImpulse||(templeRoomImpulse=createTempleImpulse(ctx));
-  function attachTempleRoomFx(node,label='Temple event'){
-    if(!node||node.__lullabyDebugTempleRoomFx||!ctx||!master)return;
-    const preDelay=ctx.createDelay(.2);preDelay.delayTime.value=.055;
-    const reverbTone=ctx.createBiquadFilter();reverbTone.type='lowpass';reverbTone.frequency.value=5000;reverbTone.Q.value=.35;
-    const convolver=ctx.createConvolver();convolver.buffer=sharedTempleRoomImpulse();
-    const reverbWet=ctx.createGain();reverbWet.gain.value=.50;
-    const echoDelay=ctx.createDelay(1);echoDelay.delayTime.value=.41;
-    const echoTone=ctx.createBiquadFilter();echoTone.type='lowpass';echoTone.frequency.value=4800;
-    const echoWet=ctx.createGain();echoWet.gain.value=.065;
-    const echoFeedback=ctx.createGain();echoFeedback.gain.value=.10;
-    node.gain.connect(preDelay).connect(reverbTone).connect(convolver).connect(reverbWet).connect(master);
-    node.gain.connect(echoDelay);echoDelay.connect(echoTone).connect(echoWet).connect(master);echoDelay.connect(echoFeedback).connect(echoDelay);
-    node.__lullabyDebugTempleRoomFx={preDelay,reverbTone,convolver,reverbWet,echoDelay,echoTone,echoWet,echoFeedback};
-    record('event',`${label} FX ready · shared 2.8s temple room + subtle echo`);
-  }
-  async function prepareTempleEventFx(){
-    if(activeJourneyId!=='forest_temple_journey')return;
-    const target=window.LullabyRemainingJourneys;await target?.ensureNodes?.();const events=target?.eventNode;
-    attachTempleRoomFx(events?.heartSutra,'Forest Temple Korean Heart Sutra');
-    attachTempleRoomFx(events?.moktak,'Forest Temple Moktak');
-  }
-"""
-if old not in s:
-    raise SystemExit('expected old temple FX block not found')
-s = s.replace(old, new).replace('await prepareTempleSutraFx()', 'await prepareTempleEventFx()')
+s = replace_once(
+    s,
+    "node.filter.frequency.value=4400;node.gain.gain.value=.18;templeBowlPreviewNode=node;return node;",
+    "node.filter.frequency.value=4400;node.gain.gain.value=.227;templeBowlPreviewNode=node;return node;",
+    'bowl preview base +2 dB',
+)
+s = replace_once(
+    s,
+    "node.gain.gain.setValueAtTime(.18,ctx.currentTime)",
+    "node.gain.gain.setValueAtTime(.227,ctx.currentTime)",
+    'bowl preview trigger +2 dB',
+)
 bridge.write_text(s)
+
+# Force the debug console to inject the newly versioned bridge.
+console = Path('web/debug-console-v1.js')
+s = console.read_text()
+s = replace_once(
+    s,
+    "doc.getElementById('lullabyDebugBridgeForceV7')?.remove();for(const id of['lullabyDebugBridgeForceV6','lullabyDebugBridgeForceV5','lullabyDebugBridgeForceV4'])doc.getElementById(id)?.remove();const script=doc.createElement('script');script.id='lullabyDebugBridgeForceV7';script.src=`/debug-bridge-v1.js?v=7&force=${Date.now()}`",
+    "doc.getElementById('lullabyDebugBridgeForceV8')?.remove();for(const id of['lullabyDebugBridgeForceV7','lullabyDebugBridgeForceV6','lullabyDebugBridgeForceV5','lullabyDebugBridgeForceV4'])doc.getElementById(id)?.remove();const script=doc.createElement('script');script.id='lullabyDebugBridgeForceV8';script.src=`/debug-bridge-v1.js?v=8&force=${Date.now()}`",
+    'debug bridge v8 injection',
+)
+s = replace_once(s, '최신 브리지 v7', '최신 브리지 v8', 'debug bridge notice v8')
+console.write_text(s)
 
 # Cache/version bumps.
 player = Path('web/player/index.html')
-s = player.read_text().replace('/remaining-journeys-v1.js?v=28','/remaining-journeys-v1.js?v=29').replace('/debug-bridge-v1.js?v=6','/debug-bridge-v1.js?v=7')
+s = player.read_text()
+s = replace_once(s, '/remaining-journeys-v1.js?v=29', '/remaining-journeys-v1.js?v=30', 'player remaining journeys v30')
+s = replace_once(s, '/debug-bridge-v1.js?v=7', '/debug-bridge-v1.js?v=8', 'player debug bridge v8')
 player.write_text(s)
 
-console = Path('web/debug-console-v1.js')
-s = console.read_text()
-s = s.replace('lullabyDebugBridgeForceV6', 'lullabyDebugBridgeForceV7')
-s = s.replace("['lullabyDebugBridgeForceV5','lullabyDebugBridgeForceV4']", "['lullabyDebugBridgeForceV6','lullabyDebugBridgeForceV5','lullabyDebugBridgeForceV4']")
-s = s.replace('/debug-bridge-v1.js?v=6&force=', '/debug-bridge-v1.js?v=7&force=')
-s = s.replace('최신 브리지 v6', '최신 브리지 v7')
-console.write_text(s)
-
 debug = Path('web/debug/index.html')
-debug.write_text(debug.read_text().replace('/debug-console-v1.js?v=7','/debug-console-v1.js?v=8'))
+s = debug.read_text()
+s = replace_once(s, '/debug-console-v1.js?v=8', '/debug-console-v1.js?v=9', 'debug console v9')
+debug.write_text(s)
 
 sw = Path('web/sw.js')
-s = sw.read_text().replace("const CACHE='lullaby-scene-debug-v15'", "const CACHE='lullaby-scene-debug-v16'")
-s = s.replace('/remaining-journeys-v1.js?v=28','/remaining-journeys-v1.js?v=29').replace('/debug-console-v1.js?v=7','/debug-console-v1.js?v=8').replace('/debug-bridge-v1.js?v=6','/debug-bridge-v1.js?v=7')
+s = sw.read_text()
+s = replace_once(s, "const CACHE='lullaby-scene-debug-v16'", "const CACHE='lullaby-scene-debug-v17'", 'debug cache v17')
+s = replace_once(s, '/remaining-journeys-v1.js?v=29', '/remaining-journeys-v1.js?v=30', 'sw remaining journeys v30')
+s = replace_once(s, '/debug-console-v1.js?v=8', '/debug-console-v1.js?v=9', 'sw debug console v9')
+s = replace_once(s, '/debug-bridge-v1.js?v=7', '/debug-bridge-v1.js?v=8', 'sw debug bridge v8')
 sw.write_text(s)
-
-# Update transformation note/hash for the current Korean chant derivative.
-meta = Path('app/src/main/assets/ambience/manifest/external_licenses.json')
-data = json.loads(meta.read_text())
-target = next(e for e in data['entries'] if e.get('asset_id') == 'forest_temple_heart_sutra_event_001')
-audio = Path('web/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg')
-target['sha256'] = hashlib.sha256(audio.read_bytes()).hexdigest()
-note = 'Demucs two-stem separation on current derivative; vocals stem +2 dB only; unchanged no-vocals stem recombined; 48 kHz stereo Ogg Opus 80 kbps VBR'
-if note not in target.get('transformation',''):
-    target['transformation'] = (target.get('transformation','') + '; ' + note).strip('; ')
-data['version'] = max(int(data.get('version',1)), 9)
-meta.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
