@@ -9,14 +9,14 @@
     "runtime_gain": 0.121,
     "runtime_crossfade_seconds": 8
   },
-  "forest_temple_distant_birds_debug_006": {
-    "source_name": "Daytime wind and distant birds in a national park",
-    "creator": "balanced",
-    "source_page": "https://freesound.org/people/balanced/sounds/857824/",
+  "forest_temple_korean_distant_birds_debug_007": {
+    "source_name": "Birds on Spring Forest",
+    "creator": "kynodelia",
+    "source_page": "https://freesound.org/people/kynodelia/sounds/829767/",
     "license": "CC0-1.0",
     "license_status": "verified",
-    "transformation": "60-180 second excerpt from the HQ preview; 260 Hz high-pass, 7.8 kHz low-pass, +7 dB gain; original AB stereo field preserved; 48 kHz stereo Ogg Opus",
-    "runtime_gain": 0.05,
+    "transformation": "8-128 second excerpt of an Ansan-si, South Korea field recording; pseudo-stereo ambience derived from the mono source using asymmetric 7/23 ms early reflections and independent all-pass decorrelation; 240 Hz high-pass, 6.2 kHz low-pass, restrained 3.2 kHz presence dip, loudness-normalized to -26 LUFS; 48 kHz stereo Ogg Opus",
+    "runtime_gain": 0.11,
     "runtime_lowpass_hz": 4800,
     "runtime_crossfade_seconds": 8
   }
