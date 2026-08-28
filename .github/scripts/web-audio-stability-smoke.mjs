@@ -13,7 +13,7 @@ page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window.LullabyPlayerRuntime?.catalog?.length===55);
+await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window.LullabyPlayerRuntime?.catalog?.length===54);
 
 const direct=await page.evaluate(async()=>{
   const R=window.LullabyPlayerRuntime;
