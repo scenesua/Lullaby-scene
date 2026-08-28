@@ -81,8 +81,8 @@
       "sample_rate": 48000,
       "channels": 2,
       "duration_ms": 128667,
-      "sha256": "4aae7519a1963bdca225655d2ef7fbe8903459a2607c55e13fb9415c7f21456d",
-      "transformation": "22 Hz high-pass ferry departure bed with 2-second raised-cosine fade-out; one 4.8-second CC0 ferry horn mixed at 18 seconds with 55 Hz high-pass, 2.2 kHz low-pass, -14.9 dB gain, short harbor echo, and peak limiting; 48 kHz stereo Ogg Opus 112 kbps VBR"
+      "sha256": "b01b3d63105b9439a728fe06222dab030a0ce5e516b84fa31aa77cd8543a4dc4",
+      "transformation": "22 Hz high-pass ferry departure bed with 2-second raised-cosine fade-out; bed ducks by 4 dB while one 4.8-second CC0 ferry horn plays at 7 seconds with 35 Hz high-pass, 6.5 kHz low-pass, -3.1 dB gain, short harbor echo at 0.9 output gain, and peak limiting; 48 kHz stereo Ogg Opus 112 kbps VBR"
     },
     {
       "asset_id": "ferry_journey_bed_001",
