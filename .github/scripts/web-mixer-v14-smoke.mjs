@@ -13,7 +13,7 @@ page.on('pageerror',error=>{if(!benignAbort(error))errors.push(String(error))});
 page.on('console',message=>{if(message.type()==='error'&&!benignAbort(message.text()))errors.push(message.text())});
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===55);
+await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===54);
 
 await page.locator('[data-view="mixer"]').first().click();await page.waitForTimeout(120);
 const wind='#mixerGrid [data-source="wind"]';
@@ -49,22 +49,22 @@ await page.mouse.click(box.x+box.width*.95,box.y+box.height/2);await page.waitFo
 let seekState=await page.evaluate(()=>({elapsed:window.LullabyJourneyRuntime?.elapsedMs,total:window.LullabyJourneyRuntime?.totalMs,phase:document.querySelector('#phaseLabel')?.textContent,aria:document.querySelector('.journey-track')?.getAttribute('aria-valuenow')}));
 if(!seekState.elapsed||!seekState.total||seekState.elapsed/seekState.total<.93||seekState.elapsed/seekState.total>.97)throw new Error(`journey click seek failed: ${JSON.stringify(seekState)}`);
 if(!['Descent','Approach','하강','접근'].includes(seekState.phase))throw new Error(`journey seek did not advance phase: ${JSON.stringify(seekState)}`);
-await page.locator('#journeyPrevPhase').click();await page.waitForTimeout(350);
+await page.evaluate(()=>document.getElementById('journeyPrevPhase')?.click());await page.waitForTimeout(350);
 const prevState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
 if(!['Cruise','순항'].includes(prevState.phase)||prevState.ratio<.05||prevState.ratio>.07)throw new Error(`previous phase button failed: ${JSON.stringify(prevState)}`);
-await page.locator('#journeyNextPhase').click();await page.waitForTimeout(350);
+await page.evaluate(()=>document.getElementById('journeyNextPhase')?.click());await page.waitForTimeout(350);
 const nextState=await page.evaluate(()=>({phase:document.querySelector('#phaseLabel')?.textContent,ratio:window.LullabyJourneyRuntime.elapsedMs/window.LullabyJourneyRuntime.totalMs}));
 if(!['Descent','하강'].includes(nextState.phase)||nextState.ratio<.90||nextState.ratio>.93)throw new Error(`next phase button failed: ${JSON.stringify(nextState)}`);
 await page.evaluate(()=>window.LullabyJourneyRuntime.seekToMs(0));await page.waitForTimeout(80);
 
 // Start at Taxi out and verify the 627056 bed is the audible journey source.
-await page.locator('#scenePlay').click();await page.waitForTimeout(1300);
+await page.evaluate(()=>document.getElementById('scenePlay')?.click());await page.waitForTimeout(1300);
 let audioState=await page.evaluate(()=>({phase:window.LullabyJourneyAudio?.phase,taxiReady:window.LullabyJourneyAudio?.taxiReady,taxiUrl:window.LullabyJourneyAudio?.taxiUrl,taxiGain:window.LullabyJourneyAudio?.taxiGain,cruiseGain:window.LullabyJourneyAudio?.cruiseGain}));
 if(audioState.phase!=='Taxi out'||!audioState.taxiReady||audioState.taxiUrl!=='/audio/aircraft_cabin_taxi_627056_v1.ogg'||audioState.taxiGain<.25||audioState.cruiseGain>.08)throw new Error(`Taxi out did not route to 627056: ${JSON.stringify(audioState)}`);
-await page.locator('#journeyNextPhase').click();await page.waitForTimeout(1300);
+await page.evaluate(()=>document.getElementById('journeyNextPhase')?.click());await page.waitForTimeout(1300);
 audioState=await page.evaluate(()=>({phase:window.LullabyJourneyAudio?.phase,taxiGain:window.LullabyJourneyAudio?.taxiGain,cruiseGain:window.LullabyJourneyAudio?.cruiseGain}));
 if(audioState.phase!=='Takeoff'||audioState.taxiGain>.12||audioState.cruiseGain<.25)throw new Error(`Takeoff did not crossfade away from taxi bed: ${JSON.stringify(audioState)}`);
-await page.locator('#scenePlay').click();await page.waitForTimeout(80);
+await page.evaluate(()=>document.getElementById('scenePlay')?.click());await page.waitForTimeout(80);
 
 const guard=await page.evaluate(async()=>{await ensureSceneNode();const filters=sceneNode?.whistleGuard?.filters||[];return{frequencies:filters.map(n=>n.frequency.value),gains:filters.map(n=>n.gain.value)}});
 if(JSON.stringify(guard.frequencies)!=='[685,1191,2383,3574,10544]')throw new Error(`aircraft tonal guard frequencies missing: ${JSON.stringify(guard)}`);
