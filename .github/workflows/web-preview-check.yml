@@ -114,14 +114,14 @@ jobs:
           grep -q '/visitor-count-v1.js?v=8' web/sw.js
           grep -q '/visitor-count-v1.js?v=8' web/player/index.html
           grep -q 'api.counterapi.dev/v1' web/visitor-count-v1.js
-          grep -q 'lullaby-scene-site-v79' web/sw.js
+          grep -q 'lullaby-scene-site-v80' web/sw.js
           grep -q "event.request.destination==='audio'" web/sw.js
           grep -q "url.pathname.startsWith('/api/')" web/sw.js
           ! sed -n '3p' web/sw.js | grep -q '/audio/'
           grep -q '/player-v2.js?v=19' web/sw.js
           grep -q '/scene-audio-v2.js?v=16' web/sw.js
-          grep -q '/train-journey-v1.js?v=11' web/sw.js
-          grep -q '/remaining-journeys-v1.js?v=26' web/sw.js
+          grep -q '/train-journey-v1.js?v=12' web/sw.js
+          grep -q '/remaining-journeys-v1.js?v=27' web/sw.js
           grep -q '/journey-background-v1.js?v=14' web/sw.js
           test -s web/assets/journeys/spacecraft.webp
           test -s web/assets/journeys/submarine.webp
