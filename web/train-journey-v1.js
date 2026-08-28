@@ -77,7 +77,7 @@
   async function ensureTrainNodes(){
     await ensureContext();
     for(const [role,[url]] of Object.entries(SOURCES))if(!trainNodes[role]){
-      const node=role==='bed'?makeCrossfadeLoopNode(url,{durationSeconds:SOURCES[role][1],fadeSeconds:8}):makeMediaNode(url,{loop:false,preload:'auto'});node.gain.gain.value=0;trainNodes[role]=node;
+      const node=role==='bed'?makeCrossfadeLoopNode(url,{durationSeconds:SOURCES[role][1],fadeSeconds:9.48}):makeMediaNode(url,{loop:false,preload:'auto'});node.gain.gain.value=0;trainNodes[role]=node;
     }
     if(!eventNode){eventNode=makeMediaNode(EVENT_SOURCE,{loop:false,preload:'none'});eventNode.gain.gain.value=.1}
   }

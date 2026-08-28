@@ -64,7 +64,7 @@
           "asset_id": "train_journey_bed_001",
           "path": "ambience/train_journey/continuous/train_journey_bed_001.ogg",
           "duration_ms": 234671,
-          "crossfade_ms": 8000,
+          "crossfade_ms": 9480,
           "role": "bed",
           "tags": [
             "train",
@@ -120,7 +120,7 @@
             "departure",
             "stereo"
           ],
-          "provenance_id": "freesound_mrmayo_74916"
+          "provenance_id": "freesound_mrmayo_74916_plus_theblockofsound235_350948"
         }
       ],
       "events": []
