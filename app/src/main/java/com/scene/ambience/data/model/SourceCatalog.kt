@@ -35,6 +35,7 @@ enum class SourceId(val id: String) {
     FOREST_TEMPLE_BOWL("forest_temple_bowl"),
     FOREST_TEMPLE_PATH_WALK("forest_temple_path_walk"),
     FOREST_TEMPLE_BAMBOO_BED("forest_temple_bamboo_bed"),
+    FOREST_TEMPLE_KOREAN_BIRDS_BED("forest_temple_korean_birds_bed"),
     FOREST_TEMPLE_MOKTAK("forest_temple_moktak"),
     FOREST_TEMPLE_GRAVEL("forest_temple_gravel"),
     FOREST_TEMPLE_HEART_SUTRA("forest_temple_heart_sutra"),

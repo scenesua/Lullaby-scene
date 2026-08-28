@@ -54,11 +54,11 @@ jobs:
           ! grep -Fq 'eval(' web/player-controls-v11.js
           node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/api/*\"]'||r.exclude.length)process.exit(1)"
           for page in web/index.html web/player/index.html web/download/index.html web/privacy/index.html web/terms/index.html web/credits/index.html web/blackout/index.html web/404.html; do
-            grep -Fq '/site-locales-v10.js?v=18' "$page"
+            grep -Fq '/site-locales-v10.js?v=20' "$page"
             grep -Fq '/i18n-runtime-v3.js?v=8' "$page"
             grep -Fq '/mobile-android-shell-v1.js?v=5' "$page"
           done
-          grep -Fq '/site-locales-v10.js?v=18' web/sw.js
+          grep -Fq '/site-locales-v10.js?v=20' web/sw.js
           grep -Fq '/i18n-runtime-v3.js?v=8' web/sw.js
           grep -Fq '/mobile-android-shell-v1.js?v=5' web/sw.js
           ! grep -Fq 'i18n-catalog-v2.js' web/_worker.js
@@ -89,7 +89,7 @@ jobs:
           grep -Eiq '^content-security-policy:.*frame-ancestors .none.' /tmp/headers
           grep -Eiq '^content-security-policy:.*object-src .none.' /tmp/headers
           grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
-          grep -Fq 'site-locales-v10.js?v=18' /tmp/home
+          grep -Fq 'site-locales-v10.js?v=20' /tmp/home
           grep -Fq 'i18n-runtime-v3.js?v=8' /tmp/home
           grep -Fq 'mobile-android-shell-v1.js?v=5' /tmp/home
           curl -fsS http://127.0.0.1:4174/.well-known/security.txt | grep -Fq 'mailto:scenesuastudio@gmail.com'

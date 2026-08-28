@@ -25,10 +25,10 @@ jobs:
             if curl -fsS --max-time 10 -D /tmp/player.headers -o /tmp/player.html -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=4&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=18&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=19&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/scene-audio-v2.js?v=16&deploycheck=${GITHUB_SHA}" > /tmp/scene-audio.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=11&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=24&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=26&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=14&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/spacecraft.webp?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.webp \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/forest-temple.webp?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple.webp \
@@ -39,14 +39,16 @@ jobs:
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-heart.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_path_walk_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-path.ogg \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_forest_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-forest.ogg \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_korean_distant_birds_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-birds.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/forest.ogg?v=3&deploycheck=${GITHUB_SHA}&attempt=${i}" > /tmp/forest.ogg \
               && curl -sS --max-time 10 -D /tmp/api.headers -o /tmp/api.json -H 'Cache-Control: no-cache' "https://lullabyscene.com/api/visitors?deploycheck=${GITHUB_SHA}"; then
               if grep -q 'display-tools-v1.js?v=4' /tmp/player.html \
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
-                && grep -q 'player-v2.js?v=18' /tmp/player.html \
+                && grep -q 'player-v2.js?v=19' /tmp/player.html \
                 && grep -q 'scene-audio-v2.js?v=16' /tmp/player.html \
                 && grep -q 'train-journey-v1.js?v=11' /tmp/player.html \
-                && grep -q 'remaining-journeys-v1.js?v=24' /tmp/player.html \
+                && grep -q 'remaining-journeys-v1.js?v=26' /tmp/player.html \
                 && grep -q 'journey-background-v1.js?v=14' /tmp/player.html \
                 && grep -q "TRAIN_ID='train_journey'" /tmp/train.js \
                 && grep -q 'makeCrossfadeLoopNode' /tmp/player.js \
@@ -56,6 +58,8 @@ jobs:
                 && grep -q 'submarine_journey' /tmp/remaining.js \
                 && grep -q 'forest_temple_journey' /tmp/remaining.js \
                 && grep -q 'forest_temple_path_walk_001.ogg?v=1' /tmp/remaining.js \
+                && grep -q 'forest_temple_forest_bed_001.ogg?v=1' /tmp/remaining.js \
+                && grep -q 'forest_temple_korean_distant_birds_bed_001.ogg?v=1' /tmp/remaining.js \
                 && grep -q 'bedStartsAtPhaseBoundary:true' /tmp/remaining.js \
                 && grep -q "'forest_temple_journey','hood_journey'" /tmp/remaining.js \
                 && grep -q 'spacecraft_journey' /tmp/background.js \
@@ -69,8 +73,10 @@ jobs:
                 && echo '6439ec0e9029126670bcf94b576261e0dbf40e304300b27221e6268b58a51932  /tmp/ferry.ogg' | sha256sum -c - \
                 && echo 'b0eacd4243ab44f934c14884750b021dea9beb891bdf456a7b3c14ae3d1b19b0  /tmp/spacecraft.ogg' | sha256sum -c - \
                 && echo '2b2c9089ce20af23fae721d5b3007c5e579f26b5f3c1623df1b9329d020c41f7  /tmp/submarine.ogg' | sha256sum -c - \
-                && echo '5dbc0c735c7066b899408fab7f802d77d72a6e292628ab3bfb6053de3fa7df3d  /tmp/forest-temple-heart.ogg' | sha256sum -c - \
+                && echo '30c52dd70ba9d28f5fdf52e83156c3cd281450bc256c2bbd944c04a6d4034533  /tmp/forest-temple-heart.ogg' | sha256sum -c - \
                 && echo 'fd78ebd7a17d0d3065661119bed299f7c619475b7eae004484a85bcc50a902a9  /tmp/forest-temple-path.ogg' | sha256sum -c - \
+                && echo '7c242464781c044600c28bb98192155e06e50a242ffb5a1119bb17e1685543d3  /tmp/forest-temple-forest.ogg' | sha256sum -c - \
+                && echo '1e74a03d24f020ca7a208a5335f1902abc3488d6fb3e46660ab2e7f12224aeeb  /tmp/forest-temple-birds.ogg' | sha256sum -c - \
                 && echo '40aee4d27b0e28e6044264aefbbadd532e458b87dbea2ede05e2c8e08b89284b  /tmp/forest.ogg' | sha256sum -c - \
                 && grep -q '_resetBlackoutSlider' /tmp/display.js \
                 && grep -q 'openPendingWindow' /tmp/display.js \

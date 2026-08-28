@@ -102,7 +102,7 @@ for(const journey of[
   if(state.role!==expectedPreBoundaryRole)throw new Error(`${id} pre-boundary role was incorrect: ${JSON.stringify({expectedPreBoundaryRole,...state})}`);
   if(id==='forest_temple_journey'){
     const templePhaseAudio=await page.evaluate(()=>{const runtime=window.LullabyRemainingJourneys,cfg=runtime.configs.forest_temple_journey,total=window.LullabyJourneyRuntime.totalMs;return{source:cfg.nodes.departure[0],departureRole:cfg.roles.departure,bedRole:cfg.roles.bed,before:runtime.audioRoleFor(89999,total,cfg),at:runtime.audioRoleFor(90000,total,cfg),eventPhases:cfg.event.phases}});
-    if(!templePhaseAudio.source.includes('forest_temple_path_walk_001.ogg')||templePhaseAudio.departureRole.join(',')!=='departure'||templePhaseAudio.bedRole.join(',')!=='forest,bowl'||templePhaseAudio.before!=='departure'||templePhaseAudio.at!=='bed'||templePhaseAudio.eventPhases.includes(0))throw new Error(`Forest Temple phase audio is not isolated: ${JSON.stringify(templePhaseAudio)}`);
+    if(!templePhaseAudio.source.includes('forest_temple_path_walk_001.ogg')||templePhaseAudio.departureRole.join(',')!=='departure,forest,birds'||templePhaseAudio.bedRole.join(',')!=='forest,birds,bowl'||templePhaseAudio.before!=='departure'||templePhaseAudio.at!=='bed'||templePhaseAudio.eventPhases.includes(0))throw new Error(`Forest Temple phase audio is not isolated: ${JSON.stringify(templePhaseAudio)}`);
   }
   await page.locator('#journeyNextPhase').click();await page.waitForTimeout(650);
   state=await page.evaluate(()=>({role:window.LullabyRemainingJourneys?.audibleRole,elapsed:window.LullabyJourneyRuntime.elapsedMs}));
