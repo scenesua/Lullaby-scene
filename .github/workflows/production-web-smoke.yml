@@ -34,6 +34,7 @@ jobs:
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/forest-temple.webp?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple.webp \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/credits/?deploycheck=${GITHUB_SHA}" > /tmp/credits.html \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/train_journey/train_journey_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/train-bed.ogg \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/ferry_journey/ferry_journey_departure_001.ogg?v=4&deploycheck=${GITHUB_SHA}" > /tmp/ferry-departure.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/ferry_journey/ferry_journey_arrival_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/ferry.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/spacecraft_journey/spacecraft_journey_transition_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg \
@@ -47,8 +48,8 @@ jobs:
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
                 && grep -q 'player-v2.js?v=19' /tmp/player.html \
                 && grep -q 'scene-audio-v2.js?v=16' /tmp/player.html \
-                && grep -q 'train-journey-v1.js?v=11' /tmp/player.html \
-                && grep -q 'remaining-journeys-v1.js?v=26' /tmp/player.html \
+                && grep -q 'train-journey-v1.js?v=12' /tmp/player.html \
+                && grep -q 'remaining-journeys-v1.js?v=28' /tmp/player.html \
                 && grep -q 'journey-background-v1.js?v=14' /tmp/player.html \
                 && grep -q "TRAIN_ID='train_journey'" /tmp/train.js \
                 && grep -q 'makeCrossfadeLoopNode' /tmp/player.js \
@@ -70,6 +71,7 @@ jobs:
                 && test "$(head -c 4 /tmp/forest-temple.webp)" = 'RIFF' \
                 && grep -q 'Attribution Credits' /tmp/credits.html \
                 && echo 'eb19517370cebb7921a15bd29764f16406cc442f011fa14ce01940312e743a72  /tmp/train-bed.ogg' | sha256sum -c - \
+                && echo 'b01b3d63105b9439a728fe06222dab030a0ce5e516b84fa31aa77cd8543a4dc4  /tmp/ferry-departure.ogg' | sha256sum -c - \
                 && echo '6439ec0e9029126670bcf94b576261e0dbf40e304300b27221e6268b58a51932  /tmp/ferry.ogg' | sha256sum -c - \
                 && echo 'b0eacd4243ab44f934c14884750b021dea9beb891bdf456a7b3c14ae3d1b19b0  /tmp/spacecraft.ogg' | sha256sum -c - \
                 && echo '2b2c9089ce20af23fae721d5b3007c5e579f26b5f3c1623df1b9329d020c41f7  /tmp/submarine.ogg' | sha256sum -c - \
