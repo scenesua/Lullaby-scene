@@ -115,7 +115,7 @@
   CATALOG.source.ko.hood_car_pass='지나가는 차량';
   CATALOG.source.en.hood_car_pass='Passing Street Car';
   const TERMS={
-    ko:{all:'전체',nature:'자연',indoor:'실내',travel:'이동',other:'기타',on:'켬',off:'끔',currentScene:'현재 장면',continuous:'연속 재생',event:'이벤트',sources:'개 소스',quickMixer:'퀵 믹서',fx:'FX',presets:'준비된 장면',ready:'준비',arrived:'도착',none:'없음',previousPhase:'◀ 이전 단계',nextPhase:'다음 단계 ▶',journeyPosition:'여정 위치',pause:'일시정지',resume:'계속 재생',stopped:'정지됨'},
+    ko:{all:'전체',nature:'자연',indoor:'실내',travel:'이동',other:'기타',on:'켬',off:'꺼짐',currentScene:'현재 장면',continuous:'연속 재생',event:'이벤트',sources:'개 소스',quickMixer:'퀵 믹서',fx:'FX',presets:'준비된 장면',ready:'준비',arrived:'도착',none:'없음',previousPhase:'◀ 이전 단계',nextPhase:'다음 단계 ▶',journeyPosition:'여정 위치',pause:'일시정지',resume:'계속 재생',stopped:'정지됨'},
     en:{all:'All',nature:'Nature',indoor:'Indoor',travel:'Travel',other:'Other',on:'On',off:'Off',currentScene:'Current scene',continuous:'continuous',event:'event',sources:'sources',quickMixer:'Quick Mixer',fx:'FX',presets:'Ready-made Scenes',ready:'Ready',arrived:'Arrived',none:'None',previousPhase:'◀ Previous phase',nextPhase:'Next phase ▶',journeyPosition:'Journey position',pause:'Pause',resume:'Resume',stopped:'Stopped'},
     ja:{all:'すべて',nature:'自然',indoor:'室内',travel:'移動',other:'その他',on:'オン',off:'オフ',currentScene:'現在のシーン',continuous:'連続再生',event:'イベント',sources:'音源',quickMixer:'クイックミキサー',fx:'FX',presets:'用意されたシーン',ready:'準備完了',arrived:'到着',none:'なし',previousPhase:'◀ 前の段階',nextPhase:'次の段階 ▶',journeyPosition:'旅の位置',pause:'一時停止',resume:'再開',stopped:'停止'},
     'zh-CN':{all:'全部',nature:'自然',indoor:'室内',travel:'移动',other:'其他',on:'开',off:'关',currentScene:'当前场景',continuous:'连续播放',event:'事件',sources:'个声音',quickMixer:'快速混音',fx:'FX',presets:'预设场景',ready:'就绪',arrived:'已抵达',none:'无',previousPhase:'◀ 上一阶段',nextPhase:'下一阶段 ▶',journeyPosition:'旅程位置',pause:'暂停',resume:'继续',stopped:'已停止'},
@@ -180,7 +180,7 @@
     document.documentElement.lang=language;document.documentElement.dataset.locale=language;
     ensureSelectors();
     const selectedJourney=document.querySelector('#journeySelector [data-journey].active')?.dataset.journey,dynamicJourney=selectedJourney&&selectedJourney!=='passenger_aircraft_cabin';
-    document.querySelectorAll('[data-i18n]').forEach(el=>{if(el.id==='saveSceneButton'||(dynamicJourney&&el.matches('.aircraft-title-row p,.journey-status small,.mobile-macros label span,.desktop-macros label span')))return;const value=t(el.dataset.i18n);if(value!==undefined&&el.textContent!==value)el.textContent=value});
+    document.querySelectorAll('[data-i18n]').forEach(el=>{const transportActive=(typeof scenePlaying!=='undefined'&&scenePlaying)||(typeof pausedAt!=='undefined'&&pausedAt>0);if(el.id==='saveSceneButton'||(transportActive&&el.matches('#scenePlay,#playerStatus'))||(dynamicJourney&&el.matches('.aircraft-title-row p,.journey-status small,.mobile-macros label span,.desktop-macros label span')))return;const value=t(el.dataset.i18n);if(value!==undefined&&el.textContent!==value)el.textContent=value});
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{el.placeholder=t(el.dataset.i18nPlaceholder)});
     document.querySelectorAll('.language-select').forEach(select=>select.value=language);
     document.dispatchEvent(new CustomEvent('lullaby-locales-applied',{detail:{language}}));

@@ -50,7 +50,7 @@
 
   function localizeCommon(){
     const selectedJourney=document.querySelector('#journeySelector [data-journey].active')?.dataset.journey,dynamicJourney=Boolean(selectedJourney&&selectedJourney!=='passenger_aircraft_cabin');
-    document.querySelectorAll('[data-i18n]').forEach(el=>{if(dynamicJourney&&el.matches('.aircraft-title-row p,.journey-status small,.mobile-macros label span,.desktop-macros label span'))return;setText(el,t(el.dataset.i18n,el.textContent))});
+    document.querySelectorAll('[data-i18n]').forEach(el=>{const transportActive=(typeof scenePlaying!=='undefined'&&scenePlaying)||(typeof pausedAt!=='undefined'&&pausedAt>0);if((transportActive&&el.matches('#scenePlay,#playerStatus'))||(dynamicJourney&&el.matches('.aircraft-title-row p,.journey-status small,.mobile-macros label span,.desktop-macros label span')))return;setText(el,t(el.dataset.i18n,el.textContent))});
     const selectorKeys={passenger_aircraft_cabin:'aircraftJourney',train_journey:'trainJourney',spacecraft_journey:'spacecraftJourney',ferry_journey:'ferryJourney',submarine_journey:'submarineJourney',forest_temple_journey:'templeJourney'};
     Object.entries(selectorKeys).forEach(([id,key])=>setText(document.querySelector(`#journeySelector [data-journey="${id}"] span`),t(key,key)));
     const status=document.getElementById('playerStatus');if(status&&['재생 버튼을 누르면 브라우저 오디오가 활성화됩니다.','Press play to enable browser audio.'].includes(status.textContent.trim()))setText(status,t('audioEnable','Press play to enable browser audio.'));
