@@ -64,7 +64,7 @@
           "asset_id": "train_journey_bed_001",
           "path": "ambience/train_journey/continuous/train_journey_bed_001.ogg",
           "duration_ms": 234671,
-          "crossfade_ms": 8000,
+          "crossfade_ms": 9480,
           "role": "bed",
           "tags": [
             "train",
@@ -120,7 +120,7 @@
             "departure",
             "stereo"
           ],
-          "provenance_id": "freesound_mrmayo_74916"
+          "provenance_id": "freesound_mrmayo_74916_plus_theblockofsound235_350948"
         }
       ],
       "events": []
@@ -374,18 +374,43 @@
       "loop_mode": "crossfade",
       "continuous": [
         {
-          "asset_id": "forest_temple_bamboo_wide_bed_001",
-          "path": "ambience/forest_temple_journey/continuous/forest_temple_bamboo_wide_bed_001.ogg",
-          "duration_ms": 94744,
+          "asset_id": "forest_temple_forest_bed_001",
+          "path": "ambience/forest_temple_journey/continuous/forest_temple_forest_bed_001.ogg",
+          "duration_ms": 73220,
           "crossfade_ms": 8000,
           "role": "bed",
           "tags": [
             "forest_temple",
-            "bamboo",
-            "wide",
-            "soft_clipped"
+            "forest",
+            "calm",
+            "clean"
           ],
-          "provenance_id": "derived_bamboo_forest_wide_001"
+          "provenance_id": "freesound_heckfricker_730301"
+        }
+      ],
+      "events": []
+    },
+    {
+      "id": "forest_temple_korean_birds_bed",
+      "category": "travel",
+      "display_name_key": "source_birds",
+      "default_volume": 0.11,
+      "loop_mode": "crossfade",
+      "continuous": [
+        {
+          "asset_id": "forest_temple_korean_distant_birds_bed_001",
+          "path": "ambience/forest_temple_journey/continuous/forest_temple_korean_distant_birds_bed_001.ogg",
+          "duration_ms": 120030,
+          "crossfade_ms": 8000,
+          "role": "bed",
+          "tags": [
+            "forest_temple",
+            "korea",
+            "birds",
+            "distant",
+            "stereo"
+          ],
+          "provenance_id": "freesound_kynodelia_829767"
         }
       ],
       "events": []

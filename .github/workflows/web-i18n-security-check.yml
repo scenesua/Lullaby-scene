@@ -7,6 +7,9 @@ on:
       - main
     paths:
       - 'web/**'
+      - 'app/src/main/res/values/**'
+      - 'app/src/main/res/values-ko/**'
+      - '.github/scripts/translation-coverage-smoke.mjs'
       - '.github/scripts/web-i18n-security-smoke.mjs'
       - '.github/scripts/web-sw-security-smoke.mjs'
       - '.github/workflows/web-i18n-security-check.yml'
@@ -39,6 +42,7 @@ jobs:
           node --check web/player-controls-v11.js
           node --check web/scene-recipe-v1.js
           node --check web/_worker.js
+          node .github/scripts/translation-coverage-smoke.mjs
           node .github/scripts/web-sw-security-smoke.mjs
           grep -Fq "frame-ancestors 'none'" web/_worker.js
           grep -Fq "'X-Frame-Options':'DENY'" web/_worker.js
@@ -54,12 +58,12 @@ jobs:
           ! grep -Fq 'eval(' web/player-controls-v11.js
           node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/api/*\"]'||r.exclude.length)process.exit(1)"
           for page in web/index.html web/player/index.html web/download/index.html web/privacy/index.html web/terms/index.html web/credits/index.html web/blackout/index.html web/404.html; do
-            grep -Fq '/site-locales-v10.js?v=18' "$page"
-            grep -Fq '/i18n-runtime-v3.js?v=8' "$page"
+            grep -Fq '/site-locales-v10.js?v=23' "$page"
+            grep -Fq '/i18n-runtime-v3.js?v=10' "$page"
             grep -Fq '/mobile-android-shell-v1.js?v=5' "$page"
           done
-          grep -Fq '/site-locales-v10.js?v=18' web/sw.js
-          grep -Fq '/i18n-runtime-v3.js?v=8' web/sw.js
+          grep -Fq '/site-locales-v10.js?v=23' web/sw.js
+          grep -Fq '/i18n-runtime-v3.js?v=10' web/sw.js
           grep -Fq '/mobile-android-shell-v1.js?v=5' web/sw.js
           ! grep -Fq 'i18n-catalog-v2.js' web/_worker.js
           ! grep -Fq "observe(host,{childList:true,subtree:true" web/i18n-runtime-v3.js
@@ -89,8 +93,8 @@ jobs:
           grep -Eiq '^content-security-policy:.*frame-ancestors .none.' /tmp/headers
           grep -Eiq '^content-security-policy:.*object-src .none.' /tmp/headers
           grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
-          grep -Fq 'site-locales-v10.js?v=18' /tmp/home
-          grep -Fq 'i18n-runtime-v3.js?v=8' /tmp/home
+          grep -Fq 'site-locales-v10.js?v=23' /tmp/home
+          grep -Fq 'i18n-runtime-v3.js?v=10' /tmp/home
           grep -Fq 'mobile-android-shell-v1.js?v=5' /tmp/home
           curl -fsS http://127.0.0.1:4174/.well-known/security.txt | grep -Fq 'mailto:scenesuastudio@gmail.com'
 

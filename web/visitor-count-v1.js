@@ -11,10 +11,11 @@
   }
 
   const english=()=>(window.LullabyI18n?.language||document.documentElement.lang)!=='ko';
+  const t=(key,fallback)=>window.LullabyLocales?.t?.(key)||fallback;
   function localize(){
     const today=root.querySelector('[data-visitor-today-label]'),total=root.querySelector('[data-visitor-total-label]');
-    if(today)today.textContent=english()?'Views today':'오늘 조회수';
-    if(total)total.textContent=english()?'Total views':'총 조회수';
+    if(today)today.textContent=t('viewsToday','Views today');
+    if(total)total.textContent=t('totalViews','Total views');
   }
   function localDay(){
     const now=new Date();
@@ -40,7 +41,7 @@
       render(today,total,data.backend);
     }catch(error){
       root.dataset.unavailable='true';root.dataset.counterVersion='7';root.dataset.counterMode='pageviews';
-      root.title=english()?'Page-view counter is temporarily unavailable.':'조회수 카운터를 일시적으로 불러올 수 없습니다.';
+      root.title=t('counterUnavailable','The page-view counter is temporarily unavailable.');
       console.warn('Page-view counter unavailable',error);
     }
   }

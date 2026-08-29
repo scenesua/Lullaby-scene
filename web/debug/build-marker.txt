@@ -1,2 +1,2 @@
-Forest Temple debug fixes ready
-2026-08-27
+Scene exposure and translation audit ready
+2026-08-29

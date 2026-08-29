@@ -67,19 +67,22 @@
     },
     {
       "asset_id": "ferry_journey_departure_001",
-      "source_name": "Back of Ferry Boat",
-      "creator": "mrmayo",
+      "source_name": "Back of Ferry Boat + BC Ferries Ferry Horn + Announcements",
+      "creator": "mrmayo + theblockofsound235",
       "source_page": "https://freesound.org/people/mrmayo/sounds/74916/",
+      "additional_source_pages": [
+        "https://freesound.org/people/theblockofsound235/sounds/350948/"
+      ],
       "license": "CC0-1.0",
       "license_status": "verified",
       "attribution_required": false,
-      "original_filename": "74916__mrmayo__back-of-ferry-boat.wav",
-      "provenance_id": "freesound_mrmayo_74916",
+      "original_filename": "74916__mrmayo__back-of-ferry-boat.wav + 350948__theblockofsound235__bc-ferries-ferry-horn-announcements.mp3",
+      "provenance_id": "freesound_mrmayo_74916_plus_theblockofsound235_350948",
       "sample_rate": 48000,
       "channels": 2,
       "duration_ms": 128667,
-      "sha256": "9f14fd2d9a0a8c1aebdb0f2744a72883a74e61d11d9b41224de7f175da9db7b1",
-      "transformation": "22 Hz high-pass; 2-second raised-cosine fade-out; 48 kHz stereo Ogg Opus 112 kbps VBR"
+      "sha256": "b01b3d63105b9439a728fe06222dab030a0ce5e516b84fa31aa77cd8543a4dc4",
+      "transformation": "22 Hz high-pass ferry departure bed with 2-second raised-cosine fade-out; bed ducks by 4 dB while one 4.8-second CC0 ferry horn plays at 7 seconds with 35 Hz high-pass, 6.5 kHz low-pass, -3.1 dB gain, short harbor echo at 0.9 output gain, and peak limiting; 48 kHz stereo Ogg Opus 112 kbps VBR"
     },
     {
       "asset_id": "ferry_journey_bed_001",
@@ -598,6 +601,38 @@
       "transformation": "Selected a stable 279.75-second region beginning at 69 seconds; 10-second circular equal-power seam; stereo Ogg Vorbis quality 5"
     },
     {
+      "asset_id": "forest_temple_forest_bed_001",
+      "source_name": "Quiet Forest, Single Bird",
+      "creator": "HECKFRICKER",
+      "source_page": "https://freesound.org/people/HECKFRICKER/sounds/730301/",
+      "license": "CC0-1.0",
+      "license_status": "verified",
+      "attribution_required": false,
+      "original_filename": "730301_HECKFRICKER_hq.mp3",
+      "provenance_id": "freesound_heckfricker_730301",
+      "sample_rate": 48000,
+      "channels": 2,
+      "duration_ms": 73220,
+      "sha256": "7c242464781c044600c28bb98192155e06e50a242ffb5a1119bb17e1685543d3",
+      "transformation": "HQ preview converted to 48 kHz stereo Ogg Opus; 90 Hz high-pass, 9 kHz low-pass and 10 dB gain; no compressor, limiter or clipping stage"
+    },
+    {
+      "asset_id": "forest_temple_korean_distant_birds_bed_001",
+      "source_name": "Birds on Spring Forest",
+      "creator": "kynodelia",
+      "source_page": "https://freesound.org/people/kynodelia/sounds/829767/",
+      "license": "CC0-1.0",
+      "license_status": "verified",
+      "attribution_required": false,
+      "original_filename": "829767_1150504-hq.mp3",
+      "provenance_id": "freesound_kynodelia_829767",
+      "sample_rate": 48000,
+      "channels": 2,
+      "duration_ms": 120030,
+      "sha256": "1e74a03d24f020ca7a208a5335f1902abc3488d6fb3e46660ab2e7f12224aeeb",
+      "transformation": "8-128 second excerpt of an Ansan-si, South Korea field recording; stereo ambience derived from the mono original with asymmetric 7/23 ms early reflections and independent all-pass decorrelation; 240 Hz high-pass, 6.2 kHz low-pass, restrained 3.2 kHz presence dip and -26 LUFS normalization; 48 kHz stereo Ogg Opus"
+    },
+    {
       "asset_id": "forest_temple_moktak_event_001",
       "source_name": "Mokugyo.wav",
       "creator": "jonopodmore",
@@ -658,8 +693,8 @@
       "sample_rate": 48000,
       "channels": 2,
       "duration_ms": 120196,
-      "sha256": "179fe8521e8f98bc8775ce96e43a8eb11a138d8496e176a00b31a01c0423594f",
-      "transformation": "Korean recitation derivative for the Forest Temple journey; voice-presence processing, dynamics, spatial echo/reverb, gain and fades; Ogg Opus"
+      "sha256": "30c52dd70ba9d28f5fdf52e83156c3cd281450bc256c2bbd944c04a6d4034533",
+      "transformation": "Korean recitation derivative for the Forest Temple journey; existing spatial echo/reverb retained, with additional 1.5/3.2 kHz voice-presence EQ and a gradual late-duration gain lift reaching about 2 dB so the recitation remains audible through the ending; Ogg Opus"
     },
     {
       "asset_id": "forest_temple_heart_sutra_original_full_001",

@@ -693,6 +693,7 @@ class SceneOrchestrator(
         profile.manualEvents.forEach { (source, base) -> desired[source] = base }
         if (current.sceneId == FOREST_TEMPLE_JOURNEY) {
             desired[SOURCE_FOREST_TEMPLE_BAMBOO] = .121f
+            desired[SOURCE_FOREST_TEMPLE_KOREAN_BIRDS] = .11f
             desired[SOURCE_FOREST_TEMPLE_BOWL] = if (current.elapsedMs >= plan.departureEndMs) .227f else 0f
         }
         desired.forEach(::setVolumeIfChanged)
@@ -842,6 +843,7 @@ class SceneOrchestrator(
         const val SOURCE_BIRDS = "birds"
         const val SOURCE_FOREST_TEMPLE_BOWL = "forest_temple_bowl"
         const val SOURCE_FOREST_TEMPLE_BAMBOO = "forest_temple_bamboo_bed"
+        const val SOURCE_FOREST_TEMPLE_KOREAN_BIRDS = "forest_temple_korean_birds_bed"
         const val SOURCE_FOREST_TEMPLE_PATH_WALK = "forest_temple_path_walk"
         const val SOURCE_FOREST_TEMPLE_MOKTAK = "forest_temple_moktak"
         const val SOURCE_FOREST_TEMPLE_GRAVEL = "forest_temple_gravel"
@@ -980,7 +982,11 @@ class SceneOrchestrator(
             AmbientJourneyProfile(
                 sceneId = FOREST_TEMPLE_JOURNEY,
                 departureSource = SOURCE_FOREST_TEMPLE_PATH_WALK,
-                bedSources = mapOf(SOURCE_FOREST_TEMPLE_BAMBOO to .121f, SOURCE_FOREST_TEMPLE_BOWL to .227f),
+                bedSources = mapOf(
+                    SOURCE_FOREST_TEMPLE_BAMBOO to .121f,
+                    SOURCE_FOREST_TEMPLE_KOREAN_BIRDS to .11f,
+                    SOURCE_FOREST_TEMPLE_BOWL to .227f,
+                ),
                 arrivalSource = SOURCE_FOREST_TEMPLE_BAMBOO,
                 manualEvents = mapOf(
                     SOURCE_FOREST_TEMPLE_MOKTAK to .09f,

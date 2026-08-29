@@ -26,7 +26,7 @@
   const isTrain=()=>activeJourneyId===TRAIN_ID;
   const isEnglish=()=>(window.LullabyI18n?.language||document.documentElement.lang||'en')!=='ko';
   const phaseName=key=>window.LullabyCatalogI18n?.phaseName?.(key)||(isEnglish()?key:null);
-  const copy=()=>isEnglish()?{
+  const copy=()=>{const localized=window.LullabyLocales?.trainJourney?.();if(localized){const t=(key,fallback)=>window.LullabyLocales?.t?.(key)||fallback;return{aircraft:window.LullabyLocales?.sourceName?.('aircraft_cabin','Aircraft Cabin')||'Aircraft Cabin',train:localized.title,aircraftDesc:t('aircraftDesc','An overnight passenger aircraft journey.'),trainDesc:localized.description,phase:localized.phaseLabel,seatbelt:localized.stateLabel,event:t('activeRandom','ACTIVE JOURNEY DETAIL'),none:localized.detail,hint:localized.hint,sleepProtect:localized.sleep,macros:localized.macros,aircraftMacros:[t('engine','Engine presence'),t('activity','Cabin activity'),t('turbulence','Turbulence'),t('night','Night depth')],start:t('startScene','▶ Start journey'),playing:localized.title,error:localized.title}}return isEnglish()?{
     aircraft:'Passenger Aircraft Cabin',train:'Overnight Train Journey',
     aircraftDesc:'Ground roll, takeoff, a long cruise, descent, and arrival on a night flight.',
     trainDesc:'Doors close, the train gathers speed, settles into a long night run, then slows into the destination.',
@@ -42,7 +42,7 @@
     hint:'전체 수면 시간을 정하면 출발, 야간 운행, 도착이 그 안에서 자연스럽게 이어집니다.',sleepProtect:'수면 중 갑작스러운 랜덤 이벤트 없이 여정이 이어집니다.',
     macros:['레일 리듬','객실 활동감','선로 질감','밤의 깊이'],aircraftMacros:['엔진 존재감','기내 활동감','난기류','밤의 깊이'],start:'▶ 장면 시작',
     playing:'야간 열차 여정 재생 중',error:'열차 오디오를 시작하지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.'
-  };
+  }};
 
   function trainBoundaries(total){
     if(total<1200000)return{departure:total*.06,leaving:total*.18,approach:total*.82,arrival:total*.94};
@@ -53,7 +53,7 @@
     if(ms<b.departure)return[phaseName('Departing')||'출발',false];
     if(ms<b.leaving)return[phaseName('Leaving city')||'도시 이탈',false];
     if(ms<b.approach)return[phaseName('Night run')||'야간 운행',false];
-    if(ms<b.arrival)return[phaseName('Approach')||'접근',false];
+    if(ms<b.arrival)return[phaseName('Approaching destination')||'목적지에 접근하는 중',false];
     if(ms<total)return[phaseName('Arriving')||'도착',false];
     return[phaseName('Arrived')||'도착',false];
   }
@@ -66,7 +66,7 @@
   }
   function trainPhaseIndex(ms,total){const b=trainBoundaries(total);if(ms<b.departure)return 0;if(ms<b.leaving)return 1;if(ms<b.approach)return 2;if(ms<b.arrival)return 3;return ms<total?4:5}
   function trainStagePoints(total){const b=trainBoundaries(total),label=(key,ko)=>[phaseName(key)||ko,phaseName(key)||ko];return[
-    {label:label('Departing','출발'),ms:0},{label:label('Leaving city','도시 이탈'),ms:b.departure},{label:label('Night run','야간 운행'),ms:b.leaving},{label:label('Approach','접근'),ms:b.approach},{label:label('Arriving','도착'),ms:b.arrival}
+    {label:label('Departing','출발'),ms:0},{label:label('Leaving city','도시 이탈'),ms:b.departure},{label:label('Night run','야간 운행'),ms:b.leaving},{label:label('Approaching destination','목적지에 접근하는 중'),ms:b.approach},{label:label('Arriving','도착'),ms:b.arrival}
   ]}
   function trainTransitionProfile(ms,total){return TRAIN_FX[Math.min(4,trainPhaseIndex(ms,total))]}
   function offsetFor(role,ms,total){
@@ -77,12 +77,12 @@
   async function ensureTrainNodes(){
     await ensureContext();
     for(const [role,[url]] of Object.entries(SOURCES))if(!trainNodes[role]){
-      const node=role==='bed'?makeCrossfadeLoopNode(url,{durationSeconds:SOURCES[role][1],fadeSeconds:8}):makeMediaNode(url,{loop:false,preload:'auto'});node.gain.gain.value=0;trainNodes[role]=node;
+      const node=role==='bed'?makeCrossfadeLoopNode(url,{durationSeconds:SOURCES[role][1],fadeSeconds:9.48}):makeMediaNode(url,{loop:false,preload:'auto'});node.gain.gain.value=0;trainNodes[role]=node;
     }
     if(!eventNode){eventNode=makeMediaNode(EVENT_SOURCE,{loop:false,preload:'none'});eventNode.gain.gain.value=.1}
   }
   function pauseTrainEvent(){clearTimeout(eventTimer);eventTimer=null;eventLabelUntil=0;if(eventNode){eventNode.el.pause();try{eventNode.el.currentTime=0}catch{}}}
-  function scheduleTrainEvent(delayMs=180000+Math.random()*240000){clearTimeout(eventTimer);if(!window.LullabyJourneyEvents?.enabled||!scenePlaying||!isTrain())return;eventTimer=setTimeout(async()=>{const phase=trainPhaseFor(currentElapsed(),Math.max(60000,durationMinutes*60000))[0];if(!['Leaving city','Night run','Approach'].includes(phase)){scheduleTrainEvent(90000);return}try{eventNode.el.currentTime=0;eventLabelUntil=performance.now()+1500;await eventNode.el.play()}catch(error){console.warn('train event unavailable',error)}scheduleTrainEvent()},delayMs)}
+  function scheduleTrainEvent(delayMs=180000+Math.random()*240000){clearTimeout(eventTimer);if(!window.LullabyJourneyEvents?.enabled||!scenePlaying||!isTrain())return;eventTimer=setTimeout(async()=>{const total=Math.max(60000,durationMinutes*60000),elapsed=currentElapsed(),b=trainBoundaries(total);if(elapsed<b.departure||elapsed>=b.arrival){scheduleTrainEvent(90000);return}try{eventNode.el.currentTime=0;eventLabelUntil=performance.now()+1500;await eventNode.el.play()}catch(error){console.warn('train event unavailable',error)}scheduleTrainEvent()},delayMs)}
   function pauseTrainNodes(reset=false){pauseTrainEvent();for(const node of Object.values(trainNodes))if(node){node.el.pause();if(reset)try{node.el.currentTime=0}catch{}node.gain.gain.value=0}}
   async function activateTrainRole(role,ms,total,fadeSeconds){
     if(role===audibleRole)return;
@@ -164,7 +164,8 @@
   function renderJourney(){
     if(activeJourneyId!==AIRCRAFT_ID&&activeJourneyId!==TRAIN_ID)return;
     const text=copy(),train=isTrain();
-    const selectorLabels={passenger_aircraft_cabin:isEnglish()?'Aircraft':'여객기',train_journey:isEnglish()?'Train':'기차'};
+    const t=(key,fallback)=>window.LullabyLocales?.t?.(key)||fallback;
+    const selectorLabels={passenger_aircraft_cabin:t('aircraftJourney','Aircraft'),train_journey:t('trainJourney','Train')};
     for(const [id,label] of Object.entries(selectorLabels)){const span=document.querySelector(`[data-journey="${id}"] span`);if(span)span.textContent=label}
     document.querySelectorAll('[data-journey]').forEach(button=>{button.classList.toggle('active',button.dataset.journey===activeJourneyId);button.setAttribute('aria-pressed',String(button.dataset.journey===activeJourneyId))});
     const title=document.querySelector('.aircraft-title-row h3'),desc=document.querySelector('.aircraft-title-row p'),icon=document.querySelector('.aircraft-icon');
