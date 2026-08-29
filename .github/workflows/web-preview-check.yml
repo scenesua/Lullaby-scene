@@ -111,18 +111,18 @@ jobs:
           grep -q 'id="durationDirect"' web/player/index.html
           grep -q 'data-inspector-mode="simple"' web/player/index.html
           grep -q 'data-fx="warmth"' web/player/index.html
-          grep -q '/visitor-count-v1.js?v=8' web/sw.js
-          grep -q '/visitor-count-v1.js?v=8' web/player/index.html
+          grep -q '/visitor-count-v1.js?v=9' web/sw.js
+          grep -q '/visitor-count-v1.js?v=9' web/player/index.html
           grep -q 'api.counterapi.dev/v1' web/visitor-count-v1.js
-          grep -q 'lullaby-scene-site-v81' web/sw.js
+          grep -q 'lullaby-scene-site-v87' web/sw.js
           grep -q "event.request.destination==='audio'" web/sw.js
           grep -q "url.pathname.startsWith('/api/')" web/sw.js
           ! sed -n '3p' web/sw.js | grep -q '/audio/'
           grep -q '/player-v2.js?v=19' web/sw.js
-          grep -q '/scene-audio-v2.js?v=16' web/sw.js
-          grep -q '/train-journey-v1.js?v=12' web/sw.js
-          grep -q '/remaining-journeys-v1.js?v=28' web/sw.js
-          grep -q '/journey-background-v1.js?v=14' web/sw.js
+          grep -q '/scene-audio-v2.js?v=17' web/sw.js
+          grep -q '/train-journey-v1.js?v=13' web/sw.js
+          grep -q '/remaining-journeys-v1.js?v=29' web/sw.js
+          grep -q '/journey-background-v1.js?v=16' web/sw.js
           test -s web/assets/journeys/spacecraft.webp
           test -s web/assets/journeys/submarine.webp
           test -s web/assets/journeys/forest-temple.webp
@@ -130,7 +130,7 @@ jobs:
           grep -q '/mixer-interaction-v14.js?v=16' web/player/index.html
           grep -q '/mixer-controls-v14.css?v=14' web/player/index.html
           grep -q '/simple-scene-quick-mixer-v12.js?v=13' web/player/index.html
-          grep -q '/saved-scenes-v13.js?v=14' web/player/index.html
+          grep -q '/saved-scenes-v13.js?v=15' web/player/index.html
           grep -q '/scene-recipe-v1.js?v=3' web/player/index.html
           ! grep -q '/mixer-zero-v13.js?v=13' web/player/index.html
           test -s web/audio/aircraft_cabin_taxi_627056_v1.ogg
