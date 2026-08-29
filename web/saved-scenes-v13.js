@@ -2,7 +2,7 @@
   const R=window.LullabyPlayerRuntime;
   if(!R||!document.getElementById('webPlayer'))return;
   const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-  const ko=()=>(window.LullabyI18n?.language||document.documentElement.lang)==='ko';
+  const ko=()=>(window.LullabyLocales?.language||window.LullabyI18n?.language||document.documentElement.lang)==='ko';
   let activeId=null;
 
   const copy=()=>ko()?{
@@ -106,6 +106,7 @@
     const overwriteButton=event.target.closest?.('[data-saved-overwrite]');if(overwriteButton){event.preventDefault();event.stopPropagation();if(confirm(copy().overwriteConfirm))overwrite(overwriteButton.dataset.savedOverwrite)}
   });
   document.addEventListener('lullaby-language-changed',enhance);
+  document.addEventListener('lullaby-locales-applied',enhance);
   const root=$('#userPresets');if(root)new MutationObserver(()=>queueMicrotask(enhance)).observe(root,{childList:true});
   replaceLegacySaveButton();enhance();
   window.LullabySavedScenes={create,load,rename,overwrite,list:()=>R.loadUserPresets(),get activeId(){return activeId}};

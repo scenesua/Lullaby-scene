@@ -155,6 +155,8 @@
   for(const [code,values] of Object.entries(PRESET_COMPLETIONS))Object.assign(CATALOG.preset[code],Object.fromEntries(PRESET_COMPLETION_KEYS.map((key,index)=>[key,values[index]])));
   const JOURNEY_EVENT_TERMS={ko:'여정 이벤트',en:'Journey events',ja:'旅のイベント','zh-CN':'旅程事件','zh-TW':'旅程事件',ru:'События путешествия',fr:'Événements du voyage',es:'Eventos del viaje',pt:'Eventos da jornada',th:'เหตุการณ์ระหว่างการเดินทาง',tl:'Mga event sa biyahe',hi:'यात्रा की घटनाएँ',vi:'Sự kiện hành trình'};
   Object.entries(JOURNEY_EVENT_TERMS).forEach(([code,label])=>{TERMS[code].journeyEvents=label});
+  const SAVE_SCENE_LABELS={ko:'장면 저장',en:'Save scene',ja:'シーンを保存','zh-CN':'保存场景','zh-TW':'儲存場景',ru:'Сохранить сцену',fr:'Enregistrer la scène',es:'Guardar escena',pt:'Salvar cena',th:'บันทึกฉาก',tl:'I-save ang eksena',hi:'दृश्य सहेजें',vi:'Lưu cảnh'};
+  EN.saveSimple=SAVE_SCENE_LABELS.en;Object.entries(SAVE_SCENE_LABELS).forEach(([code,label])=>{if(T[code])T[code].saveSimple=label});
   function normalize(value){
     const raw=String(value||'').toLowerCase();if(raw.startsWith('zh'))return /tw|hk|hant/.test(raw)?'zh-TW':'zh-CN';
     const base=raw.split('-')[0];return LANGS.some(([code])=>code.toLowerCase()===raw)?LANGS.find(([code])=>code.toLowerCase()===raw)[0]:LANGS.some(([code])=>code===base)?base:'en';
@@ -178,7 +180,7 @@
     document.documentElement.lang=language;document.documentElement.dataset.locale=language;
     ensureSelectors();
     const selectedJourney=document.querySelector('#journeySelector [data-journey].active')?.dataset.journey,dynamicJourney=selectedJourney&&selectedJourney!=='passenger_aircraft_cabin';
-    document.querySelectorAll('[data-i18n]').forEach(el=>{if(dynamicJourney&&el.matches('.aircraft-title-row p,.journey-status small,.mobile-macros label span,.desktop-macros label span'))return;const value=t(el.dataset.i18n);if(value!==undefined&&el.textContent!==value)el.textContent=value});
+    document.querySelectorAll('[data-i18n]').forEach(el=>{if(el.id==='saveSceneButton'||(dynamicJourney&&el.matches('.aircraft-title-row p,.journey-status small,.mobile-macros label span,.desktop-macros label span')))return;const value=t(el.dataset.i18n);if(value!==undefined&&el.textContent!==value)el.textContent=value});
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{el.placeholder=t(el.dataset.i18nPlaceholder)});
     document.querySelectorAll('.language-select').forEach(select=>select.value=language);
     document.dispatchEvent(new CustomEvent('lullaby-locales-applied',{detail:{language}}));
