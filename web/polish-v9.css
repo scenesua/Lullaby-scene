@@ -30,3 +30,23 @@ button,input,select,a{position:relative;z-index:1}
 @media(max-width:1180px){.player-page-main{width:min(calc(100% - 56px),1540px)!important}.site-header.wide,.compact-footer{width:min(calc(100% - 56px),1540px)!important}.player-page-main .web-player{grid-template-columns:190px minmax(0,1fr) 300px!important}.player-page-main .workspace-main{padding:28px!important}}
 @media(max-width:900px){.player-page-main,.site-header.wide,.compact-footer{width:min(calc(100% - 24px),1540px)!important}.player-page-main .web-player{display:block!important}.player-page-main .workspace-main{padding:0 0 86px!important}.duration-direct{grid-template-columns:1fr}.duration-direct-entry{width:100%}.duration-direct-entry input{flex:1;width:auto}.legal-page{width:min(calc(100% - 32px),1180px);padding-top:48px}.desktop-inspector{display:none!important}}
 @media(max-width:620px){.hero h1{font-size:clamp(2.7rem,14vw,4.1rem)!important;line-height:1.02!important}.download-hero h1{font-size:2.8rem!important}.landing-card h3{font-size:2.1rem!important}.site-header.wide,.compact-footer{width:min(calc(100% - 20px),1540px)!important}}
+
+/* UI/UX pass: lower-risk hierarchy, touch size, and interaction polish. */
+:root{--text-subtle:#8f97a6}
+.hero{min-height:54vh;padding-block:30px 38px;gap:clamp(36px,4vw,60px)}
+.hero-copy{max-width:760px}
+.hero h1{font-size:clamp(3.2rem,5.6vw,6.3rem);max-width:11ch}
+.hero-lead{max-width:620px;margin-top:22px}
+.hero-actions{margin-top:24px}
+.microcopy,.muted-copy{color:var(--text-subtle)}
+.button,.language-toggle,.small-action,.duration-chips button,.timer-chips button,.mixer-filters button{min-height:44px}
+.button:hover,.button:focus-visible{border-color:color-mix(in srgb,var(--text) 34%,transparent)}
+.button.primary:hover,.button.primary:focus-visible{background:color-mix(in srgb,var(--text) 91%,var(--accent));border-color:transparent}
+.button.ghost:hover,.button.ghost:focus-visible{background:color-mix(in srgb,var(--surface-3) 82%,transparent)}
+.button:active,.language-toggle:active,.small-action:active{transform:translateY(1px)}
+.language-toggle:hover,.language-toggle:focus-visible,.small-action:hover,.small-action:focus-visible{background:var(--surface-3);border-color:color-mix(in srgb,var(--text) 30%,transparent)}
+.landing-card{padding:32px;border-radius:24px}
+@media(prefers-reduced-motion:no-preference){.button,.language-toggle,.small-action{transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .16s ease}}
+@media(max-width:900px){.hero{padding-block:38px 58px}.mobile-player-top button,.android-icon-button,.mobile-scene-display-button{width:44px!important;height:44px!important;min-width:44px;min-height:44px!important}}
+@media(max-width:620px){.hero{gap:28px;padding-block:34px 52px}.hero h1{font-size:clamp(2.7rem,13vw,3.8rem)!important;max-width:10ch}.hero-lead{font-size:1.03rem}.scene-orb{max-width:330px}.landing-card{padding:26px 24px;border-radius:22px}}
+@media(prefers-color-scheme:light){:root{--text-subtle:#6d7480}}
