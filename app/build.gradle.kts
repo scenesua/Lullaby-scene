@@ -20,8 +20,8 @@ android {
         applicationId = "com.scene.ambience"
         minSdk = 26
         targetSdk = 36
-        versionCode = 23
-        versionName = "1.1.14"
+        versionCode = 24
+        versionName = "1.1.15"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
