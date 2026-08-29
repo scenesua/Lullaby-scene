@@ -89,7 +89,7 @@ fun SceneDisplayDialog(
         ),
         label = "scene-exposure-level",
     )
-    val exposure = if (playing) animatedExposure else 0.22f
+    val exposure = if (playing) animatedExposure else 0f
     val siren = remember { Animatable(0f) }
     val sirenDirection = remember(activeEventId) { if ((System.nanoTime() and 1L) == 0L) 1f else -1f }
     LaunchedEffect(activeEventId) {
@@ -135,7 +135,7 @@ fun SceneDisplayDialog(
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
-                            alpha = 0.035f + exposure * 0.14f
+                            alpha = exposure * 0.16f
                             blendMode = BlendMode.Screen
                             compositingStrategy = CompositingStrategy.Offscreen
                         },
@@ -150,7 +150,7 @@ fun SceneDisplayDialog(
                         .scale(1.08f)
                         .blur(54.dp)
                         .graphicsLayer {
-                            alpha = 0.018f + exposure * 0.18f
+                            alpha = exposure * 0.20f
                             blendMode = BlendMode.Screen
                             compositingStrategy = CompositingStrategy.Offscreen
                         },

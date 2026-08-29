@@ -53,7 +53,7 @@ for(const phase of ['train_departure','train_leaving_city','train_night_run','tr
 if(!text('web/player/index.html').includes('/train-journey-v1.js?v=13'))throw new Error('Web player does not load Train Journey runtime');
 if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=29'))throw new Error('Web player does not load remaining Journey runtime');
 for(const file of['web/audio/scenes/aircraft_cabin/aircraft_chime_event_001.ogg','web/audio/scenes/train_journey/train_rail_event_001.ogg','web/audio/scenes/ferry_journey/ferry_wave_event_001.ogg','web/audio/scenes/spacecraft_journey/spacecraft_servo_event_001.ogg','web/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg'])if(!existsSync(file)||statSync(file).size<8000)throw new Error(`Journey random-event asset missing or empty: ${file}`);
-if(!text('web/player/index.html').includes('/journey-background-v1.js?v=15'))throw new Error('Web player does not load Journey backgrounds');
+if(!text('web/player/index.html').includes('/journey-background-v1.js?v=16'))throw new Error('Web player does not load Journey backgrounds');
 if(!text('web/journey-background-v1.js').includes("screen.orientation.lock('landscape')"))throw new Error('Mobile Journey display does not request landscape orientation');
 if(!text('web/journey-background-v1.js').includes('const motionVideoEnabled=false'))throw new Error('Journey backgrounds must remain still-only until approved motion assets exist');
 for(const scene of['aircraft','train','spacecraft','ferry','submarine','forest-temple','hood']){
