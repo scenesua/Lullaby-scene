@@ -32,7 +32,9 @@
   document.addEventListener('keydown',e=>{if(e.target?.id==='durationDirect'&&e.key==='Enter'){e.preventDefault();e.stopImmediatePropagation();applyDirect()}},true);
   document.addEventListener('input',e=>{const el=e.target;if(el?.id==='durationDirect'){e.stopImmediatePropagation();const digits=el.value.replace(/\D/g,'');if(!digits){el.value='';return}el.value=digits.length>=3?`${digits.slice(0,-2)}:${digits.slice(-2)}`:digits;const error=$('#durationDirectError');if(error)error.hidden=true;el.removeAttribute('aria-invalid');return}if(el?.id==='durationSlider'){e.stopImmediatePropagation();duration(el.value);return}if(el?.matches?.('[data-macro]')){const key=el.dataset.macro,value=Number(el.value)/100;try{macro[key]=value}catch{};$$(`[data-output="${key}"]`).forEach(o=>o.textContent=`${Math.round(value*100)}%`);call('updateSceneAudio',call('currentElapsed')||0);return}if(el?.matches?.('.master-volume')){call('setMaster',Number(el.value)/100);return}},true);
   document.addEventListener('change',e=>{if(e.target?.id==='themeSelect')call('applyTheme',e.target.value)},true);
-  document.addEventListener('lullaby-language-changed',()=>{syncDirectCopy();updateSimpleTransport()});
+  const localizeControls=()=>{syncDirectCopy();updateSimpleTransport()};
+  document.addEventListener('lullaby-language-changed',localizeControls);
+  document.addEventListener('lullaby-locales-applied',localizeControls);
   document.addEventListener('lullaby-preset-applied',syncSimpleAfterPreset);
   configureSlider();syncDirectCopy();injectSimpleTransport();setTimeout(()=>{configureSlider();syncDirectCopy();injectSimpleTransport();applyJourneyDuration(typeof durationMinutes==='number'?durationMinutes:480)},0);
   window.LullabyControls={setDuration:duration,applyDirect,parseDirect:parseDirectValue,profiles:JOURNEY_DURATION_PROFILES,simple:{playPause:toggleSimple,stop:stopSimple}};
