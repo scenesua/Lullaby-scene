@@ -35,12 +35,13 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.asImageBitmap
@@ -78,17 +79,17 @@ fun SceneDisplayDialog(
             }.getOrNull()
         }
     }
-    val transition = rememberInfiniteTransition(label = "scene-light")
-    val animatedLight by transition.animateFloat(
+    val transition = rememberInfiniteTransition(label = "scene-exposure")
+    val animatedExposure by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 6_000, easing = FastOutSlowInEasing),
+            animation = tween(durationMillis = 11_000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
         ),
-        label = "scene-light-level",
+        label = "scene-exposure-level",
     )
-    val light = if (playing) animatedLight else 0.3f
+    val exposure = if (playing) animatedExposure else 0.22f
     val siren = remember { Animatable(0f) }
     val sirenDirection = remember(activeEventId) { if ((System.nanoTime() and 1L) == 0L) 1f else -1f }
     LaunchedEffect(activeEventId) {
@@ -123,19 +124,36 @@ fun SceneDisplayDialog(
                     bitmap = bitmap,
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
-                    colorFilter = brightnessFilter((0.84f + light * 0.48f) * brightness),
+                    colorFilter = brightnessFilter(brightness),
                     modifier = Modifier.fillMaxSize(),
                 )
                 Image(
                     bitmap = bitmap,
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
-                    colorFilter = brightnessFilter(1.42f * brightness),
+                    colorFilter = brightnessFilter(brightness),
                     modifier = Modifier
                         .fillMaxSize()
-                        .scale(1.10f)
-                        .blur(48.dp)
-                        .alpha(((0.10f + light * 0.40f) * brightness).coerceIn(0f, .72f)),
+                        .graphicsLayer {
+                            alpha = 0.035f + exposure * 0.14f
+                            blendMode = BlendMode.Screen
+                            compositingStrategy = CompositingStrategy.Offscreen
+                        },
+                )
+                Image(
+                    bitmap = bitmap,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    colorFilter = brightnessFilter(brightness),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .scale(1.08f)
+                        .blur(54.dp)
+                        .graphicsLayer {
+                            alpha = 0.018f + exposure * 0.18f
+                            blendMode = BlendMode.Screen
+                            compositingStrategy = CompositingStrategy.Offscreen
+                        },
                 )
                 if (sceneId == SceneOrchestrator.HOOD_JOURNEY && siren.value in 0.001f..0.999f) {
                     Canvas(

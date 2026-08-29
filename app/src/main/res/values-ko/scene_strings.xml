@@ -17,7 +17,7 @@
 
     <string name="scenes_question">오늘은 어디에서 쉬고 싶나요?</string>
     <string name="scenes_subtitle">고정된 믹스를 반복하는 대신, 시간이 지나며 천천히 변하는 살아있는 장면입니다.</string>
-    <string name="scene_aircraft_name">Passenger Aircraft Cabin</string>
+    <string name="scene_aircraft_name">여객기 객실</string>
     <string name="scene_aircraft_description">내 수면 시간에 맞춰 출발부터 도착까지 이어지는 야간 여객기 여정입니다.</string>
     <string name="scene_aircraft_short_name">여객기</string>
     <string name="scene_train_short_name">기차</string>

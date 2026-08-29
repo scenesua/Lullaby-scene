@@ -18,10 +18,11 @@ for(const match of mapping.matchAll(/:'(\/assets\/(?:simple-scenes|journeys)\/[^
   const file=path.join(root,'web',match[1]);
   if(!fs.existsSync(file))throw new Error(`Missing visual asset ${match[1]}`);
 }
-for(const marker of ['createAnalyser()','smoothingTimeConstant=.94','lullaby-preset-applied','--scene-light']){
+for(const marker of ['createAnalyser()','smoothingTimeConstant=.94','lullaby-preset-applied','--scene-exposure','mix-blend-mode:screen']){
   if(!`${player}\n${background}\n${css}`.includes(marker))throw new Error(`Missing audio-reactive marker ${marker}`);
 }
-for(const marker of ['data-i18n="sleepJourneys"','mobile-scene-display-button','stopJourneyPlayback','stopJourney:stopJourneyPlayback','R.stopJourney?.()','brightness(calc(.8 + var(--scene-light)*.9))','journey-hood-active','hood-siren-light']){
+for(const marker of ['data-i18n="sleepJourneys"','mobile-scene-display-button','stopJourneyPlayback','stopJourney:stopJourneyPlayback','R.stopJourney?.()','brightness(var(--scene-user-brightness,1))','journey-hood-active','hood-siren-light']){
   if(!`${html}\n${player}\n${background}\n${bridge}\n${interaction}\n${css}`.includes(marker))throw new Error(`Missing mobile playback marker ${marker}`);
 }
+if(css.includes('brightness(calc(.8 + var(--scene-light)'))throw new Error('Scene base image still animates brightness instead of exposure layers');
 console.log(`scene visuals smoke passed: ${presetIds.length} presets`);

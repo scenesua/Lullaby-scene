@@ -4,8 +4,7 @@
   const isSlave=location.pathname.replace(/\/+$/,'')==='/blackout';
   const isPendingSlave=isSlave&&new URLSearchParams(location.search).get('pending')==='1';
   const $=s=>document.querySelector(s);
-  const language=()=>window.LullabyLocales?.language||window.LullabyI18n?.language||'en';
-  const copy=()=>language()==='ko'?{screen:'화면 검게',slider:'밀어서 검은 화면 끄기',desktop:'화면 검게'}:{screen:'Black screen',slider:'Slide to exit black screen',desktop:'Black Screen'};
+  const copy=()=>{const t=(key,fallback)=>window.LullabyLocales?.t?.(key)||fallback;return{screen:t('blackScreen','Black Screen'),slider:t('slideExitBlack','Slide to exit black screen'),desktop:t('blackScreen','Black Screen')}};
   const channel='BroadcastChannel'in window?new BroadcastChannel(CHANNEL):null;
   let overlay=null,hideTimer=null,active=false,children=[],cachedScreenDetails=null;
 

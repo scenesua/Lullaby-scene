@@ -2,6 +2,7 @@
   if(window.__lullabyI18nRuntimeV3)return;window.__lullabyI18nRuntimeV3=true;
   const L=()=>window.LullabyLocales;
   const language=()=>L()?.language||'en';
+  const t=(key,fallback=key)=>L()?.t?.(key)||fallback;
   const term=(key,fallback=key)=>L()?.term?.(key)||fallback;
   const sourceName=(id,fallback=id)=>L()?.sourceName?.(id,fallback)||fallback;
   const presetName=(id,fallback=id)=>L()?.presetName?.(id,fallback)||fallback;
@@ -39,6 +40,28 @@
     hi:{'Taxi out':'रनवे की ओर बढ़ना','Takeoff':'उड़ान भरना','Climb':'ऊँचाई पकड़ना','Cruise':'स्थिर उड़ान','Descent':'नीचे उतरना','Approach':'लैंडिंग की ओर','Touchdown':'भूमि पर उतरना','Taxi in':'गेट की ओर बढ़ना','Departing':'प्रस्थान','Leaving city':'शहर से बाहर','Night run':'रात की यात्रा','Arriving':'आगमन','Casting off':'घाट से प्रस्थान','Leaving harbor':'बंदरगाह से बाहर','Night crossing':'रात का समुद्री सफ़र','Harbor approach':'बंदरगाह के पास','Reaching shore':'तट पर पहुँचना','Leaving orbit':'कक्षा से बाहर','Cabin settling':'केबिन शांत हो रहा है','Deep-space drift':'गहरे अंतरिक्ष में बहाव','Destination approach':'गंतव्य के पास','Quiet docking':'शांत डॉकिंग','Diving':'गोता लगाना','Settling at depth':'गहराई में स्थिर होना','Deep-water cruise':'गहरे पानी की यात्रा','Ascending':'ऊपर उठना','Reaching surface':'सतह पर पहुँचना','Street quieting down':'गली शांत हो रही है','After hours':'देर रात की गली','Deep night':'गहरी रात','Street stirring':'गली फिर जाग रही है','First light':'भोर की पहली रोशनी','Arrived':'पहुँच गया','Ready':'तैयार'},
     vi:{'Taxi out':'Lăn ra đường băng','Takeoff':'Cất cánh','Climb':'Lấy độ cao','Cruise':'Bay hành trình','Descent':'Hạ độ cao','Approach':'Tiếp cận hạ cánh','Touchdown':'Chạm đất','Taxi in':'Lăn vào sân đỗ','Departing':'Khởi hành','Leaving city':'Rời thành phố','Night run':'Chạy tàu ban đêm','Arriving':'Sắp đến nơi','Casting off':'Rời cầu cảng','Leaving harbor':'Rời bến cảng','Night crossing':'Hải trình đêm','Harbor approach':'Tiến vào cảng','Reaching shore':'Cập bờ','Leaving orbit':'Rời quỹ đạo','Cabin settling':'Khoang tàu dần yên ổn','Deep-space drift':'Trôi giữa không gian sâu','Destination approach':'Tiếp cận điểm đến','Quiet docking':'Ghép nối êm ái','Diving':'Lặn xuống','Settling at depth':'Ổn định ở độ sâu','Deep-water cruise':'Hành trình dưới biển sâu','Ascending':'Nổi lên','Reaching surface':'Lên đến mặt nước','Street quieting down':'Phố xá dần lắng xuống','After hours':'Phố khuya','Deep night':'Đêm sâu','Street stirring':'Phố bắt đầu chuyển động','First light':'Ánh sáng đầu ngày','Arrived':'Đã đến','Ready':'Sẵn sàng'}
   };
+  const TEMPLE_PHASES={
+    ko:['절길에 들어서는 중','아침 마당에 머무는 중','숲속 명상 중','절길로 돌아가는 중','조용히 나서는 중'],en:['Entering the temple path','Morning courtyard','Forest meditation','Returning to the path','Leaving quietly'],ja:['寺へ続く道に入る','朝の境内','森で瞑想','参道へ戻る','静かに立ち去る'],'zh-CN':['走入寺院小径','清晨庭院','林中冥想','回到小径','安静离开'],'zh-TW':['走入寺院小徑','清晨庭院','林中冥想','回到小徑','安靜離開'],ru:['Вход на храмовую тропу','Утренний двор','Медитация в лесу','Возвращение на тропу','Тихий уход'],fr:['Entrée sur le chemin du temple','Cour du matin','Méditation en forêt','Retour vers le chemin','Départ en silence'],es:['Entrada al sendero del templo','Patio al amanecer','Meditación en el bosque','Regreso al sendero','Salida en silencio'],pt:['Entrada na trilha do templo','Pátio pela manhã','Meditação na floresta','Retorno à trilha','Saída silenciosa'],th:['เข้าสู่ทางเดินวัด','ลานวัดยามเช้า','ทำสมาธิกลางป่า','กลับสู่ทางเดิน','จากไปอย่างเงียบสงบ'],tl:['Pagpasok sa landas ng templo','Patyo sa umaga','Meditasyon sa gubat','Pagbalik sa landas','Tahimik na pag-alis'],hi:['मंदिर की पगडंडी पर प्रवेश','सुबह का प्रांगण','वन में ध्यान','पगडंडी की ओर वापसी','शांत प्रस्थान'],vi:['Bước vào lối chùa','Sân chùa buổi sớm','Thiền giữa rừng','Trở lại lối mòn','Lặng lẽ rời đi']
+  };
+  const templeKeys=['Entering the temple path','Morning courtyard','Forest meditation','Returning to the path','Leaving quietly'];
+  Object.entries(TEMPLE_PHASES).forEach(([code,values])=>values.forEach((value,index)=>{PHASES[code][templeKeys[index]]=value}));
+  const destinationApproach={ko:'목적지에 접근하는 중',en:'Approaching destination',ja:'目的地へ接近','zh-CN':'接近目的地','zh-TW':'接近目的地',ru:'Подход к месту назначения',fr:'Approche de la destination',es:'Acercándose al destino',pt:'Aproximação do destino',th:'เข้าใกล้จุดหมาย',tl:'Papalapit sa destinasyon',hi:'गंतव्य के पास',vi:'Tiến gần điểm đến'};
+  Object.entries(destinationApproach).forEach(([code,value])=>{PHASES[code]['Approaching destination']=value});
+
+  function localizeCommon(){
+    const selectedJourney=document.querySelector('#journeySelector [data-journey].active')?.dataset.journey,dynamicJourney=Boolean(selectedJourney&&selectedJourney!=='passenger_aircraft_cabin');
+    document.querySelectorAll('[data-i18n]').forEach(el=>{if(dynamicJourney&&el.matches('.aircraft-title-row p,.journey-status small,.mobile-macros label span,.desktop-macros label span'))return;setText(el,t(el.dataset.i18n,el.textContent))});
+    const selectorKeys={passenger_aircraft_cabin:'aircraftJourney',train_journey:'trainJourney',spacecraft_journey:'spacecraftJourney',ferry_journey:'ferryJourney',submarine_journey:'submarineJourney',forest_temple_journey:'templeJourney'};
+    Object.entries(selectorKeys).forEach(([id,key])=>setText(document.querySelector(`#journeySelector [data-journey="${id}"] span`),t(key,key)));
+    const status=document.getElementById('playerStatus');if(status&&['재생 버튼을 누르면 브라우저 오디오가 활성화됩니다.','Press play to enable browser audio.'].includes(status.textContent.trim()))setText(status,t('audioEnable','Press play to enable browser audio.'));
+    const now=document.getElementById('railNowPlaying');if(now&&['Stopped','정지됨','停止','已停止','Остановлено','Arrêté','Detenido','Parado','หยุดแล้ว','Nakahinto','रुका हुआ','Đã dừng'].includes(now.textContent.trim()))setText(now,term('stopped','Stopped'));
+    setText(document.querySelector('[data-direct-title]'),t('customDuration','Custom duration'));
+    const durationHint=document.querySelector('.duration-direct-copy span');if(durationHint)setText(durationHint,t('durationHint','HH:MM · any duration'));
+    setText(document.getElementById('durationDirectApply'),t('applyDuration','Apply'));
+    document.querySelectorAll('.master-inline').forEach(label=>{const node=label.querySelector('span');if(node)setText(node,t('masterShort','Master'))});
+    const eventLabel=document.querySelector('[data-journey-event-label]'),eventToggle=document.getElementById('journeyEventToggle');setText(eventLabel,t('randomEvents','Random events'));if(eventToggle){eventToggle.setAttribute('aria-label',t('randomEvents','Random events'));setText(eventToggle,eventToggle.getAttribute('aria-checked')==='true'?term('on','On'):term('off','Off'))}
+    document.querySelector('.desktop-rail')?.setAttribute('aria-label',t('playerNavigation','Player navigation'));document.getElementById('journeyStageBar')?.setAttribute('aria-label',t('journeyStages','Journey stages'));
+  }
 
   function localizeRuntimeData(){
     const R=window.LullabyPlayerRuntime;if(!R)return;
@@ -100,12 +123,12 @@
 
   let queued=false;
   function reveal(){clearTimeout(window.__lullabyLocaleRevealTimer);document.documentElement.classList.remove('i18n-pending');document.documentElement.dataset.i18nReady='1'}
-  function apply(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;localizeRuntimeData();localizeMixer();localizeQuickMixer();localizePresets();localizeJourney();reveal()})}
+  function apply(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;localizeRuntimeData();localizeMixer();localizeQuickMixer();localizePresets();localizeJourney();localizeCommon();reveal()})}
   function watchDirect(selector){const root=document.querySelector(selector);if(!root)return;new MutationObserver(apply).observe(root,{childList:true})}
 
   document.addEventListener('lullaby-language-changed',apply);document.addEventListener('lullaby-locales-applied',apply);document.addEventListener('lullaby-view-changed',apply);document.addEventListener('lullaby-scene-mode-changed',apply);
   ['#mixerGrid','#builtInPresets','#userPresets','#simpleQuickMixerList','#inspectorMixerList'].forEach(watchDirect);
-  const phaseTimer=setInterval(localizeJourney,1000);window.addEventListener('pagehide',()=>clearInterval(phaseTimer),{once:true});
+  const phaseTimer=setInterval(()=>{localizeJourney();localizeCommon()},1000);window.addEventListener('pagehide',()=>clearInterval(phaseTimer),{once:true});
   apply();setTimeout(apply,120);setTimeout(apply,650);
   window.LullabyCatalogI18n={sourceName,presetName,term,apply,phaseName:key=>PHASES[language()]?.[key]||PHASES.en[key]||key};
 })();

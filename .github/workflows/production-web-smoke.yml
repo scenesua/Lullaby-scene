@@ -23,13 +23,13 @@ jobs:
           ok=0
           for i in {1..36}; do
             if curl -fsS --max-time 10 -D /tmp/player.headers -o /tmp/player.html -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=4&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=5&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=3&deploycheck=${GITHUB_SHA}" > /tmp/display.css \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=19&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/scene-audio-v2.js?v=16&deploycheck=${GITHUB_SHA}" > /tmp/scene-audio.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=12&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=28&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=14&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/scene-audio-v2.js?v=17&deploycheck=${GITHUB_SHA}" > /tmp/scene-audio.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=13&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=29&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/journey-background-v1.js?v=15&deploycheck=${GITHUB_SHA}" > /tmp/background.js \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/spacecraft.webp?deploycheck=${GITHUB_SHA}" > /tmp/spacecraft.webp \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/assets/journeys/forest-temple.webp?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple.webp \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/credits/?deploycheck=${GITHUB_SHA}" > /tmp/credits.html \
@@ -44,13 +44,13 @@ jobs:
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_korean_distant_birds_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-birds.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/forest.ogg?v=3&deploycheck=${GITHUB_SHA}&attempt=${i}" > /tmp/forest.ogg \
               && curl -sS --max-time 10 -D /tmp/api.headers -o /tmp/api.json -H 'Cache-Control: no-cache' "https://lullabyscene.com/api/visitors?deploycheck=${GITHUB_SHA}"; then
-              if grep -q 'display-tools-v1.js?v=4' /tmp/player.html \
+              if grep -q 'display-tools-v1.js?v=5' /tmp/player.html \
                 && grep -q 'display-tools-v1.css?v=3' /tmp/player.html \
                 && grep -q 'player-v2.js?v=19' /tmp/player.html \
-                && grep -q 'scene-audio-v2.js?v=16' /tmp/player.html \
-                && grep -q 'train-journey-v1.js?v=12' /tmp/player.html \
-                && grep -q 'remaining-journeys-v1.js?v=28' /tmp/player.html \
-                && grep -q 'journey-background-v1.js?v=14' /tmp/player.html \
+                && grep -q 'scene-audio-v2.js?v=17' /tmp/player.html \
+                && grep -q 'train-journey-v1.js?v=13' /tmp/player.html \
+                && grep -q 'remaining-journeys-v1.js?v=29' /tmp/player.html \
+                && grep -q 'journey-background-v1.js?v=15' /tmp/player.html \
                 && grep -q "TRAIN_ID='train_journey'" /tmp/train.js \
                 && grep -q 'makeCrossfadeLoopNode' /tmp/player.js \
                 && grep -q 'makeCrossfadeLoopNode' /tmp/scene-audio.js \

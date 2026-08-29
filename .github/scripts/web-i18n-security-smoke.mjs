@@ -58,7 +58,22 @@ for(const[code,[prepared,rain,preset]]of Object.entries(expected)){
   await expectText('#mixerGrid [data-source="rain"] strong',rain);
   await expectText('#builtInPresets [data-preset="preset_rainy_cafe"] strong',preset);
   await expectText('[data-quick-source="rain"] strong',rain);
+  const ui=await page.evaluate(()=>({now:window.LullabyLocales.t('nowPlaying'),black:window.LullabyLocales.t('blackScreen'),scene:window.LullabyLocales.t('sceneScreen'),events:window.LullabyLocales.t('randomEvents'),duration:window.LullabyLocales.t('customDuration')}));
+  await expectText('[data-i18n="nowPlaying"]',ui.now);
+  await expectText('[data-blackout-label]',ui.black);
+  await expectText('[data-journey-display-label]',ui.scene);
+  await expectText('[data-journey-event-label]',ui.events);
+  await expectText('[data-direct-title]',ui.duration);
 }
+await setLanguage('vi');
+await page.locator('#journeySelector [data-journey="spacecraft_journey"]').click();await page.waitForTimeout(120);
+const spacecraftVi=await page.evaluate(()=>window.LullabyLocales.journey('spacecraft_journey'));
+await expectText('.aircraft-title-row h3',spacecraftVi.title);await expectText('.aircraft-title-row p',spacecraftVi.description);
+for(let index=0;index<4;index++)await expectText(`.desktop-macros label:nth-child(${index+1}) span`,spacecraftVi.macros[index]);
+await page.locator('#journeySelector [data-journey="train_journey"]').click();await page.waitForTimeout(120);
+const trainVi=await page.evaluate(()=>window.LullabyLocales.trainJourney());
+await expectText('.aircraft-title-row h3',trainVi.title);await expectText('.aircraft-title-row p',trainVi.description);
+for(let index=0;index<4;index++)await expectText(`.desktop-macros label:nth-child(${index+1}) span`,trainVi.macros[index]);
 await setLanguage('en');
 if(await page.locator('body').evaluate(el=>/\bSimple Scenes?\b/.test(el.innerText)))throw new Error('English UI still exposes legacy Simple Scene wording');
 
