@@ -1,0 +1,114 @@
+[
+  {
+    "width": 390,
+    "height": 844,
+    "route": "home",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "focusables": 13,
+      "minButtonHeight": 48,
+      "heroHeight": 1030.21875,
+      "activePanel": null
+    }
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "route": "player/",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "focusables": 36,
+      "minButtonHeight": 36,
+      "heroHeight": null,
+      "activePanel": "scene"
+    }
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "route": "home",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "focusables": 13,
+      "minButtonHeight": 48,
+      "heroHeight": 959.078125,
+      "activePanel": null
+    }
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "route": "player/",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "focusables": 44,
+      "minButtonHeight": 36,
+      "heroHeight": null,
+      "activePanel": "scene"
+    }
+  },
+  {
+    "width": 1024,
+    "height": 900,
+    "route": "home",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "focusables": 15,
+      "minButtonHeight": 48,
+      "heroHeight": 630,
+      "activePanel": null
+    }
+  },
+  {
+    "width": 1024,
+    "height": 900,
+    "route": "player/",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "focusables": 54,
+      "minButtonHeight": 36,
+      "heroHeight": null,
+      "activePanel": "scene"
+    }
+  },
+  {
+    "width": 1440,
+    "height": 1000,
+    "route": "home",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "focusables": 15,
+      "minButtonHeight": 48,
+      "heroHeight": 700,
+      "activePanel": null
+    }
+  },
+  {
+    "width": 1440,
+    "height": 1000,
+    "route": "player/",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "focusables": 54,
+      "minButtonHeight": 36,
+      "heroHeight": null,
+      "activePanel": "scene"
+    }
+  }
+]

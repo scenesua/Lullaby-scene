@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { chromium } from 'playwright-core';
+const baseUrl=(process.env.WEB_BASE_URL||'http://127.0.0.1:4173').replace(/\/+$/,'');
 const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].filter(Boolean);
 const executablePath=candidates.find(p=>fs.existsSync(p));
 if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
@@ -14,7 +15,7 @@ await page.route('**/api/visitors',async route=>{
   const body=route.request().postDataJSON?.()||{};
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({available:true,backend:'countapi.mileshilliard-v1',mode:'pageviews',version:7,today:7,total:42,day:body.day||'2026-08-20',incremented:true})});
 });
-await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
+await page.goto(`${baseUrl}/player/`,{waitUntil:'networkidle'});
 await page.evaluate(()=>localStorage.removeItem('lullaby-user-presets'));
 const visible=async sel=>{if(!(await page.locator(sel).isVisible()))throw new Error(`${sel} not visible`)};
 
@@ -77,7 +78,7 @@ if(!unsafePreview.visible||JSON.stringify(unsafePreview.before)!==JSON.stringify
 if(importedGains.length>8||importedGainSum>1.2001||unsafePreview.recipe.master>.8501)throw new Error(`Recipe limits failed: ${JSON.stringify(unsafePreview.recipe)}`);
 const linkedPage=await context.newPage();
 await linkedPage.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
-await linkedPage.goto(`http://127.0.0.1:4173/player/?recipe=${encodeURIComponent(unsafePreview.encoded)}`,{waitUntil:'networkidle'});
+await linkedPage.goto(`${baseUrl}/player/?recipe=${encodeURIComponent(unsafePreview.encoded)}`,{waitUntil:'networkidle'});
 await linkedPage.waitForFunction(()=>window.LullabySceneRecipe?.pending&&document.getElementById('sceneRecipePreview')?.hidden===false);
 const linkedState=await linkedPage.evaluate(()=>({pending:!!window.LullabySceneRecipe.pending,mix:window.LullabyPlayerRuntime.snapshotMix(),button:document.querySelector('[data-recipe-load]')?.textContent}));
 if(!linkedState.pending||Object.values(linkedState.mix||{}).some(value=>value>0)||!linkedState.button)throw new Error(`Recipe URL auto-played or missed preview: ${JSON.stringify(linkedState)}`);
@@ -132,6 +133,18 @@ if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ Pa
 if((await page.locator('#saveSceneButton').textContent())?.trim()!=='Save scene')throw new Error('saved scene controls did not localize');
 if((await page.locator(`[data-saved-rename="${savedId}"]`).textContent())?.trim()!=='Rename')throw new Error('saved scene rename control did not localize');
 if((await page.locator('[data-visitor-today-label]').textContent())?.trim()!=='Views today')throw new Error('page-view counter did not localize');
+
+await page.setViewportSize({width:1440,height:1000});await page.evaluate(()=>{window.switchView('scene');window.setLullabySceneMode('journey')});await page.locator('#journeySceneTab').focus();await page.keyboard.press('ArrowRight');const tabState=await page.evaluate(()=>{const focusTarget=document.getElementById('simpleSceneTab');return{selected:focusTarget?.getAttribute('aria-selected'),hidden:document.getElementById('simpleScenePanel')?.getAttribute('aria-hidden'),focused:document.activeElement===focusTarget,outline:getComputedStyle(focusTarget).outlineStyle}});
+if(tabState.selected!=='true'||tabState.hidden!=='false'||!tabState.focused||tabState.outline==='none')throw new Error(`Scene tabs are not keyboard accessible: ${JSON.stringify(tabState)}`);
+for(const width of [390,768,1024,1440]){await page.setViewportSize({width,height:900});const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth);if(overflow)throw new Error(`horizontal overflow at ${width}px`)}
+await page.setViewportSize({width:390,height:900});const destinationStates=[];
+for(const destination of ['scenes','mixer','prepared','fx','settings','timer']){await page.evaluate(value=>window.LullabyAndroidWebShell.showDestination(value),destination);await page.waitForTimeout(40);destinationStates.push(await page.evaluate(value=>{const visible=el=>el.getClientRects().length&&!el.closest('[aria-hidden="true"]'),unnamed=[...document.querySelectorAll('input,select')].filter(visible).filter(el=>el.type!=='hidden'&&!el.getAttribute('aria-label')&&!el.getAttribute('aria-labelledby')&&!el.labels?.length),short=[...document.querySelectorAll('button,a.button')].filter(visible).filter(el=>el.getBoundingClientRect().height<43.5);return{destination:value,unnamed:unnamed.length,short:short.map(el=>({text:el.textContent.trim(),height:el.getBoundingClientRect().height}))}},destination))}
+if(destinationStates.some(state=>state.unnamed||state.short.length))throw new Error(`mobile accessibility failed: ${JSON.stringify(destinationStates)}`);
+const adState=await page.evaluate(()=>{const slot=document.querySelector('[data-ad-slot="player"]'),emptyDisplay=getComputedStyle(slot).display;slot.innerHTML='<div style="width:728px;height:90px"></div>';const shown={display:getComputedStyle(slot).display,width:slot.getBoundingClientRect().width,height:slot.getBoundingClientRect().height,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};slot.replaceChildren();return{emptyDisplay,shown}});
+if(adState.emptyDisplay!=='none'||adState.shown.display==='none'||adState.shown.width>320.5||adState.shown.height<99.5||adState.shown.overflow)throw new Error(`ad slot failed: ${JSON.stringify(adState)}`);
+for(const path of ['/about/','/contact/','/privacy/']){
+  const trustPage=await context.newPage();await trustPage.goto(`${baseUrl}${path}`,{waitUntil:'domcontentloaded'});const state=await trustPage.evaluate(()=>({title:document.title,h1:document.querySelector('h1')?.textContent.trim(),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,consentEnabled:window.LullabyConsent?.enabled,consentPanel:!!document.querySelector('.consent-panel'),email:document.querySelector('a[href="mailto:scenesuastudio@gmail.com"]')?.getAttribute('href')}));if(!state.title||!state.h1||state.overflow||state.consentEnabled!==false||state.consentPanel)throw new Error(`trust page failed: ${path} ${JSON.stringify(state)}`);if((path==='/contact/'||path==='/privacy/')&&!state.email)throw new Error(`contact email missing: ${path}`);await trustPage.close();
+}
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log('web interaction smoke test passed');

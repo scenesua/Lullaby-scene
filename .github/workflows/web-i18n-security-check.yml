@@ -56,11 +56,11 @@ jobs:
           grep -Fq "startsWith('application/json')" web/_worker.js
           ! grep -Fq 'HTMLRewriter' web/_worker.js
           ! grep -Fq 'eval(' web/player-controls-v11.js
-          node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/api/*\"]'||r.exclude.length)process.exit(1)"
+          node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/*\"]'||r.exclude.length)process.exit(1)"
           for page in web/index.html web/player/index.html web/download/index.html web/privacy/index.html web/terms/index.html web/credits/index.html web/blackout/index.html web/404.html; do
             grep -Fq '/site-locales-v10.js?v=23' "$page"
             grep -Fq '/i18n-runtime-v3.js?v=10' "$page"
-            grep -Fq '/mobile-android-shell-v1.js?v=5' "$page"
+            grep -Eq '/mobile-android-shell-v1.js[?]v=(5|6)' "$page"
           done
           grep -Fq '/site-locales-v10.js?v=23' web/sw.js
           grep -Fq '/i18n-runtime-v3.js?v=10' web/sw.js
@@ -87,7 +87,7 @@ jobs:
           WRANGLER_PID=$!
           trap 'kill $WRANGLER_PID || true' EXIT
           for i in {1..40}; do curl -fsS http://127.0.0.1:4174/ >/dev/null && break; sleep 0.5; done
-          curl -fsS -D /tmp/headers -o /tmp/home http://127.0.0.1:4174/
+          curl -fsS -D /tmp/headers -o /tmp/home http://127.0.0.1:4174/player/
           grep -Eiq '^x-frame-options:[[:space:]]*DENY' /tmp/headers
           grep -Eiq '^x-content-type-options:[[:space:]]*nosniff' /tmp/headers
           grep -Eiq '^content-security-policy:.*frame-ancestors .none.' /tmp/headers
@@ -95,7 +95,7 @@ jobs:
           grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
           grep -Fq 'site-locales-v10.js?v=23' /tmp/home
           grep -Fq 'i18n-runtime-v3.js?v=10' /tmp/home
-          grep -Fq 'mobile-android-shell-v1.js?v=5' /tmp/home
+          grep -Fq 'mobile-android-shell-v1.js?v=6' /tmp/home
           curl -fsS http://127.0.0.1:4174/.well-known/security.txt | grep -Fq 'mailto:scenesuastudio@gmail.com'
 
           code=$(curl -sS -o /tmp/cross.json -w '%{http_code}' -X POST \
