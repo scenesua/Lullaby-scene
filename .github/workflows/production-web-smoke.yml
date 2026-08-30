@@ -119,3 +119,18 @@ jobs:
             exit 1
           fi
           echo 'Production lullabyscene.com is serving blackout display tools v4 and all Journeys.'
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify public trust pages and AdSense ownership after deployment
+        env:
+          TRUST_BASE_URL: https://lullabyscene.com
+        shell: bash
+        run: |
+          for attempt in {1..18}; do
+            if node .github/scripts/web-trust-pages-smoke.mjs; then exit 0; fi
+            sleep 5
+          done
+          exit 1

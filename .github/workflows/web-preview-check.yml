@@ -43,7 +43,11 @@ jobs:
       - name: Install browser dependency
         run: npm install --no-save playwright-core@1.55.0
 
-      - name: Verify committed aircraft beds
+      - name: Verify public trust pages and ownership files
+        # These public pages must ship with their footer links and AdSense verification.
+        run: node .github/scripts/web-trust-pages-smoke.mjs
+
+      - name: Verify committed aircraft audio
         shell: bash
         run: |
           set -euo pipefail
