@@ -56,7 +56,7 @@ jobs:
           grep -Fq "startsWith('application/json')" web/_worker.js
           ! grep -Fq 'HTMLRewriter' web/_worker.js
           ! grep -Fq 'eval(' web/player-controls-v11.js
-          node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/api/*\"]'||r.exclude.length)process.exit(1)"
+          node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/*\"]'||r.exclude.length)process.exit(1)"
           for page in web/index.html web/player/index.html web/download/index.html web/privacy/index.html web/terms/index.html web/credits/index.html web/blackout/index.html web/404.html; do
             grep -Fq '/site-locales-v10.js?v=23' "$page"
             grep -Fq '/i18n-runtime-v3.js?v=10' "$page"
