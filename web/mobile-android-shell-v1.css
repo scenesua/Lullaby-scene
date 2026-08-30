@@ -25,3 +25,19 @@
   body.android-shell-page .settings-list{border-radius:18px!important}.setting-row{padding:16px!important}.timer-card{min-height:210px!important;border-radius:18px!important}
 }
 @media(max-width:480px){body.android-shell-page .workspace-main{padding-left:12px!important;padding-right:12px!important}.mobile-tab b{font-size:.6rem}.android-top-title strong{font-size:1.05rem}.journey-status{grid-template-columns:1fr 1fr!important}.android-language-setting{grid-template-columns:1fr}.android-language-setting .language-select{width:100%;max-width:none}.transport .master-inline{order:3}.aircraft-icon{font-size:1.8rem!important}}
+
+/* Native disclosure preserves the existing macro inputs and audio bindings. */
+.mobile-macros summary{min-height:44px;padding-block:10px;cursor:pointer;font-weight:700;color:var(--text)}
+.mobile-macros summary:focus-visible{outline:3px solid var(--focus-ring);outline-offset:3px}
+.mobile-macros[open] summary{margin-bottom:14px}
+@media(max-width:900px){
+  body.android-shell-page .mobile-macros{margin-top:14px!important;padding-top:6px!important}
+  body.android-shell-page .transport{margin-top:18px}
+  body.android-shell-page .workspace-main{padding-bottom:calc(108px + env(safe-area-inset-bottom))!important}
+  body.android-shell-page :is(button,input,select,summary){scroll-margin-block:84px 100px}
+  .journey-selector button{min-height:44px;max-width:100%;overflow-wrap:anywhere}
+  .journey-phase-arrows{flex-wrap:wrap}
+  .journey-phase-arrows .small-action{flex:1;min-width:0;white-space:normal}
+  .journey-stage-select{min-width:0}.journey-stage-select select{min-width:0}
+  .duration-direct-entry{min-width:0}.duration-direct-entry input{min-width:0}
+}
