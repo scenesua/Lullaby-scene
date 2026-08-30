@@ -17,7 +17,7 @@ body.journey-ambient .site-header,body.journey-ambient .player-page-main,body.jo
 body.journey-ambient .site-header{background:linear-gradient(color-mix(in srgb,var(--bg) 96%,transparent) 65%,transparent)!important}
 body.journey-ambient .web-player{background:color-mix(in srgb,var(--surface) 96%,transparent)}
 html[data-theme] body.journey-ambient .desktop-rail,html[data-theme] body.journey-ambient .desktop-inspector{background:var(--surface-2)!important}
-body.journey-ambient .player-page-intro,body.journey-ambient>.site-footer{--text:#f4f1e9;--muted:#bfc4ce;color:var(--text)}
+body.journey-ambient:not(.journey-ambient-off) .player-page-intro,body.journey-ambient:not(.journey-ambient-off)>.site-footer{--text:#f4f1e9;--muted:#bfc4ce;color:var(--text)}
 [data-scene-content="journey"]{color:var(--text)}
 [data-scene-content="journey"] .mobile-scene-heading p,[data-scene-content="journey"] .aircraft-title-row p,[data-scene-content="journey"] .player-status,[data-scene-content="journey"] .master-inline{color:var(--muted)}
 html[data-theme] body.journey-ambient [data-scene-content="journey"] .aircraft-card,[data-scene-content="journey"] .aircraft-card{background:var(--surface)!important;border-color:var(--line);box-shadow:0 24px 70px rgba(0,0,0,.18)}

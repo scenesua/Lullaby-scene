@@ -69,6 +69,12 @@ try{
       for(const contrast of contrasts)assert(contrast.ratio>=4.5,`${theme} ${contrast.selector} contrast ${contrast.ratio}`);
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${theme} overflow`);
       if(artifacts&&width===1024)await page.screenshot({path:`${artifacts}/player-${width}-${theme}.png`,fullPage:true});
+      if(width>900){
+        await page.locator('.journey-background-toggle').click();
+        assert(await page.evaluate(()=>document.body.classList.contains('journey-ambient-off')),'Background switches off');
+        assert(await page.evaluate(()=>getComputedStyle(document.querySelector('.player-page-intro')).color===getComputedStyle(document.body).color),`${theme} intro follows theme without a photo`);
+        await page.locator('.journey-background-toggle').click();
+      }
     }
     console.log(`UI/UX layout and controls passed at ${width}px`);
     await context.close();
