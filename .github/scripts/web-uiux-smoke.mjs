@@ -49,6 +49,27 @@ try{
     }
     await page.evaluate(()=>scrollTo(0,0));
     if(artifacts)await page.screenshot({path:`${artifacts}/player-${width}.png`,fullPage:true});
+    const navigation=page.locator(width>900?'.desktop-rail':'.mobile-tabs');
+    for(const theme of ['light','dark','system']){
+      await navigation.locator(width>900?'[data-view="settings"]':'[data-android-dest="settings"]').click();
+      await page.locator('#themeSelect').selectOption(theme);
+      await navigation.locator(width>900?'[data-view="scene"]':'[data-android-dest="scenes"]').click();
+      const contrasts=await page.evaluate(()=>{
+        const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
+        const ctx=canvas.getContext('2d',{willReadFrequently:true});
+        const rgb=value=>{ctx.clearRect(0,0,1,1);ctx.fillStyle=value;ctx.fillRect(0,0,1,1);const data=ctx.getImageData(0,0,1,1).data;return [data[0],data[1],data[2],data[3]/255]};
+        const blend=(front,back)=>front.slice(0,3).map((value,i)=>value*(front[3]??1)+back[i]*(1-(front[3]??1)));
+        const background=element=>element?blend(rgb(getComputedStyle(element).backgroundColor),background(element.parentElement)):[255,255,255];
+        const luminance=color=>color.map(value=>{value/=255;return value<=.04045?value/12.92:((value+.055)/1.055)**2.4}).reduce((sum,value,i)=>sum+value*[.2126,.7152,.0722][i],0);
+        return ['.aircraft-title-row h3','.control-heading strong','#phaseLabel','.mobile-scene-heading h3'].map(selector=>{
+          const element=document.querySelector(selector),back=background(element),front=blend(rgb(getComputedStyle(element).color),back),a=luminance(front),b=luminance(back);
+          return {selector,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
+        });
+      });
+      for(const contrast of contrasts)assert(contrast.ratio>=4.5,`${theme} ${contrast.selector} contrast ${contrast.ratio}`);
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${theme} overflow`);
+      if(artifacts&&width===1024)await page.screenshot({path:`${artifacts}/player-${width}-${theme}.png`,fullPage:true});
+    }
     console.log(`UI/UX layout and controls passed at ${width}px`);
     await context.close();
   }
