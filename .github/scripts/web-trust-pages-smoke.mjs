@@ -35,6 +35,7 @@ for(const path of ['/','/player/','/download/','/terms/','/credits/','/about/','
 assert((await read('/privacy/')).includes('localStorage'));
 assert((await read('/trust-pages.css')).includes('.story-hero'));
 const sitemap=await read('/sitemap.xml'),locations=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match=>match[1]);
+assert(/^<\?xml[^?]+\?>\s*<urlset\s[^>]+>\s*(?:<url>[\s\S]*?<\/url>\s*)+<\/urlset>\s*$/.test(sitemap),'Sitemap URLs are inside a single XML root');
 assert.equal(new Set(locations).size,locations.length,'No duplicate sitemap URLs');
 for(const path of ['about','contact','privacy','credits'])assert(locations.includes(`https://lullabyscene.com/${path}/`));
 console.log('Trust pages, navigation, ownership metadata and ads.txt verified'+(base?` on ${base}`:' locally'));
