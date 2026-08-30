@@ -12,6 +12,24 @@
   const copy=map=>map[L()?.language||'en']||map.en;
   const journeyLabel=()=>({ko:'여정',en:'Journey',ja:'旅','zh-CN':'旅程','zh-TW':'旅程',ru:'Путешествие',fr:'Voyage',es:'Viaje',pt:'Jornada',th:'การเดินทาง',tl:'Paglalakbay',hi:'यात्रा',vi:'Hành trình'}[L()?.language||'en']||'Journey');
 
+  function ensureJourneyIcons(){
+    const paths={
+      passenger_aircraft_cabin:'M12 3v18m0-14L3 13v2l9-3 9 3v-2L12 7m-4 14 4-3 4 3',
+      train_journey:'M6 3h12v14H6zM6 10h12M9 3v7m6-7v7M8 14h1m6 0h1M8 17l-3 4m11-4 3 4M7 20h10',
+      spacecraft_journey:'M9 15c-2-5 1-10 10-12 0 9-5 13-10 12Zm0 0-4 4m3-9H4l-2 5h6m6 1v4l-5 2v-6m4-8h2',
+      ferry_journey:'M3 13l9-3 9 3-3 6H6l-3-6Zm4-2V6h10v5M10 6V3h4v3M2 21l4-1 4 1 4-1 4 1 4-1',
+      submarine_journey:'M6 9h11a5 5 0 0 1 0 10H7a5 5 0 0 1-1-10Zm4 0V5h4V3m6 9h3m-1 0v4M7 13v2m5-2v2m5-2v2',
+      forest_temple_journey:'M3 10l9-6 9 6H3Zm2 0v10m14-10v10M2 20h20M9 20v-7h6v7M12 4V2',
+      hood_journey:'M3 21V9h7v12m0-16h8v16m0-9h3v9M2 21h20M5 12h2m-2 4h2m6-8h2m-2 4h2m-2 4h2'
+    };
+    $$('#journeySelector button').forEach(button=>{
+      const path=paths[button.dataset.journey];if(!path||button.querySelector('svg'))return;
+      const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),shape=document.createElementNS(svg.namespaceURI,'path');
+      svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('class','journey-choice-icon');svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');shape.setAttribute('d',path);svg.append(shape);
+      [...button.childNodes].filter(node=>node.nodeType===3).forEach(node=>node.remove());button.prepend(svg);
+    });
+  }
+
   function ensureTopBar(){
     const root=$('.mobile-player-top');if(!root)return;
     root.innerHTML='<div class="android-top-leading"><button class="android-icon-button android-back" type="button" data-android-back hidden aria-label="Back">‹</button><div class="android-top-title"><strong data-android-title></strong><small>Lullaby Scene</small></div></div><div class="android-top-actions"><button class="android-icon-button mobile-scene-display-button" type="button" data-journey-display-button data-journey-display-placement="mobile" aria-label="Scene screen">▣</button><button class="android-icon-button filled" type="button" data-android-play aria-label="Play">▶</button><button class="android-icon-button" type="button" data-android-timer aria-label="Sleep timer">☾</button></div>';
@@ -66,9 +84,9 @@
     if(activeDest==='scenes'){document.getElementById('scenePlay')?.click();setTimeout(syncPlayButton,60);return}
     if(pausedMixer.length)await resumeMixer();else if(mixerStates().length)await pauseMixer();syncPlayButton();
   }
-  function syncPlayButton(){const button=$('[data-android-play]');if(!button)return;const journeyPlaying=activeDest==='scenes'&&(document.getElementById('scenePlay')?.textContent||'').includes('Ⅱ');const mixPlaying=activeDest!=='scenes'&&mixerStates().length>0&&!pausedMixer.length;const playing=journeyPlaying||mixPlaying;setText(button,playing?'Ⅱ':'▶');button.setAttribute('aria-label',playing?term('pause','Pause'):pausedMixer.length?term('resume','Resume'):term('play','Play'))}
+  function syncPlayButton(){const button=$('[data-android-play]');if(!button)return;const journeyRunning=(document.getElementById('scenePlay')?.textContent||'').includes('Ⅱ');const journeyPlaying=activeDest==='scenes'&&journeyRunning;const mixPlaying=activeDest!=='scenes'&&mixerStates().length>0&&!pausedMixer.length;const playing=journeyPlaying||mixPlaying;setText(button,playing?'Ⅱ':'▶');button.setAttribute('aria-label',playing?term('pause','Pause'):pausedMixer.length?term('resume','Resume'):t('start','Play'));$('#webPlayer').dataset.journeyPlaying=String(journeyRunning);$$('#journeySelector button').forEach(choice=>{choice.disabled=journeyRunning});$$('.android-icon-button,.mobile-scene-display-button').forEach(control=>{control.title=control.getAttribute('aria-label')||''})}
   function inferFromEvents(){const activePanel=$('[data-panel].active')?.dataset.panel;if(activePanel==='timer'){activeDest='timer'}else if(activePanel==='mixer'){activeDest='mixer';lastPrimaryDest='mixer'}else if(activePanel==='settings'){activeDest='settings';lastPrimaryDest='settings'}else if(activePanel==='fx'){activeDest='fx';lastPrimaryDest='fx'}else if(activePanel==='scene'){const simple=$('[data-scene-content="simple"]')?.classList.contains('active');activeDest=simple?'prepared':'scenes';lastPrimaryDest=activeDest}updateChrome()}
-  ensureTopBar();ensureBottomNav();ensureFxPanel();ensureLanguageSetting();
+  ensureTopBar();ensureBottomNav();ensureFxPanel();ensureLanguageSetting();ensureJourneyIcons();
   document.addEventListener('lullaby-language-changed',()=>{L()?.apply?.();updateChrome();window.LullabyCatalogI18n?.apply?.()});document.addEventListener('lullaby-locales-applied',updateChrome);document.addEventListener('lullaby-view-changed',inferFromEvents);document.addEventListener('lullaby-scene-mode-changed',inferFromEvents);
   const media=matchMedia('(max-width:900px)');media.addEventListener?.('change',event=>{if(!event.matches&&activeDest==='fx'){window.switchView?.('scene');window.setLullabySceneMode?.('simple')}});
   setInterval(syncPlayButton,700);showDestination('scenes');setTimeout(()=>{window.LullabyMixerFx?.syncUi?.();updateChrome()},250);

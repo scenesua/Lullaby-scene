@@ -95,7 +95,7 @@ jobs:
           grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
           grep -Fq 'site-locales-v10.js?v=23' /tmp/home
           grep -Fq 'i18n-runtime-v3.js?v=10' /tmp/home
-          grep -Fq 'mobile-android-shell-v1.js?v=6' /tmp/home
+          grep -Fq 'mobile-android-shell-v1.js?v=7' /tmp/home
           curl -fsS http://127.0.0.1:4174/.well-known/security.txt | grep -Fq 'mailto:scenesuastudio@gmail.com'
 
           code=$(curl -sS -o /tmp/cross.json -w '%{http_code}' -X POST \

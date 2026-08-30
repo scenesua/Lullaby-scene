@@ -233,6 +233,7 @@ jobs:
           trap 'kill $SERVER_PID || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
           timeout 90s node .github/scripts/web-smoke.mjs
+          timeout 90s node .github/scripts/web-uiux-smoke.mjs
 
       - name: Browser Mixer and journey seek smoke
         timeout-minutes: 2
