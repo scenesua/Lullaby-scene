@@ -23,7 +23,14 @@ for(const path of ['/','/player/','/download/','/terms/','/credits/','/about/','
     assert(html.includes('data-lang-block="ko"')&&html.includes('data-lang-block="en"'));
     assert(html.includes('/trust-pages.css?v=1'));
   }
-  if(path==='/contact/'||path==='/privacy/')assert(html.includes('mailto:scenesuastudio@gmail.com'));
+  if(path==='/contact/'||path==='/privacy/'){
+    // Cloudflare may obfuscate email addresses in the production HTML.
+    const protectedEmails=[...html.matchAll(/data-cfemail="([a-fA-F0-9]+)"/g)].map(([,hex])=>{
+      const bytes=Buffer.from(hex,'hex');
+      return String.fromCharCode(...bytes.subarray(1).map(byte=>byte^bytes[0]));
+    });
+    assert(html.includes('mailto:scenesuastudio@gmail.com')||protectedEmails.includes('scenesuastudio@gmail.com'),'Contact email is correct');
+  }
 }
 assert((await read('/privacy/')).includes('localStorage'));
 assert((await read('/trust-pages.css')).includes('.story-hero'));
