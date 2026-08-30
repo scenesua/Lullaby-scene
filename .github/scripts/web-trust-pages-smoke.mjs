@@ -35,7 +35,11 @@ for(const path of ['/','/player/','/download/','/terms/','/credits/','/about/','
 assert((await read('/privacy/')).includes('localStorage'));
 assert((await read('/trust-pages.css')).includes('.story-hero'));
 const sitemap=await read('/sitemap.xml'),locations=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match=>match[1]);
-assert(/^<\?xml[^?]+\?>\s*<urlset\s[^>]+>\s*(?:<url>[\s\S]*?<\/url>\s*)+<\/urlset>\s*$/.test(sitemap),'Sitemap URLs are inside a single XML root');
+const sitemapXml=sitemap.replace(/\r\n/g,'\n').trimEnd();
+assert(sitemapXml.startsWith('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'),'Sitemap starts with its XML declaration and root');
+assert(sitemapXml.endsWith('\n</urlset>'),'Sitemap ends with its XML root');
+assert.equal(sitemapXml.split('<urlset ').length,2,'Only one sitemap root');
+assert.equal(sitemapXml.split('</urlset>').length,2,'Only one sitemap root closing tag');
 assert.equal(new Set(locations).size,locations.length,'No duplicate sitemap URLs');
 for(const path of ['about','contact','privacy','credits'])assert(locations.includes(`https://lullabyscene.com/${path}/`));
 console.log('Trust pages, navigation, ownership metadata and ads.txt verified'+(base?` on ${base}`:' locally'));
