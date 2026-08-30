@@ -44,6 +44,7 @@ if((await track.getAttribute('role'))!=='slider')throw new Error('journey track 
 if(!(await page.locator('#journeyPrevPhase').isVisible())||!(await page.locator('#journeyNextPhase').isVisible()))throw new Error('explicit phase step buttons are not visible');
 
 // Verify the physical progress rail before audio playback changes transport state.
+await track.scrollIntoViewIfNeeded();
 const box=await track.boundingBox();if(!box)throw new Error('journey track has no layout box');
 await page.mouse.click(box.x+box.width*.95,box.y+box.height/2);await page.waitForTimeout(80);
 let seekState=await page.evaluate(()=>({elapsed:window.LullabyJourneyRuntime?.elapsedMs,total:window.LullabyJourneyRuntime?.totalMs,phase:document.querySelector('#phaseLabel')?.textContent,aria:document.querySelector('.journey-track')?.getAttribute('aria-valuenow')}));

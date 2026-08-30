@@ -19,6 +19,13 @@ const SECURITY_HEADERS={
 function secureResponse(response,request){
   const headers=new Headers(response.headers);
   Object.entries(SECURITY_HEADERS).forEach(([name,value])=>headers.set(name,value));
+  const url=new URL(request.url);
+  // The Access-protected console embeds its own player; public pages stay DENY.
+  if(url.hostname==='debug.lullabyscene.com'&&(url.pathname.startsWith('/debug/')||url.pathname.startsWith('/player/'))){
+    headers.set('Content-Security-Policy',SECURITY_HEADERS['Content-Security-Policy'].replace("frame-src 'none'; frame-ancestors 'none'","frame-src 'self'; frame-ancestors 'self'"));
+    headers.set('X-Frame-Options','SAMEORIGIN');
+    headers.set('X-Robots-Tag','noindex, nofollow, noarchive');
+  }
   if(new URL(request.url).pathname.startsWith('/api/'))headers.set('X-Robots-Tag','noindex, nofollow');
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
 }

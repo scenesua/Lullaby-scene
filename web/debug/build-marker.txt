@@ -1,2 +1,2 @@
-Scene exposure and translation audit ready
-2026-08-29
+UI/UX steps 5–7: landing, mobile controls, desktop workspace
+2026-08-31
