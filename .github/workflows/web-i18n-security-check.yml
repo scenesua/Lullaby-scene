@@ -60,7 +60,7 @@ jobs:
           for page in web/index.html web/player/index.html web/download/index.html web/privacy/index.html web/terms/index.html web/credits/index.html web/blackout/index.html web/404.html; do
             grep -Fq '/site-locales-v10.js?v=23' "$page"
             grep -Fq '/i18n-runtime-v3.js?v=10' "$page"
-            grep -Eq '/mobile-android-shell-v1.js\?v=(5|6)' "$page"
+            grep -Eq '/mobile-android-shell-v1.js[?]v=(5|6)' "$page"
           done
           grep -Fq '/site-locales-v10.js?v=23' web/sw.js
           grep -Fq '/i18n-runtime-v3.js?v=10' web/sw.js
