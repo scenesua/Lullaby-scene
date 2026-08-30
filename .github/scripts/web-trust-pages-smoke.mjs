@@ -15,7 +15,9 @@ for(const path of ['/','/player/','/download/','/terms/','/credits/','/about/','
   const html=path==='/'?home:await read(path);
   const footer=html.slice(html.indexOf('<footer'));
   for(const link of ['/about/','/contact/','/privacy/'])assert(footer.includes(`href="${link}"`),`${path} links to ${link}`);
-  assert(!html.includes('pagead2.googlesyndication.com'),'No advertising runtime activation');
+  for(const script of html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/g)){
+    assert.equal(new URL(script[1],'https://lullabyscene.com').origin,'https://lullabyscene.com','Only existing first-party scripts; no ad runtime');
+  }
   if(['/about/','/contact/','/privacy/'].includes(path)){
     assert(html.includes(`rel="canonical" href="https://lullabyscene.com${path}"`));
     assert(html.includes('data-lang-block="ko"')&&html.includes('data-lang-block="en"'));
