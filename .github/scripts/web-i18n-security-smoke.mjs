@@ -150,19 +150,21 @@ await page.locator('[data-android-dest="prepared"]').click();await page.waitForT
 if(!await page.locator('[data-scene-content="simple"]').evaluate(el=>el.classList.contains('active')))throw new Error('Prepared destination did not open ready-made scenes');
 await expectText('[data-android-title]','준비된 장면');
 const preparedLayout=await page.evaluate(()=>{
-  const preset=document.querySelector('#builtInPresets [data-preset="preset_rainy_cafe"]');
+  const picker=document.getElementById('presetPicker'),preset=picker?.querySelector('summary');
   const transport=document.querySelector('#simpleSceneTransport');
   const quick=document.querySelector('#simpleQuickMixerSection');
   const mixerSource=document.querySelector('#mixerGrid [data-source="rain"]');
   return{
     presetVisible:!!preset&&getComputedStyle(preset).display!=='none',
+    pickerClosed:!!picker&&!picker.open,
     presetTop:preset?.getBoundingClientRect().top??null,
     transportTop:transport?.getBoundingClientRect().top??null,
     quickDisplay:quick?getComputedStyle(quick).display:null,
+    quickTop:quick?.getBoundingClientRect().top??null,
     mixerSourceVisible:!!mixerSource&&mixerSource.getClientRects().length>0
   };
 });
-if(!preparedLayout.presetVisible||preparedLayout.quickDisplay!=='none'||preparedLayout.mixerSourceVisible||preparedLayout.presetTop===null||preparedLayout.transportTop===null||preparedLayout.presetTop>=preparedLayout.transportTop)throw new Error(`Prepared mobile layout mismatch: ${JSON.stringify(preparedLayout)}`);
+if(!preparedLayout.presetVisible||!preparedLayout.pickerClosed||preparedLayout.quickDisplay==='none'||preparedLayout.mixerSourceVisible||preparedLayout.presetTop===null||preparedLayout.transportTop===null||preparedLayout.quickTop===null||preparedLayout.presetTop>=preparedLayout.transportTop||preparedLayout.transportTop>=preparedLayout.quickTop)throw new Error(`Prepared mobile picker / transport / mixer order mismatch: ${JSON.stringify(preparedLayout)}`);
 await page.locator('[data-android-dest="mixer"]').click();await page.waitForTimeout(80);
 if(!await page.locator('#mixerGrid [data-source="rain"]').isVisible())throw new Error('Mixer destination did not expose source controls');
 await page.locator('[data-android-dest="prepared"]').click();await page.waitForTimeout(80);

@@ -37,6 +37,7 @@
     if(!image||key===currentKey)return;
     currentKey=key;currentImage=image;if(id)currentId=id;const token=++generation,nextIndex=(activeIndex+1)%layers.length,next=layers[nextIndex],old=layers[activeIndex];
     next.poster=image;next.dataset.journey=id;visual.style.setProperty('--scene-image',`url("${image}")`);
+    document.documentElement.style.setProperty('--slider-scene-image',`url("${image}")`);
     if(motionVideoEnabled&&(ambientEnabled||document.body.classList.contains('journey-display-mode'))&&!reduceMotion.matches&&!saveData){
       next.src=asset(id,'mp4');next.load();
       try{await next.play()}catch{}

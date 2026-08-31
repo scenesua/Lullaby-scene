@@ -2,6 +2,7 @@
   const R=window.LullabyPlayerRuntime;
   if(!R||!document.getElementById('webPlayer'))return;
   const desired=new Map(),starting=new Map(),latestPercent=new Map(),lastNonZero=new Map(),rafById=new Map();
+  let draggingInput=null;
   const clampPercent=v=>Math.max(0,Math.min(100,Math.round(Number(v)||0))),english=()=>(window.LullabyI18n?.language||document.documentElement.lang)!=='ko';
   const source=id=>R.sourceById[id]||R.catalog.find(item=>item.id===id)||null;
 
@@ -105,14 +106,17 @@
   function defaultPercent(id){const def=source(id);return clampPercent(lastNonZero.get(id)||def?.defaultVolume||30)||30}
   async function toggle(id){const st=stateFor(id);if(st.on)disable(id);else await setVolume(id,defaultPercent(id));finalize()}
   function normalize(){R.catalog.forEach(def=>updateDom(def.id))}
-  function finalize(){desired.clear();R.renderMixer();R.updateNowPlaying();queueMicrotask(()=>{normalize();window.LullabyQuickMixer?.render?.()})}
+  function finalize(){if(draggingInput)return;desired.clear();R.renderMixer();R.updateNowPlaying();queueMicrotask(()=>{normalize();window.LullabyQuickMixer?.render?.()})}
+  function finishInput(input){const id=input.dataset.sourceVolume||input.dataset.quickVolume;Promise.resolve(starting.get(id)).then(()=>setTimeout(finalize,0))}
   function allOff(){R.catalog.forEach(def=>disable(def.id));finalize()}
   function clearDesiredSoon(){desired.clear();setTimeout(()=>{normalize();window.LullabyQuickMixer?.render?.()},220)}
 
-  window.addEventListener('pointerdown',event=>{
+  const beginInput=event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
-    input.dataset.dragging='1';R.ensureContext().catch(()=>{});
-  },true);
+    if(draggingInput===input)return;
+    draggingInput=input;input.dataset.dragging='1';R.ensureContext().catch(()=>{});
+  };
+  window.addEventListener('pointerdown',beginInput,true);window.addEventListener('mousedown',beginInput,true);window.addEventListener('touchstart',beginInput,{capture:true,passive:true});
   window.addEventListener('input',event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
     event.stopImmediatePropagation();
@@ -121,9 +125,11 @@
   },true);
   window.addEventListener('change',event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
-    event.stopImmediatePropagation();delete input.dataset.dragging;setTimeout(finalize,0);
+    event.stopImmediatePropagation();if(input!==draggingInput)finishInput(input);
   },true);
-  window.addEventListener('pointerup',event=>{const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(input)delete input.dataset.dragging},true);
+  const releaseInput=()=>{if(!draggingInput)return;const input=draggingInput;draggingInput=null;delete input.dataset.dragging;finishInput(input)};
+  window.addEventListener('pointerup',releaseInput,true);window.addEventListener('pointercancel',releaseInput,true);
+  window.addEventListener('mouseup',releaseInput,true);window.addEventListener('touchend',releaseInput,true);window.addEventListener('touchcancel',releaseInput,true);window.addEventListener('blur',releaseInput);
   window.addEventListener('click',event=>{
     const button=event.target.closest?.('[data-source-toggle],[data-quick-toggle]');
     if(button){event.preventDefault();event.stopImmediatePropagation();toggle(button.dataset.sourceToggle||button.dataset.quickToggle).catch(console.error);return}

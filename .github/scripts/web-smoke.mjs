@@ -5,7 +5,7 @@ const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/goo
 const executablePath=candidates.find(p=>fs.existsSync(p));
 if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
-const context=await browser.newContext({viewport:{width:1440,height:1000},locale:'ko-KR'});
+const context=await browser.newContext({viewport:{width:1440,height:1000},locale:'ko-KR',serviceWorkers:'block'});
 const page=await context.newPage();
 const errors=[];
 const benignAbort=value=>String(value).includes('AbortError: The play() request was interrupted by a call to pause()');
@@ -38,7 +38,7 @@ await page.locator('[data-view="scene"]').first().click();
 await page.locator('[data-scene-mode="simple"]').click();await visible('[data-scene-content="simple"]');await visible('[data-inspector-mode="simple"]');await visible('#simpleScenePlayPause');await visible('#simpleSceneStop');await visible('#saveSceneButton');await visible('#shareSceneRecipe');
 if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ 일시정지')throw new Error('Simple Scene pause control missing');
 
-await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(350);
+await page.locator('#presetPicker summary').click();await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(350);
 const quickOrder=await page.locator('#inspectorMixerList [data-quick-source]').evaluateAll(rows=>rows.slice(0,4).map(row=>row.getAttribute('data-quick-source')));
 if(JSON.stringify(quickOrder.slice(0,2))!==JSON.stringify(['rain','cafe']))throw new Error(`preset sources were not sorted first: ${JSON.stringify(quickOrder)}`);
 const inactive=page.locator('#inspectorMixerList [data-quick-source="wind"]');
@@ -87,10 +87,10 @@ await page.locator('[data-recipe-load]').click();await page.waitForFunction(()=>
 const importedState=await page.evaluate(()=>({pending:window.LullabySceneRecipe.pending,previewHidden:document.getElementById('sceneRecipePreview')?.hidden,mix:window.LullabyPlayerRuntime.snapshotMix()}));
 const activeImported=Object.values(importedState.mix||{}).filter(value=>value>0),activeImportedSum=activeImported.reduce((sum,value)=>sum+value,0);
 if(importedState.pending!==null||!importedState.previewHidden||activeImported.length>8||activeImportedSum>1.2001)throw new Error(`Explicit recipe load failed: ${JSON.stringify(importedState)}`);
-await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(350);
+await page.locator('#presetPicker summary').click();await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(350);
 
 const savedId=await page.evaluate(()=>window.LullabySavedScenes.create('My Sleep Scene'));
-await page.waitForTimeout(80);await visible(`[data-user-preset="${savedId}"]`);await visible(`[data-saved-load="${savedId}"]`);await visible(`[data-saved-rename="${savedId}"]`);await visible(`[data-saved-overwrite="${savedId}"]`);
+await page.locator('#presetPicker summary').click();await page.waitForTimeout(80);await visible(`[data-user-preset="${savedId}"]`);await visible(`[data-saved-load="${savedId}"]`);await visible(`[data-saved-rename="${savedId}"]`);await visible(`[data-saved-overwrite="${savedId}"]`);
 let savedState=await page.evaluate(id=>window.LullabySavedScenes.list().find(scene=>scene.id===id),savedId);
 if(savedState?.name!=='My Sleep Scene'||!savedState.mix?.rain||!savedState.mix?.cafe)throw new Error(`saved scene snapshot failed: ${JSON.stringify(savedState)}`);
 if(!(await page.evaluate(id=>window.LullabySavedScenes.rename(id,'Renamed Sleep Scene'),savedId)))throw new Error('saved scene rename returned false');

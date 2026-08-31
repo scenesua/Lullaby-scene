@@ -146,15 +146,21 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps firefox webkit
+          sudo apt-get install -y pulseaudio
 
       - name: Run the shared browser smoke suite
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m http.server 4173 --directory web >/tmp/lullaby-cross-browser.log 2>&1 &
+          # Firefox Web Audio needs an output device even in a headless runner.
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=browser_tests
+          pactl set-default-sink browser_tests
+          python3 .github/scripts/serve-web-smoke.py >/tmp/lullaby-cross-browser.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
           for browser in firefox webkit; do
             BROWSER="$browser" timeout 120s node .github/scripts/web-i18n-security-smoke.mjs
+            BROWSER="$browser" timeout 120s node .github/scripts/web-preset-picker-smoke.mjs
           done
