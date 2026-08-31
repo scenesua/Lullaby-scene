@@ -128,7 +128,7 @@ jobs:
           test -s web/assets/journeys/forest-temple.webp
           grep -q '/aircraft-source-v15.js?v=15' web/player/index.html
           grep -q '/mixer-interaction-v14.js?v=17' web/player/index.html
-          grep -q '/mixer-controls-v14.css?v=16' web/player/index.html
+          grep -q '/mixer-controls-v14.css?v=17' web/player/index.html
           grep -q '/simple-scene-quick-mixer-v12.js?v=14' web/player/index.html
           grep -q '/saved-scenes-v13.js?v=15' web/player/index.html
           grep -q '/scene-recipe-v1.js?v=3' web/player/index.html
