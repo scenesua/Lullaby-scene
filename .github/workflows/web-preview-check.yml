@@ -144,6 +144,11 @@ jobs:
           const webPath=url=>'web'+url.split('?')[0];
           const digest=path=>crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex');
           if(data.sources.length!==55) throw new Error(`expected 55 mixer sources, got ${data.sources.length}`);
+          const vm=require('vm'),assert=require('assert'),player=fs.readFileSync('web/player-v2.js','utf8');
+          const presets=player.slice(player.indexOf('const isPreviewHost='),player.indexOf('const presetVisuals='));
+          for(const [hostname,expected] of [['debug.lullabyscene.com',true],['localhost',true],['127.0.0.1',true],['build.lullaby-scene-debug.pages.dev',true],['lullabyscene.com',false],['lullaby-scene.pages.dev',false],['debug.lullabyscene.com.example.org',false]]){
+            assert.equal(vm.runInNewContext(presets+';builtinPresets.some(p=>p.id==="preset_rain_eaves")',{location:{hostname}}),expected);
+          }
           for(const s of data.sources){
             for(const url of s.eventVariants||[]) if(!fs.existsSync(webPath(url))) throw new Error(`missing event variant ${s.id}: ${url}`);
             if(s.kind==='continuous' && !fs.existsSync(webPath(s.url))) throw new Error(`missing ${s.id}: ${webPath(s.url)}`);
