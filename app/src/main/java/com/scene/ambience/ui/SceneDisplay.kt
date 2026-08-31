@@ -25,7 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Slider
+import com.scene.ambience.ui.components.SceneSlider as Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -218,6 +218,7 @@ private fun visualAsset(sceneId: String?, presetId: String?): String {
     }
     if (journey != null) return "visuals/journeys/$journey.webp"
     return when (presetId) {
+        "preset_rain_eaves" -> "visuals/simple-scenes/rain-eaves.webp"
         "preset_rainy_cafe", "preset_cafe_focus" -> "visuals/simple-scenes/rainy-cafe.webp"
         "preset_forest_night", "preset_quiet_night" -> "visuals/simple-scenes/forest-night.webp"
         "preset_beach", "preset_ocean_waves" -> "visuals/simple-scenes/ocean-night.webp"

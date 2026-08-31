@@ -8,12 +8,14 @@ if(!executablePath)throw new Error('No Chrome/Chromium executable found on runne
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
 const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
 const page=await context.newPage();
+page.on('framenavigated',frame=>{if(frame===page.mainFrame())console.log(`Audio smoke navigation: ${frame.url()}`)});
+page.on('crash',()=>console.error('Audio smoke renderer crashed'));
 const errors=[];
 page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window.LullabyPlayerRuntime?.catalog?.length===54);
+await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window.LullabyPlayerRuntime?.catalog?.length===55);
 
 const direct=await page.evaluate(async()=>{
   const R=window.LullabyPlayerRuntime;
@@ -64,6 +66,34 @@ const timer=await page.evaluate(()=>{
   return{backgroundMode:window.LullabyAudioStability.backgroundMode,directSourceCount:window.LullabyAudioStability.directSourceCount};
 });
 if(timer.backgroundMode!==false)throw new Error(`unexpected hidden state in foreground smoke: ${JSON.stringify(timer)}`);
+const drumConfig=await page.evaluate(()=>{
+  const R=window.LullabyPlayerRuntime,def=R.sourceById.rain_drum;
+  R.startEventLayer(def);
+  return{preview:def.previewOnly,notes:def.eventVariants.length,min:def.eventMinSeconds,max:def.eventMaxSeconds};
+});
+if(drumConfig.preview||drumConfig.notes!==5||drumConfig.min<.8||drumConfig.max>4)throw new Error('Rain drum public configuration');
+await page.waitForFunction(()=>window.LullabyAudioStability.eventVoices.filter(v=>v.id==='rain_drum'&&!v.paused&&!v.ended).length>=2,{},{timeout:16000});
+const drum=await page.evaluate(()=>{
+  const R=window.LullabyPlayerRuntime,voices=()=>window.LullabyAudioStability.eventVoices.filter(v=>v.id==='rain_drum');
+  const before=voices();
+  R.eventState.rain_drum.volume=.1;
+  window.LullabyAudioStability.syncDirectVolumes();
+  const quiet=voices().every(v=>v.volume<=.1);
+  R.stopEventLayer('rain_drum');
+  return{overlap:before.filter(v=>!v.paused&&!v.ended).length,notes:new Set(before.map(v=>v.url)).size,quiet,stopped:voices().every(v=>v.paused),timer:R.eventState.rain_drum.timer};
+});
+if(drum.overlap<2||drum.notes<2||!drum.quiet||!drum.stopped||drum.timer!==null)throw new Error(`Rain drum overlap/volume/stop failed: ${JSON.stringify(drum)}`);
+// Exercise the same user-gesture path as playback in the public preset picker.
+await page.getByRole('tab',{name:'준비된 장면',exact:true}).click();
+await page.locator('.preset-picker summary').click();
+await page.locator('[data-preset="preset_rain_eaves"]').click();
+await page.waitForFunction(()=>window.LullabyPlayerRuntime.getMixerUiState('rain').on&&window.LullabyPlayerRuntime.getMixerUiState('rain_drum').on);
+const porch=await page.evaluate(()=>{
+  const R=window.LullabyPlayerRuntime,preset=R.presets.find(p=>p.id==='preset_rain_eaves');
+  const result={preview:preset.previewOnly,rain:R.getMixerUiState('rain'),drum:R.getMixerUiState('rain_drum'),name:window.LullabyLocales.presetName(preset.id)};
+  stopAllMixer();return result;
+});
+if(porch.preview||!porch.rain.on||!porch.drum.on||porch.rain.volume!==45||porch.drum.volume!==28||porch.name!=='비 오는 날, 처마 아래')throw new Error(`Rain eaves preset failed: ${JSON.stringify(porch)}`);
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log('web audio stability v2 native-media smoke test passed');

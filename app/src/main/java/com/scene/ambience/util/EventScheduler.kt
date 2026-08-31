@@ -5,6 +5,18 @@ import kotlin.random.Random
 /** Random event timing and selection helpers. Pure logic, unit-testable. */
 object EventScheduler {
 
+    /** Ordered pentatonic notes: prefer nearby tones, with no immediate repeat. */
+    fun melodicWeight(index: Int, previous: Int): Float = when {
+        previous < 0 -> 1f
+        index == previous -> 0f
+        kotlin.math.abs(index - previous) == 1 -> 4f
+        kotlin.math.abs(index - previous) == 2 -> 2f
+        else -> 1f
+    }
+
+    fun rainDrumDelayMs(random: Random): Long = nextDelayMs(900L, 3800L, random) +
+        if (random.nextFloat() < .12f) nextDelayMs(1800L, 2600L, random) else 0L
+
     /** Next trigger delay in ms, uniformly random in [minMs, maxMs]. */
     fun nextDelayMs(minMs: Long, maxMs: Long, random: Random = Random.Default): Long {
         if (maxMs <= minMs) return minMs.coerceAtLeast(0L)

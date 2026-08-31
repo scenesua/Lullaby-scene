@@ -5,7 +5,7 @@ const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/goo
 const executablePath=candidates.find(path=>fs.existsSync(path));
 if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
-const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
+const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR',serviceWorkers:'block'});
 const page=await context.newPage();
 const errors=[];
 const benignAbort=value=>String(value).includes('AbortError: The play() request was interrupted by a call to pause()');
@@ -13,7 +13,7 @@ page.on('pageerror',error=>{if(!benignAbort(error))errors.push(String(error))});
 page.on('console',message=>{if(message.type()==='error'&&!benignAbort(message.text()))errors.push(message.text())});
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===54);
+await page.waitForFunction(()=>window.LullabyMixerInteraction&&window.LullabyQuickMixer&&window.LullabyPlayerRuntime?.catalog?.length===55);
 
 await page.locator('[data-view="mixer"]').first().click();await page.waitForTimeout(120);
 const wind='#mixerGrid [data-source="wind"]';
@@ -27,7 +27,7 @@ await page.locator(`${wind} [data-source-volume]`).evaluate(input=>{input.value=
 state=await page.evaluate(()=>({ui:window.LullabyPlayerRuntime.getMixerUiState('wind'),value:document.querySelector('#mixerGrid [data-source="wind"] [data-source-volume]')?.value}));
 if(state.ui.on||state.ui.volume!==0||state.value!=='0')throw new Error(`full Mixer 0% did not switch off: ${JSON.stringify(state)}`);
 
-await page.locator('[data-view="scene"]').first().click();await page.locator('[data-scene-mode="simple"]').click();await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(300);
+await page.locator('[data-view="scene"]').first().click();await page.locator('[data-scene-mode="simple"]').click();await page.locator('#presetPicker summary').click();await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(300);
 const quick='#inspectorMixerList [data-quick-source="wind"]';
 let quickState=await page.locator(quick).evaluate(row=>({off:row.classList.contains('is-off'),value:row.querySelector('[data-quick-volume]')?.value}));
 if(!quickState.off||quickState.value!=='0')throw new Error(`Quick Mixer inactive source not 0/off: ${JSON.stringify(quickState)}`);
@@ -44,6 +44,7 @@ if((await track.getAttribute('role'))!=='slider')throw new Error('journey track 
 if(!(await page.locator('#journeyPrevPhase').isVisible())||!(await page.locator('#journeyNextPhase').isVisible()))throw new Error('explicit phase step buttons are not visible');
 
 // Verify the physical progress rail before audio playback changes transport state.
+await track.scrollIntoViewIfNeeded();
 const box=await track.boundingBox();if(!box)throw new Error('journey track has no layout box');
 await page.mouse.click(box.x+box.width*.95,box.y+box.height/2);await page.waitForTimeout(80);
 let seekState=await page.evaluate(()=>({elapsed:window.LullabyJourneyRuntime?.elapsedMs,total:window.LullabyJourneyRuntime?.totalMs,phase:document.querySelector('#phaseLabel')?.textContent,aria:document.querySelector('.journey-track')?.getAttribute('aria-valuenow')}));

@@ -268,6 +268,7 @@ private fun PresetCard(
 }
 
 private fun stringResFor(id: String): Int = when (id) {
+    "preset_rain_eaves" -> R.string.preset_rain_eaves
     "preset_rainy_cafe" -> R.string.preset_rainy_cafe
     "preset_forest_night" -> R.string.preset_forest_night
     "preset_beach" -> R.string.preset_beach

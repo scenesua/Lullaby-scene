@@ -67,6 +67,18 @@ class EventSourcePlayer(
     private var loadJob: Job? = null
     private val movingJobs = CopyOnWriteArrayList<Job>()
     private var lastSample = -1
+    private val isRainDrum = sourceId == "rain_drum"
+    private data class RingingNote(val streamId: Int, val scale: Float, val pan: Float, val endsAt: Long)
+    private val ringingNotes = mutableListOf<RingingNote>()
+
+    private fun pruneNotes() {
+        val now = SystemClock.elapsedRealtime()
+        ringingNotes.removeAll { it.endsAt <= now }
+    }
+
+    private fun rememberNote(streamId: Int, scale: Float, pan: Float, durationMs: Long) {
+        if (isRainDrum && streamId != 0) ringingNotes += RingingNote(streamId, scale, pan, SystemClock.elapsedRealtime() + durationMs + 50L)
+    }
 
     @Volatile private var baseGain = volumeProvider().coerceIn(0f, 1f)
     @Volatile private var released = false
@@ -100,6 +112,8 @@ class EventSourcePlayer(
     fun stopScheduling() {
         job?.cancel()
         job = null
+        ringingNotes.forEach { soundPool.stop(it.streamId) }
+        ringingNotes.clear()
     }
 
     fun release() {
@@ -117,11 +131,18 @@ class EventSourcePlayer(
 
     fun applyBaseVolume(baseGain: Float) {
         this.baseGain = baseGain.coerceIn(0f, 1f)
+        pruneNotes()
+        ringingNotes.forEach { note ->
+            val (left, right) = panVolumes(this.baseGain * note.scale, note.pan)
+            soundPool.setVolume(note.streamId, left, right)
+        }
     }
 
     /** Play one loaded event immediately for scene-authored causal sequences. */
     private fun playNow(volumeScale: Float, pan: Float, rate: Float = 1f): Int {
         if (released || !isActive()) return 0
+        pruneNotes()
+        if (isRainDrum && ringingNotes.size >= 8) return 0
         val preferredAssetId = ManualEventAssetSelection.consume(sourceId)
         val sampleIndex = if (preferredAssetId != null) {
             samples.indexOfFirst { it.asset.assetId == preferredAssetId }
@@ -137,6 +158,7 @@ class EventSourcePlayer(
         val (left, right) = panVolumes(volume, pan)
         val streamId = soundPool.play(sample.sampleId, left, right, 1, 0, rate.coerceIn(.5f, 2f))
         if (streamId != 0) {
+            rememberNote(streamId, volumeScale, pan, (sample.asset.durationMs / rate).toLong())
             lastSample = sampleIndex
             lastPlayedAtMs[sample.asset.assetId] = SystemClock.elapsedRealtime()
             return streamId
@@ -189,8 +211,10 @@ class EventSourcePlayer(
 
     private suspend fun run() {
         while (currentCoroutineContext().isActive) {
-            delay(EventScheduler.nextDelayMs(config.minIntervalMs, config.maxIntervalMs, random))
+            delay(if (isRainDrum) EventScheduler.rainDrumDelayMs(random) else EventScheduler.nextDelayMs(config.minIntervalMs, config.maxIntervalMs, random))
             if (!isActive() || samples.isEmpty()) continue
+            pruneNotes()
+            if (isRainDrum && ringingNotes.size >= 8) continue
 
             val now = SystemClock.elapsedRealtime()
             val cooldownEligible = samples.indices.filter { index ->
@@ -206,7 +230,7 @@ class EventSourcePlayer(
                 cooldownEligible
             }
             val localIndex = EventScheduler.nextWeightedIndex(
-                noImmediateRepeat.map { samples[it].asset.eventWeight.toFloat() },
+                noImmediateRepeat.map { samples[it].asset.eventWeight.toFloat() * if (isRainDrum) EventScheduler.melodicWeight(it, lastSample) else 1f },
                 random,
             )
             if (localIndex < 0) continue
@@ -215,11 +239,12 @@ class EventSourcePlayer(
 
             val currentGain = baseGain
             if (currentGain <= 0f) continue
-            val volume = EventScheduler.randomVolume(
+            val scale = EventScheduler.randomVolume(
                 config.eventVolumeRange.getOrElse(0) { 0.75 }.toFloat(),
                 config.eventVolumeRange.getOrElse(1) { 1.0 }.toFloat(),
                 random,
-            ) * currentGain
+            )
+            val volume = scale * currentGain
             val pan = EventScheduler.randomPan(
                 config.eventPanRange.getOrElse(0) { -0.6 }.toFloat(),
                 config.eventPanRange.getOrElse(1) { 0.6 }.toFloat(),
@@ -228,6 +253,7 @@ class EventSourcePlayer(
             val (left, right) = panVolumes(volume, pan)
             val streamId = soundPool.play(sample.sampleId, left, right, 1, 0, 1f)
             if (streamId != 0) {
+                rememberNote(streamId, scale, pan, sample.asset.durationMs)
                 lastSample = sampleIndex
                 lastPlayedAtMs[sample.asset.assetId] = now
             }
@@ -236,6 +262,8 @@ class EventSourcePlayer(
 
     /** Equal-power pan split for [-1, 1] pan values. */
     private fun panVolumes(volume: Float, pan: Float): Pair<Float, Float> {
+        // Keep the baked stereo room intact, matching the web's centered notes.
+        if (isRainDrum) return volume.coerceIn(0f, 1f) to volume.coerceIn(0f, 1f)
         val p = pan.coerceIn(-1f, 1f)
         val angle = (PI / 4.0 * (p + 1.0)).toFloat()
         return volume * cos(angle) to volume * sin(angle)

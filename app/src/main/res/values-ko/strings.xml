@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="source_rain_drum">레인 드럼</string>
+    <string name="preset_rain_eaves">비 오는 날, 처마 아래</string>
     <string name="action_back">뒤로</string>
     <string name="app_name">Lullaby Scene</string>
     <string name="app_name_full">환경음</string>
@@ -20,6 +22,7 @@
     <!-- navigation -->
     <string name="nav_mixer">믹서</string>
     <string name="nav_presets">준비된 장면</string>
+    <string name="nav_presets_short">장면</string>
     <string name="nav_settings">설정</string>
     <string name="timer_title">취침 타이머</string>
 

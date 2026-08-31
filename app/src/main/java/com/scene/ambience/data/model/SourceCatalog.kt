@@ -6,6 +6,7 @@ import com.scene.ambience.R
 /** Canonical catalog of user-visible sound sources. */
 enum class SourceId(val id: String) {
     RAIN("rain"),
+    RAIN_DRUM("rain_drum"),
     THUNDER("thunder"),
     WIND("wind"),
     OCEAN("ocean"),
@@ -82,6 +83,7 @@ data class SourceDefinition(
 
 object SourceCatalog {
     val all: List<SourceDefinition> = listOf(
+        SourceDefinition(SourceId.RAIN_DRUM, R.string.source_rain_drum, UiCategory.OTHER),
         SourceDefinition(SourceId.RAIN, R.string.source_rain, UiCategory.NATURE),
         SourceDefinition(SourceId.THUNDER, R.string.source_thunder, UiCategory.NATURE),
         SourceDefinition(SourceId.WIND, R.string.source_wind, UiCategory.NATURE),

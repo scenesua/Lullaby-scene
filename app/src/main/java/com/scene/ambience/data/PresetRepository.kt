@@ -27,6 +27,7 @@ object BuiltInPresets {
             )
 
         return listOf(
+            preset("preset_rain_eaves", 0.65f, "medium", "rain" to 0.45f, "rain_drum" to 0.28f),
             AmbiencePreset(
                 id = "preset_rainy_cafe",
                 name = "preset_rainy_cafe",

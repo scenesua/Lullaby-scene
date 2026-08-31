@@ -1,0 +1,127 @@
+name: Android UI preview
+
+on:
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'gradle/**'
+      - 'scripts/check-android-lint.py'
+      - '.github/workflows/android-ui-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-ui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - name: Expose Android SDK tools
+        run: |
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          echo "ANDROID_AVD_HOME=$RUNNER_TEMP/android-avd" >> "$GITHUB_ENV"
+      - name: Build test APK and run unit tests
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest --stacktrace
+      - name: Start Android emulator
+        run: |
+          sdkmanager 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64'
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo no | avdmanager create avd --name ui-review --path "$ANDROID_AVD_HOME/ui-review.avd" --package 'system-images;android-35;google_apis;x86_64'
+          "$ANDROID_HOME/emulator/emulator" -list-avds | grep -Fx ui-review
+          sudo chmod 666 /dev/kvm
+          "$ANDROID_HOME/emulator/emulator" -avd ui-review -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect >/tmp/ui-emulator.log 2>&1 &
+          timeout 90 adb wait-for-device
+          for i in {1..90}; do
+            if adb shell getprop sys.boot_completed | grep -q 1; then break; fi
+            sleep 2
+          done
+          adb shell getprop sys.boot_completed | grep -q 1
+          adb shell input keyevent 82
+          adb shell settings put global window_animation_scale 0
+          adb shell settings put global transition_animation_scale 0
+          adb shell settings put global animator_duration_scale 0
+      - name: Test portrait, large text and landscape
+        run: |
+          adb shell wm size 1080x1920
+          adb shell wm density 480
+          ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.scene.ambience.IntuitiveControlsTest
+      - name: Collect screenshots
+        if: always()
+        timeout-minutes: 1
+        run: |
+          mkdir -p ui-review
+          cp /tmp/ui-emulator.log ui-review/ || true
+          if timeout 5 adb get-state; then
+            timeout 15 adb logcat -d -v threadtime > ui-review/logcat.txt || true
+            timeout 15 adb pull /sdcard/Download/lullaby-ui-review ui-review/ || true
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: Android-UI-review
+          path: |
+            app/build/reports/tests/
+            app/build/reports/androidTests/
+            app/build/reports/lint-results-debug.html
+            ui-review/
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: Android-UI-preview-APK
+          path: app/build/outputs/apk/debug/*.apk
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+
+  lint-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - name: Compare lint errors with unchanged base
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || 'main' }}
+        run: |
+          git fetch --depth=1 origin "$BASE_SHA"
+          git worktree add "$RUNNER_TEMP/lint-base" FETCH_HEAD
+          for checkout in "$RUNNER_TEMP/lint-base" "$GITHUB_WORKSPACE"; do
+            (
+              cd "$checkout"
+              chmod +x gradlew
+              ./gradlew --no-daemon lintDebug --stacktrace || test -f app/build/reports/lint-results-debug.xml
+            )
+          done
+          mkdir -p lint-review
+          cp "$RUNNER_TEMP/lint-base/app/build/reports/lint-results-debug.xml" lint-review/base.xml
+          cp app/build/reports/lint-results-debug.xml lint-review/head.xml
+          python3 scripts/check-android-lint.py lint-review/base.xml lint-review/head.xml "$RUNNER_TEMP/lint-base" "$GITHUB_WORKSPACE"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: Android-lint-review
+          path: |
+            lint-review/
+            app/build/reports/lint-results-debug.html
+          retention-days: 14

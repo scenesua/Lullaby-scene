@@ -2,6 +2,7 @@
   const R=window.LullabyPlayerRuntime;
   if(!R||!document.getElementById('webPlayer'))return;
   const desired=new Map(),starting=new Map(),latestPercent=new Map(),lastNonZero=new Map(),rafById=new Map();
+  let draggingInput=null;
   const clampPercent=v=>Math.max(0,Math.min(100,Math.round(Number(v)||0))),english=()=>(window.LullabyI18n?.language||document.documentElement.lang)!=='ko';
   const source=id=>R.sourceById[id]||R.catalog.find(item=>item.id===id)||null;
 
@@ -24,17 +25,25 @@
   function setText(node,value){if(node&&node.textContent!==value)node.textContent=value}
   function setAttr(node,name,value){if(node&&node.getAttribute(name)!==value)node.setAttribute(name,value)}
 
+  function syncSwitch(button,id,on){
+    if(!button)return;
+    const name=window.LullabyLocales?.sourceName?.(id,source(id)?.name||id)||source(id)?.name||id;
+    setText(button,window.LullabyLocales?.term?.(on?'on':'off')||(on?'On':'Off'));
+    setAttr(button,'role','switch');setAttr(button,'aria-checked',String(on));setAttr(button,'aria-label',name);
+    if(button.hasAttribute('aria-pressed'))button.removeAttribute('aria-pressed');
+  }
+
   function updateDom(id,state=stateFor(id)){
     document.querySelectorAll(`#mixerGrid [data-source="${CSS.escape(id)}"]`).forEach(row=>{
       setClass(row,'on',state.on);setClass(row,'is-zero-off',!state.on);
       const range=row.querySelector(`[data-source-volume="${CSS.escape(id)}"]`);if(range&&document.activeElement!==range&&range.value!==String(state.volume))range.value=String(state.volume);
-      const button=row.querySelector(`[data-source-toggle="${CSS.escape(id)}"]`);if(button){setText(button,state.on?'On':'Off');setAttr(button,'aria-pressed',String(state.on))}
+      syncSwitch(row.querySelector(`[data-source-toggle="${CSS.escape(id)}"]`),id,state.on);
     });
     document.querySelectorAll(`[data-quick-source="${CSS.escape(id)}"]`).forEach(row=>{
       setClass(row,'is-on',state.on);setClass(row,'is-off',!state.on);
       const range=row.querySelector(`[data-quick-volume="${CSS.escape(id)}"]`);if(range&&document.activeElement!==range&&range.value!==String(state.volume))range.value=String(state.volume);
       const output=row.querySelector(`[data-quick-output="${CSS.escape(id)}"]`);setText(output,`${state.volume}%`);
-      const button=row.querySelector(`[data-quick-toggle="${CSS.escape(id)}"]`);if(button){setText(button,state.on?(english()?'Off':'끔'):(english()?'On':'켬'));setAttr(button,'aria-pressed',String(state.on))}
+      syncSwitch(row.querySelector(`[data-quick-toggle="${CSS.escape(id)}"]`),id,state.on);
     });
   }
 
@@ -95,6 +104,7 @@
     if(def.kind==='event'){
       if(!R.eventState[id]?.enabled)R.startEventLayer(def);
       if(R.eventState[id]){R.eventState[id].enabled=true;R.eventState[id].volume=value/100}
+      window.LullabyAudioStability?.syncDirectVolumes?.();
       R.updateNowPlaying();return Promise.resolve();
     }
     const node=R.nodes[id];
@@ -105,14 +115,17 @@
   function defaultPercent(id){const def=source(id);return clampPercent(lastNonZero.get(id)||def?.defaultVolume||30)||30}
   async function toggle(id){const st=stateFor(id);if(st.on)disable(id);else await setVolume(id,defaultPercent(id));finalize()}
   function normalize(){R.catalog.forEach(def=>updateDom(def.id))}
-  function finalize(){desired.clear();R.renderMixer();R.updateNowPlaying();queueMicrotask(()=>{normalize();window.LullabyQuickMixer?.render?.()})}
+  function finalize(){if(draggingInput)return;desired.clear();R.renderMixer();R.updateNowPlaying();queueMicrotask(()=>{normalize();window.LullabyQuickMixer?.render?.()})}
+  function finishInput(input){const id=input.dataset.sourceVolume||input.dataset.quickVolume;Promise.resolve(starting.get(id)).then(()=>setTimeout(finalize,0))}
   function allOff(){R.catalog.forEach(def=>disable(def.id));finalize()}
   function clearDesiredSoon(){desired.clear();setTimeout(()=>{normalize();window.LullabyQuickMixer?.render?.()},220)}
 
-  window.addEventListener('pointerdown',event=>{
+  const beginInput=event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
-    input.dataset.dragging='1';R.ensureContext().catch(()=>{});
-  },true);
+    if(draggingInput===input)return;
+    draggingInput=input;input.dataset.dragging='1';R.ensureContext().catch(()=>{});
+  };
+  window.addEventListener('pointerdown',beginInput,true);window.addEventListener('mousedown',beginInput,true);window.addEventListener('touchstart',beginInput,{capture:true,passive:true});
   window.addEventListener('input',event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
     event.stopImmediatePropagation();
@@ -121,9 +134,11 @@
   },true);
   window.addEventListener('change',event=>{
     const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(!input)return;
-    event.stopImmediatePropagation();delete input.dataset.dragging;setTimeout(finalize,0);
+    event.stopImmediatePropagation();if(input!==draggingInput)finishInput(input);
   },true);
-  window.addEventListener('pointerup',event=>{const input=event.target.closest?.('[data-source-volume],[data-quick-volume]');if(input)delete input.dataset.dragging},true);
+  const releaseInput=()=>{if(!draggingInput)return;const input=draggingInput;draggingInput=null;delete input.dataset.dragging;finishInput(input)};
+  window.addEventListener('pointerup',releaseInput,true);window.addEventListener('pointercancel',releaseInput,true);
+  window.addEventListener('mouseup',releaseInput,true);window.addEventListener('touchend',releaseInput,true);window.addEventListener('touchcancel',releaseInput,true);window.addEventListener('blur',releaseInput);
   window.addEventListener('click',event=>{
     const button=event.target.closest?.('[data-source-toggle],[data-quick-toggle]');
     if(button){event.preventDefault();event.stopImmediatePropagation();toggle(button.dataset.sourceToggle||button.dataset.quickToggle).catch(console.error);return}
@@ -138,5 +153,5 @@
   const mixer=document.getElementById('mixerGrid');if(mixer)new MutationObserver(()=>queueMicrotask(normalize)).observe(mixer,{childList:true});
   document.addEventListener('lullaby-language-changed',()=>queueMicrotask(normalize));
   setTimeout(normalize,120);
-  window.LullabyMixerInteraction={stateFor,setVolume,disable,normalize,toggle};
+  window.LullabyMixerInteraction={stateFor,setVolume,disable,normalize,toggle,syncSwitch};
 })();
