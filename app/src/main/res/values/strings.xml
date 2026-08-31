@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="source_rain_drum">Rain Drum</string>
+    <string name="preset_rain_eaves">Rain Beneath the Eaves</string>
     <string name="action_back">Back</string>
     <string name="app_name">Lullaby Scene</string>
     <string name="app_name_full">Ambient Sounds</string>

@@ -2,6 +2,17 @@
   "version": 5,
   "sources": [
     {
+      "id": "rain_drum",
+      "name": "Rain Drum",
+      "category": "other",
+      "kind": "event",
+      "url": "/audio/rain-drum/c3.ogg",
+      "eventVariants": ["/audio/rain-drum/c3.ogg", "/audio/rain-drum/d3.ogg", "/audio/rain-drum/e3.ogg", "/audio/rain-drum/g3.ogg", "/audio/rain-drum/a3.ogg"],
+      "eventMinSeconds": 0.9,
+      "eventMaxSeconds": 3.8,
+      "defaultVolume": 35
+    },
+    {
       "id": "rain",
       "name": "Rain",
       "category": "nature",

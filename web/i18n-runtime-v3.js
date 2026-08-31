@@ -76,7 +76,7 @@
       const id=row.dataset.source,def=R?.sourceById?.[id],name=sourceName(id,id),on=row.classList.contains('on');
       setText(row.querySelector('strong'),name);
       const meta=row.querySelector('span');if(meta&&def)setText(meta,row.classList.contains('journey-event')?term('journeyEvents','Journey events'):`${term(def.category,def.category)} · ${def.kind==='event'?term('event','event'):term('continuous','continuous')}`);
-      setText(row.querySelector('[data-source-toggle]'),on?term('on','On'):term('off','Off'));
+      setText(row.querySelector('[data-source-toggle]'),on?term('on','On'):term('off','Off'));window.LullabyMixerInteraction?.syncSwitch?.(row.querySelector('[data-source-toggle]'),id,on);
       row.querySelector('[data-source-volume]')?.setAttribute('aria-label',`${name} ${copy('volume')}`);
     });
   }
@@ -88,7 +88,7 @@
       setText(row.querySelector('.quick-mixer-copy strong'),name);
       const strong=row.querySelector('.quick-mixer-copy strong');if(strong)strong.title=name;
       setText(row.querySelector('.quick-mixer-copy span'),preferred?term('currentScene','Current scene'):on?term('on','On'):term('off','Off'));
-      setText(row.querySelector('[data-quick-toggle]'),on?term('off','Off'):term('on','On'));
+      setText(row.querySelector('[data-quick-toggle]'),on?term('on','On'):term('off','Off'));window.LullabyMixerInteraction?.syncSwitch?.(row.querySelector('[data-quick-toggle]'),id,on);
       row.querySelector('[data-quick-volume]')?.setAttribute('aria-label',`${name} ${copy('volume')}`);
     });
   }

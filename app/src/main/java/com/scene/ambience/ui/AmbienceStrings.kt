@@ -14,6 +14,7 @@ object AmbienceStrings {
         if (presetId == null) return context.getString(R.string.app_name)
         userPresets.firstOrNull { it.id == presetId }?.let { return it.name }
         return when (presetId) {
+            "preset_rain_eaves" -> context.getString(R.string.preset_rain_eaves)
             "preset_rainy_cafe" -> context.getString(R.string.preset_rainy_cafe)
             "preset_forest_night" -> context.getString(R.string.preset_forest_night)
             "preset_beach" -> context.getString(R.string.preset_beach)

@@ -56,13 +56,13 @@ jobs:
           grep -Fq "startsWith('application/json')" web/_worker.js
           ! grep -Fq 'HTMLRewriter' web/_worker.js
           ! grep -Fq 'eval(' web/player-controls-v11.js
-          node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/api/*\"]'||r.exclude.length)process.exit(1)"
+          node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/*\"]'||r.exclude.length)process.exit(1)"
           for page in web/index.html web/player/index.html web/download/index.html web/privacy/index.html web/terms/index.html web/credits/index.html web/blackout/index.html web/404.html; do
-            grep -Fq '/site-locales-v10.js?v=23' "$page"
-            grep -Fq '/i18n-runtime-v3.js?v=10' "$page"
-            grep -Fq '/mobile-android-shell-v1.js?v=5' "$page"
+            grep -Fq '/site-locales-v10.js?v=24' "$page"
+            grep -Fq '/i18n-runtime-v3.js?v=11' "$page"
+            grep -Fq '/mobile-android-shell-v1.js?v=8' "$page"
           done
-          grep -Fq '/site-locales-v10.js?v=23' web/sw.js
+          grep -Fq '/site-locales-v10.js?v=24' web/sw.js
           grep -Fq '/i18n-runtime-v3.js?v=10' web/sw.js
           grep -Fq '/mobile-android-shell-v1.js?v=5' web/sw.js
           ! grep -Fq 'i18n-catalog-v2.js' web/_worker.js
@@ -87,15 +87,15 @@ jobs:
           WRANGLER_PID=$!
           trap 'kill $WRANGLER_PID || true' EXIT
           for i in {1..40}; do curl -fsS http://127.0.0.1:4174/ >/dev/null && break; sleep 0.5; done
-          curl -fsS -D /tmp/headers -o /tmp/home http://127.0.0.1:4174/
+          curl -fsS -D /tmp/headers -o /tmp/home http://127.0.0.1:4174/player/
           grep -Eiq '^x-frame-options:[[:space:]]*DENY' /tmp/headers
           grep -Eiq '^x-content-type-options:[[:space:]]*nosniff' /tmp/headers
           grep -Eiq '^content-security-policy:.*frame-ancestors .none.' /tmp/headers
           grep -Eiq '^content-security-policy:.*object-src .none.' /tmp/headers
           grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
-          grep -Fq 'site-locales-v10.js?v=23' /tmp/home
-          grep -Fq 'i18n-runtime-v3.js?v=10' /tmp/home
-          grep -Fq 'mobile-android-shell-v1.js?v=5' /tmp/home
+          grep -Fq 'site-locales-v10.js?v=24' /tmp/home
+          grep -Fq 'i18n-runtime-v3.js?v=11' /tmp/home
+          grep -Fq 'mobile-android-shell-v1.js?v=8' /tmp/home
           curl -fsS http://127.0.0.1:4174/.well-known/security.txt | grep -Fq 'mailto:scenesuastudio@gmail.com'
 
           code=$(curl -sS -o /tmp/cross.json -w '%{http_code}' -X POST \
@@ -146,15 +146,21 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps firefox webkit
+          sudo apt-get install -y pulseaudio
 
       - name: Run the shared browser smoke suite
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m http.server 4173 --directory web >/tmp/lullaby-cross-browser.log 2>&1 &
+          # Firefox Web Audio needs an output device even in a headless runner.
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=browser_tests
+          pactl set-default-sink browser_tests
+          python3 .github/scripts/serve-web-smoke.py >/tmp/lullaby-cross-browser.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
           for browser in firefox webkit; do
             BROWSER="$browser" timeout 120s node .github/scripts/web-i18n-security-smoke.mjs
+            BROWSER="$browser" timeout 120s node .github/scripts/web-preset-picker-smoke.mjs
           done

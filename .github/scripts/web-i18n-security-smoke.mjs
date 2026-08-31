@@ -64,6 +64,18 @@ for(const[code,[prepared,rain,preset]]of Object.entries(expected)){
   await expectText('[data-journey-display-label]',ui.scene);
   await expectText('[data-journey-event-label]',ui.events);
   await expectText('[data-direct-title]',ui.duration);
+  await expectText('[data-blackout-placement="mobile"] [data-blackout-label]',ui.black);
+  const shortScene={ko:'장면 화면',en:'Scene Screen',ja:'シーン画面','zh-CN':'场景画面','zh-TW':'場景畫面',ru:'Сцена',fr:'Scène',es:'Escena',pt:'Cena',th:'ฉาก',tl:'Eksena',hi:'दृश्य',vi:'Cảnh'};
+  await expectText('[data-mobile-display-label]',shortScene[code]);
+  if(await page.locator('[data-journey-display-placement="mobile"]').getAttribute('aria-label')!==ui.scene)throw new Error('Full accessible scene label missing');
+  for(const width of [320,390]){
+    await page.setViewportSize({width,height:844});
+    const controls=await page.locator('.android-top-actions>button,.android-top-blackout').evaluateAll(buttons=>buttons.map(button=>{const r=button.getBoundingClientRect(),label=button.querySelector('span');return{width:r.width,height:r.height,right:r.right,label:label?.textContent,clipped:label&&(label.getBoundingClientRect().top+label.scrollHeight>r.bottom-2||label.scrollWidth>r.width-6)}}));
+    if(controls.length!==4||controls.some(c=>c.width<44||c.height<44||c.right>width||!c.label||c.clipped))throw new Error(`Mobile action layout ${code}/${width}: ${JSON.stringify(controls)}`);
+    const tabs=await page.locator('.mobile-tab').evaluateAll(buttons=>buttons.map(button=>{const r=button.getBoundingClientRect();return{x:r.x,right:r.right,width:r.width,height:r.height,svg:button.querySelectorAll('svg').length}}));
+    if(tabs.length!==5||tabs.some((tab,index)=>tab.width<44||tab.height<44||tab.svg!==1||(index>0&&tab.x-tabs[index-1].right<5)))throw new Error(`Bottom tab spacing ${code}/${width}: ${JSON.stringify(tabs)}`);
+  }
+  await page.setViewportSize({width:1280,height:900});
 }
 await setLanguage('vi');
 await page.locator('#journeySelector [data-journey="spacecraft_journey"]').click();await page.waitForTimeout(120);
@@ -150,19 +162,21 @@ await page.locator('[data-android-dest="prepared"]').click();await page.waitForT
 if(!await page.locator('[data-scene-content="simple"]').evaluate(el=>el.classList.contains('active')))throw new Error('Prepared destination did not open ready-made scenes');
 await expectText('[data-android-title]','준비된 장면');
 const preparedLayout=await page.evaluate(()=>{
-  const preset=document.querySelector('#builtInPresets [data-preset="preset_rainy_cafe"]');
+  const picker=document.getElementById('presetPicker'),preset=picker?.querySelector('summary');
   const transport=document.querySelector('#simpleSceneTransport');
   const quick=document.querySelector('#simpleQuickMixerSection');
   const mixerSource=document.querySelector('#mixerGrid [data-source="rain"]');
   return{
     presetVisible:!!preset&&getComputedStyle(preset).display!=='none',
+    pickerClosed:!!picker&&!picker.open,
     presetTop:preset?.getBoundingClientRect().top??null,
     transportTop:transport?.getBoundingClientRect().top??null,
     quickDisplay:quick?getComputedStyle(quick).display:null,
+    quickTop:quick?.getBoundingClientRect().top??null,
     mixerSourceVisible:!!mixerSource&&mixerSource.getClientRects().length>0
   };
 });
-if(!preparedLayout.presetVisible||preparedLayout.quickDisplay!=='none'||preparedLayout.mixerSourceVisible||preparedLayout.presetTop===null||preparedLayout.transportTop===null||preparedLayout.presetTop>=preparedLayout.transportTop)throw new Error(`Prepared mobile layout mismatch: ${JSON.stringify(preparedLayout)}`);
+if(!preparedLayout.presetVisible||!preparedLayout.pickerClosed||preparedLayout.quickDisplay==='none'||preparedLayout.mixerSourceVisible||preparedLayout.presetTop===null||preparedLayout.transportTop===null||preparedLayout.quickTop===null||preparedLayout.presetTop>=preparedLayout.transportTop||preparedLayout.transportTop>=preparedLayout.quickTop)throw new Error(`Prepared mobile picker / transport / mixer order mismatch: ${JSON.stringify(preparedLayout)}`);
 await page.locator('[data-android-dest="mixer"]').click();await page.waitForTimeout(80);
 if(!await page.locator('#mixerGrid [data-source="rain"]').isVisible())throw new Error('Mixer destination did not expose source controls');
 await page.locator('[data-android-dest="prepared"]').click();await page.waitForTimeout(80);

@@ -128,6 +128,7 @@ class AmbiencePlaybackService : MediaSessionService() {
         val user = application.settingsRepository.settingsFlow.value.userPresets
         user.firstOrNull { it.id == presetId }?.let { return it.name }
         return when (presetId) {
+            "preset_rain_eaves" -> getString(R.string.preset_rain_eaves)
             "preset_rainy_cafe" -> getString(R.string.preset_rainy_cafe)
             "preset_forest_night" -> getString(R.string.preset_forest_night)
             "preset_beach" -> getString(R.string.preset_beach)

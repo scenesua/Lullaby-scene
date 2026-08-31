@@ -1,6 +1,13 @@
 {
   "version": 3,
   "categories": {
+    "rain_drum": {
+      "min_interval_seconds": 0.9,
+      "max_interval_seconds": 3.8,
+      "density": "medium",
+      "event_volume_range": [0.62, 1.0],
+      "event_pan_range": [0.0, 0.0]
+    },
     "rain": {
       "min_interval_seconds": 20,
       "max_interval_seconds": 90,

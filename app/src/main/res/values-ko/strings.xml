@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="source_rain_drum">레인 드럼</string>
+    <string name="preset_rain_eaves">비 오는 날, 처마 아래</string>
     <string name="action_back">뒤로</string>
     <string name="app_name">Lullaby Scene</string>
     <string name="app_name_full">환경음</string>

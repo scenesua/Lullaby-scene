@@ -2,6 +2,21 @@
   "version": 5,
   "sources": [
     {
+      "id": "rain_drum",
+      "category": "other",
+      "display_name_key": "source_rain_drum",
+      "default_volume": 0.35,
+      "loop_mode": "event",
+      "continuous": [],
+      "events": [
+        {"asset_id": "rain_drum_c3", "path": "ambience/rain_drum/events/c3.ogg", "duration_ms": 7400},
+        {"asset_id": "rain_drum_d3", "path": "ambience/rain_drum/events/d3.ogg", "duration_ms": 7400},
+        {"asset_id": "rain_drum_e3", "path": "ambience/rain_drum/events/e3.ogg", "duration_ms": 7400},
+        {"asset_id": "rain_drum_g3", "path": "ambience/rain_drum/events/g3.ogg", "duration_ms": 7400},
+        {"asset_id": "rain_drum_a3", "path": "ambience/rain_drum/events/a3.ogg", "duration_ms": 7400}
+      ]
+    },
+    {
       "id": "bamboo_forest",
       "category": "nature",
       "display_name_key": "source_bamboo_forest",
