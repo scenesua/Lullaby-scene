@@ -27,19 +27,22 @@ try{
     assert((await first.evaluate(el=>getComputedStyle(el).backgroundImage)).includes('.webp'));
     await page.keyboard.press('Escape');assert.equal(await picker.evaluate(el=>el.open),false);
     await open();await picker.locator('[data-preset="preset_rainy_cafe"]').click();
-    await page.waitForFunction(()=>window.LullabyPlayerRuntime.getMixerUiState('rain').on&&window.LullabyPlayerRuntime.getMixerUiState('cafe').on);
+    try{await page.waitForFunction(()=>window.LullabyPlayerRuntime.getMixerUiState('rain').on&&window.LullabyPlayerRuntime.getMixerUiState('cafe').on)}catch(error){console.error(await page.evaluate(()=>({label:document.querySelector('#presetPicker summary').textContent,open:document.getElementById('presetPicker').open,status:document.getElementById('playerStatus').textContent,context:window.LullabyAudioReactive.context?.state,mix:window.LullabyPlayerRuntime.snapshotMix(),nodes:Object.fromEntries(Object.entries(window.LullabyPlayerRuntime.nodes).map(([id,n])=>[id,{paused:n.el.paused,time:n.el.currentTime}]))})));throw error}
     assert.equal(await picker.evaluate(el=>el.open),false,'Selection collapses picker');
     const ids=()=>page.locator('#simpleQuickMixerList [data-quick-source]').evaluateAll(rows=>rows.map(row=>row.dataset.quickSource));
+    const waitOrder=expected=>page.waitForFunction(values=>[...document.querySelectorAll('#simpleQuickMixerList [data-quick-source]')].slice(0,values.length).map(row=>row.dataset.quickSource).join('|')===values.join('|'),expected);
     assert.deepEqual((await ids()).slice(0,2),['rain','cafe']);
     await page.locator('#simpleQuickMixerList [data-quick-toggle="rain"]').click();
     await page.waitForFunction(()=>!window.LullabyMixerInteraction.stateFor('rain').on);
     assert.deepEqual((await ids()).slice(0,2),['rain','cafe'],'Disabled preset source stays pinned');
     const wind=page.locator('#simpleQuickMixerList [data-quick-volume="wind"]');
     await wind.focus();await wind.press('ArrowRight');await page.waitForTimeout(180);
+    await waitOrder(['rain','cafe','wind']);
     assert.equal(await wind.evaluate(el=>document.activeElement===el),true,'Keyboard focus survives sorting');
     assert.deepEqual((await ids()).slice(0,3),['rain','cafe','wind']);
     await page.locator('#simpleQuickMixerList [data-quick-toggle="wind"]').click();
     const catalog=await page.evaluate(()=>window.LullabyPlayerRuntime.catalog.map(s=>s.id).filter(id=>!['rain','cafe'].includes(id)));
+    await waitOrder(['rain','cafe',...catalog]);
     assert.deepEqual((await ids()).slice(2),catalog,'Unused sources retain catalog order');
     // Mouse drag retains the actual range node until release; a second pointer
     // input cannot lose its target to a reorder halfway through the gesture.
@@ -51,6 +54,7 @@ try{
     await page.mouse.move(box.x+box.width*.28,box.y+box.height/2,{steps:5});
     assert(await wind.evaluate(el=>el===window.__dragRange),'Range remains mounted during drag');
     await page.mouse.up();await page.waitForTimeout(200);
+    await waitOrder(['rain','cafe','wind']);
     assert.deepEqual((await ids()).slice(0,3),['rain','cafe','wind']);
     const nav=page.locator(width<=900?'.mobile-tabs':'.desktop-rail');
     await nav.locator(width<=900?'[data-android-dest="mixer"]':'[data-view="mixer"]').click();
@@ -58,6 +62,7 @@ try{
     await nav.locator(width<=900?'[data-android-dest="prepared"]':'[data-view="scene"]').click();
     await open();await picker.locator('[data-preset="preset_beach"]').click();
     await page.waitForFunction(()=>window.LullabyPlayerRuntime.getMixerUiState('ocean').on);
+    await waitOrder(['ocean','wind']);
     assert.deepEqual((await ids()).slice(0,2),['ocean','wind'],'New selection replaces pinned group');
     for(const theme of ['light','dark']){
       await page.evaluate(value=>window.applyTheme(value),theme);
