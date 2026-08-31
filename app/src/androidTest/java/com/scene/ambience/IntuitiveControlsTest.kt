@@ -22,6 +22,31 @@ class IntuitiveControlsTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
+    @Test
+    fun rainDrumSamplesLoadAndOverlapWithoutTruncation() {
+        val pool = android.media.SoundPool.Builder().setMaxStreams(8).build()
+        val ready = java.util.concurrent.CountDownLatch(5)
+        val failures = java.util.concurrent.CopyOnWriteArrayList<Int>()
+        pool.setOnLoadCompleteListener { _, _, status ->
+            if (status != 0) failures += status
+            ready.countDown()
+        }
+        try {
+            val ids = listOf("c3", "d3", "e3", "g3", "a3").map { note ->
+                context.assets.openFd("ambience/rain_drum/events/$note.ogg").use { pool.load(it, 1) }
+            }
+            assertTrue(ids.all { it != 0 })
+            assertTrue(ready.await(15, java.util.concurrent.TimeUnit.SECONDS))
+            assertTrue(failures.isEmpty())
+            val streams = ids.map { pool.play(it, .05f, .05f, 1, 0, 1f) }
+            assertTrue(streams.all { it != 0 })
+            assertEquals(5, streams.toSet().size)
+            streams.forEach { pool.setVolume(it, .01f, .01f); pool.stop(it) }
+        } finally {
+            pool.release()
+        }
+    }
+
     private fun tab(labelId: Int): androidx.test.uiautomator.UiObject2 {
         val name = context.getString(labelId)
         val icons = device.findObjects(By.desc(name))
