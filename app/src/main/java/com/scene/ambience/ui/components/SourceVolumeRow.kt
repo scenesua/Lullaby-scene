@@ -1,6 +1,5 @@
 package com.scene.ambience.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,14 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.MaterialTheme
 import com.scene.ambience.ui.components.SceneSlider as Slider
 import androidx.compose.material3.Switch
@@ -34,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.style.TextOverflow
@@ -132,23 +123,6 @@ fun SourceVolumeRow(
                     color = MaterialTheme.colorScheme.outline,
                 )
             }
-        }
-    }
-}
-
-/** Active-source indicator dot used next to source names. */
-@Composable
-fun ActiveDot(active: Boolean, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
-    if (active) {
-        Row(
-            modifier = modifier.padding(end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(
-                modifier = Modifier.width(8.dp).height(8.dp),
-                shape = RoundedCornerShape(4.dp),
-                color = color,
-            ) {}
         }
     }
 }

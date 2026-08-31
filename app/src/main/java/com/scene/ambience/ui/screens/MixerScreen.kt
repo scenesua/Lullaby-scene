@@ -168,7 +168,7 @@ private fun MasterControls(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = context.getString(R.string.master_volume), style = MaterialTheme.typography.titleLarge)
                     Text(

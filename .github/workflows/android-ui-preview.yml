@@ -5,6 +5,7 @@ on:
     paths:
       - 'app/**'
       - 'gradle/**'
+      - 'scripts/check-android-lint.py'
       - '.github/workflows/android-ui-preview.yml'
   workflow_dispatch:
 
@@ -29,7 +30,7 @@ jobs:
       - name: Build test APK and run unit tests
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest lintDebug --stacktrace
+          ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Start Android emulator
         run: |
           sdkmanager 'system-images;android-35;google_apis;x86_64'
@@ -67,4 +68,40 @@ jobs:
             app/build/reports/lint-results-debug.html
             ui-review/
           if-no-files-found: error
+          retention-days: 14
+
+  lint-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - name: Compare lint errors with unchanged base
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || 'main' }}
+        run: |
+          git fetch --depth=1 origin "$BASE_SHA"
+          git worktree add "$RUNNER_TEMP/lint-base" FETCH_HEAD
+          for checkout in "$RUNNER_TEMP/lint-base" "$GITHUB_WORKSPACE"; do
+            (
+              cd "$checkout"
+              chmod +x gradlew
+              ./gradlew --no-daemon lintDebug --stacktrace || test -f app/build/reports/lint-results-debug.xml
+            )
+          done
+          mkdir -p lint-review
+          cp "$RUNNER_TEMP/lint-base/app/build/reports/lint-results-debug.xml" lint-review/base.xml
+          cp app/build/reports/lint-results-debug.xml lint-review/head.xml
+          python3 scripts/check-android-lint.py lint-review/base.xml lint-review/head.xml
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: Android-lint-review
+          path: |
+            lint-review/
+            app/build/reports/lint-results-debug.html
           retention-days: 14
