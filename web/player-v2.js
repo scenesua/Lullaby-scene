@@ -10,8 +10,10 @@ let sleepTimerEnd=0,sleepTimerTick=null,sleepFadeSeconds=30;
 let deferredInstall=null;
 const journeyEventIds=new Set(['aircraft_chime','train_rail_event','ferry_wave_event','spacecraft_servo_event','submarine_sonar','hood_gunshot','hood_siren','hood_glass','hood_shout','hood_footsteps','hood_car_pass','hood_car_door','hood_helicopter','hood_dog','forest_temple_moktak','forest_temple_gravel']);
 const hoodJourneyEventIds=new Set([...journeyEventIds].filter(id=>id.startsWith('hood_')));
+const isPreviewHost=['localhost','127.0.0.1','debug.lullabyscene.com','lullaby-scene-debug.pages.dev'].includes(location.hostname)||location.hostname.endsWith('.lullaby-scene-debug.pages.dev');
 
 const builtinPresets=[
+ {id:'preset_rain_eaves',name:'Rain Beneath the Eaves',previewOnly:true,master:.65,mix:{rain:.45,rain_drum:.28}},
  {id:'preset_rainy_cafe',name:'Rainy Cafe',master:.7,mix:{rain:.5,cafe:.35}},
  {id:'preset_forest_night',name:'Forest Night',master:.7,mix:{forest:.4,crickets:.25,wind:.15}},
  {id:'preset_beach',name:'Beach',master:.7,mix:{ocean:.5,wind:.3}},
@@ -37,9 +39,10 @@ const builtinPresets=[
  {id:'preset_winter_lighthouse',name:'Winter Lighthouse',master:.65,mix:{snowy_night:.38,lighthouse:.25,wind:.1}},
  {id:'preset_harbor_cabin',name:'Harbor Cabin',master:.65,mix:{ferry_journey_bed:.35,ocean:.22,lighthouse:.14}},
  {id:'preset_polar_night_train',name:'Polar Night Train',master:.65,mix:{train_journey_bed:.38,snowy_night:.28,brown_noise:.1}}
-];
+].filter(preset=>!preset.previewOnly||isPreviewHost);
 
 const presetVisuals={
+ preset_rain_eaves:'/assets/simple-scenes/rain-eaves.webp',
  preset_rainy_cafe:'/assets/simple-scenes/rainy-cafe.webp',preset_cafe_focus:'/assets/simple-scenes/rainy-cafe.webp',
  preset_forest_night:'/assets/simple-scenes/forest-night.webp',preset_quiet_night:'/assets/simple-scenes/forest-night.webp',
  preset_beach:'/assets/simple-scenes/ocean-night.webp',preset_ocean_waves:'/assets/simple-scenes/ocean-night.webp',
@@ -94,7 +97,7 @@ window.LullabyLoopCrossfade={makeNode:makeCrossfadeLoopNode,gains:t=>{const valu
 async function getAircraftUrl(){if(aircraftObjectUrl)return aircraftObjectUrl;const parts=await Promise.all([0,1,2,3].map(i=>fetch(`/audio/aircraft.part0${i}`).then(r=>{if(!r.ok)throw new Error(`aircraft part ${i}`);return r.text()})));const b64=parts.join('').replace(/\s/g,'');const bin=atob(b64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);aircraftObjectUrl=URL.createObjectURL(new Blob([bytes],{type:'audio/ogg'}));return aircraftObjectUrl}
 async function makeSourceNode(def){await ensureContext();if(def.kind==='aircraft')return makeMediaNode(await getAircraftUrl());return makeMediaNode(def.url)}
 
-async function loadCatalog(){const res=await fetch('/mixer-sources.json',{cache:'no-cache'});if(!res.ok)throw new Error('mixer catalog');const data=await res.json();catalog=data.sources;sourceById=Object.fromEntries(catalog.map(s=>[s.id,s]));renderMixerFilters();renderMixer();renderPresets()}
+async function loadCatalog(){const res=await fetch('/mixer-sources.json',{cache:'no-cache'});if(!res.ok)throw new Error('mixer catalog');const data=await res.json();catalog=data.sources.filter(def=>!def.previewOnly||isPreviewHost);sourceById=Object.fromEntries(catalog.map(s=>[s.id,s]));renderMixerFilters();renderMixer();renderPresets()}
 function renderMixerFilters(){const labels={all:'All',nature:'Nature',indoor:'Indoor',travel:'Travel',other:'Other',journeyEvents:'Journey events'};$('#mixerFilters').innerHTML=Object.entries(labels).map(([id,label])=>`<button type="button" data-filter="${id}" class="${currentFilter===id?'active':''}">${label}</button>`).join('');$$('[data-filter]').forEach(b=>b.addEventListener('click',()=>{currentFilter=b.dataset.filter;renderMixerFilters();renderMixer()}))}
 function renderMixer(){const journey=catalog.filter(def=>journeyEventIds.has(def.id)),regular=catalog.filter(def=>!journeyEventIds.has(def.id)),list=currentFilter==='all'?regular:currentFilter==='journeyEvents'?[]:regular.filter(def=>def.category===currentFilter),journeyList=currentFilter==='all'||currentFilter==='journeyEvents'?journey:[];const card=def=>{const st=getMixerUiState(def.id),kind=def.kind==='event'?'event layer':'continuous',classes=['mixer-source',st.on?'on':'',journeyEventIds.has(def.id)?'journey-event':'',hoodJourneyEventIds.has(def.id)?'hood-journey-event':''].filter(Boolean).join(' ');return`<article class="${classes}" data-source="${def.id}"><div><strong>${def.name}</strong><span>${journeyEventIds.has(def.id)?'journey event':`${def.category} · ${kind}`}</span></div><button type="button" data-source-toggle="${def.id}">${st.on?'On':'Off'}</button><input data-source-volume="${def.id}" type="range" min="0" max="100" value="${st.volume}" aria-label="${def.name} volume"></article>`};const preferredIds=Object.keys(window.LullabyQuickMixer?.activePreset?.mix||{}),available=[...list,...journeyList],preferred=preferredIds.map(id=>available.find(def=>def.id===id)).filter(Boolean),pinned=new Set(preferredIds),extra=available.filter(def=>!pinned.has(def.id)&&getMixerUiState(def.id).on),top=[...preferred,...extra],topIds=new Set(top.map(def=>def.id)),rest=list.filter(def=>!topIds.has(def.id)),events=journeyList.filter(def=>!topIds.has(def.id));const focused=document.activeElement,focusKey=focused?.dataset.sourceVolume?'data-source-volume':'data-source-toggle',focusId=focused?.getAttribute(focusKey);$('#mixerGrid').innerHTML=top.map(card).join('')+rest.map(card).join('')+(events.length?`<div class="mixer-group-heading" data-mixer-group-title>Journey events</div>${events.map(card).join('')}`:'');if(focusId)$('#mixerGrid').querySelector(`[${focusKey}="${CSS.escape(focusId)}"]`)?.focus({preventScroll:true});$$('[data-source-toggle]').forEach(b=>b.addEventListener('click',()=>toggleMixer(b.dataset.sourceToggle)));$$('[data-source-volume]').forEach(r=>r.addEventListener('input',e=>setSourceVolume(e.target.dataset.sourceVolume,+e.target.value/100)));window.LullabyCatalogI18n?.apply?.()}
 function getMixerUiState(id){const def=sourceById[id]||{};if(def.kind==='event')return{on:!!eventState[id]?.enabled,volume:Math.round((eventState[id]?.volume??(def.defaultVolume||30)/100)*100)};const n=nodes[id];return{on:!!n&&!n.el.paused,volume:Math.round((n?.gain?.gain?.value??(def.defaultVolume||30)/100)*100)}}

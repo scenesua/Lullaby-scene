@@ -25,7 +25,7 @@ jobs:
             if curl -fsS --max-time 10 -D /tmp/player.headers -o /tmp/player.html -H 'Cache-Control: no-cache' "https://lullabyscene.com/player/?deploycheck=${GITHUB_SHA}" \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.js?v=6&deploycheck=${GITHUB_SHA}" > /tmp/display.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/display-tools-v1.css?v=4&deploycheck=${GITHUB_SHA}" > /tmp/display.css \
-              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=20&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
+              && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/player-v2.js?v=21&deploycheck=${GITHUB_SHA}" > /tmp/player.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/scene-audio-v2.js?v=17&deploycheck=${GITHUB_SHA}" > /tmp/scene-audio.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/train-journey-v1.js?v=13&deploycheck=${GITHUB_SHA}" > /tmp/train.js \
               && curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "https://lullabyscene.com/remaining-journeys-v1.js?v=30&deploycheck=${GITHUB_SHA}" > /tmp/remaining.js \
@@ -46,7 +46,7 @@ jobs:
               && curl -sS --max-time 10 -D /tmp/api.headers -o /tmp/api.json -H 'Cache-Control: no-cache' "https://lullabyscene.com/api/visitors?deploycheck=${GITHUB_SHA}"; then
               if grep -q 'display-tools-v1.js?v=6' /tmp/player.html \
                 && grep -q 'display-tools-v1.css?v=4' /tmp/player.html \
-                && grep -q 'player-v2.js?v=20' /tmp/player.html \
+                && grep -q 'player-v2.js?v=21' /tmp/player.html \
                 && grep -q 'scene-audio-v2.js?v=17' /tmp/player.html \
                 && grep -q 'train-journey-v1.js?v=13' /tmp/player.html \
                 && grep -q 'remaining-journeys-v1.js?v=30' /tmp/player.html \

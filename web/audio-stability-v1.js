@@ -39,8 +39,8 @@
       if(node?.__lullabyDirect)node.el.volume=directVolume(node.gain.gain.value);
     });
     eventPlayers.forEach((media,id)=>{
-      const gain=eventState?.[id]?.volume??0;
-      media.volume=directVolume(gain);
+      const gain=eventState?.[media.eventSourceId||id]?.volume??0;
+      media.volume=directVolume(gain*(media.eventLevel??1));
     });
   }
 
@@ -162,6 +162,28 @@
   }
 
   function getEventMedia(id,def){
+    if(def.eventVariants?.length){
+      // Reuse idle voices, never restart a ringing note; bound overlap to eight.
+      let key=null;
+      for(let voice=0;voice<8;voice++){
+        const candidate=`${id}:${voice}`,media=eventPlayers.get(candidate);
+        if(!media||media.paused||media.ended){key=candidate;break}
+      }
+      if(key===null)return null;
+      let media=eventPlayers.get(key);
+      if(!media){media=new Audio();media.preload='auto';media.crossOrigin='anonymous';media.eventSourceId=id;observeMedia(media);eventPlayers.set(key,media)}
+      // Variants are ordered by pitch: favor small steps without repeating a note.
+      const previous=def.eventVariants.indexOf(eventState[id].lastVariant);
+      const choices=def.eventVariants.flatMap((url,index)=>{
+        const distance=Math.abs(index-previous);
+        return Array(previous<0?1:distance===0?0:distance===1?4:distance===2?2:1).fill(url);
+      });
+      const url=choices[Math.floor(Math.random()*choices.length)]||def.eventVariants[0];
+      eventState[id].lastVariant=url;
+      media.eventLevel=rand(.62,1);
+      media.src=url;
+      return media;
+    }
     let media=eventPlayers.get(id);
     if(media)return media;
     media=new Audio();
@@ -185,20 +207,22 @@
     scheduleEvent=function(id,delayMs=null){
       const st=eventState[id],def=sourceById[id];
       if(!st?.enabled||!def)return;
-      const wait=document.hidden
+      let wait=document.hidden&&!def.eventVariants?.length
         ?hiddenEventDelay(def,delayMs)
         :(delayMs??rand((def.eventMinSeconds||2)*1000,(def.eventMaxSeconds||12)*1000));
+      if(delayMs===null&&def.eventVariants?.length&&Math.random()<.12)wait+=rand(1800,2600);
       if(st.timer)clearTimeout(st.timer);
       st.timer=setTimeout(async()=>{
         st.timer=null;
         if(!st.enabled)return;
         try{
           const media=getEventMedia(id,def);
-          media.volume=directVolume(st.volume??.35);
+          if(!media)return;
+          media.volume=directVolume((st.volume??.35)*(media.eventLevel??1));
           try{media.currentTime=0}catch{}
           await media.play();
         }catch(error){console.error(error)}
-        finally{if(st.enabled)scheduleEvent(id)}
+        finally{if(st.enabled&&eventState[id]===st)scheduleEvent(id)}
       },wait);
     };
   }
@@ -207,8 +231,9 @@
     const baseStopEventLayer=stopEventLayer;
     stopEventLayer=function(id){
       baseStopEventLayer(id);
-      const media=eventPlayers.get(id);
-      if(media){media.pause();try{media.currentTime=0}catch{}}
+      eventPlayers.forEach((media,key)=>{
+        if(key===id||media.eventSourceId===id){media.pause();try{media.currentTime=0}catch{}}
+      });
       queueDirectSync();
     };
   }
@@ -232,7 +257,7 @@
       if(!st?.enabled)return;
       if(st.timer)clearTimeout(st.timer);
       st.timer=null;
-      scheduleEvent(id,hidden?BACKGROUND_EVENT_MIN_MS:500);
+      scheduleEvent(id,sourceById[id]?.eventVariants?.length?null:hidden?BACKGROUND_EVENT_MIN_MS:500);
     });
   }
 
@@ -308,6 +333,7 @@
   queueDirectSync();
   window.LullabyAudioStability={
     version:2,
+    get eventVoices(){return [...eventPlayers].map(([key,media])=>({id:media.eventSourceId||key,url:media.src,paused:media.paused,ended:media.ended,volume:media.volume}))},
     installLimiter,
     syncDirectVolumes,
     get limiterActive(){return !!limiter},
