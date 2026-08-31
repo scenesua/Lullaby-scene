@@ -47,7 +47,7 @@ try{
     // Mouse drag retains the actual range node until release; a second pointer
     // input cannot lose its target to a reorder halfway through the gesture.
     await wind.scrollIntoViewIfNeeded();let box=await wind.boundingBox();
-    if(width<=900){await page.touchscreen.tap(box.x+box.width*.25,box.y+box.height/2);await page.waitForTimeout(150);assert(await page.evaluate(()=>window.LullabyMixerInteraction.stateFor('wind').on),'Touch tap sets volume');await page.locator('#simpleQuickMixerList [data-quick-toggle="wind"]').click();await wind.scrollIntoViewIfNeeded()}
+    if(width<=900){await wind.tap({position:{x:box.width*.25,y:22}});await page.waitForFunction(()=>window.LullabyMixerInteraction.stateFor('wind').on);await page.locator('#simpleQuickMixerList [data-quick-toggle="wind"]').click();await wind.scrollIntoViewIfNeeded()}
     // Let the locator wait for scroll/layout stability before taking raw pointer
     // coordinates (fonts and row reordering can move it after scrollIntoView).
     await wind.hover({position:{x:16,y:22}});box=await wind.boundingBox();
