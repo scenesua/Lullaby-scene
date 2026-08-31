@@ -26,6 +26,19 @@ try{
     if(width>900){
       const workspace=await page.locator('.workspace-main').boundingBox();
       assert(workspace.width>=550,'Central workspace is not compressed');
+      const controls=page.locator('.desktop-rail .rail-item,.blackout-inspector-button,.journey-display-inspector,.scene-subtab');
+      for(const control of await controls.all()){
+        const bounds=await control.boundingBox();
+        assert(bounds&&bounds.height>=44,'Desktop navigation keeps accessible touch targets');
+      }
+      const firstTab=page.locator('#journeySceneTab'),secondTab=page.locator('#simpleSceneTab');
+      await firstTab.focus();await firstTab.press('ArrowRight');
+      assert.equal(await secondTab.getAttribute('aria-selected'),'true','Keyboard selects prepared scenes');
+      await secondTab.press('ArrowLeft');
+      assert.equal(await firstTab.getAttribute('aria-selected'),'true','Keyboard returns to journey');
+      const display=await page.locator('.journey-display-inspector').boundingBox();
+      const blackout=await page.locator('.blackout-inspector-button').boundingBox();
+      assert(display.y>=blackout.y+blackout.height+8,'Display actions have a visible gap');
     }else{
       const details=page.locator('details.mobile-macros');
       assert.equal(await details.getAttribute('open'),null,'Controls initially folded');
