@@ -13,8 +13,7 @@
   body.android-shell-page .mobile-tab span{display:block!important;font-size:1.05rem;line-height:1.1}.mobile-tab b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:inherit;font-weight:700}.mobile-tab.active{color:var(--text)!important;background:var(--surface-3)!important}.mobile-tab.active span{color:var(--accent)}
   body.android-shell-page .scene-subtabs{display:none!important}
   body.android-shell-page [data-scene-content="simple"].active{display:flex!important;flex-direction:column}
-  body.android-shell-page #simpleQuickMixerSection{display:none!important}
-  body.android-shell-page #simpleSceneTransport{order:100;margin-top:22px;margin-bottom:0}
+  body.android-shell-page #simpleSceneTransport{margin-top:22px;margin-bottom:0}
   body.android-shell-page .view-panel{animation:none!important}.android-fx-panel{display:none}.android-fx-panel.active{display:block}
   body.android-shell-page .panel-header{margin:2px 0 18px;align-items:flex-start}.android-mobile-section-title{margin:0 0 4px;font-size:1.5rem;line-height:1.15}.android-mobile-section-copy{margin:0;color:var(--muted);font-size:.86rem}
   body.android-shell-page .mobile-scene-heading h3{font-size:1.55rem!important}.aircraft-card{padding:16px!important;border-radius:18px!important}.aircraft-title-row{margin:16px 0!important}.aircraft-title-row h3{font-size:1.4rem!important}.journey-status{gap:8px!important;margin:16px 0!important}.journey-status>div{padding:10px!important;border-radius:12px!important}.duration-control{padding:14px!important;border-radius:16px!important}.transport{gap:8px!important}.transport-main{min-width:0!important}.mobile-macros{display:block!important;margin-top:20px!important;padding-top:18px!important}

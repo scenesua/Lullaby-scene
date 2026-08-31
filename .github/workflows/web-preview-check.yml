@@ -128,8 +128,8 @@ jobs:
           test -s web/assets/journeys/forest-temple.webp
           grep -q '/aircraft-source-v15.js?v=15' web/player/index.html
           grep -q '/mixer-interaction-v14.js?v=16' web/player/index.html
-          grep -q '/mixer-controls-v14.css?v=14' web/player/index.html
-          grep -q '/simple-scene-quick-mixer-v12.js?v=13' web/player/index.html
+          grep -q '/mixer-controls-v14.css?v=15' web/player/index.html
+          grep -q '/simple-scene-quick-mixer-v12.js?v=14' web/player/index.html
           grep -q '/saved-scenes-v13.js?v=15' web/player/index.html
           grep -q '/scene-recipe-v1.js?v=3' web/player/index.html
           ! grep -q '/mixer-zero-v13.js?v=13' web/player/index.html
@@ -234,6 +234,7 @@ jobs:
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
           timeout 90s node .github/scripts/web-smoke.mjs
           timeout 90s node .github/scripts/web-uiux-smoke.mjs
+          timeout 90s node .github/scripts/web-preset-picker-smoke.mjs
           node .github/scripts/web-debug-smoke.mjs
 
       - name: Browser Mixer and journey seek smoke

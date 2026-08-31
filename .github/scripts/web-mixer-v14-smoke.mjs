@@ -27,7 +27,7 @@ await page.locator(`${wind} [data-source-volume]`).evaluate(input=>{input.value=
 state=await page.evaluate(()=>({ui:window.LullabyPlayerRuntime.getMixerUiState('wind'),value:document.querySelector('#mixerGrid [data-source="wind"] [data-source-volume]')?.value}));
 if(state.ui.on||state.ui.volume!==0||state.value!=='0')throw new Error(`full Mixer 0% did not switch off: ${JSON.stringify(state)}`);
 
-await page.locator('[data-view="scene"]').first().click();await page.locator('[data-scene-mode="simple"]').click();await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(300);
+await page.locator('[data-view="scene"]').first().click();await page.locator('[data-scene-mode="simple"]').click();await page.locator('#presetPicker summary').click();await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(300);
 const quick='#inspectorMixerList [data-quick-source="wind"]';
 let quickState=await page.locator(quick).evaluate(row=>({off:row.classList.contains('is-off'),value:row.querySelector('[data-quick-volume]')?.value}));
 if(!quickState.off||quickState.value!=='0')throw new Error(`Quick Mixer inactive source not 0/off: ${JSON.stringify(quickState)}`);

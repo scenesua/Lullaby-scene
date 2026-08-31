@@ -157,4 +157,5 @@ jobs:
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done
           for browser in firefox webkit; do
             BROWSER="$browser" timeout 120s node .github/scripts/web-i18n-security-smoke.mjs
+            BROWSER="$browser" timeout 120s node .github/scripts/web-preset-picker-smoke.mjs
           done
