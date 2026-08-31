@@ -8,6 +8,8 @@ if(!executablePath)throw new Error('No Chrome/Chromium executable found on runne
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
 const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
 const page=await context.newPage();
+page.on('framenavigated',frame=>{if(frame===page.mainFrame())console.log(`Audio smoke navigation: ${frame.url()}`)});
+page.on('crash',()=>console.error('Audio smoke renderer crashed'));
 const errors=[];
 page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
@@ -81,9 +83,13 @@ const drum=await page.evaluate(()=>{
   return{overlap:before.filter(v=>!v.paused&&!v.ended).length,notes:new Set(before.map(v=>v.url)).size,quiet,stopped:voices().every(v=>v.paused),timer:R.eventState.rain_drum.timer};
 });
 if(drum.overlap<2||drum.notes<2||!drum.quiet||!drum.stopped||drum.timer!==null)throw new Error(`Rain drum overlap/volume/stop failed: ${JSON.stringify(drum)}`);
-const porch=await page.evaluate(async()=>{
+// Exercise the same user-gesture path as playback in the public preset picker.
+await page.getByRole('tab',{name:'준비된 장면',exact:true}).click();
+await page.locator('.preset-picker summary').click();
+await page.locator('[data-preset="preset_rain_eaves"]').click();
+await page.waitForFunction(()=>window.LullabyPlayerRuntime.getMixerUiState('rain').on&&window.LullabyPlayerRuntime.getMixerUiState('rain_drum').on);
+const porch=await page.evaluate(()=>{
   const R=window.LullabyPlayerRuntime,preset=R.presets.find(p=>p.id==='preset_rain_eaves');
-  await R.applyPreset(preset.id);
   const result={preview:preset.previewOnly,rain:R.getMixerUiState('rain'),drum:R.getMixerUiState('rain_drum'),name:window.LullabyLocales.presetName(preset.id)};
   stopAllMixer();return result;
 });
