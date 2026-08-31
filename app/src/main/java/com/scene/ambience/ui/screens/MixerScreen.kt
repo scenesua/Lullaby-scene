@@ -29,7 +29,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
+import com.scene.ambience.ui.components.SceneSlider as Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -287,8 +287,10 @@ private fun SourceRow(
         enabled = enabled,
         available = available,
         unavailableText = unavailableText,
-        onVolumeChangeFinished = { viewModel.setSourceVolume(def.sourceId.id, it) },
-        onToggleMuted = { viewModel.setSourceMuted(def.sourceId.id, !muted) },
+        onVolumeChangeFinished = {
+            if (it > 0f && muted) viewModel.setSourceMuted(def.sourceId.id, false)
+            viewModel.setSourceVolume(def.sourceId.id, it)
+        },
         accentColor = if (def.uiCategory == UiCategory.JOURNEY_EVENTS && def.sourceId.id.startsWith("hood_")) Color(0xFFD9AA45) else null,
     )
 }

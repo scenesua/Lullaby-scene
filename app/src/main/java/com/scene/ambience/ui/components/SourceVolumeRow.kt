@@ -17,7 +17,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
+import com.scene.ambience.ui.components.SceneSlider as Slider
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SliderDefaults
@@ -37,7 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
-/** One sound source: name, volume slider, mute toggle. */
+/** One sound source: named on/off switch and a native volume slider. */
 @Composable
 fun SourceVolumeRow(
     name: String,
@@ -47,14 +51,15 @@ fun SourceVolumeRow(
     available: Boolean,
     unavailableText: String,
     onVolumeChangeFinished: (Float) -> Unit,
-    onToggleMuted: () -> Unit,
     modifier: Modifier = Modifier,
     accentColor: Color? = null,
 ) {
     var localVolume by remember { mutableFloatStateOf(volume) }
     var dragging by remember { mutableStateOf(false) }
+    var lastVolume by remember { mutableFloatStateOf(volume.takeIf { it > 0f } ?: .5f) }
     LaunchedEffect(volume, dragging) {
         if (!dragging) localVolume = volume
+        if (volume > 0f) lastVolume = volume
     }
     val active = enabled && volume > 0f && !muted
     val accent = accentColor ?: MaterialTheme.colorScheme.primary
@@ -81,30 +86,25 @@ fun SourceVolumeRow(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                FilledTonalIconButton(
-                    onClick = onToggleMuted,
-                    enabled = available && enabled,
-                    modifier = Modifier.width(40.dp).height(40.dp),
-                ) {
-                    Icon(
-                        imageVector = if (muted) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp,
-                        contentDescription = null,
-                        tint = if (active || accentColor != null) accent else MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleSmall,
                     color = accentColor ?: MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(start = 10.dp).weight(1f),
+                    modifier = Modifier.weight(1f).padding(end = 12.dp),
                 )
-                ActiveDot(active, color = accent)
                 Text(
                     text = "${(localVolume * 100).roundToInt()}%",
                     style = MaterialTheme.typography.labelMedium,
                     color = if (active || accentColor != null) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Switch(
+                    checked = active,
+                    onCheckedChange = { onVolumeChangeFinished(if (it) lastVolume else 0f) },
+                    enabled = available,
+                    modifier = Modifier.padding(start = 12.dp).semantics { contentDescription = name },
+                    colors = SwitchDefaults.colors(checkedTrackColor = accent),
                 )
             }
             Slider(
@@ -118,7 +118,7 @@ fun SourceVolumeRow(
                     onVolumeChangeFinished(localVolume)
                 },
                 enabled = available,
-                modifier = Modifier.fillMaxWidth().height(36.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp).semantics { contentDescription = name },
                 colors = SliderDefaults.colors(
                     activeTrackColor = accent,
                     thumbColor = accent,

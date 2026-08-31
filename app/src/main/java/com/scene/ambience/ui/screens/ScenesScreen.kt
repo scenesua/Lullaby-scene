@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -30,7 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
+import com.scene.ambience.ui.components.SceneSlider as Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -99,9 +101,11 @@ fun ScenesScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 JOURNEY_IDS.forEach { journeyId ->
                     FilterChip(
-                        modifier = if (journeyId == SceneOrchestrator.HOOD_JOURNEY) Modifier.border(1.dp, hoodGold.copy(alpha = if (selectedSceneId == journeyId) .92f else .46f), RoundedCornerShape(8.dp)) else Modifier,
+                        modifier = Modifier.heightIn(min = 48.dp).then(if (journeyId == SceneOrchestrator.HOOD_JOURNEY) Modifier.border(1.dp, hoodGold.copy(alpha = if (selectedSceneId == journeyId) .92f else .46f), RoundedCornerShape(8.dp)) else Modifier),
                         selected = selectedSceneId == journeyId,
+                        enabled = !scene.active || selectedSceneId == journeyId,
                         onClick = { if (!scene.active) selectedSceneId = journeyId },
+                        leadingIcon = if (selectedSceneId == journeyId) ({ Icon(Icons.Filled.Check, contentDescription = null) }) else null,
                         label = { Text(context.getString(sceneShortNameRes(journeyId)), color = if (journeyId == SceneOrchestrator.HOOD_JOURNEY) hoodGold else Color.Unspecified) },
                     )
                 }
