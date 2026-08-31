@@ -13,7 +13,7 @@ page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
 await page.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await page.goto('http://127.0.0.1:4173/player/',{waitUntil:'networkidle'});
-await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window.LullabyPlayerRuntime?.catalog?.length===54);
+await page.waitForFunction(()=>window.LullabyAudioStability?.version===2&&window.LullabyPlayerRuntime?.catalog?.length===55);
 
 const direct=await page.evaluate(async()=>{
   const R=window.LullabyPlayerRuntime;
@@ -64,6 +64,23 @@ const timer=await page.evaluate(()=>{
   return{backgroundMode:window.LullabyAudioStability.backgroundMode,directSourceCount:window.LullabyAudioStability.directSourceCount};
 });
 if(timer.backgroundMode!==false)throw new Error(`unexpected hidden state in foreground smoke: ${JSON.stringify(timer)}`);
+const drumConfig=await page.evaluate(()=>{
+  const R=window.LullabyPlayerRuntime,def=R.sourceById.rain_drum;
+  R.startEventLayer(def);
+  return{preview:def.previewOnly,notes:def.eventVariants.length,min:def.eventMinSeconds,max:def.eventMaxSeconds};
+});
+if(!drumConfig.preview||drumConfig.notes!==5||drumConfig.min<.8||drumConfig.max>4)throw new Error('Rain drum preview configuration');
+await page.waitForFunction(()=>window.LullabyAudioStability.eventVoices.filter(v=>v.id==='rain_drum'&&!v.paused&&!v.ended).length>=2,{},{timeout:16000});
+const drum=await page.evaluate(()=>{
+  const R=window.LullabyPlayerRuntime,voices=()=>window.LullabyAudioStability.eventVoices.filter(v=>v.id==='rain_drum');
+  const before=voices();
+  R.eventState.rain_drum.volume=.1;
+  window.LullabyAudioStability.syncDirectVolumes();
+  const quiet=voices().every(v=>v.volume<=.1);
+  R.stopEventLayer('rain_drum');
+  return{overlap:before.filter(v=>!v.paused&&!v.ended).length,notes:new Set(before.map(v=>v.url)).size,quiet,stopped:voices().every(v=>v.paused),timer:R.eventState.rain_drum.timer};
+});
+if(drum.overlap<2||drum.notes<2||!drum.quiet||!drum.stopped||drum.timer!==null)throw new Error(`Rain drum overlap/volume/stop failed: ${JSON.stringify(drum)}`);
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log('web audio stability v2 native-media smoke test passed');

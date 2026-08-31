@@ -114,6 +114,8 @@
   };
   CATALOG.source.ko.hood_car_pass='지나가는 차량';
   CATALOG.source.en.hood_car_pass='Passing Street Car';
+  const RAIN_DRUM_NAMES={ko:'레인 드럼',en:'Rain Drum',ja:'レインドラム','zh-CN':'雨滴鼓','zh-TW':'雨滴鼓',ru:'Дождевой барабан',fr:'Tambour de pluie',es:'Tambor de lluvia',pt:'Tambor de chuva',th:'กลองฝน',tl:'Tambol ng ulan',hi:'रेन ड्रम',vi:'Trống mưa'};
+  for(const [code,name] of Object.entries(RAIN_DRUM_NAMES))CATALOG.source[code].rain_drum=name;
   const TERMS={
     ko:{all:'전체',nature:'자연',indoor:'실내',travel:'이동',other:'기타',on:'켬',off:'꺼짐',currentScene:'현재 장면',continuous:'연속 재생',event:'이벤트',sources:'개 소스',quickMixer:'퀵 믹서',fx:'FX',presets:'준비된 장면',ready:'준비',arrived:'도착',none:'없음',previousPhase:'◀ 이전 단계',nextPhase:'다음 단계 ▶',journeyPosition:'여정 위치',pause:'일시정지',resume:'계속 재생',stopped:'정지됨'},
     en:{all:'All',nature:'Nature',indoor:'Indoor',travel:'Travel',other:'Other',on:'On',off:'Off',currentScene:'Current scene',continuous:'continuous',event:'event',sources:'sources',quickMixer:'Quick Mixer',fx:'FX',presets:'Ready-made Scenes',ready:'Ready',arrived:'Arrived',none:'None',previousPhase:'◀ Previous phase',nextPhase:'Next phase ▶',journeyPosition:'Journey position',pause:'Pause',resume:'Resume',stopped:'Stopped'},

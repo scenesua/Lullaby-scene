@@ -104,6 +104,7 @@
     if(def.kind==='event'){
       if(!R.eventState[id]?.enabled)R.startEventLayer(def);
       if(R.eventState[id]){R.eventState[id].enabled=true;R.eventState[id].volume=value/100}
+      window.LullabyAudioStability?.syncDirectVolumes?.();
       R.updateNowPlaying();return Promise.resolve();
     }
     const node=R.nodes[id];
