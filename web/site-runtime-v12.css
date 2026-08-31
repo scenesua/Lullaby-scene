@@ -27,5 +27,28 @@ html.i18n-pending body{visibility:hidden}
 .preset-picker .saved-scene-actions{grid-column:1/-1;padding:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
 .preset-picker .subsection-title{margin:18px 8px 10px}
 #simpleQuickMixerSection{margin-top:0}.simple-quick-mixer-main .quick-mixer-row{min-height:76px}
+/* Tactile material only on transport, mobile round controls and journey chips.
+   Keep secondary actions, image cards and blackout controls visually quiet. */
+#webPlayer{--button-material:var(--surface-2)}
+#webPlayer :is(.transport>.button,#simpleSceneTransport>.button,.android-icon-button,#journeySelector>button){
+  border:1px solid color-mix(in srgb,var(--text) 20%,var(--surface-2));
+  background-color:var(--button-material);
+  background-image:linear-gradient(160deg,rgba(255,255,255,.13),transparent 48%,rgba(0,0,0,.13));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(0,0,0,.2),0 2px 3px rgba(0,0,0,.16);
+  transform:none;transition:box-shadow .12s ease,border-color .12s ease;
+}
+#webPlayer :is(.transport>.primary,#simpleSceneTransport>.primary){--button-material:var(--text)}
+#webPlayer .android-icon-button.filled{--button-material:var(--accent)}
+#webPlayer #journeySelector>button.active{
+  --button-material:color-mix(in srgb,var(--accent) 14%,var(--surface-2));
+  border-color:color-mix(in srgb,var(--accent) 65%,var(--line));
+  box-shadow:inset 1px 2px 4px rgba(0,0,0,.25),inset -1px -1px 0 rgba(255,255,255,.16);
+}
+#webPlayer :is(.transport>.button,#simpleSceneTransport>.button,.android-icon-button,#journeySelector>button):active:not(:disabled){
+  box-shadow:inset 1px 2px 4px rgba(0,0,0,.3),inset -1px -1px 0 rgba(255,255,255,.16);transform:none;
+}
+#webPlayer :is(.transport>.button,#simpleSceneTransport>.button,.android-icon-button,#journeySelector>button):focus-visible{outline:2px solid var(--focus-ring,var(--accent));outline-offset:3px}
+#webPlayer :is(.transport>.button,#simpleSceneTransport>.button,.android-icon-button,#journeySelector>button):disabled{box-shadow:none;opacity:.5;cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){#webPlayer :is(.transport>.button,#simpleSceneTransport>.button,.android-icon-button,#journeySelector>button){transition:none}}
 .desktop-inspector .quick-mixer-row{grid-template-columns:minmax(0,1fr) auto}.desktop-inspector .quick-mixer-volume{grid-column:1/-1;grid-template-columns:38px minmax(0,1fr)}
 @media(max-width:620px){.preset-picker>summary{padding:18px;min-height:96px}.preset-picker-options{max-height:55dvh}.preset-picker .preset-card-visual{min-height:88px!important}.simple-quick-mixer-main .quick-mixer-heading{grid-template-columns:minmax(0,1fr) auto}.simple-quick-mixer-main .quick-mixer-row{padding:12px}.simple-quick-mixer-main .quick-mixer-copy strong{white-space:normal}}
