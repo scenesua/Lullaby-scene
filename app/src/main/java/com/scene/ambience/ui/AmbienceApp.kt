@@ -10,19 +10,31 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.GraphicEq
+import androidx.compose.material.icons.outlined.Landscape
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalConfiguration
+import com.scene.ambience.ui.components.SceneActionButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Bookmarks
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.Landscape
-import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +58,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -201,50 +215,56 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: ROUTE_SCENES
+    val configuration = LocalConfiguration.current
+    val compactHeight = configuration.screenHeightDp < 400
+    val compactNavigation = configuration.screenWidthDp < 360 && configuration.fontScale > 1.15f
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(titleForRoute(context, currentRoute), style = MaterialTheme.typography.titleLarge)
-                        if (currentRoute in setOf(ROUTE_SCENES, ROUTE_MIXER, ROUTE_PRESETS, ROUTE_FX, ROUTE_SETTINGS)) {
-                            Text(
-                                text = context.getString(R.string.app_name),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+            Column(modifier = if (compactHeight && currentRoute !in setOf(ROUTE_TIMER, ROUTE_EQ, ROUTE_LICENSES)) Modifier.statusBarsPadding() else Modifier) {
+                if (!compactHeight || currentRoute in setOf(ROUTE_TIMER, ROUTE_EQ, ROUTE_LICENSES)) TopAppBar(
+                    title = {
+                        Column {
+                            Text(titleForRoute(context, currentRoute), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(context.getString(R.string.app_name), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         }
-                    }
-                },
-                navigationIcon = {
-                    if (currentRoute in setOf(ROUTE_TIMER, ROUTE_EQ, ROUTE_LICENSES)) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = context.getString(R.string.action_back))
+                    },
+                    navigationIcon = {
+                        if (currentRoute in setOf(ROUTE_TIMER, ROUTE_EQ, ROUTE_LICENSES)) {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = context.getString(R.string.action_back))
+                            }
                         }
-                    }
-                },
-                actions = {
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                )
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     if (currentRoute == ROUTE_SCENES || currentRoute == ROUTE_PRESETS) {
-                        IconButton(onClick = { showSceneDisplay = true }) {
-                            Icon(Icons.Filled.Landscape, contentDescription = context.getString(R.string.scene_display))
-                        }
-                    }
-                    FilledIconButton(onClick = viewModel::togglePlayPause) {
-                        val playing = state.snapshot?.playbackState == PlaybackState.PLAYING
-                        Icon(
-                            imageVector = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                            contentDescription = context.getString(if (playing) R.string.action_pause else R.string.action_play),
+                        SceneActionButton(
+                            label = context.getString(R.string.scene_display), icon = Icons.Outlined.Landscape,
+                            onClick = { showSceneDisplay = true }, modifier = Modifier.weight(1f).fillMaxHeight(),
                         )
                     }
+                    val playing = state.snapshot?.playbackState == PlaybackState.PLAYING
+                    SceneActionButton(
+                        label = context.getString(if (playing) R.string.action_pause else R.string.action_play),
+                        icon = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        onClick = viewModel::togglePlayPause, primary = true,
+                        enabled = (state.snapshot?.activeSourceCount ?: 0) > 0,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    )
                     if (currentRoute != ROUTE_TIMER) {
-                        IconButton(onClick = { navController.navigate(ROUTE_TIMER) }) {
-                            Icon(Icons.Filled.NightsStay, contentDescription = context.getString(R.string.timer_title))
-                        }
+                        SceneActionButton(
+                            label = context.getString(R.string.timer_title), icon = Icons.Outlined.Timer,
+                            onClick = { navController.navigate(ROUTE_TIMER) { launchSingleTop = true } },
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                        )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-            )
+                }
+            }
         },
         bottomBar = {
             val navigationColors = NavigationBarItemDefaults.colors(
@@ -254,42 +274,65 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
-                NavigationBarItem(
-                    selected = currentRoute == ROUTE_SCENES,
-                    onClick = { navController.navigateTo(ROUTE_SCENES) },
-                    icon = { Icon(Icons.Filled.AutoAwesome, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_scenes)) },
-                    colors = navigationColors,
-                )
-                NavigationBarItem(
-                    selected = currentRoute == ROUTE_MIXER,
-                    onClick = { navController.navigateTo(ROUTE_MIXER) },
-                    icon = { Icon(Icons.Filled.GraphicEq, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_mixer)) },
-                    colors = navigationColors,
-                )
-                NavigationBarItem(
-                    selected = currentRoute == ROUTE_PRESETS,
-                    onClick = { navController.navigateTo(ROUTE_PRESETS) },
-                    icon = { Icon(Icons.Filled.Bookmarks, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_presets)) },
-                    colors = navigationColors,
-                )
-                NavigationBarItem(
-                    selected = currentRoute == ROUTE_FX || currentRoute == ROUTE_EQ,
-                    onClick = { navController.navigateTo(ROUTE_FX) },
-                    icon = { Icon(Icons.Filled.Tune, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_fx)) },
-                    colors = navigationColors,
-                )
-                NavigationBarItem(
-                    selected = currentRoute == ROUTE_SETTINGS,
-                    onClick = { navController.navigateTo(ROUTE_SETTINGS) },
-                    icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_settings)) },
-                    colors = navigationColors,
-                )
+            Surface(
+                modifier = Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(26.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = .94f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                shadowElevation = 4.dp,
+            ) {
+                Column {
+                    if (compactNavigation) {
+                        Text(
+                            text = titleForRoute(context, currentRoute),
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp, start = 12.dp, end = 12.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    NavigationBar(modifier = if (compactNavigation) Modifier.height(64.dp) else Modifier, containerColor = androidx.compose.ui.graphics.Color.Transparent, tonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0)) {
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_SCENES,
+                            onClick = { navController.navigateTo(ROUTE_SCENES) },
+                            icon = { Icon(Icons.Outlined.Explore, contentDescription = if (compactNavigation) stringResource(R.string.nav_scenes) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_scenes)) } },
+                            colors = navigationColors,
+                        )
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_MIXER,
+                            onClick = { navController.navigateTo(ROUTE_MIXER) },
+                            icon = { Icon(Icons.Outlined.GraphicEq, contentDescription = if (compactNavigation) stringResource(R.string.nav_mixer) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_mixer)) } },
+                            colors = navigationColors,
+                        )
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_PRESETS,
+                            onClick = { navController.navigateTo(ROUTE_PRESETS) },
+                            icon = { Icon(Icons.Outlined.Landscape, contentDescription = if (compactNavigation) stringResource(R.string.nav_presets_short) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_presets_short)) } },
+                            colors = navigationColors,
+                        )
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_FX || currentRoute == ROUTE_EQ,
+                            onClick = { navController.navigateTo(ROUTE_FX) },
+                            icon = { Icon(Icons.Outlined.Tune, contentDescription = if (compactNavigation) stringResource(R.string.nav_fx) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_fx)) } },
+                            colors = navigationColors,
+                        )
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_SETTINGS,
+                            onClick = { navController.navigateTo(ROUTE_SETTINGS) },
+                            icon = { Icon(Icons.Outlined.Settings, contentDescription = if (compactNavigation) stringResource(R.string.nav_settings) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_settings)) } },
+                            colors = navigationColors,
+                        )
+                    }
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
