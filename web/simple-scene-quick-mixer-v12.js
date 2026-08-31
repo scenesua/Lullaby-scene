@@ -32,8 +32,8 @@
   function rowMarkup(def){
     const state=stateFor(def.id),on=!!state.on,preferred=presetIds().includes(def.id),volume=on?Math.max(0,Math.min(100,Number(state.volume)||0)):0;
     const status=preferred?(isEnglish()?'Current scene':'현재 씬'):on?(isEnglish()?'On':'켜짐'):(isEnglish()?'Off':'꺼짐');
-    const action=on?(isEnglish()?'Off':'끔'):(isEnglish()?'On':'켬');
-    return `<div class="quick-mixer-row ${on?'is-on':'is-off'} ${preferred?'is-preset-source':''}" data-quick-source="${def.id}"><div class="quick-mixer-copy"><strong title="${escapeText(def.name||def.id)}">${escapeText(def.name||def.id)}</strong><span>${status}</span></div><button type="button" data-quick-toggle="${def.id}" aria-pressed="${on}">${action}</button><label class="quick-mixer-volume"><output data-quick-output="${def.id}">${volume}%</output><input data-quick-volume="${def.id}" type="range" min="0" max="100" value="${volume}" aria-label="${escapeText(def.name||def.id)} volume"></label></div>`;
+    const action=window.LullabyLocales?.term?.(on?'on':'off')||(on?'On':'Off');
+    return `<div class="quick-mixer-row ${on?'is-on':'is-off'} ${preferred?'is-preset-source':''}" data-quick-source="${def.id}"><div class="quick-mixer-copy"><strong title="${escapeText(def.name||def.id)}">${escapeText(def.name||def.id)}</strong><span>${status}</span></div><button type="button" data-quick-toggle="${def.id}" role="switch" aria-checked="${on}" aria-label="${escapeText(def.name||def.id)}">${action}</button><label class="quick-mixer-volume"><output data-quick-output="${def.id}">${volume}%</output><input data-quick-volume="${def.id}" type="range" min="0" max="100" value="${volume}" aria-label="${escapeText(def.name||def.id)} volume"></label></div>`;
   }
 
   function render(){
@@ -74,7 +74,7 @@
       if(row.classList.contains('is-on')!==on)row.classList.toggle('is-on',on);
       if(row.classList.contains('is-off')===on)row.classList.toggle('is-off',!on);
       const output=row.querySelector(`[data-quick-output="${id}"]`);if(output&&output.textContent!==`${Math.round(value)}%`)output.textContent=`${Math.round(value)}%`;
-      const button=row.querySelector(`[data-quick-toggle="${id}"]`);if(button){const text=on?(isEnglish()?'Off':'끔'):(isEnglish()?'On':'켬');if(button.textContent!==text)button.textContent=text;if(button.getAttribute('aria-pressed')!==String(on))button.setAttribute('aria-pressed',String(on))}
+      const button=row.querySelector(`[data-quick-toggle="${id}"]`);window.LullabyMixerInteraction?.syncSwitch?.(button,id,on);
       const status=row.querySelector('.quick-mixer-copy span');if(status&&!row.classList.contains('is-preset-source')){const text=on?(isEnglish()?'On':'켜짐'):(isEnglish()?'Off':'꺼짐');if(status.textContent!==text)status.textContent=text}
       row.querySelectorAll(`[data-quick-volume="${id}"]`).forEach(input=>{const text=String(Math.round(value));if(document.activeElement!==input&&input.value!==text)input.value=text});
     });

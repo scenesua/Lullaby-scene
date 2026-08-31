@@ -29,10 +29,27 @@ try{
     await open();await picker.locator('[data-preset="preset_rainy_cafe"]').click();
     try{await page.waitForFunction(()=>window.LullabyPlayerRuntime.getMixerUiState('rain').on&&window.LullabyPlayerRuntime.getMixerUiState('cafe').on)}catch(error){console.error(await page.evaluate(()=>({label:document.querySelector('#presetPicker summary').textContent,open:document.getElementById('presetPicker').open,status:document.getElementById('playerStatus').textContent,context:window.LullabyAudioReactive.context?.state,mix:window.LullabyPlayerRuntime.snapshotMix(),nodes:Object.fromEntries(Object.entries(window.LullabyPlayerRuntime.nodes).map(([id,n])=>[id,{paused:n.el.paused,time:n.el.currentTime}]))})));throw error}
     assert.equal(await picker.evaluate(el=>el.open),false,'Selection collapses picker');
+    await page.waitForFunction(()=>document.getElementById('simpleSceneTransportState').textContent.includes('2'));
+    const transport=page.locator(width<=900?'[data-android-play]':'#simpleScenePlayPause');
+    await transport.click();
+    await page.waitForFunction(()=>window.LullabyPlayerRuntime.nodes.rain.el.paused&&window.LullabyPlayerRuntime.nodes.cafe.el.paused);
+    await page.waitForFunction(()=>document.getElementById('simpleScenePlayPause').textContent.includes('▶'));
+    await transport.click();
+    await page.waitForFunction(()=>!window.LullabyPlayerRuntime.nodes.rain.el.paused&&!window.LullabyPlayerRuntime.nodes.cafe.el.paused);
     const ids=()=>page.locator('#simpleQuickMixerList [data-quick-source]').evaluateAll(rows=>rows.map(row=>row.dataset.quickSource));
     const waitOrder=expected=>page.waitForFunction(values=>[...document.querySelectorAll('#simpleQuickMixerList [data-quick-source]')].slice(0,values.length).map(row=>row.dataset.quickSource).join('|')===values.join('|'),expected);
     assert.deepEqual((await ids()).slice(0,2),['rain','cafe']);
+    const rainSwitch=page.locator('#simpleQuickMixerList [data-quick-toggle="rain"]');
+    assert.equal(await rainSwitch.getAttribute('role'),'switch');
+    assert.equal(await rainSwitch.getAttribute('aria-checked'),'true');
+    const sourceLabel=await rainSwitch.getAttribute('aria-label');
     await page.locator('#simpleQuickMixerList [data-quick-toggle="rain"]').click();
+    await page.waitForFunction(()=>!window.LullabyMixerInteraction.stateFor('rain').on);
+    assert.equal(await rainSwitch.getAttribute('aria-checked'),'false');
+    assert.equal(await rainSwitch.getAttribute('aria-label'),sourceLabel,'Switch name stays stable across states');
+    await rainSwitch.focus();await rainSwitch.press('Space');
+    await page.waitForFunction(()=>window.LullabyMixerInteraction.stateFor('rain').on);
+    await rainSwitch.press('Space');
     await page.waitForFunction(()=>!window.LullabyMixerInteraction.stateFor('rain').on);
     assert.deepEqual((await ids()).slice(0,2),['rain','cafe'],'Disabled preset source stays pinned');
     const wind=page.locator('#simpleQuickMixerList [data-quick-volume="wind"]');

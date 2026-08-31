@@ -158,7 +158,7 @@
     const top=$('.mobile-player-top'),actions=top?.querySelector('.android-top-actions');
     if(top&&actions&&!top.querySelector('[data-blackout-placement="mobile"]')){
       const button=document.createElement('button');button.className='android-top-blackout';button.type='button';button.dataset.blackoutButton='';button.dataset.blackoutPlacement='mobile';
-      button.innerHTML='<span aria-hidden="true">■</span>';
+      button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="3"/><path d="M9 21h6m-3-3v3M8 8l8 6"/></svg><span data-blackout-label>Black Screen</span>';
       actions.before(button);
     }
 
