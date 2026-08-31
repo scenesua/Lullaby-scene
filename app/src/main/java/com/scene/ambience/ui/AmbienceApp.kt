@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.WindowInsets
@@ -55,6 +58,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -210,7 +215,9 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: ROUTE_SCENES
-    val compactHeight = LocalConfiguration.current.screenHeightDp < 400
+    val configuration = LocalConfiguration.current
+    val compactHeight = configuration.screenHeightDp < 400
+    val compactNavigation = configuration.screenWidthDp < 360 && configuration.fontScale > 1.15f
 
     Scaffold(
         topBar = {
@@ -232,13 +239,13 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 )
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (currentRoute == ROUTE_SCENES || currentRoute == ROUTE_PRESETS) {
                         SceneActionButton(
                             label = context.getString(R.string.scene_display), icon = Icons.Outlined.Landscape,
-                            onClick = { showSceneDisplay = true }, modifier = Modifier.weight(1f),
+                            onClick = { showSceneDisplay = true }, modifier = Modifier.weight(1f).fillMaxHeight(),
                         )
                     }
                     val playing = state.snapshot?.playbackState == PlaybackState.PLAYING
@@ -247,13 +254,13 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                         icon = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                         onClick = viewModel::togglePlayPause, primary = true,
                         enabled = (state.snapshot?.activeSourceCount ?: 0) > 0,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
                     )
                     if (currentRoute != ROUTE_TIMER) {
                         SceneActionButton(
                             label = context.getString(R.string.timer_title), icon = Icons.Outlined.Timer,
                             onClick = { navController.navigate(ROUTE_TIMER) { launchSingleTop = true } },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
                         )
                     }
                 }
@@ -274,48 +281,58 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 shadowElevation = 4.dp,
             ) {
-            NavigationBar(containerColor = androidx.compose.ui.graphics.Color.Transparent, tonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0)) {
-                NavigationBarItem(
-                    modifier = Modifier.padding(horizontal = 3.dp),
-                    selected = currentRoute == ROUTE_SCENES,
-                    onClick = { navController.navigateTo(ROUTE_SCENES) },
-                    icon = { Icon(Icons.Outlined.Explore, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_scenes)) },
-                    colors = navigationColors,
-                )
-                NavigationBarItem(
-                    modifier = Modifier.padding(horizontal = 3.dp),
-                    selected = currentRoute == ROUTE_MIXER,
-                    onClick = { navController.navigateTo(ROUTE_MIXER) },
-                    icon = { Icon(Icons.Outlined.GraphicEq, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_mixer)) },
-                    colors = navigationColors,
-                )
-                NavigationBarItem(
-                    modifier = Modifier.padding(horizontal = 3.dp),
-                    selected = currentRoute == ROUTE_PRESETS,
-                    onClick = { navController.navigateTo(ROUTE_PRESETS) },
-                    icon = { Icon(Icons.Outlined.Landscape, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_presets_short)) },
-                    colors = navigationColors,
-                )
-                NavigationBarItem(
-                    modifier = Modifier.padding(horizontal = 3.dp),
-                    selected = currentRoute == ROUTE_FX || currentRoute == ROUTE_EQ,
-                    onClick = { navController.navigateTo(ROUTE_FX) },
-                    icon = { Icon(Icons.Outlined.Tune, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_fx)) },
-                    colors = navigationColors,
-                )
-                NavigationBarItem(
-                    modifier = Modifier.padding(horizontal = 3.dp),
-                    selected = currentRoute == ROUTE_SETTINGS,
-                    onClick = { navController.navigateTo(ROUTE_SETTINGS) },
-                    icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_settings)) },
-                    colors = navigationColors,
-                )
-            }
+                Column {
+                    if (compactNavigation) {
+                        Text(
+                            text = titleForRoute(context, currentRoute),
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp, start = 12.dp, end = 12.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    NavigationBar(modifier = if (compactNavigation) Modifier.height(64.dp) else Modifier, containerColor = androidx.compose.ui.graphics.Color.Transparent, tonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0)) {
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_SCENES,
+                            onClick = { navController.navigateTo(ROUTE_SCENES) },
+                            icon = { Icon(Icons.Outlined.Explore, contentDescription = if (compactNavigation) stringResource(R.string.nav_scenes) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_scenes)) } },
+                            colors = navigationColors,
+                        )
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_MIXER,
+                            onClick = { navController.navigateTo(ROUTE_MIXER) },
+                            icon = { Icon(Icons.Outlined.GraphicEq, contentDescription = if (compactNavigation) stringResource(R.string.nav_mixer) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_mixer)) } },
+                            colors = navigationColors,
+                        )
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_PRESETS,
+                            onClick = { navController.navigateTo(ROUTE_PRESETS) },
+                            icon = { Icon(Icons.Outlined.Landscape, contentDescription = if (compactNavigation) stringResource(R.string.nav_presets_short) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_presets_short)) } },
+                            colors = navigationColors,
+                        )
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_FX || currentRoute == ROUTE_EQ,
+                            onClick = { navController.navigateTo(ROUTE_FX) },
+                            icon = { Icon(Icons.Outlined.Tune, contentDescription = if (compactNavigation) stringResource(R.string.nav_fx) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_fx)) } },
+                            colors = navigationColors,
+                        )
+                        NavigationBarItem(
+                            modifier = Modifier.padding(horizontal = 3.dp),
+                            selected = currentRoute == ROUTE_SETTINGS,
+                            onClick = { navController.navigateTo(ROUTE_SETTINGS) },
+                            icon = { Icon(Icons.Outlined.Settings, contentDescription = if (compactNavigation) stringResource(R.string.nav_settings) else null) },
+                            label = if (compactNavigation) null else { { Text(stringResource(R.string.nav_settings)) } },
+                            colors = navigationColors,
+                        )
+                    }
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },

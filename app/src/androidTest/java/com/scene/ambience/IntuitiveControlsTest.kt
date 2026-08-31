@@ -22,8 +22,12 @@ class IntuitiveControlsTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-    private fun tab(labelId: Int) = device.findObjects(By.text(context.getString(labelId)))
-        .maxByOrNull { it.visibleBounds.centerY() } ?: error("Missing navigation label $labelId")
+    private fun tab(labelId: Int): androidx.test.uiautomator.UiObject2 {
+        val name = context.getString(labelId)
+        val icons = device.findObjects(By.desc(name))
+        val matches = if (icons.isNotEmpty()) icons else device.findObjects(By.text(name))
+        return matches.maxByOrNull { it.visibleBounds.centerY() } ?: error("Missing navigation label $labelId")
+    }
 
     private fun screenshot(name: String) {
         val folder = File(context.getExternalFilesDir(null), "ui-review").apply { mkdirs() }
