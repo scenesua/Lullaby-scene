@@ -81,6 +81,13 @@ const drum=await page.evaluate(()=>{
   return{overlap:before.filter(v=>!v.paused&&!v.ended).length,notes:new Set(before.map(v=>v.url)).size,quiet,stopped:voices().every(v=>v.paused),timer:R.eventState.rain_drum.timer};
 });
 if(drum.overlap<2||drum.notes<2||!drum.quiet||!drum.stopped||drum.timer!==null)throw new Error(`Rain drum overlap/volume/stop failed: ${JSON.stringify(drum)}`);
+const porch=await page.evaluate(async()=>{
+  const R=window.LullabyPlayerRuntime,preset=R.presets.find(p=>p.id==='preset_rain_eaves');
+  await R.applyPreset(preset.id);
+  const result={preview:preset.previewOnly,rain:R.getMixerUiState('rain'),drum:R.getMixerUiState('rain_drum'),name:window.LullabyLocales.presetName(preset.id)};
+  stopAllMixer();return result;
+});
+if(!porch.preview||!porch.rain.on||!porch.drum.on||porch.rain.volume!==45||porch.drum.volume!==28||porch.name!=='비 오는 날, 처마 아래')throw new Error(`Rain eaves preset failed: ${JSON.stringify(porch)}`);
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
 console.log('web audio stability v2 native-media smoke test passed');

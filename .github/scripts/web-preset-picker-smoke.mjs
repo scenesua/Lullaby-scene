@@ -37,7 +37,7 @@ try{
     await transport.click();
     await page.waitForFunction(()=>!window.LullabyPlayerRuntime.nodes.rain.el.paused&&!window.LullabyPlayerRuntime.nodes.cafe.el.paused);
     const ids=()=>page.locator('#simpleQuickMixerList [data-quick-source]').evaluateAll(rows=>rows.map(row=>row.dataset.quickSource));
-    const waitOrder=expected=>page.waitForFunction(values=>[...document.querySelectorAll('#simpleQuickMixerList [data-quick-source]')].slice(0,values.length).map(row=>row.dataset.quickSource).join('|')===values.join('|'),expected);
+    const waitOrder=async expected=>{try{await page.waitForFunction(values=>[...document.querySelectorAll('#simpleQuickMixerList [data-quick-source]')].slice(0,values.length).map(row=>row.dataset.quickSource).join('|')===values.join('|'),expected)}catch(error){console.error({width,expected,actual:await ids(),state:await page.evaluate(()=>({mix:window.LullabyPlayerRuntime.snapshotMix(),wind:window.LullabyMixerInteraction.stateFor('wind'),dragging:document.querySelector('[data-dragging="1"]')?.outerHTML}))});throw error}};
     assert.deepEqual((await ids()).slice(0,2),['rain','cafe']);
     const rainSwitch=page.locator('#simpleQuickMixerList [data-quick-toggle="rain"]');
     assert.equal(await rainSwitch.getAttribute('role'),'switch');
