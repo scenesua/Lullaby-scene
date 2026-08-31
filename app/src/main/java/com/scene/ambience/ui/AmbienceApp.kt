@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalConfiguration
 import com.scene.ambience.ui.components.SceneActionButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -208,11 +209,12 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: ROUTE_SCENES
+    val compactHeight = LocalConfiguration.current.screenHeightDp < 400
 
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(
+                if (!compactHeight || currentRoute in setOf(ROUTE_TIMER, ROUTE_EQ, ROUTE_LICENSES)) TopAppBar(
                     title = {
                         Column {
                             Text(titleForRoute(context, currentRoute), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -293,7 +295,7 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
                     selected = currentRoute == ROUTE_PRESETS,
                     onClick = { navController.navigateTo(ROUTE_PRESETS) },
                     icon = { Icon(Icons.Outlined.Landscape, contentDescription = null) },
-                    label = { Text(context.getString(R.string.nav_presets)) },
+                    label = { Text(context.getString(R.string.nav_presets_short)) },
                     colors = navigationColors,
                 )
                 NavigationBarItem(

@@ -44,7 +44,7 @@ class IntuitiveControlsTest {
                 ActivityScenario.launch(MainActivity::class.java).use {
                     assertTrue(device.wait(Until.hasObject(By.text(context.getString(R.string.scenes_question))), 20_000))
                     device.waitForIdle()
-                    val labels = listOf(R.string.nav_scenes, R.string.nav_mixer, R.string.nav_presets, R.string.nav_fx, R.string.nav_settings)
+                    val labels = listOf(R.string.nav_scenes, R.string.nav_mixer, R.string.nav_presets_short, R.string.nav_fx, R.string.nav_settings)
                     val rectangles = labels.map { tab(it).visibleBounds }
                     rectangles.zipWithNext().forEach { (a, b) -> assertTrue("Navigation labels overlap", a.right < b.left) }
                     screenshot(if (largeText) "journey-320-large-text" else "journey-360")
@@ -53,21 +53,22 @@ class IntuitiveControlsTest {
                     device.waitForIdle()
                     screenshot("mixer-before-scroll-${if (largeText) "large" else "normal"}")
                     val name = context.getString(R.string.source_rain)
-                    UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().description(name).checkable(true))
+                    UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().description(name))
                     screenshot("mixer-before-switch-${if (largeText) "large" else "normal"}")
-                    val switchSelector = By.desc(name).checkable(true)
+                    // Compose exposes the name as a child of the native control node.
+                    val switchSelector = By.checkable(true).hasDescendant(By.desc(name))
                     assertNotNull(device.wait(Until.findObject(switchSelector), 10_000))
                     if (requireNotNull(device.findObject(switchSelector)).isChecked) requireNotNull(device.findObject(switchSelector)).click()
                     assertNotNull(device.wait(Until.findObject(switchSelector.checked(false)), 10_000))
-                    requireNotNull(device.findObject(By.desc(name).checkable(true))).click()
-                    assertNotNull(device.wait(Until.findObject(By.desc(name).checkable(true).checked(true)), 10_000))
-                    requireNotNull(device.findObject(By.desc(name).checkable(true))).click()
-                    assertNotNull(device.wait(Until.findObject(By.desc(name).checkable(true).checked(false)), 10_000))
-                    UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().description(name).className("android.widget.SeekBar"))
-                    val slider = requireNotNull(device.findObject(By.desc(name).clazz("android.widget.SeekBar"))) { "Native slider remains accessible" }
+                    requireNotNull(device.findObject(By.checkable(true).hasDescendant(By.desc(name)))).click()
+                    assertNotNull(device.wait(Until.findObject(By.checkable(true).hasDescendant(By.desc(name)).checked(true)), 10_000))
+                    requireNotNull(device.findObject(By.checkable(true).hasDescendant(By.desc(name)))).click()
+                    assertNotNull(device.wait(Until.findObject(By.checkable(true).hasDescendant(By.desc(name)).checked(false)), 10_000))
+                    UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().className("android.widget.SeekBar").childSelector(UiSelector().description(name)))
+                    val slider = requireNotNull(device.findObject(By.clazz("android.widget.SeekBar").hasDescendant(By.desc(name)))) { "Native slider remains accessible" }
                     val bounds = slider.visibleBounds
                     device.swipe(bounds.left + bounds.width() / 4, bounds.centerY(), bounds.left + bounds.width() * 3 / 4, bounds.centerY(), 12)
-                    assertNotNull(device.wait(Until.findObject(By.desc(name).checkable(true).checked(true)), 10_000))
+                    assertNotNull(device.wait(Until.findObject(By.checkable(true).hasDescendant(By.desc(name)).checked(true)), 10_000))
                     screenshot(if (largeText) "mixer-320-large-text" else "mixer-360")
                     tab(R.string.nav_settings).click()
                     device.waitForIdle()
