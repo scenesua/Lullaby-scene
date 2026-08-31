@@ -65,17 +65,24 @@ jobs:
         run: |
           mkdir -p ui-review
           cp /tmp/ui-emulator.log ui-review/ || true
-          adb pull /sdcard/Android/data/com.scene.ambience.debug/files/ui-review ui-review/ || true
+          adb pull /sdcard/Download/lullaby-ui-review ui-review/ || true
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: Android-UI-preview
+          name: Android-UI-review
           path: |
-            app/build/outputs/apk/debug/*.apk
             app/build/reports/tests/
             app/build/reports/androidTests/
             app/build/reports/lint-results-debug.html
             ui-review/
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: Android-UI-preview-APK
+          path: app/build/outputs/apk/debug/*.apk
+          compression-level: 0
           if-no-files-found: error
           retention-days: 14
 

@@ -26,6 +26,11 @@ class IntuitiveControlsTest {
     private fun screenshot(name: String) {
         val folder = File(context.getExternalFilesDir(null), "ui-review").apply { mkdirs() }
         assertTrue(device.takeScreenshot(File(folder, "$name.png")))
+        device.dumpWindowHierarchy(File(folder, "$name.xml"))
+        // UTP uninstalls the test apps; copy evidence outside their data folders first.
+        device.executeShellCommand("mkdir -p /sdcard/Download/lullaby-ui-review")
+        device.executeShellCommand("cp ${folder.absolutePath}/$name.png /sdcard/Download/lullaby-ui-review/$name.png")
+        device.executeShellCommand("cp ${folder.absolutePath}/$name.xml /sdcard/Download/lullaby-ui-review/$name.xml")
     }
 
     @Test
@@ -44,8 +49,12 @@ class IntuitiveControlsTest {
                     rectangles.zipWithNext().forEach { (a, b) -> assertTrue("Navigation labels overlap", a.right < b.left) }
                     screenshot(if (largeText) "journey-320-large-text" else "journey-360")
                     tab(R.string.nav_mixer).click()
+                    assertTrue("Mixer navigation completed", device.wait(Until.hasObject(By.text(context.getString(R.string.master_volume))), 10_000))
+                    device.waitForIdle()
+                    screenshot("mixer-before-scroll-${if (largeText) "large" else "normal"}")
                     val name = context.getString(R.string.source_rain)
                     UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().description(name).checkable(true))
+                    screenshot("mixer-before-switch-${if (largeText) "large" else "normal"}")
                     val switchSelector = By.desc(name).checkable(true)
                     assertNotNull(device.wait(Until.findObject(switchSelector), 10_000))
                     if (requireNotNull(device.findObject(switchSelector)).isChecked) requireNotNull(device.findObject(switchSelector)).click()
