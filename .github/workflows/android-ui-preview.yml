@@ -62,11 +62,14 @@ jobs:
           ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.scene.ambience.IntuitiveControlsTest
       - name: Collect screenshots
         if: always()
+        timeout-minutes: 1
         run: |
           mkdir -p ui-review
           cp /tmp/ui-emulator.log ui-review/ || true
-          adb logcat -d -v threadtime > ui-review/logcat.txt || true
-          adb pull /sdcard/Download/lullaby-ui-review ui-review/ || true
+          if timeout 5 adb get-state; then
+            timeout 15 adb logcat -d -v threadtime > ui-review/logcat.txt || true
+            timeout 15 adb pull /sdcard/Download/lullaby-ui-review ui-review/ || true
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
