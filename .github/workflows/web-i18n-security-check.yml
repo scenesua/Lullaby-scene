@@ -156,7 +156,7 @@ jobs:
           pulseaudio --start --exit-idle-time=-1
           pactl load-module module-null-sink sink_name=browser_tests
           pactl set-default-sink browser_tests
-          python3 -m http.server 4173 --directory web >/tmp/lullaby-cross-browser.log 2>&1 &
+          python3 .github/scripts/serve-web-smoke.py >/tmp/lullaby-cross-browser.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/player/ >/dev/null && break; sleep 0.5; done

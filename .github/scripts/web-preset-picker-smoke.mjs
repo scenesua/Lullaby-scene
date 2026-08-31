@@ -48,13 +48,16 @@ try{
     // input cannot lose its target to a reorder halfway through the gesture.
     await wind.scrollIntoViewIfNeeded();let box=await wind.boundingBox();
     if(width<=900){await page.touchscreen.tap(box.x+box.width*.25,box.y+box.height/2);await page.waitForTimeout(150);assert(await page.evaluate(()=>window.LullabyMixerInteraction.stateFor('wind').on),'Touch tap sets volume');await page.locator('#simpleQuickMixerList [data-quick-toggle="wind"]').click();await wind.scrollIntoViewIfNeeded()}
-    box=await wind.boundingBox();
+    // Let the locator wait for scroll/layout stability before taking raw pointer
+    // coordinates (fonts and row reordering can move it after scrollIntoView).
+    await wind.hover({position:{x:16,y:22}});box=await wind.boundingBox();
     await wind.evaluate(el=>window.__dragRange=el);
-    await page.mouse.move(box.x+16,box.y+box.height/2);await page.mouse.down();
+    assert(await wind.evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+16,r.y+22)===el}),'Drag starts on an unobstructed range');
+    await page.mouse.down();
     await page.mouse.move(box.x+box.width*.28,box.y+box.height/2,{steps:5});
     assert(await wind.evaluate(el=>el===window.__dragRange),'Range remains mounted during drag');
     await page.mouse.up();await page.waitForTimeout(200);
-    await waitOrder(['rain','cafe','wind']);
+    try{await waitOrder(['rain','cafe','wind'])}catch(error){console.error(await wind.evaluate(el=>({value:el.value,dragging:el.dataset.dragging,state:window.LullabyMixerInteraction.stateFor('wind'),node:window.LullabyPlayerRuntime.nodes.wind?.el.paused,focused:document.activeElement?.outerHTML,rect:el.getBoundingClientRect().toJSON()})));throw error}
     assert.deepEqual((await ids()).slice(0,3),['rain','cafe','wind']);
     const nav=page.locator(width<=900?'.mobile-tabs':'.desktop-rail');
     await nav.locator(width<=900?'[data-android-dest="mixer"]':'[data-view="mixer"]').click();
