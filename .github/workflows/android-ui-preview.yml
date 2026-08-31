@@ -27,17 +27,22 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: gradle
+      - name: Expose Android SDK tools
+        run: |
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
       - name: Build test APK and run unit tests
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Start Android emulator
         run: |
-          sdkmanager 'system-images;android-35;google_apis;x86_64'
+          sdkmanager 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64'
           echo no | avdmanager create avd --name ui-review --package 'system-images;android-35;google_apis;x86_64'
           sudo chmod 666 /dev/kvm
           "$ANDROID_HOME/emulator/emulator" -avd ui-review -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect >/tmp/ui-emulator.log 2>&1 &
-          adb wait-for-device
+          timeout 90 adb wait-for-device
           for i in {1..90}; do
             if adb shell getprop sys.boot_completed | grep -q 1; then break; fi
             sleep 2
@@ -56,6 +61,7 @@ jobs:
         if: always()
         run: |
           mkdir -p ui-review
+          cp /tmp/ui-emulator.log ui-review/ || true
           adb pull /sdcard/Android/data/com.scene.ambience.debug/files/ui-review ui-review/ || true
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
@@ -96,7 +102,7 @@ jobs:
           mkdir -p lint-review
           cp "$RUNNER_TEMP/lint-base/app/build/reports/lint-results-debug.xml" lint-review/base.xml
           cp app/build/reports/lint-results-debug.xml lint-review/head.xml
-          python3 scripts/check-android-lint.py lint-review/base.xml lint-review/head.xml
+          python3 scripts/check-android-lint.py lint-review/base.xml lint-review/head.xml "$RUNNER_TEMP/lint-base" "$GITHUB_WORKSPACE"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

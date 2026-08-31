@@ -33,6 +33,7 @@ class IntuitiveControlsTest {
         val originalFont = device.executeShellCommand("settings get system font_scale").trim()
         try {
             for (largeText in listOf(false, true)) {
+                device.executeShellCommand("cmd uimode night ${if (largeText) "yes" else "no"}")
                 device.executeShellCommand("settings put system font_scale ${if (largeText) 1.3 else 1.0}")
                 device.executeShellCommand("wm density ${if (largeText) 540 else 480}")
                 ActivityScenario.launch(MainActivity::class.java).use {
@@ -76,6 +77,7 @@ class IntuitiveControlsTest {
             device.unfreezeRotation()
             device.executeShellCommand("settings put system font_scale $originalFont")
             device.executeShellCommand("wm density reset")
+            device.executeShellCommand("cmd uimode night no")
         }
     }
 }
