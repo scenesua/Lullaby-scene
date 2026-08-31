@@ -61,7 +61,7 @@ try{
         const blend=(front,back)=>front.slice(0,3).map((value,i)=>value*(front[3]??1)+back[i]*(1-(front[3]??1)));
         const background=element=>element?blend(rgb(getComputedStyle(element).backgroundColor),background(element.parentElement)):[255,255,255];
         const luminance=color=>color.map(value=>{value/=255;return value<=.04045?value/12.92:((value+.055)/1.055)**2.4}).reduce((sum,value,i)=>sum+value*[.2126,.7152,.0722][i],0);
-        return ['.aircraft-title-row h3','.control-heading strong','#phaseLabel','.mobile-scene-heading h3'].map(selector=>{
+        return ['.aircraft-title-row h3','.control-heading strong','#phaseLabel','.mobile-scene-heading h3','#scenePlay','#sceneStop','#journeySelector button.active'].map(selector=>{
           const element=document.querySelector(selector),back=background(element),front=blend(rgb(getComputedStyle(element).color),back),a=luminance(front),b=luminance(back);
           return {selector,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
         });
