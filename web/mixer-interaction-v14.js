@@ -25,17 +25,25 @@
   function setText(node,value){if(node&&node.textContent!==value)node.textContent=value}
   function setAttr(node,name,value){if(node&&node.getAttribute(name)!==value)node.setAttribute(name,value)}
 
+  function syncSwitch(button,id,on){
+    if(!button)return;
+    const name=window.LullabyLocales?.sourceName?.(id,source(id)?.name||id)||source(id)?.name||id;
+    setText(button,window.LullabyLocales?.term?.(on?'on':'off')||(on?'On':'Off'));
+    setAttr(button,'role','switch');setAttr(button,'aria-checked',String(on));setAttr(button,'aria-label',name);
+    if(button.hasAttribute('aria-pressed'))button.removeAttribute('aria-pressed');
+  }
+
   function updateDom(id,state=stateFor(id)){
     document.querySelectorAll(`#mixerGrid [data-source="${CSS.escape(id)}"]`).forEach(row=>{
       setClass(row,'on',state.on);setClass(row,'is-zero-off',!state.on);
       const range=row.querySelector(`[data-source-volume="${CSS.escape(id)}"]`);if(range&&document.activeElement!==range&&range.value!==String(state.volume))range.value=String(state.volume);
-      const button=row.querySelector(`[data-source-toggle="${CSS.escape(id)}"]`);if(button){setText(button,state.on?'On':'Off');setAttr(button,'aria-pressed',String(state.on))}
+      syncSwitch(row.querySelector(`[data-source-toggle="${CSS.escape(id)}"]`),id,state.on);
     });
     document.querySelectorAll(`[data-quick-source="${CSS.escape(id)}"]`).forEach(row=>{
       setClass(row,'is-on',state.on);setClass(row,'is-off',!state.on);
       const range=row.querySelector(`[data-quick-volume="${CSS.escape(id)}"]`);if(range&&document.activeElement!==range&&range.value!==String(state.volume))range.value=String(state.volume);
       const output=row.querySelector(`[data-quick-output="${CSS.escape(id)}"]`);setText(output,`${state.volume}%`);
-      const button=row.querySelector(`[data-quick-toggle="${CSS.escape(id)}"]`);if(button){setText(button,state.on?(english()?'Off':'끔'):(english()?'On':'켬'));setAttr(button,'aria-pressed',String(state.on))}
+      syncSwitch(row.querySelector(`[data-quick-toggle="${CSS.escape(id)}"]`),id,state.on);
     });
   }
 
@@ -144,5 +152,5 @@
   const mixer=document.getElementById('mixerGrid');if(mixer)new MutationObserver(()=>queueMicrotask(normalize)).observe(mixer,{childList:true});
   document.addEventListener('lullaby-language-changed',()=>queueMicrotask(normalize));
   setTimeout(normalize,120);
-  window.LullabyMixerInteraction={stateFor,setVolume,disable,normalize,toggle};
+  window.LullabyMixerInteraction={stateFor,setVolume,disable,normalize,toggle,syncSwitch};
 })();

@@ -30,6 +30,38 @@ html.i18n-pending body{visibility:hidden}
 /* Tactile material only on transport, mobile round controls and journey chips.
    Keep secondary actions, image cards and blackout controls visually quiet. */
 #webPlayer{--button-material:var(--surface-2)}
+#webPlayer :is(.panel-actions,.duration-chips,.timer-chips,.mixer-filters,#journeySelector){gap:10px}
+#webPlayer .simple-scene-header>div:last-child:has(>.small-action){display:flex;flex-wrap:wrap;gap:10px}
+#webPlayer .simple-scene-header>.small-action{margin:4px 8px 4px 0}
+#webPlayer .transport,#webPlayer #simpleSceneTransport{gap:12px!important}
+/* Native switches: position and text both communicate the current state. */
+#webPlayer :is([data-source-toggle],[data-quick-toggle]){
+  position:relative;box-sizing:border-box;min-width:64px;min-height:56px;padding:34px 6px 4px!important;
+  border:0!important;border-radius:12px!important;background:transparent!important;color:var(--text)!important;
+  font-size:.72rem;line-height:1.2;font-weight:650;text-align:center;white-space:normal;cursor:pointer;box-shadow:none!important;
+}
+#webPlayer :is([data-source-toggle],[data-quick-toggle])::before{
+  content:'';position:absolute;top:5px;left:calc(50% - 24px);width:48px;height:26px;box-sizing:border-box;border:1px solid color-mix(in srgb,var(--text) 35%,transparent);border-radius:20px;
+  background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(0,0,0,.12)),var(--surface-3);box-shadow:inset 0 2px 4px rgba(0,0,0,.25);
+}
+#webPlayer :is([data-source-toggle],[data-quick-toggle])::after{
+  content:'';position:absolute;top:8px;left:calc(50% - 21px);width:20px;height:20px;box-sizing:border-box;border:2px solid transparent;border-radius:50%;
+  background:linear-gradient(135deg,#aeb4bb,#e4e5e3 65%,#fff) padding-box,linear-gradient(135deg,#fff,#a6adb5) border-box;
+  box-shadow:inset 1px 1px 2px rgba(0,0,0,.35),inset -1px -1px 1px white,1px 2px 3px rgba(0,0,0,.4);transition:transform .16s ease;
+}
+#webPlayer :is([data-source-toggle],[data-quick-toggle])[aria-checked="true"]::before{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(0,0,0,.12)),var(--accent);border-color:var(--accent)}
+#webPlayer :is([data-source-toggle],[data-quick-toggle])[aria-checked="true"]::after{transform:translateX(22px)}
+#webPlayer .hood-journey-event [data-source-toggle]::before{border-color:#d9aa45}
+#webPlayer .hood-journey-event [data-source-toggle][aria-checked="true"]::before{background:#a57c27}
+#webPlayer :is([data-source-toggle],[data-quick-toggle]):hover{background:color-mix(in srgb,var(--text) 7%,transparent)!important}
+#webPlayer :is([data-source-toggle],[data-quick-toggle]):focus-visible{outline:3px solid var(--focus-ring,var(--accent));outline-offset:2px}
+#webPlayer #journeySelector>button::after{content:'✓';margin-left:auto;visibility:hidden;font-weight:850}
+#webPlayer #journeySelector>button.active::after{visibility:visible}
+#webPlayer #journeySelector>button.active span{font-weight:800}
+#webPlayer :is(#scenePlay,#simpleScenePlayPause,[data-android-play])[aria-busy="true"]{cursor:progress}
+#webPlayer :is(#scenePlay,#simpleScenePlayPause)[aria-busy="true"]::after{content:'…';margin-left:.5em}
+#webPlayer [data-android-play][aria-busy="true"] svg{opacity:.4}
+@media(prefers-reduced-motion:reduce){#webPlayer :is([data-source-toggle],[data-quick-toggle])::after{transition:none}}
 #webPlayer :is(.transport>.button,#simpleSceneTransport>.button,.android-icon-button,#journeySelector>button){
   border:1px solid color-mix(in srgb,var(--text) 20%,var(--surface-2));
   background-color:var(--button-material);
