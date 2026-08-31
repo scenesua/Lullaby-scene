@@ -1,6 +1,8 @@
 package com.scene.ambience
 
 import android.content.Context
+import androidx.lifecycle.ViewModelProvider
+import com.scene.ambience.presentation.AmbienceViewModel
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -41,7 +43,9 @@ class IntuitiveControlsTest {
                 device.executeShellCommand("cmd uimode night ${if (largeText) "yes" else "no"}")
                 device.executeShellCommand("settings put system font_scale ${if (largeText) 1.3 else 1.0}")
                 device.executeShellCommand("wm density ${if (largeText) 540 else 480}")
-                ActivityScenario.launch(MainActivity::class.java).use {
+                ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                    lateinit var observedViewModel: AmbienceViewModel
+                    scenario.onActivity { observedViewModel = ViewModelProvider(it)[AmbienceViewModel::class.java] }
                     assertTrue(device.wait(Until.hasObject(By.text(context.getString(R.string.scenes_question))), 20_000))
                     device.waitForIdle()
                     val labels = listOf(R.string.nav_scenes, R.string.nav_mixer, R.string.nav_presets_short, R.string.nav_fx, R.string.nav_settings)
@@ -53,7 +57,8 @@ class IntuitiveControlsTest {
                     device.waitForIdle()
                     screenshot("mixer-before-scroll-${if (largeText) "large" else "normal"}")
                     val name = context.getString(R.string.source_rain)
-                    UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().description(name))
+                    // Bring the whole card into view, not just a switch clipped by the bottom bar.
+                    UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().className("android.widget.SeekBar").childSelector(UiSelector().description(name)))
                     screenshot("mixer-before-switch-${if (largeText) "large" else "normal"}")
                     // Compose exposes the name as a child of the native control node.
                     val switchSelector = By.checkable(true).hasDescendant(By.desc(name))
@@ -61,7 +66,9 @@ class IntuitiveControlsTest {
                     if (requireNotNull(device.findObject(switchSelector)).isChecked) requireNotNull(device.findObject(switchSelector)).click()
                     assertNotNull(device.wait(Until.findObject(switchSelector.checked(false)), 10_000))
                     requireNotNull(device.findObject(By.checkable(true).hasDescendant(By.desc(name)))).click()
-                    assertNotNull(device.wait(Until.findObject(By.checkable(true).hasDescendant(By.desc(name)).checked(true)), 10_000))
+                    val switchedOn = device.wait(Until.findObject(By.checkable(true).hasDescendant(By.desc(name)).checked(true)), 10_000)
+                    screenshot("mixer-switched-on-${if (largeText) "large" else "normal"}")
+                    assertNotNull("Switch on: connected=${observedViewModel.uiState.value.connected}, rain=${observedViewModel.uiState.value.snapshot?.sources?.get("rain")}", switchedOn)
                     requireNotNull(device.findObject(By.checkable(true).hasDescendant(By.desc(name)))).click()
                     assertNotNull(device.wait(Until.findObject(By.checkable(true).hasDescendant(By.desc(name)).checked(false)), 10_000))
                     UiScrollable(UiSelector().scrollable(true)).scrollIntoView(UiSelector().className("android.widget.SeekBar").childSelector(UiSelector().description(name)))
