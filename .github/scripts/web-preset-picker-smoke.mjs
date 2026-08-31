@@ -10,7 +10,7 @@ const base=process.env.WEB_BASE_URL||'http://127.0.0.1:4173';
 try{
   for(const width of [390,768,1024,1440]){
     const context=await browser.newContext({viewport:{width,height:844},locale:'ko-KR',hasTouch:width<=900,serviceWorkers:'block'}),page=await context.newPage();
-    const errors=[];page.on('pageerror',error=>errors.push(String(error)));
+    const errors=[];page.on('pageerror',error=>errors.push(String(error)));page.on('console',message=>{if(message.type()==='error')console.error(`${engine}: ${message.text()}`)});
     await page.route('**/api/visitors',route=>route.fulfill({json:{available:false}}));
     await page.goto(base+'/player/?scene=simple',{waitUntil:'networkidle'});
     if(width<=900)await page.locator('[data-android-dest="prepared"]').click();
@@ -43,8 +43,9 @@ try{
     assert.deepEqual((await ids()).slice(2),catalog,'Unused sources retain catalog order');
     // Mouse drag retains the actual range node until release; a second pointer
     // input cannot lose its target to a reorder halfway through the gesture.
-    await wind.scrollIntoViewIfNeeded();const box=await wind.boundingBox();
+    await wind.scrollIntoViewIfNeeded();let box=await wind.boundingBox();
     if(width<=900){await page.touchscreen.tap(box.x+box.width*.25,box.y+box.height/2);await page.waitForTimeout(150);assert(await page.evaluate(()=>window.LullabyMixerInteraction.stateFor('wind').on),'Touch tap sets volume');await page.locator('#simpleQuickMixerList [data-quick-toggle="wind"]').click();await wind.scrollIntoViewIfNeeded()}
+    box=await wind.boundingBox();
     await wind.evaluate(el=>window.__dragRange=el);
     await page.mouse.move(box.x+6,box.y+box.height/2);await page.mouse.down();
     await page.mouse.move(box.x+box.width*.28,box.y+box.height/2,{steps:5});

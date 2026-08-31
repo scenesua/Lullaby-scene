@@ -5,7 +5,7 @@ const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/goo
 const executablePath=candidates.find(path=>fs.existsSync(path));
 if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
-const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
+const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR',serviceWorkers:'block'});
 const page=await context.newPage();
 const errors=[];
 const benignAbort=value=>String(value).includes('AbortError: The play() request was interrupted by a call to pause()');
