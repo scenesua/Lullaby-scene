@@ -36,7 +36,7 @@ if(mixerWindState.ui.on||mixerWindState.on||mixerWindState.slider!=='0')throw ne
 
 await page.locator('[data-view="scene"]').first().click();
 await page.locator('[data-scene-mode="simple"]').click();await visible('[data-scene-content="simple"]');await visible('[data-inspector-mode="simple"]');await visible('#simpleScenePlayPause');await visible('#simpleSceneStop');await visible('#saveSceneButton');await visible('#shareSceneRecipe');
-if((await page.locator('#simpleScenePlayPause').textContent())?.trim()!=='Ⅱ 일시정지')throw new Error('Simple Scene pause control missing');
+if(!(await page.locator('#simpleScenePlayPause').isDisabled())||!(await page.locator('#simpleScenePlayPause').textContent())?.trim().startsWith('▶'))throw new Error('Empty Simple Scene transport must show disabled Play');
 
 await page.locator('#presetPicker summary').click();await page.locator('[data-preset="preset_rainy_cafe"]').click();await page.waitForTimeout(350);
 const quickOrder=await page.locator('#inspectorMixerList [data-quick-source]').evaluateAll(rows=>rows.slice(0,4).map(row=>row.getAttribute('data-quick-source')));

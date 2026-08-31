@@ -65,7 +65,9 @@ for(const[code,[prepared,rain,preset]]of Object.entries(expected)){
   await expectText('[data-journey-event-label]',ui.events);
   await expectText('[data-direct-title]',ui.duration);
   await expectText('[data-blackout-placement="mobile"] [data-blackout-label]',ui.black);
-  await expectText('[data-journey-display-placement="mobile"] [data-journey-display-label]',ui.scene);
+  const shortScene={ko:'장면 화면',en:'Scene Screen',ja:'シーン画面','zh-CN':'场景画面','zh-TW':'場景畫面',ru:'Сцена',fr:'Scène',es:'Escena',pt:'Cena',th:'ฉาก',tl:'Eksena',hi:'दृश्य',vi:'Cảnh'};
+  await expectText('[data-mobile-display-label]',shortScene[code]);
+  if(await page.locator('[data-journey-display-placement="mobile"]').getAttribute('aria-label')!==ui.scene)throw new Error('Full accessible scene label missing');
   for(const width of [320,390]){
     await page.setViewportSize({width,height:844});
     const controls=await page.locator('.android-top-actions>button,.android-top-blackout').evaluateAll(buttons=>buttons.map(button=>{const r=button.getBoundingClientRect(),label=button.querySelector('span');return{width:r.width,height:r.height,right:r.right,label:label?.textContent,clipped:label&&(label.getBoundingClientRect().top+label.scrollHeight>r.bottom-2||label.scrollWidth>r.width-6)}}));
