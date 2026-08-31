@@ -14,6 +14,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -213,7 +214,7 @@ fun AmbienceApp(viewModel: AmbienceViewModel) {
 
     Scaffold(
         topBar = {
-            Column {
+            Column(modifier = if (compactHeight && currentRoute !in setOf(ROUTE_TIMER, ROUTE_EQ, ROUTE_LICENSES)) Modifier.statusBarsPadding() else Modifier) {
                 if (!compactHeight || currentRoute in setOf(ROUTE_TIMER, ROUTE_EQ, ROUTE_LICENSES)) TopAppBar(
                     title = {
                         Column {
