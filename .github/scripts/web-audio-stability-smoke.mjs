@@ -58,8 +58,11 @@ if(!aircraft.direct||aircraft.hasWebAudioSource||!aircraft.url)throw new Error(`
 
 const forest=await page.evaluate(async()=>{
   const R=window.LullabyPlayerRuntime,node=await R.makeSourceNode(R.sourceById.forest);
-  node.gain.gain.value=.001;await node.el.play();node.el.currentTime=node.loopDurationSeconds-node.loopFadeSeconds-.45;
-  await new Promise(resolve=>setTimeout(resolve,1400));
+  node.gain.gain.value=.001;await node.el.play();node.el.currentTime=node.loopDurationSeconds-node.loopFadeSeconds-.75;
+  const deadline=performance.now()+15000;
+  while(performance.now()<deadline&&(node.loopCount<1||node.voices.filter(voice=>!voice.el.paused).length<2)){
+    await new Promise(resolve=>setTimeout(resolve,100));
+  }
   const state={direct:!!node.__lullabyDirect,crossfade:!!node.__lullabyCrossfadeLoop,duration:node.loopDurationSeconds,fade:node.loopFadeSeconds,voices:node.voices?.length||0,playing:node.voices.filter(voice=>!voice.el.paused).length,loops:node.loopCount};
   node.el.pause();state.stopped=node.voices.every(voice=>voice.el.paused);return state;
 });
