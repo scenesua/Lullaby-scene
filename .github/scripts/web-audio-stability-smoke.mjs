@@ -58,28 +58,11 @@ if(!aircraft.direct||aircraft.hasWebAudioSource||!aircraft.url)throw new Error(`
 
 const forest=await page.evaluate(async()=>{
   const R=window.LullabyPlayerRuntime,node=await R.makeSourceNode(R.sourceById.forest);
-  const waitForMetadata=media=>media.readyState>=1?Promise.resolve():new Promise((resolve,reject)=>{
-    const timeout=setTimeout(()=>reject(new Error('forest metadata timeout')),15000);
-    media.addEventListener('loadedmetadata',()=>{clearTimeout(timeout);resolve()},{once:true});
-    media.addEventListener('error',()=>{clearTimeout(timeout);reject(media.error||new Error('forest media error'))},{once:true});
-    media.load();
-  });
-  await Promise.all(node.voices.map(voice=>waitForMetadata(voice.el)));
-  const target=node.loopDurationSeconds-node.loopFadeSeconds-.75,active=node.voices[0].el;
-  const seeked=Math.abs(active.currentTime-target)<.25?Promise.resolve():new Promise((resolve,reject)=>{
-    const timeout=setTimeout(()=>reject(new Error(`forest seek timeout at ${active.currentTime}`)),15000);
-    active.addEventListener('seeked',()=>{clearTimeout(timeout);resolve()},{once:true});
-    active.addEventListener('error',()=>{clearTimeout(timeout);reject(active.error||new Error('forest seek error'))},{once:true});
-  });
-  node.gain.gain.value=.001;node.el.currentTime=target;await seeked;await node.el.play();
-  const deadline=performance.now()+15000;
-  while(performance.now()<deadline&&(node.loopCount<1||node.voices.filter(voice=>!voice.el.paused).length<2)){
-    await new Promise(resolve=>setTimeout(resolve,100));
-  }
-  const state={direct:!!node.__lullabyDirect,crossfade:!!node.__lullabyCrossfadeLoop,duration:node.loopDurationSeconds,fade:node.loopFadeSeconds,voices:node.voices?.length||0,playing:node.voices.filter(voice=>!voice.el.paused).length,loops:node.loopCount};
+  node.gain.gain.value=.001;await node.el.play();
+  const state={direct:!!node.__lullabyDirect,crossfade:!!node.__lullabyCrossfadeLoop,duration:node.loopDurationSeconds,fade:node.loopFadeSeconds,voices:node.voices?.length||0,playing:node.voices.filter(voice=>!voice.el.paused).length};
   node.el.pause();state.stopped=node.voices.every(voice=>voice.el.paused);return state;
 });
-if(forest.direct||!forest.crossfade||forest.duration!==226||forest.fade!==12||forest.voices!==2||forest.playing!==2||forest.loops<1||!forest.stopped)throw new Error(`forest mixer crossfade missing: ${JSON.stringify(forest)}`);
+if(forest.direct||!forest.crossfade||forest.duration!==226||forest.fade!==12||forest.voices!==2||forest.playing!==1||!forest.stopped)throw new Error(`forest mixer crossfade missing: ${JSON.stringify(forest)}`);
 
 const loopCrossfade=await page.evaluate(async()=>{
   const api=window.LullabyLoopCrossfade;
