@@ -491,7 +491,7 @@
       "id": "forest_temple_heart_sutra",
       "category": "travel",
       "display_name_key": "source_forest_temple_heart_sutra",
-      "default_volume": 0.05,
+      "default_volume": 0.45,
       "loop_mode": "seamless",
       "continuous": [
         {
