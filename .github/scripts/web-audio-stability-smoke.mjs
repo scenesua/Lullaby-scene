@@ -58,7 +58,14 @@ if(!aircraft.direct||aircraft.hasWebAudioSource||!aircraft.url)throw new Error(`
 
 const forest=await page.evaluate(async()=>{
   const R=window.LullabyPlayerRuntime,node=await R.makeSourceNode(R.sourceById.forest);
-  node.gain.gain.value=.001;await node.el.play();node.el.currentTime=node.loopDurationSeconds-node.loopFadeSeconds-.75;
+  const waitForMetadata=media=>media.readyState>=1?Promise.resolve():new Promise((resolve,reject)=>{
+    const timeout=setTimeout(()=>reject(new Error('forest metadata timeout')),15000);
+    media.addEventListener('loadedmetadata',()=>{clearTimeout(timeout);resolve()},{once:true});
+    media.addEventListener('error',()=>{clearTimeout(timeout);reject(media.error||new Error('forest media error'))},{once:true});
+    media.load();
+  });
+  await Promise.all(node.voices.map(voice=>waitForMetadata(voice.el)));
+  node.gain.gain.value=.001;node.el.currentTime=node.loopDurationSeconds-node.loopFadeSeconds-.75;await node.el.play();
   const deadline=performance.now()+15000;
   while(performance.now()<deadline&&(node.loopCount<1||node.voices.filter(voice=>!voice.el.paused).length<2)){
     await new Promise(resolve=>setTimeout(resolve,100));
