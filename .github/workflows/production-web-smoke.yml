@@ -40,7 +40,7 @@ jobs:
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/submarine.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-heart.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_path_walk_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-path.ogg \
-              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_forest_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-forest.ogg \
+              && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_forest_bed_001.ogg?v=3&deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-forest.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/scenes/forest_temple_journey/forest_temple_korean_distant_birds_bed_001.ogg?deploycheck=${GITHUB_SHA}" > /tmp/forest-temple-birds.ogg \
               && curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "https://lullabyscene.com/audio/forest.ogg?v=5&deploycheck=${GITHUB_SHA}&attempt=${i}" > /tmp/forest.ogg \
               && curl -sS --max-time 10 -D /tmp/api.headers -o /tmp/api.json -H 'Cache-Control: no-cache' "https://lullabyscene.com/api/visitors?deploycheck=${GITHUB_SHA}"; then

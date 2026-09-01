@@ -90,9 +90,10 @@ jobs:
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)"
           mkdir -p "$RUNNER_TEMP/previous-release"
           gh release download v1.1.15 --pattern 'Lullaby-Scene-v1.1.15.apk' --dir "$RUNNER_TEMP/previous-release"
-          OLD="$("$APKSIGNER" verify --print-certs "$RUNNER_TEMP/previous-release/Lullaby-Scene-v1.1.15.apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
-          NEW="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
-          test -n "$OLD" && test "$OLD" = "$NEW" || { echo '::error::Release signing certificate changed'; exit 1; }
+          OLD="$("$APKSIGNER" verify --print-certs "$RUNNER_TEMP/previous-release/Lullaby-Scene-v1.1.15.apk" | sed -n -E 's/^(Signer #1|V[23] Signer):? certificate SHA-256 digest: //p' | head -n1)"
+          NEW="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | sed -n -E 's/^(Signer #1|V[23] Signer):? certificate SHA-256 digest: //p' | head -n1)"
+          test -n "$OLD" && test -n "$NEW" || { echo '::error::Could not extract one or both signing certificate digests'; exit 1; }
+          test "$OLD" = "$NEW" || { echo "::error::Release signing certificate changed (previous=$OLD current=$NEW)"; exit 1; }
           echo "Existing-install update certificate verified: $NEW"
       - name: Prepare release assets
         if: steps.release_state.outputs.exists != 'true'
