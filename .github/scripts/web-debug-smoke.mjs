@@ -10,8 +10,8 @@ for(const file of['web/debug/index.html','web/debug-console-v1.js','web/debug-br
 const page=text('web/debug/index.html'),player=text('web/player/index.html'),bridge=text('web/debug-bridge-v1.js'),consoleJs=text('web/debug-console-v1.js'),worker=text('web/_worker.js'),routes=JSON.parse(text('web/_routes.json')),headers=text('web/_headers'),redirects=text('web/_redirects');
 for(const marker of['선택 이벤트 즉시 발생','다음 루프 직전으로','단계 바로 이동','Audio Nodes'])if(!page.includes(marker))throw new Error(`Debug console missing ${marker}`);
 for(const marker of['triggerEvent','jumpBeforeLoop','selectJourney','setAudioContext','snapshot'])if(!bridge.includes(marker)||!consoleJs.includes(marker))throw new Error(`Debug bridge is not wired for ${marker}`);
-if(!player.includes('/debug-bridge-v1.js?v=8'))throw new Error('Player does not load the debug bridge');
-for(const marker of['EVENT_OPTIONS','eventOptions','forest_temple_journey','heartSutra','hood_journey','동네 개 짖는 소리'])if(!bridge.includes(marker))throw new Error(`Journey event selector missing ${marker}`);
+if(!player.includes('/debug-bridge-v1.js?v=9'))throw new Error('Player does not load the debug bridge');
+for(const marker of['EVENT_OPTIONS','eventOptions','forest_temple_journey','nearFootsteps','distantFootsteps','heartSutra','hood_journey','동네 개 짖는 소리'])if(!bridge.includes(marker))throw new Error(`Journey event selector missing ${marker}`);
 if(page.indexOf('forest_temple_journey')<0||page.indexOf('forest_temple_journey')>page.indexOf('hood_journey'))throw new Error('Forest Temple must appear immediately before HOOD in debug target order');
 for(const host of ['debug.lullabyscene.com','lullabyscene.com','localhost']){
   for(const path of ['/debug/','/player/','/about/']){
