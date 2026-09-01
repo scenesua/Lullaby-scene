@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "sources": [
     {
       "id": "rain_drum",
@@ -7,8 +7,8 @@
       "category": "other",
       "kind": "event",
       "previewOnly": true,
-      "url": "/audio/rain-drum/c3.ogg?v=2",
-      "eventVariants": ["/audio/rain-drum/c3.ogg?v=2", "/audio/rain-drum/d3.ogg?v=2", "/audio/rain-drum/e3.ogg?v=2", "/audio/rain-drum/g3.ogg?v=2", "/audio/rain-drum/a3.ogg?v=2"],
+      "url": "/audio/rain-drum/c3.ogg?v=3",
+      "eventVariants": ["/audio/rain-drum/c3.ogg?v=3", "/audio/rain-drum/d3.ogg?v=3", "/audio/rain-drum/e3.ogg?v=3", "/audio/rain-drum/g3.ogg?v=3", "/audio/rain-drum/a3.ogg?v=3"],
       "eventMinSeconds": 0.65,
       "eventMaxSeconds": 2.4,
       "defaultVolume": 35
