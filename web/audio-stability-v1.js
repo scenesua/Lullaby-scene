@@ -122,6 +122,10 @@
     if(!def)throw new Error('Missing source definition');
     const url=def.kind==='aircraft'?await getAircraftUrl():def.url;
     if(!url)throw new Error(`Missing source URL: ${def.id||'unknown'}`);
+    if(Number(def.loopCrossfadeSeconds)>0&&typeof makeCrossfadeLoopNode==='function'){
+      await ensureContext();
+      return makeCrossfadeLoopNode(url,{durationSeconds:def.loopDurationSeconds,fadeSeconds:def.loopCrossfadeSeconds,preload:'auto'});
+    }
     return makeDirectNode(url,{loop:true,preload:'auto'});
   };
 

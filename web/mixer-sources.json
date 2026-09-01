@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "sources": [
     {
       "id": "rain_drum",
@@ -58,7 +58,9 @@
       "name": "Forest",
       "category": "nature",
       "kind": "continuous",
-      "url": "/audio/forest.ogg?v=4",
+      "url": "/audio/forest.ogg?v=5",
+      "loopDurationSeconds": 226,
+      "loopCrossfadeSeconds": 12,
       "defaultVolume": 30
     },
     {

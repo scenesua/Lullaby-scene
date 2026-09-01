@@ -16,6 +16,8 @@ for(const [name,expected] of Object.entries(rainHashes)){
   const bytes=fs.readFileSync(`web/audio/rain-drum/${name}`),actual=createHash('sha256').update(bytes).digest('hex');
   if(actual!==expected||bytes.length<8000)throw new Error(`Rain texture asset mismatch: ${name}`);
 }
+const forestBytes=fs.readFileSync('web/audio/forest.ogg');
+if(createHash('sha256').update(forestBytes).digest('hex')!=='c92ff41bfecf55166d8cdfea5a160572d83a4f44d433964251ed7032dac360f9'||forestBytes.length<2000000)throw new Error('Long forest bed mismatch');
 
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
 const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
@@ -53,6 +55,14 @@ const aircraft=await page.evaluate(async()=>{
   return{direct:node.__lullabyDirect===true,url:node.url,hasWebAudioSource:!!node.src};
 });
 if(!aircraft.direct||aircraft.hasWebAudioSource||!aircraft.url)throw new Error(`aircraft mixer source still routed through WebAudio: ${JSON.stringify(aircraft)}`);
+
+const forest=await page.evaluate(async()=>{
+  const R=window.LullabyPlayerRuntime,node=await R.makeSourceNode(R.sourceById.forest);
+  node.gain.gain.value=.001;await node.el.play();
+  const state={direct:!!node.__lullabyDirect,crossfade:!!node.__lullabyCrossfadeLoop,duration:node.loopDurationSeconds,fade:node.loopFadeSeconds,voices:node.voices?.length||0,playing:node.voices.filter(voice=>!voice.el.paused).length};
+  node.el.pause();state.stopped=node.voices.every(voice=>voice.el.paused);return state;
+});
+if(forest.direct||!forest.crossfade||forest.duration!==226||forest.fade!==12||forest.voices!==2||forest.playing!==1||!forest.stopped)throw new Error(`forest mixer crossfade missing: ${JSON.stringify(forest)}`);
 
 const loopCrossfade=await page.evaluate(async()=>{
   const api=window.LullabyLoopCrossfade;
