@@ -65,7 +65,13 @@ const forest=await page.evaluate(async()=>{
     media.load();
   });
   await Promise.all(node.voices.map(voice=>waitForMetadata(voice.el)));
-  node.gain.gain.value=.001;node.el.currentTime=node.loopDurationSeconds-node.loopFadeSeconds-.75;await node.el.play();
+  const target=node.loopDurationSeconds-node.loopFadeSeconds-.75,active=node.voices[0].el;
+  const seeked=Math.abs(active.currentTime-target)<.25?Promise.resolve():new Promise((resolve,reject)=>{
+    const timeout=setTimeout(()=>reject(new Error(`forest seek timeout at ${active.currentTime}`)),15000);
+    active.addEventListener('seeked',()=>{clearTimeout(timeout);resolve()},{once:true});
+    active.addEventListener('error',()=>{clearTimeout(timeout);reject(active.error||new Error('forest seek error'))},{once:true});
+  });
+  node.gain.gain.value=.001;node.el.currentTime=target;await seeked;await node.el.play();
   const deadline=performance.now()+15000;
   while(performance.now()<deadline&&(node.loopCount<1||node.voices.filter(voice=>!voice.el.paused).length<2)){
     await new Promise(resolve=>setTimeout(resolve,100));
