@@ -214,20 +214,9 @@
         {
           "asset_id": "forest_loop_001",
           "path": "ambience/forest/continuous/forest_loop_001.ogg",
-          "duration_ms": 7857,
-          "crossfade_ms": 2000
-        },
-        {
-          "asset_id": "forest_loop_002",
-          "path": "ambience/forest/continuous/forest_loop_002.ogg",
-          "duration_ms": 7857,
-          "crossfade_ms": 2000
-        },
-        {
-          "asset_id": "forest_loop_003",
-          "path": "ambience/forest/continuous/forest_loop_003.ogg",
-          "duration_ms": 7857,
-          "crossfade_ms": 2000
+          "duration_ms": 226000,
+          "crossfade_ms": 12000,
+          "provenance_id": "freesound_priesjensen_488328"
         }
       ],
       "events": []

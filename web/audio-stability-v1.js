@@ -9,6 +9,8 @@
   let limiter=null;
   let syncQueued=false;
 
+  function randomBetween(min,max){return min+Math.random()*(max-min)}
+
   function timerScale(){
     if(typeof sleepTimerEnd==='undefined'||!sleepTimerEnd)return 1;
     const fadeMs=Math.max(1,(Number(sleepFadeSeconds)||30)*1000);
@@ -122,6 +124,10 @@
     if(!def)throw new Error('Missing source definition');
     const url=def.kind==='aircraft'?await getAircraftUrl():def.url;
     if(!url)throw new Error(`Missing source URL: ${def.id||'unknown'}`);
+    if(Number(def.loopCrossfadeSeconds)>0&&typeof makeCrossfadeLoopNode==='function'){
+      await ensureContext();
+      return makeCrossfadeLoopNode(url,{durationSeconds:def.loopDurationSeconds,fadeSeconds:def.loopCrossfadeSeconds,preload:'auto'});
+    }
     return makeDirectNode(url,{loop:true,preload:'auto'});
   };
 
@@ -172,16 +178,12 @@
       if(key===null)return null;
       let media=eventPlayers.get(key);
       if(!media){media=new Audio();media.preload='auto';media.crossOrigin='anonymous';media.eventSourceId=id;observeMedia(media);eventPlayers.set(key,media)}
-      // Variants are ordered by pitch: favor small steps without repeating a note.
-      const previous=def.eventVariants.indexOf(eventState[id].lastVariant);
-      const choices=def.eventVariants.flatMap((url,index)=>{
-        const distance=Math.abs(index-previous);
-        return Array(previous<0?1:distance===0?0:distance===1?4:distance===2?2:1).fill(url);
-      });
+      const choices=def.eventVariants.filter(url=>url!==eventState[id].lastVariant);
       const url=choices[Math.floor(Math.random()*choices.length)]||def.eventVariants[0];
       eventState[id].lastVariant=url;
-      media.eventLevel=rand(.62,1);
+      media.eventLevel=id==='rain_drum'?randomBetween(.48,.84):randomBetween(.62,1);
       media.src=url;
+      media.playbackRate=id==='rain_drum'?randomBetween(.90,1.10):1;
       return media;
     }
     let media=eventPlayers.get(id);
@@ -207,10 +209,15 @@
     scheduleEvent=function(id,delayMs=null){
       const st=eventState[id],def=sourceById[id];
       if(!st?.enabled||!def)return;
-      let wait=document.hidden&&!def.eventVariants?.length
+      const rainDrum=id==='rain_drum';
+      const clusterActive=rainDrum&&Number.isFinite(st.clusterRemaining);
+      if(rainDrum&&!clusterActive)st.clusterRemaining=1+Math.floor(Math.random()*4);
+      let wait=rainDrum
+        ?clusterActive?randomBetween(75,260):randomBetween((def.eventMinSeconds||.65)*1000,(def.eventMaxSeconds||2.4)*1000)
+        :document.hidden&&!def.eventVariants?.length
         ?hiddenEventDelay(def,delayMs)
-        :(delayMs??rand((def.eventMinSeconds||2)*1000,(def.eventMaxSeconds||12)*1000));
-      if(delayMs===null&&def.eventVariants?.length&&Math.random()<.12)wait+=rand(1800,2600);
+        :(delayMs??randomBetween((def.eventMinSeconds||2)*1000,(def.eventMaxSeconds||12)*1000));
+      if(delayMs===null&&def.eventVariants?.length&&!rainDrum&&Math.random()<.12)wait+=randomBetween(1800,2600);
       if(st.timer)clearTimeout(st.timer);
       st.timer=setTimeout(async()=>{
         st.timer=null;
@@ -221,8 +228,14 @@
           media.volume=directVolume((st.volume??.35)*(media.eventLevel??1));
           try{media.currentTime=0}catch{}
           await media.play();
-        }catch(error){console.error(error)}
-        finally{if(st.enabled&&eventState[id]===st)scheduleEvent(id)}
+        }catch(error){if(error?.name!=='AbortError'&&st.enabled)console.error(error)}
+        finally{
+          if(rainDrum){
+            st.clusterRemaining=Math.max(0,(st.clusterRemaining||0)-1);
+            if(st.clusterRemaining===0)st.clusterRemaining=NaN;
+          }
+          if(st.enabled&&eventState[id]===st)scheduleEvent(id);
+        }
       },wait);
     };
   }
@@ -333,7 +346,7 @@
   queueDirectSync();
   window.LullabyAudioStability={
     version:2,
-    get eventVoices(){return [...eventPlayers].map(([key,media])=>({id:media.eventSourceId||key,url:media.src,paused:media.paused,ended:media.ended,volume:media.volume}))},
+    get eventVoices(){return [...eventPlayers].map(([key,media])=>({id:media.eventSourceId||key,url:media.src,paused:media.paused,ended:media.ended,volume:media.volume,playbackRate:media.playbackRate}))},
     installLimiter,
     syncDirectVolumes,
     get limiterActive(){return !!limiter},

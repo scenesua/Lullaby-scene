@@ -42,9 +42,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '/audio-stability-v1.js?v=3' web/player/index.html
-          grep -Fq '/audio-stability-v1.js?v=3' web/sw.js
-          grep -Fq "lullaby-scene-site-v90" web/sw.js
+          grep -Fq '/audio-stability-v1.js?v=7' web/player/index.html
+          grep -Fq '/audio-stability-v1.js?v=7' web/sw.js
+          grep -Fq "lullaby-scene-site-v94" web/sw.js
           grep -Fq "event.request.destination==='audio'" web/sw.js
           grep -Fq "url.pathname.startsWith('/api/')" web/sw.js
           ! sed -n '3p' web/sw.js | grep -Fq '/audio/'

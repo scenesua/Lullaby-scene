@@ -762,35 +762,13 @@
     },
     {
       "asset_id": "forest_loop_001",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
+      "source_name": "Forest ambience with singing birds",
+      "creator": "priesjensen",
+      "source_page": "https://freesound.org/people/priesjensen/sounds/488328/",
+      "license": "CC0-1.0",
+      "license_status": "verified",
       "attribution_required": false,
-      "original_filename": "826326__upkey__forest-ambience-with-birds.wav",
-      "original_archive": null
-    },
-    {
-      "asset_id": "forest_loop_002",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "826326__upkey__forest-ambience-with-birds.wav",
-      "original_archive": null
-    },
-    {
-      "asset_id": "forest_loop_003",
-      "source_name": null,
-      "creator": null,
-      "source_page": null,
-      "license": null,
-      "license_status": "unknown",
-      "attribution_required": false,
-      "original_filename": "826326__upkey__forest-ambience-with-birds.wav",
+      "original_filename": "488328_8972317-hq.mp3",
       "original_archive": null
     },
     {

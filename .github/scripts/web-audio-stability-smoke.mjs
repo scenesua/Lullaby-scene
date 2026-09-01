@@ -1,9 +1,23 @@
 import fs from 'node:fs';
+import {createHash} from 'node:crypto';
 import { chromium } from 'playwright-core';
 
 const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].filter(Boolean);
 const executablePath=candidates.find(path=>fs.existsSync(path));
 if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
+const rainHashes={
+  'c3.ogg':'063d35ccbbf3dac6337edb49a265f183f73c1529e4cf2f6b2e633e97c303e5c8',
+  'd3.ogg':'8a715f53ced213ec84556a983c885228007107c3ac5f1215f8e6651605f71bbb',
+  'e3.ogg':'96c0ac4938decc1dd2f725d4128eaf3e7ea6464f837b7c87903d8d27ab05571e',
+  'g3.ogg':'4fd1c53583639da31ac1dd7f3ce9803c283b87dca12090004338d8b3f5dccf81',
+  'a3.ogg':'bafd79dd518ec8a634ef03b391001f56ccfaa57afe744bdfedafb59a6f5f56ef'
+};
+for(const [name,expected] of Object.entries(rainHashes)){
+  const bytes=fs.readFileSync(`web/audio/rain-drum/${name}`),actual=createHash('sha256').update(bytes).digest('hex');
+  if(actual!==expected||bytes.length<8000)throw new Error(`Rain texture asset mismatch: ${name}`);
+}
+const forestBytes=fs.readFileSync('web/audio/forest.ogg');
+if(createHash('sha256').update(forestBytes).digest('hex')!=='c92ff41bfecf55166d8cdfea5a160572d83a4f44d433964251ed7032dac360f9'||forestBytes.length<2000000)throw new Error('Long forest bed mismatch');
 
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
 const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
@@ -44,6 +58,14 @@ const aircraft=await page.evaluate(async()=>{
 });
 if(!aircraft.direct||aircraft.hasWebAudioSource||!aircraft.url)throw new Error(`aircraft mixer source still routed through WebAudio: ${JSON.stringify(aircraft)}`);
 
+const forest=await page.evaluate(async()=>{
+  const R=window.LullabyPlayerRuntime,node=await R.makeSourceNode(R.sourceById.forest);
+  node.gain.gain.value=.001;await node.el.play();
+  const state={direct:!!node.__lullabyDirect,crossfade:!!node.__lullabyCrossfadeLoop,duration:node.loopDurationSeconds,fade:node.loopFadeSeconds,voices:node.voices?.length||0,playing:node.voices.filter(voice=>!voice.el.paused).length};
+  node.el.pause();state.stopped=node.voices.every(voice=>voice.el.paused);return state;
+});
+if(forest.direct||!forest.crossfade||forest.duration!==226||forest.fade!==12||forest.voices!==2||forest.playing!==1||!forest.stopped)throw new Error(`forest mixer crossfade missing: ${JSON.stringify(forest)}`);
+
 const loopCrossfade=await page.evaluate(async()=>{
   const api=window.LullabyLoopCrossfade;
   await window.LullabyPlayerRuntime.ensureContext();
@@ -71,7 +93,7 @@ const drumConfig=await page.evaluate(()=>{
   R.startEventLayer(def);
   return{preview:def.previewOnly,notes:def.eventVariants.length,min:def.eventMinSeconds,max:def.eventMaxSeconds};
 });
-if(drumConfig.preview||drumConfig.notes!==5||drumConfig.min<.8||drumConfig.max>4)throw new Error('Rain drum public configuration');
+if(drumConfig.preview||drumConfig.notes!==5||drumConfig.min<.6||drumConfig.max>2.5)throw new Error('Rain drum public configuration');
 await page.waitForFunction(()=>window.LullabyAudioStability.eventVoices.filter(v=>v.id==='rain_drum'&&!v.paused&&!v.ended).length>=2,{},{timeout:16000});
 const drum=await page.evaluate(()=>{
   const R=window.LullabyPlayerRuntime,voices=()=>window.LullabyAudioStability.eventVoices.filter(v=>v.id==='rain_drum');
@@ -80,9 +102,9 @@ const drum=await page.evaluate(()=>{
   window.LullabyAudioStability.syncDirectVolumes();
   const quiet=voices().every(v=>v.volume<=.1);
   R.stopEventLayer('rain_drum');
-  return{overlap:before.filter(v=>!v.paused&&!v.ended).length,notes:new Set(before.map(v=>v.url)).size,quiet,stopped:voices().every(v=>v.paused),timer:R.eventState.rain_drum.timer};
+  return{overlap:before.filter(v=>!v.paused&&!v.ended).length,notes:new Set(before.map(v=>v.url)).size,rates:before.map(v=>v.playbackRate),quiet,stopped:voices().every(v=>v.paused),timer:R.eventState.rain_drum.timer};
 });
-if(drum.overlap<2||drum.notes<2||!drum.quiet||!drum.stopped||drum.timer!==null)throw new Error(`Rain drum overlap/volume/stop failed: ${JSON.stringify(drum)}`);
+if(drum.overlap<2||drum.notes<2||drum.rates.some(rate=>rate<.9||rate>1.1)||!drum.rates.some(rate=>Math.abs(rate-1)>.005)||!drum.quiet||!drum.stopped||drum.timer!==null)throw new Error(`Rain drum clustered overlap/pitch/volume/stop failed: ${JSON.stringify(drum)}`);
 // Exercise the same user-gesture path as playback in the public preset picker.
 await page.getByRole('tab',{name:'준비된 장면',exact:true}).click();
 await page.locator('.preset-picker summary').click();
