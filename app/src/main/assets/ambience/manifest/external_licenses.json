@@ -728,9 +728,9 @@
       "original_filename": "염불소리1.wav",
       "provenance_id": "gongu_kim_yongbae_13254274",
       "sample_rate": 48000,
-      "duration_ms": 120196,
-      "sha256": "5416990fbba3c33cf59e952be843854c01fc75b74b3675e203ea2f09cd18c05c",
-      "transformation": "Complete official original recording used as the mixer source; voice-presence EQ/dynamics, temple-style multi-tap room echo/reverb, gain and limiting; stereo placement preserved with no panning; Ogg Opus."
+      "duration_ms": 120207,
+      "sha256": "3fd9bbc532a7737c0e45dad05c5318a53e572369a63f449150d06f3645e0fa86",
+      "transformation": "Complete official original recording used as the mixer source; dialogue extraction emphasizes sustained Korean recitation while fast compression restrains embedded moktak transients, followed by voice-presence EQ, loudness normalization and stereo Ogg Opus encoding."
     }
   ]
 }

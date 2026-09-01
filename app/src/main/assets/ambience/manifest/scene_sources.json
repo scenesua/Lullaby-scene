@@ -491,13 +491,13 @@
       "id": "forest_temple_heart_sutra",
       "category": "travel",
       "display_name_key": "source_forest_temple_heart_sutra",
-      "default_volume": 0.45,
+      "default_volume": 0.25,
       "loop_mode": "seamless",
       "continuous": [
         {
           "asset_id": "forest_temple_heart_sutra_original_full_001",
           "path": "ambience/forest_temple_journey/continuous/forest_temple_heart_sutra_original_full_001.ogg",
-          "duration_ms": 120196,
+          "duration_ms": 120207,
           "role": "bed",
           "tags": [
             "heart_sutra",
