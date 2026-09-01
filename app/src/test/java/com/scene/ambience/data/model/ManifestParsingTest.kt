@@ -70,12 +70,17 @@ class ManifestParsingTest {
             assertEquals("$id uses one verified asset", 1, source.continuous.size)
             assertTrue("$id has no event assets", source.events.isEmpty())
         }
-        listOf("forest", "bamboo_forest").forEach { id ->
-            val source = manifest.sources.first { it.id == id }
-            assertEquals("$id crossfade", "crossfade", source.loopMode)
-            assertEquals("$id has three analyzed assets", 3, source.continuous.size)
-            assertTrue("$id has no event assets", source.events.isEmpty())
-        }
+        val forest = manifest.sources.first { it.id == "forest" }
+        assertEquals("forest crossfade", "crossfade", forest.loopMode)
+        assertEquals("forest uses the verified long bed", 1, forest.continuous.size)
+        assertEquals("forest long bed duration", 226_000L, forest.continuous.single().durationMs)
+        assertEquals("forest long bed crossfade", 12_000L, forest.continuous.single().crossfadeMs)
+        assertTrue("forest has no event assets", forest.events.isEmpty())
+
+        val bambooForest = manifest.sources.first { it.id == "bamboo_forest" }
+        assertEquals("bamboo forest crossfade", "crossfade", bambooForest.loopMode)
+        assertEquals("bamboo forest has three analyzed assets", 3, bambooForest.continuous.size)
+        assertTrue("bamboo forest has no event assets", bambooForest.events.isEmpty())
         assertTrue("miscellaneous removed", "miscellaneous" !in ids)
     }
 

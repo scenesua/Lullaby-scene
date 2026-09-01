@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 7,
   "sources": [
     {
       "id": "rain_drum",
@@ -8,9 +8,9 @@
       "kind": "event",
       "url": "/audio/rain-drum/c3.ogg",
       "eventVariants": ["/audio/rain-drum/c3.ogg", "/audio/rain-drum/d3.ogg", "/audio/rain-drum/e3.ogg", "/audio/rain-drum/g3.ogg", "/audio/rain-drum/a3.ogg"],
-      "eventMinSeconds": 0.9,
-      "eventMaxSeconds": 3.8,
-      "defaultVolume": 35
+      "eventMinSeconds": 0.65,
+      "eventMaxSeconds": 2.4,
+      "defaultVolume": 28
     },
     {
       "id": "rain",
@@ -57,7 +57,9 @@
       "name": "Forest",
       "category": "nature",
       "kind": "continuous",
-      "url": "/audio/forest.ogg?v=3",
+      "url": "/audio/forest.ogg?v=5",
+      "loopDurationSeconds": 226,
+      "loopCrossfadeSeconds": 12,
       "defaultVolume": 30
     },
     {
