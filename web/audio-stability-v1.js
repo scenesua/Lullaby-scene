@@ -172,16 +172,12 @@
       if(key===null)return null;
       let media=eventPlayers.get(key);
       if(!media){media=new Audio();media.preload='auto';media.crossOrigin='anonymous';media.eventSourceId=id;observeMedia(media);eventPlayers.set(key,media)}
-      // Variants are ordered by pitch: favor small steps without repeating a note.
-      const previous=def.eventVariants.indexOf(eventState[id].lastVariant);
-      const choices=def.eventVariants.flatMap((url,index)=>{
-        const distance=Math.abs(index-previous);
-        return Array(previous<0?1:distance===0?0:distance===1?4:distance===2?2:1).fill(url);
-      });
+      const choices=def.eventVariants.filter(url=>url!==eventState[id].lastVariant);
       const url=choices[Math.floor(Math.random()*choices.length)]||def.eventVariants[0];
       eventState[id].lastVariant=url;
-      media.eventLevel=rand(.62,1);
+      media.eventLevel=id==='rain_drum'?rand(.48,.84):rand(.62,1);
       media.src=url;
+      media.playbackRate=id==='rain_drum'?rand(.90,1.10):1;
       return media;
     }
     let media=eventPlayers.get(id);
@@ -207,10 +203,15 @@
     scheduleEvent=function(id,delayMs=null){
       const st=eventState[id],def=sourceById[id];
       if(!st?.enabled||!def)return;
-      let wait=document.hidden&&!def.eventVariants?.length
+      const rainDrum=id==='rain_drum';
+      const clusterActive=rainDrum&&Number.isFinite(st.clusterRemaining);
+      if(rainDrum&&!clusterActive)st.clusterRemaining=1+Math.floor(Math.random()*4);
+      let wait=rainDrum
+        ?clusterActive?rand(75,260):rand((def.eventMinSeconds||.65)*1000,(def.eventMaxSeconds||2.4)*1000)
+        :document.hidden&&!def.eventVariants?.length
         ?hiddenEventDelay(def,delayMs)
         :(delayMs??rand((def.eventMinSeconds||2)*1000,(def.eventMaxSeconds||12)*1000));
-      if(delayMs===null&&def.eventVariants?.length&&Math.random()<.12)wait+=rand(1800,2600);
+      if(delayMs===null&&def.eventVariants?.length&&!rainDrum&&Math.random()<.12)wait+=rand(1800,2600);
       if(st.timer)clearTimeout(st.timer);
       st.timer=setTimeout(async()=>{
         st.timer=null;
@@ -221,8 +222,14 @@
           media.volume=directVolume((st.volume??.35)*(media.eventLevel??1));
           try{media.currentTime=0}catch{}
           await media.play();
-        }catch(error){console.error(error)}
-        finally{if(st.enabled&&eventState[id]===st)scheduleEvent(id)}
+        }catch(error){if(error?.name!=='AbortError'&&st.enabled)console.error(error)}
+        finally{
+          if(rainDrum){
+            st.clusterRemaining=Math.max(0,(st.clusterRemaining||0)-1);
+            if(st.clusterRemaining===0)st.clusterRemaining=NaN;
+          }
+          if(st.enabled&&eventState[id]===st)scheduleEvent(id);
+        }
       },wait);
     };
   }
@@ -333,7 +340,7 @@
   queueDirectSync();
   window.LullabyAudioStability={
     version:2,
-    get eventVoices(){return [...eventPlayers].map(([key,media])=>({id:media.eventSourceId||key,url:media.src,paused:media.paused,ended:media.ended,volume:media.volume}))},
+    get eventVoices(){return [...eventPlayers].map(([key,media])=>({id:media.eventSourceId||key,url:media.src,paused:media.paused,ended:media.ended,volume:media.volume,playbackRate:media.playbackRate}))},
     installLimiter,
     syncDirectVolumes,
     get limiterActive(){return !!limiter},

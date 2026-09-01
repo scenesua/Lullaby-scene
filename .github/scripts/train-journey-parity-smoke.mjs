@@ -5,6 +5,8 @@ const root=new URL('../../',import.meta.url);
 const read=path=>readFileSync(new URL(path,root));
 const text=path=>read(path).toString('utf8');
 const sha256=path=>createHash('sha256').update(read(path)).digest('hex');
+const remainingRuntime=text('web/remaining-journeys-v1.js');
+const debugForestHash='c65c57e176398009bea4946e9e07ad1ce3eb1df2f32c152d642f746671ba5c0d';
 const manifest=JSON.parse(text('app/src/main/assets/ambience/manifest/scene_sources.json'));
 const expected={
   train_journey_departure_001:['train_journey','continuous',35183,'9a9a32c8d61819e7cf56ba15892042f151e27e0106b7bc517d41176bf0bae7ed'],train_journey_bed_001:['train_journey','continuous',234671,'eb19517370cebb7921a15bd29764f16406cc442f011fa14ce01940312e743a72'],train_journey_arrival_001:['train_journey','continuous',32236,'4ded52057adf0fee21bc94e32160a45347080420018427ff747b6ce49ee28b48'],
@@ -23,6 +25,10 @@ for(const [assetId,[scene,kind,duration,hash]] of Object.entries(expected)){
   const android=`app/src/main/assets/ambience/${scene}/${kind}/${name}`;
   const web=`web/audio/scenes/${scene}/${name}`;
   const androidHash=sha256(android),webHash=sha256(web);
+  if(assetId==='forest_temple_forest_bed_001'&&remainingRuntime.includes('forest_temple_forest_bed_001.ogg?v=2')){
+    if(androidHash!==hash||webHash!==debugForestHash)throw new Error(`${assetId} explicit debug-preview hash mismatch`);
+    continue;
+  }
   if(androidHash!==hash||webHash!==hash||androidHash!==webHash)throw new Error(`${assetId} platform hash mismatch`);
 }
 
@@ -51,7 +57,7 @@ for(const phase of ['train_departure','train_leaving_city','train_night_run','tr
   if(!text('app/src/main/java/com/scene/ambience/media/SceneOrchestrator.kt').includes(phase))throw new Error(`Android phase missing ${phase}`);
 }
 if(!text('web/player/index.html').includes('/train-journey-v1.js?v=13'))throw new Error('Web player does not load Train Journey runtime');
-if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=30'))throw new Error('Web player does not load remaining Journey runtime');
+if(!text('web/player/index.html').includes('/remaining-journeys-v1.js?v=31'))throw new Error('Web player does not load remaining Journey runtime');
 for(const file of['web/audio/scenes/aircraft_cabin/aircraft_chime_event_001.ogg','web/audio/scenes/train_journey/train_rail_event_001.ogg','web/audio/scenes/ferry_journey/ferry_wave_event_001.ogg','web/audio/scenes/spacecraft_journey/spacecraft_servo_event_001.ogg','web/audio/scenes/submarine_journey/submarine_sonar_event_001.ogg'])if(!existsSync(file)||statSync(file).size<8000)throw new Error(`Journey random-event asset missing or empty: ${file}`);
 if(!text('web/player/index.html').includes('/journey-background-v1.js?v=17'))throw new Error('Web player does not load Journey backgrounds');
 if(!text('web/journey-background-v1.js').includes("screen.orientation.lock('landscape')"))throw new Error('Mobile Journey display does not request landscape orientation');
@@ -74,6 +80,6 @@ for(const marker of ['triggerPassingEventNow','responseAtMs = lastGunshotMs + ra
 for(const marker of ['preservesPitch=false','playbackRate=1.08','playbackRate=.93'])if(!remaining.includes(marker))throw new Error(`Web siren Doppler path missing ${marker}`);
 for(const marker of ['playNow(startVolumeScale, startPan, 1.08f)','soundPool.setRate(streamId, rate)'])if(!text('app/src/main/java/com/scene/ambience/media/EventSourcePlayer.kt').includes(marker))throw new Error(`Android siren Doppler path missing ${marker}`);
 for(const marker of ['SOURCE_FOREST_TEMPLE_BOWL','SOURCE_FOREST_TEMPLE_KOREAN_BIRDS','SOURCE_FOREST_TEMPLE_MOKTAK','SOURCE_FOREST_TEMPLE_GRAVEL','SOURCE_FOREST_TEMPLE_HEART_SUTRA','startTempleEvents'])if(!orchestrator.includes(marker))throw new Error(`Android Forest Temple runtime missing ${marker}`);
-for(const marker of ["forest_temple_path_walk_001.ogg?v=1","forest_temple_forest_bed_001.ogg?v=1","forest_temple_korean_distant_birds_bed_001.ogg?v=1","roles:{departure:['departure','forest','birds'],bed:['forest','birds','bowl']","bedStartsAtPhaseBoundary:true","const templeEventTypes=['moktak','gravel','moktak','gravel','heartSutra']","delete configs.hood_journey;configs.hood_journey=hoodConfig","'forest_temple_journey','hood_journey'"])if(!remaining.includes(marker))throw new Error(`Web Forest Temple order/runtime missing ${marker}`);
+for(const marker of ["forest_temple_path_walk_001.ogg?v=1","forest_temple_forest_bed_001.ogg?v=2","forest_temple_korean_distant_birds_bed_001.ogg?v=1","roles:{departure:['departure','forest','birds'],bed:['forest','birds','bowl']","bedStartsAtPhaseBoundary:true","seamlessForest=activeJourneyId==='forest_temple_journey'&&key==='forest'","const templeEventTypes=['moktak','moktak','heartSutra']","scheduleTempleFootsteps","stage===1?random(38000,76000)","delete configs.hood_journey;configs.hood_journey=hoodConfig","'forest_temple_journey','hood_journey'"])if(!remaining.includes(marker))throw new Error(`Web Forest Temple order/runtime missing ${marker}`);
 if(!sw.includes("event.request.destination==='audio'"))throw new Error('Web audio is not isolated from service-worker shell caching');
 console.log('All seven Journey Android/Web asset and timeline parity passed');

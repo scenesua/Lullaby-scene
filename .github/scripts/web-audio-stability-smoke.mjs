@@ -1,9 +1,21 @@
 import fs from 'node:fs';
+import {createHash} from 'node:crypto';
 import { chromium } from 'playwright-core';
 
 const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].filter(Boolean);
 const executablePath=candidates.find(path=>fs.existsSync(path));
 if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
+const rainHashes={
+  'c3.ogg':'8b28ecc76d615a22d1eb6a61019cb66f041e30107b9beca11490678dcdf36127',
+  'd3.ogg':'825dc863720a347df3e872365624bb97837863197fa7646ddedc1106ca789d15',
+  'e3.ogg':'d029f2c9e92dc1eb6c99f2f841a89d2c564d1556d8f4d70f3ea0a62bfb8bca86',
+  'g3.ogg':'90497139eae47fd56b7793648b3fef8f33ca2a2590d4ecd23dbb865b777feb33',
+  'a3.ogg':'0656f9f1ca899bcade0b0b7c210b1b9d4303699b6edc1bbb6f0b275a05718022'
+};
+for(const [name,expected] of Object.entries(rainHashes)){
+  const bytes=fs.readFileSync(`web/audio/rain-drum/${name}`),actual=createHash('sha256').update(bytes).digest('hex');
+  if(actual!==expected||bytes.length<8000)throw new Error(`Rain texture asset mismatch: ${name}`);
+}
 
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
 const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
@@ -69,7 +81,7 @@ const drumConfig=await page.evaluate(()=>{
   R.startEventLayer(def);
   return{preview:def.previewOnly,notes:def.eventVariants.length,min:def.eventMinSeconds,max:def.eventMaxSeconds};
 });
-if(!drumConfig.preview||drumConfig.notes!==5||drumConfig.min<.8||drumConfig.max>4)throw new Error('Rain drum preview configuration');
+if(!drumConfig.preview||drumConfig.notes!==5||drumConfig.min<.6||drumConfig.max>2.5)throw new Error('Rain drum preview configuration');
 await page.waitForFunction(()=>window.LullabyAudioStability.eventVoices.filter(v=>v.id==='rain_drum'&&!v.paused&&!v.ended).length>=2,{},{timeout:16000});
 const drum=await page.evaluate(()=>{
   const R=window.LullabyPlayerRuntime,voices=()=>window.LullabyAudioStability.eventVoices.filter(v=>v.id==='rain_drum');
@@ -78,9 +90,9 @@ const drum=await page.evaluate(()=>{
   window.LullabyAudioStability.syncDirectVolumes();
   const quiet=voices().every(v=>v.volume<=.1);
   R.stopEventLayer('rain_drum');
-  return{overlap:before.filter(v=>!v.paused&&!v.ended).length,notes:new Set(before.map(v=>v.url)).size,quiet,stopped:voices().every(v=>v.paused),timer:R.eventState.rain_drum.timer};
+  return{overlap:before.filter(v=>!v.paused&&!v.ended).length,notes:new Set(before.map(v=>v.url)).size,rates:before.map(v=>v.playbackRate),quiet,stopped:voices().every(v=>v.paused),timer:R.eventState.rain_drum.timer};
 });
-if(drum.overlap<2||drum.notes<2||!drum.quiet||!drum.stopped||drum.timer!==null)throw new Error(`Rain drum overlap/volume/stop failed: ${JSON.stringify(drum)}`);
+if(drum.overlap<2||drum.notes<2||drum.rates.some(rate=>rate<.9||rate>1.1)||!drum.rates.some(rate=>Math.abs(rate-1)>.005)||!drum.quiet||!drum.stopped||drum.timer!==null)throw new Error(`Rain drum clustered overlap/pitch/volume/stop failed: ${JSON.stringify(drum)}`);
 const porch=await page.evaluate(async()=>{
   const R=window.LullabyPlayerRuntime,preset=R.presets.find(p=>p.id==='preset_rain_eaves');
   await R.applyPreset(preset.id);

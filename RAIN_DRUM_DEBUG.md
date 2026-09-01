@@ -2,11 +2,11 @@
 
 Available only on the existing debug host and localhost. Production and Android are not promoted by this experiment.
 
-- Mixer: `rain_drum`, default off; five real tongue-drum samples C3/D3/E3/G3/A3, not a recording of rain hitting an instrument.
+- Mixer: `rain_drum`, default off. The five CC0 tongue-drum previews are reshaped into short rain-on-metal hits rather than sustained notes.
 - Preset: **비 오는 날, 처마 아래** / **Rain Beneath the Eaves**. Rain 45%, rain drum 28%, master 65%. No thunder or cafe audio.
-- Random intervals: 0.9–3.8 seconds, with a 12% chance of an additional 1.8–2.6 second rest. No immediate pitch repetition; adjacent scale tones are weighted 4, next-nearest 2, larger jumps 1.
-- Stereo tails are baked into 7.4-second assets. Up to eight reusable native-audio voices can overlap; an occupied voice is never restarted by a new note.
-- Source provenance and reproducible audio processing: `tools/prepare_rain_drum.py`. All five source pages are CC0; no public attribution entry is required or added.
+- Rhythm: irregular one-to-four-hit groups, 75–260 ms inside a `타닥 / 탁 / 타다닥` group and 0.65–2.4 seconds between groups. Pitch varies narrowly per hit instead of following a scale melody.
+- Each hit is 1.35 seconds with a fast metallic transient and damped body. Up to eight reusable native-audio voices can overlap; an occupied voice is never restarted.
+- Source provenance is unchanged. `tools/prepare_rain_texture.py` reproducibly performs the second-stage transient shaping. All five source pages are CC0; no public attribution entry is required or added.
 - Background: `web/assets/simple-scenes/rain-eaves.webp`, generated with the built-in image-generation tool, then encoded as WebP. No existing background replaced.
 
 ## Final image prompt

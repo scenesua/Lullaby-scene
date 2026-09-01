@@ -7,10 +7,10 @@
       "category": "other",
       "kind": "event",
       "previewOnly": true,
-      "url": "/audio/rain-drum/c3.ogg",
-      "eventVariants": ["/audio/rain-drum/c3.ogg", "/audio/rain-drum/d3.ogg", "/audio/rain-drum/e3.ogg", "/audio/rain-drum/g3.ogg", "/audio/rain-drum/a3.ogg"],
-      "eventMinSeconds": 0.9,
-      "eventMaxSeconds": 3.8,
+      "url": "/audio/rain-drum/c3.ogg?v=2",
+      "eventVariants": ["/audio/rain-drum/c3.ogg?v=2", "/audio/rain-drum/d3.ogg?v=2", "/audio/rain-drum/e3.ogg?v=2", "/audio/rain-drum/g3.ogg?v=2", "/audio/rain-drum/a3.ogg?v=2"],
+      "eventMinSeconds": 0.65,
+      "eventMaxSeconds": 2.4,
       "defaultVolume": 35
     },
     {
@@ -58,7 +58,7 @@
       "name": "Forest",
       "category": "nature",
       "kind": "continuous",
-      "url": "/audio/forest.ogg?v=3",
+      "url": "/audio/forest.ogg?v=4",
       "defaultVolume": 30
     },
     {

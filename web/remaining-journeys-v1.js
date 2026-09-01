@@ -37,7 +37,7 @@
     forest_temple_journey:{
       icon:'卍',title:['Forest Temple','숲속 절'],description:['A bright forest temple for rest and meditation, with birds, a quiet singing bowl, distant gravel footsteps, and occasional verified sutra readings.','밝은 숲속 절에서 새소리와 잔잔한 싱잉볼, 멀리 자갈을 밟는 발소리, 검증된 경전 낭독을 드물게 듣는 휴식·명상 여정입니다.'],
       durations:[90000,600000,600000,90000],phases:[['Entering the temple path','절길에 들어서는 중'],['Morning courtyard','아침 마당에 머무는 중'],['Forest meditation','숲속 명상 중'],['Returning to the path','절길로 돌아가는 중'],['Leaving quietly','조용히 나서는 중']],
-      nodes:{departure:['/audio/scenes/forest_temple_journey/forest_temple_path_walk_001.ogg?v=1',104.007],forest:['/audio/scenes/forest_temple_journey/forest_temple_forest_bed_001.ogg?v=1',73.220],birds:['/audio/scenes/forest_temple_journey/forest_temple_korean_distant_birds_bed_001.ogg?v=1',120.030],bowl:['/audio/scenes/forest_temple_journey/forest_temple_bowl_distant_bed_001.ogg?v=1',77.007]},roles:{departure:['departure','forest','birds'],bed:['forest','birds','bowl'],arrival:['forest','birds','bowl']},gains:{departure:1,forest:.121,birds:.11,bowl:.227},bedStartsAtPhaseBoundary:true,event:{sequence:'temple',label:['Temple sound','절의 소리'],minMs:210000,maxMs:540000,phases:[2,3],sources:{moktak:['/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg?v=2',77165],gravel:['/audio/scenes/forest_temple_journey/forest_temple_gravel_event_001.ogg?v=2',26907],heartSutra:['/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?v=5',120196]}},
+      nodes:{departure:['/audio/scenes/forest_temple_journey/forest_temple_path_walk_001.ogg?v=1',104.007],forest:['/audio/scenes/forest_temple_journey/forest_temple_forest_bed_001.ogg?v=2',65.214],birds:['/audio/scenes/forest_temple_journey/forest_temple_korean_distant_birds_bed_001.ogg?v=1',120.030],bowl:['/audio/scenes/forest_temple_journey/forest_temple_bowl_distant_bed_001.ogg?v=1',77.007]},roles:{departure:['departure','forest','birds'],bed:['forest','birds','bowl'],arrival:['forest','birds','bowl']},gains:{departure:1,forest:.121,birds:.11,bowl:.227},bedStartsAtPhaseBoundary:true,event:{sequence:'temple',label:['Temple sound','절의 소리'],minMs:210000,maxMs:540000,phases:[2,3],sources:{moktak:['/audio/scenes/forest_temple_journey/forest_temple_moktak_event_001.ogg?v=2',77165],gravel:['/audio/scenes/forest_temple_journey/forest_temple_gravel_event_001.ogg?v=2',26907],heartSutra:['/audio/scenes/forest_temple_journey/forest_temple_heart_sutra_event_001.ogg?v=5',120196]}},
       macros:[['Forest presence','숲의 존재감'],['Bird activity','새의 활동감'],['Temple resonance','절의 울림'],['Meditation depth','명상의 깊이']],detail:['Quiet temple ambience','고요한 절의 기척'],fx:[
         {gain:.92,cutoff:11500,gainSeconds:8,filterSeconds:12,roleFadeSeconds:10,visualMs:900,seekDelayMs:145},{gain:1,cutoff:12500,gainSeconds:12,filterSeconds:18,roleFadeSeconds:14,visualMs:1250,seekDelayMs:200},{gain:.88,cutoff:9200,gainSeconds:20,filterSeconds:30,roleFadeSeconds:20,visualMs:1700,seekDelayMs:270},{gain:.96,cutoff:11000,gainSeconds:14,filterSeconds:21,roleFadeSeconds:16,visualMs:1400,seekDelayMs:225},{gain:.9,cutoff:10500,gainSeconds:10,filterSeconds:15,roleFadeSeconds:12,visualMs:1050,seekDelayMs:170}
       ]
@@ -48,7 +48,7 @@
   const hoodConfig=configs.hood_journey;delete configs.hood_journey;configs.hood_journey=hoodConfig;
   const base={start:startScene,pause:pauseScene,stop:stopScene,phaseFor,updateUi:updateSceneUi,updateAudio:updateSceneAudio};
   const playButton=document.getElementById('scenePlay');if(playButton)playButton.removeEventListener('click',base.start);
-  const media={},eventNodes={},hoodVoiceCursor={gunshot:0,gunShotgun:0};let audibleRole=null,eventTimers=new Set(),eventLabelUntil=0,currentEventLabel=null,roleGeneration=0,templePhaseIndex=-1,templeStageThreeStarting=false;
+  const media={},eventNodes={},hoodVoiceCursor={gunshot:0,gunShotgun:0};let audibleRole=null,eventTimers=new Set(),eventLabelUntil=0,currentEventLabel=null,roleGeneration=0,templePhaseIndex=-1,templeStageThreeStarting=false,templeFootstepTimer=null;
   const config=()=>configs[activeJourneyId]||null;
   const localizedConfig=()=>window.LullabyLocales?.journey?.(activeJourneyId)||null;
   const language=()=>String(window.LullabyI18n?.language||document.documentElement.lang||'en').trim();
@@ -80,7 +80,7 @@
   }
   async function ensureNodes(){
     const cfg=config();if(!cfg)return;await ensureContext();media[cfg.title[0]]??={};const bucket=media[cfg.title[0]];
-    for(const [key,[url,duration]] of Object.entries(cfg.nodes))if(!bucket[key]){const loop=key!=='departure'&&key!=='arrival'&&key!=='transition',node=loop?makeCrossfadeLoopNode(url,{durationSeconds:duration,fadeSeconds:8}):makeMediaNode(url,{loop:false,preload:'auto'});if(activeJourneyId==='forest_temple_journey'&&key==='bowl'){const panner=ctx.createStereoPanner?.();if(panner){node.filter.disconnect();node.filter.connect(panner).connect(node.gain);panner.pan.value=0;node.panner=panner}}node.gain.gain.value=0;bucket[key]=node}
+    for(const [key,[url,duration]] of Object.entries(cfg.nodes))if(!bucket[key]){const loop=key!=='departure'&&key!=='arrival'&&key!=='transition',seamlessForest=activeJourneyId==='forest_temple_journey'&&key==='forest',node=seamlessForest?makeMediaNode(url,{loop:true,preload:'auto'}):loop?makeCrossfadeLoopNode(url,{durationSeconds:duration,fadeSeconds:8}):makeMediaNode(url,{loop:false,preload:'auto'});if(activeJourneyId==='forest_temple_journey'&&key==='bowl'){const panner=ctx.createStereoPanner?.();if(panner){node.filter.disconnect();node.filter.connect(panner).connect(node.gain);panner.pan.value=0;node.panner=panner}}node.gain.gain.value=0;bucket[key]=node}
     if(cfg.event&&!eventNodes[activeJourneyId]){
       const bucket={};
       if(cfg.event.sources)for(const[key,[url]]of Object.entries(cfg.event.sources)){
@@ -118,7 +118,7 @@
   function prepareTempleRoomFx(){
     if(activeJourneyId!=='forest_temple_journey')return;const events=eventNodes[activeJourneyId];attachTempleRoomFx(events?.heartSutra);attachTempleRoomFx(events?.moktak);
   }
-  function pauseEvent(){for(const timer of eventTimers)clearTimeout(timer);eventTimers.clear();eventLabelUntil=0;currentEventLabel=null;for(const bucket of Object.values(eventNodes))for(const entry of Object.values(bucket))for(const node of(Array.isArray(entry)?entry:[entry])){node.el.pause();node.gain.gain.value=0;try{node.el.currentTime=0}catch{}}}
+  function pauseEvent(){for(const timer of eventTimers)clearTimeout(timer);eventTimers.clear();templeFootstepTimer=null;eventLabelUntil=0;currentEventLabel=null;for(const bucket of Object.values(eventNodes))for(const entry of Object.values(bucket))for(const node of(Array.isArray(entry)?entry:[entry])){node.el.pause();node.gain.gain.value=0;try{node.el.currentTime=0}catch{}}}
   function pauseNodes(reset=false){pauseEvent();for(const bucket of Object.values(media))for(const node of Object.values(bucket)){node.el.pause();node.gain.gain.value=0;if(reset)try{node.el.currentTime=0}catch{}}}
   function offset(key,role,ms,total,cfg){const b=boundaries(total,cfg),start=role==='arrival'?b.arrival:role==='bed'?b.departure:0;return Math.max(0,(ms-start)/1000)%cfg.nodes[key][1]}
   async function activateRole(role,ms,total,fadeSeconds){
@@ -130,19 +130,44 @@
   }
   function updateAudio(ms){
     const cfg=config();if(!cfg||!ctx)return;const total=Math.max(60000,durationMinutes*60000),stage=phaseIndex(ms,total,cfg),role=audioRoleFor(ms,total,cfg),roleChanged=role!==audibleRole,fx=transitionProfile(ms,total,cfg),fadeSeconds=role==='bed'?cfg.fx[1].roleFadeSeconds:role==='arrival'?cfg.fx[4].roleFadeSeconds:fx.roleFadeSeconds;
-    if(activeJourneyId==='forest_temple_journey'){const entered=stage!==templePhaseIndex;templePhaseIndex=stage;if(entered&&stage===2&&scenePlaying)forceTempleStageThreeSutra()}else templePhaseIndex=-1;
+    if(activeJourneyId==='forest_temple_journey'){const entered=stage!==templePhaseIndex;templePhaseIndex=stage;if(entered&&scenePlaying){if(stage===1)rearmTempleFootsteps(random(4000,9000));if(stage===2){forceTempleStageThreeSutra();rearmTempleFootsteps(random(10000,26000))}}}else templePhaseIndex=-1;
     void activateRole(role,ms,total,fadeSeconds).catch(console.error);
     const factor=(.88+.18*macro.engine)*(.96+.05*macro.activity)*(.96+.04*macro.turbulence)*(1-.08*macro.night);
     for(const [key,node] of Object.entries(activeNodes())){const on=role&&cfg.roles[role].includes(key),gain=on?(activeJourneyId==='forest_temple_journey'&&key==='bowl'?cfg.gains[key]:cfg.gains[key]*(role==='bed'?factor:1)*fx.gain):0;node.gain.gain.setTargetAtTime(gain,ctx.currentTime,(roleChanged?fadeSeconds:fx.gainSeconds)/3);const templeCutoff=key==='birds'?4800:key==='bowl'?4400:fx.cutoff;node.filter.frequency.setTargetAtTime(activeJourneyId==='forest_temple_journey'?templeCutoff:fx.cutoff,ctx.currentTime,fx.filterSeconds/3);if(node.panner&&key==='bowl')node.panner.pan.setTargetAtTime(0,ctx.currentTime,1.2)}
     const eventNode=eventNodes[activeJourneyId]?.primary;if(eventNode)eventNode.gain.gain.setTargetAtTime((cfg.event.gain??.08)*(.65+.35*macro.activity)*(1-.08*macro.night),ctx.currentTime,.5);
   }
   function later(callback,delay){const timer=setTimeout(()=>{eventTimers.delete(timer);callback()},delay);eventTimers.add(timer);return timer}
+  function rearmTempleFootsteps(delayMs){
+    if(templeFootstepTimer){clearTimeout(templeFootstepTimer);eventTimers.delete(templeFootstepTimer)}
+    templeFootstepTimer=scheduleTempleFootsteps(delayMs);
+  }
+  function scheduleTempleFootsteps(delayMs=30000){
+    const id=activeJourneyId;if(id!=='forest_temple_journey')return null;
+    return later(async()=>{
+      templeFootstepTimer=null;
+      if(activeJourneyId!==id||!scenePlaying||!window.LullabyJourneyEvents?.enabled)return;
+      const cfg=config(),stage=phaseIndex(currentElapsed(),Math.max(60000,durationMinutes*60000),cfg);
+      if(stage===1||stage===2||stage===3)await playTempleFootsteps(stage===1);
+      const next=stage===1?random(38000,76000):(stage===2||stage===3)?random(75000,165000):30000;
+      templeFootstepTimer=scheduleTempleFootsteps(next);
+    },delayMs)
+  }
   const random=(min,max)=>min+Math.random()*(max-min);
   const randomInt=(min,maxExclusive)=>Math.floor(random(min,maxExclusive));
   const hoodGuns=['gunshot','gunShotgun'],hoodVoices=['shout','shoutMale','screamShort','screamCrowd'],hoodSirens=['siren','sirenAlt1','sirenAlt2'];
   const hoodLabels={gunshot:['Distant gunfire','먼 총격'],gunShotgun:['Distant shotgun','먼 산탄총 사격'],siren:['Police siren','경찰 사이렌'],sirenAlt1:['Police siren','경찰 사이렌'],sirenAlt2:['Police siren','경찰 사이렌'],glass:['Breaking glass','유리 파손'],shout:['Distant shouting','먼 고함'],shoutMale:['Distant shouting','먼 고함'],screamShort:['Distant scream','먼 비명'],screamCrowd:['Distant screams','먼 비명'],footsteps:['Footsteps','발소리'],carPass:['Passing car','지나가는 차량'],carDoor:['Car door','차 문'],helicopter:['Helicopter','헬리콥터'],dog:['Dog barking','개 짖는 소리']};
   const templeLabels={moktak:['Wooden moktak','목탁'],gravel:['Slow distant gravel footsteps','멀리 저벅이는 자갈 발소리'],heartSutra:['Heart Sutra · Korean','반야심경 · 한국어 독송']};
-  const templeEventTypes=['moktak','gravel','moktak','gravel','heartSutra'];
+  const templeEventTypes=['moktak','moktak','heartSutra'];
+  async function playTempleFootsteps(nearby,{force=false}={}){
+    const cfg=config(),node=eventNodes.forest_temple_journey?.gravel;if(activeJourneyId!=='forest_temple_journey'||!cfg||!node)return false;
+    if(!node.el.paused&&!force)return false;
+    if(force)node.el.pause();
+    try{
+      const at=ctx.currentTime;node.el.currentTime=0;node.filter.frequency.cancelScheduledValues(at);node.filter.frequency.value=nearby?6400:4600;node.gain.gain.cancelScheduledValues(at);node.gain.gain.value=nearby?.095:.052;
+      if(node.panner){node.panner.pan.cancelScheduledValues(at);node.panner.pan.value=nearby?random(-.14,.14):random(.32,.72)*(Math.random()<.5?-1:1)}
+      currentEventLabel=nearby?['Slow path footsteps','천천히 이어지는 발소리']:['Distant walkers','멀리 걷는 사람들'];eventLabelUntil=performance.now()+cfg.event.sources.gravel[1];await node.el.play();return true;
+    }catch(error){console.warn('temple footsteps unavailable',error);return false}
+  }
   function hoodEventNode(type){
     const entry=eventNodes.hood_journey?.[type];if(!entry)return null;if(!Array.isArray(entry))return entry;
     const index=(hoodVoiceCursor[type]||0)%entry.length;hoodVoiceCursor[type]=index+1;return entry[index];
@@ -195,7 +220,7 @@
     void playTempleEventNow('heartSutra',{resumeRandom:true}).catch(error=>console.warn('stage 3 Heart Sutra unavailable',error)).finally(()=>{templeStageThreeStarting=false});
   }
   function scheduleTempleEvent(delayMs){const cfg=config(),id=activeJourneyId,event=cfg?.event;if(id!=='forest_temple_journey'||event?.sequence!=='temple')return;later(async()=>{if(activeJourneyId!==id||!scenePlaying||!window.LullabyJourneyEvents?.enabled)return;const index=phaseIndex(currentElapsed(),Math.max(60000,durationMinutes*60000),cfg);if(!event.phases.includes(index)){scheduleTempleEvent(90000);return}const available=templeEventTypes.filter(type=>event.sources[type]&&eventNodes[id]?.[type]);if(!available.length)return;const type=available[randomInt(0,available.length)],node=eventNodes[id][type],durationMs=event.sources[type][1],sutra=type==='heartSutra',fromTemple=sutra||type==='moktak';try{node.el.currentTime=0;node.filter.frequency.setValueAtTime(sutra?6100:type==='gravel'?5200:7200,ctx.currentTime);node.gain.gain.setValueAtTime(sutra?.157:type==='gravel'?.075:.09,ctx.currentTime);if(node.panner)node.panner.pan.setValueAtTime(fromTemple?.48:random(-.28,.28),ctx.currentTime);currentEventLabel=templeLabels[type];eventLabelUntil=performance.now()+durationMs;await node.el.play()}catch(error){console.warn(`temple ${type} unavailable`,error)}later(()=>scheduleTempleEvent(),durationMs)},delayMs??random(event.minMs,event.maxMs))}
-  function scheduleEvent(delayMs){const cfg=config();if(!cfg?.event||!scenePlaying||!window.LullabyJourneyEvents?.enabled)return;if(cfg.event.sequence==='hood'){scheduleHoodEvent(delayMs);scheduleHoodTraffic(delayMs==null?random(45000,120000):Math.max(15000,delayMs*.72));return}if(cfg.event.sequence==='temple'){scheduleTempleEvent(delayMs);return}const id=activeJourneyId,event=cfg.event,delay=delayMs??event.minMs+Math.random()*(event.maxMs-event.minMs);later(async()=>{if(activeJourneyId!==id||!scenePlaying||!window.LullabyJourneyEvents?.enabled)return;const index=phaseIndex(currentElapsed(),Math.max(60000,durationMinutes*60000),cfg);if(!event.phases.includes(index)){scheduleEvent(90000);return}try{const node=eventNodes[id]?.primary;node.el.currentTime=0;eventLabelUntil=performance.now()+event.durationMs;await node.el.play()}catch(error){console.warn(`${id} event unavailable`,error)}scheduleEvent()},delay)}
+  function scheduleEvent(delayMs){const cfg=config();if(!cfg?.event||!scenePlaying||!window.LullabyJourneyEvents?.enabled)return;if(cfg.event.sequence==='hood'){scheduleHoodEvent(delayMs);scheduleHoodTraffic(delayMs==null?random(45000,120000):Math.max(15000,delayMs*.72));return}if(cfg.event.sequence==='temple'){scheduleTempleEvent(delayMs);templeFootstepTimer=scheduleTempleFootsteps(30000);return}const id=activeJourneyId,event=cfg.event,delay=delayMs??event.minMs+Math.random()*(event.maxMs-event.minMs);later(async()=>{if(activeJourneyId!==id||!scenePlaying||!window.LullabyJourneyEvents?.enabled)return;const index=phaseIndex(currentElapsed(),Math.max(60000,durationMinutes*60000),cfg);if(!event.phases.includes(index)){scheduleEvent(90000);return}try{const node=eventNodes[id]?.primary;node.el.currentTime=0;eventLabelUntil=performance.now()+event.durationMs;await node.el.play()}catch(error){console.warn(`${id} event unavailable`,error)}scheduleEvent()},delay)}
   function updateUi(){
     const cfg=config(),elapsed=currentElapsed(),total=durationMinutes*60000,remaining=Math.max(0,total-elapsed),info=phaseInfo(elapsed,total,cfg),phase=phaseName(info[0]);
     const translated=localizedConfig(),eventLabel=!window.LullabyJourneyEvents?.enabled?(window.LullabyLocales?.term?.('off')||'Off'):performance.now()<eventLabelUntil?local(currentEventLabel||cfg.event.label):(translated?.detail||local(cfg.detail)),values={phaseLabel:phase,elapsedLabel:fmt(elapsed,true),remainingLabel:fmt(remaining),seatbeltLabel:translated?.stateLabel||(korean()?'운행 중':'In motion'),eventLabel};
@@ -222,6 +247,9 @@
       const calm=['footsteps','carPass','carDoor','dog','dog','helicopter','glass'],picked=calm[randomInt(0,calm.length)];await playHoodEvent(picked,random(picked==='carPass'?.18:picked==='glass'?.68:picked==='dog'?.45:.58,picked==='dog'?.96:1));return local(hoodLabels[picked])
     }
     if(activeJourneyId==='forest_temple_journey'){
+      if(type==='nearFootsteps'||type==='distantFootsteps'){
+        const nearby=type==='nearFootsteps';if(!await playTempleFootsteps(nearby,{force:true}))throw new Error('Forest Temple footsteps are unavailable.');updateUi();return nearby?'2단계 · 내 느린 발소리':'3단계 이후 · 먼 사람들 발소리';
+      }
       const available=templeEventTypes.filter(candidate=>cfg.event.sources[candidate]&&eventNodes[activeJourneyId]?.[candidate]);if(!available.length)throw new Error('Forest Temple event sources are unavailable.');
       const picked=type==='random'?available[randomInt(0,available.length)]:type;if(!available.includes(picked))throw new Error(`Unknown Forest Temple event: ${type}`);
       for(const node of Object.values(eventNodes[activeJourneyId])){node.el.pause();node.el.currentTime=0}
