@@ -6,11 +6,11 @@ const candidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/goo
 const executablePath=candidates.find(path=>fs.existsSync(path));
 if(!executablePath)throw new Error('No Chrome/Chromium executable found on runner');
 const rainHashes={
-  'c3.ogg':'8b28ecc76d615a22d1eb6a61019cb66f041e30107b9beca11490678dcdf36127',
-  'd3.ogg':'825dc863720a347df3e872365624bb97837863197fa7646ddedc1106ca789d15',
-  'e3.ogg':'d029f2c9e92dc1eb6c99f2f841a89d2c564d1556d8f4d70f3ea0a62bfb8bca86',
-  'g3.ogg':'90497139eae47fd56b7793648b3fef8f33ca2a2590d4ecd23dbb865b777feb33',
-  'a3.ogg':'0656f9f1ca899bcade0b0b7c210b1b9d4303699b6edc1bbb6f0b275a05718022'
+  'c3.ogg':'063d35ccbbf3dac6337edb49a265f183f73c1529e4cf2f6b2e633e97c303e5c8',
+  'd3.ogg':'8a715f53ced213ec84556a983c885228007107c3ac5f1215f8e6651605f71bbb',
+  'e3.ogg':'96c0ac4938decc1dd2f725d4128eaf3e7ea6464f837b7c87903d8d27ab05571e',
+  'g3.ogg':'4fd1c53583639da31ac1dd7f3ce9803c283b87dca12090004338d8b3f5dccf81',
+  'a3.ogg':'bafd79dd518ec8a634ef03b391001f56ccfaa57afe744bdfedafb59a6f5f56ef'
 };
 for(const [name,expected] of Object.entries(rainHashes)){
   const bytes=fs.readFileSync(`web/audio/rain-drum/${name}`),actual=createHash('sha256').update(bytes).digest('hex');
