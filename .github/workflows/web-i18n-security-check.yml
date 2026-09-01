@@ -63,8 +63,8 @@ jobs:
             grep -Fq '/mobile-android-shell-v1.js?v=8' "$page"
           done
           grep -Fq '/site-locales-v10.js?v=24' web/sw.js
-          grep -Fq '/i18n-runtime-v3.js?v=10' web/sw.js
-          grep -Fq '/mobile-android-shell-v1.js?v=5' web/sw.js
+          grep -Fq '/i18n-runtime-v3.js?v=11' web/sw.js
+          grep -Fq '/mobile-android-shell-v1.js?v=8' web/sw.js
           ! grep -Fq 'i18n-catalog-v2.js' web/_worker.js
           ! grep -Fq "observe(host,{childList:true,subtree:true" web/i18n-runtime-v3.js
           ! grep -Eq "script-src[^;]*unsafe-(inline|eval)" web/_worker.js
