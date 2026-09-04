@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources><string name="scene_duration_direct">مدة مباشرة</string><string name="scene_duration_direct_hint">HH:MM · أي مدة موجبة</string><string name="scene_duration_apply">تطبيق</string><string name="scene_duration_direct_error">أدخل HH:MM بمدة لا تقل عن 00:01.</string><string name="scene_duration_slider_hint">شريط التمرير: دقيقة–12 ساعة · الأزرار الثابتة اقتراحات خاصة بالمشهد</string></resources>

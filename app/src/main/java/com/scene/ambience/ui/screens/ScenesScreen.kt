@@ -4,6 +4,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +55,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scene.ambience.R
+import com.scene.ambience.data.model.SourceCatalog
+import com.scene.ambience.data.model.UiCategory
 import com.scene.ambience.media.AircraftJourneyTimelineBuilder
 import com.scene.ambience.media.SceneOrchestrator
 import com.scene.ambience.media.TrainJourneyTimeline
@@ -74,6 +79,17 @@ fun ScenesScreen(
     val isAircraft = selectedSceneId == SceneOrchestrator.PASSENGER_AIRCRAFT
     val available = SceneOrchestrator.requiredSourcesFor(selectedSceneId).all { state.library.manifestFor(it) != null }
     var selectedDuration by remember { mutableIntStateOf(if (active) scene.totalDurationMinutes else 480) }
+    var extraSoundsByJourney by remember { mutableStateOf<Map<String, List<String>>>(emptyMap()) }
+    var extraMenuExpanded by remember { mutableStateOf(false) }
+    var pendingExtraSoundId by remember(selectedSceneId) { mutableStateOf<String?>(null) }
+    val selectedExtraSounds = extraSoundsByJourney[selectedSceneId].orEmpty()
+    val extraSoundCandidates = SourceCatalog.all.filter { definition ->
+        definition.uiCategory != UiCategory.JOURNEY_EVENTS &&
+            !definition.sourceId.id.contains("_journey_") &&
+            !definition.sourceId.id.startsWith("forest_temple_") &&
+            definition.sourceId.id != "aircraft_cabin" &&
+            state.library.manifestFor(definition.sourceId.id) != null
+    }
 
     LaunchedEffect(scene.sceneId) {
         if (scene.active) selectedSceneId = scene.sceneId!!
@@ -103,8 +119,12 @@ fun ScenesScreen(
                     FilterChip(
                         modifier = Modifier.heightIn(min = 48.dp).then(if (journeyId == SceneOrchestrator.HOOD_JOURNEY) Modifier.border(1.dp, hoodGold.copy(alpha = if (selectedSceneId == journeyId) .92f else .46f), RoundedCornerShape(8.dp)) else Modifier),
                         selected = selectedSceneId == journeyId,
-                        enabled = !scene.active || selectedSceneId == journeyId,
-                        onClick = { if (!scene.active) selectedSceneId = journeyId },
+                        onClick = {
+                            if (selectedSceneId != journeyId) {
+                                if (scene.active) viewModel.stopScene()
+                                selectedSceneId = journeyId
+                            }
+                        },
                         leadingIcon = if (selectedSceneId == journeyId) ({ Icon(Icons.Filled.Check, contentDescription = null) }) else null,
                         label = { Text(context.getString(sceneShortNameRes(journeyId)), color = if (journeyId == SceneOrchestrator.HOOD_JOURNEY) hoodGold else Color.Unspecified) },
                     )
@@ -152,6 +172,57 @@ fun ScenesScreen(
                         }
                     }
 
+                    Text(context.getString(R.string.scene_add_sound_title), style = MaterialTheme.typography.titleSmall)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedButton(
+                                onClick = { extraMenuExpanded = true },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                val selected = extraSoundCandidates.firstOrNull { it.sourceId.id == pendingExtraSoundId }
+                                Text(selected?.let { context.getString(it.displayNameRes) } ?: context.getString(R.string.scene_choose_sound))
+                            }
+                            DropdownMenu(expanded = extraMenuExpanded, onDismissRequest = { extraMenuExpanded = false }) {
+                                extraSoundCandidates.filterNot { it.sourceId.id in selectedExtraSounds }.forEach { definition ->
+                                    DropdownMenuItem(
+                                        text = { Text(context.getString(definition.displayNameRes)) },
+                                        onClick = {
+                                            pendingExtraSoundId = definition.sourceId.id
+                                            extraMenuExpanded = false
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                        Button(
+                            enabled = pendingExtraSoundId != null && selectedExtraSounds.size < 6,
+                            onClick = {
+                                val id = pendingExtraSoundId ?: return@Button
+                                extraSoundsByJourney = extraSoundsByJourney + (selectedSceneId to (selectedExtraSounds + id).distinct().take(6))
+                                pendingExtraSoundId = null
+                                if (active) viewModel.setSourceVolume(id, 0.25f)
+                            },
+                        ) { Text(context.getString(R.string.scene_add_sound_action)) }
+                    }
+                    if (selectedExtraSounds.isEmpty()) {
+                        Text(context.getString(R.string.scene_no_added_sounds), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    } else {
+                        selectedExtraSounds.forEach { sourceId ->
+                            val definition = extraSoundCandidates.firstOrNull { it.sourceId.id == sourceId } ?: return@forEach
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(context.getString(definition.displayNameRes), style = MaterialTheme.typography.bodyMedium)
+                                OutlinedButton(onClick = {
+                                    extraSoundsByJourney = extraSoundsByJourney + (selectedSceneId to selectedExtraSounds.filterNot { it == sourceId })
+                                    if (active) viewModel.setSourceVolume(sourceId, 0f)
+                                }) { Text(context.getString(R.string.scene_remove_sound_action)) }
+                            }
+                        }
+                    }
+
                     if (!available) {
                         Text(
                             context.getString(sceneUnavailableRes(selectedSceneId)),
@@ -166,7 +237,7 @@ fun ScenesScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Button(
-                            onClick = { viewModel.startScene(selectedSceneId, selectedDuration) },
+                            onClick = { viewModel.startScene(selectedSceneId, selectedDuration, selectedExtraSounds) },
                             modifier = Modifier.fillMaxWidth(),
                         ) { Text(context.getString(R.string.scene_start)) }
                     } else {

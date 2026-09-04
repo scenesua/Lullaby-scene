@@ -195,7 +195,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
         startScene(SceneOrchestrator.PASSENGER_AIRCRAFT, totalDurationMinutes)
     }
 
-    fun startScene(sceneId: String, totalDurationMinutes: Int) {
+    fun startScene(sceneId: String, totalDurationMinutes: Int, extraSourceIds: Collection<String> = emptyList()) {
         val required = SceneOrchestrator.requiredSourcesFor(sceneId)
         if (required.isEmpty() || required.any { uiState.value.library.manifestFor(it) == null }) {
             val message = when (sceneId) {
@@ -210,7 +210,7 @@ class AmbienceViewModel(application: Application) : AndroidViewModel(application
             _events.tryEmit(AmbienceUiEvent.ShowMessage(message))
             return
         }
-        controllerRepository.startScene(sceneId, totalDurationMinutes)
+        controllerRepository.startScene(sceneId, totalDurationMinutes, extraSourceIds)
     }
 
     fun stopScene() = controllerRepository.stopScene()

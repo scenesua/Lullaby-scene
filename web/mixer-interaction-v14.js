@@ -96,11 +96,11 @@
     starting.set(id,task);return task;
   }
 
-  function setVolume(id,percent){
+  function setVolume(id,percent,options={}){
     const def=source(id);if(!def)return Promise.resolve();
     const value=clampPercent(percent);setDesired(id,value);
     if(value===0){disable(id);return Promise.resolve()}
-    R.stopJourney?.();
+    if(!options.preserveJourney)R.stopJourney?.();
     if(def.kind==='event'){
       if(!R.eventState[id]?.enabled)R.startEventLayer(def);
       if(R.eventState[id]){R.eventState[id].enabled=true;R.eventState[id].volume=value/100}

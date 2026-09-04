@@ -65,7 +65,7 @@
     return'departure';
   }
   function trainPhaseIndex(ms,total){const b=trainBoundaries(total);if(ms<b.departure)return 0;if(ms<b.leaving)return 1;if(ms<b.approach)return 2;if(ms<b.arrival)return 3;return ms<total?4:5}
-  function trainStagePoints(total){const b=trainBoundaries(total),label=(key,ko)=>[phaseName(key)||ko,phaseName(key)||ko];return[
+  function trainStagePoints(total){const b=trainBoundaries(total),label=key=>[key,key];return[
     {label:label('Departing','출발'),ms:0},{label:label('Leaving city','도시 이탈'),ms:b.departure},{label:label('Night run','야간 운행'),ms:b.leaving},{label:label('Approaching destination','목적지에 접근하는 중'),ms:b.approach},{label:label('Arriving','도착'),ms:b.arrival}
   ]}
   function trainTransitionProfile(ms,total){return TRAIN_FX[Math.min(4,trainPhaseIndex(ms,total))]}
@@ -108,7 +108,7 @@
     const elapsed=currentElapsed(),total=durationMinutes*60000,remaining=Math.max(0,total-elapsed),[phase]=trainPhaseFor(elapsed,total);
     const eventLabel=!window.LullabyJourneyEvents?.enabled?(isEnglish()?'Off':'꺼짐'):performance.now()<eventLabelUntil?(isEnglish()?'Distant rail joint':'멀리서 전해지는 레일 이음'):copy().none;
     const values={phaseLabel:phase,elapsedLabel:fmt(elapsed,true),remainingLabel:fmt(remaining),seatbeltLabel:phase==='Arrived'?(isEnglish()?'Arrived':'도착'):(isEnglish()?'In motion':'운행 중'),eventLabel};
-    for(const [id,value] of Object.entries(values)){const el=document.getElementById(id);if(el)el.textContent=value}
+    for(const [id,value] of Object.entries(values)){const el=document.getElementById(id);if(el)el.textContent=value}const phaseLabel=document.getElementById('phaseLabel');if(phaseLabel)phaseLabel.dataset.phaseKey=['Departing','Leaving city','Night run','Approaching destination','Arriving','Arrived'][trainPhaseIndex(elapsed,total)];
     const progress=document.getElementById('journeyProgress');if(progress)progress.style.width=`${Math.min(100,elapsed/total*100)}%`;
     updateTrainAudio(elapsed);window.LullabyJourneyStageControl?.sync();updateNowPlaying();
     if(elapsed>=total)stopScene(true);
@@ -128,10 +128,11 @@
   function stopTrain(arrived=false){
     scenePlaying=false;pausedAt=0;clearInterval(sceneTimer);roleGeneration++;pauseTrainNodes(true);audibleRole=null;
     if(playButton)playButton.textContent=copy().start;
-    const values={phaseLabel:arrived?'Arrived':'Ready',elapsedLabel:'00:00',remainingLabel:fmt(durationMinutes*60000),seatbeltLabel:'—',eventLabel:window.LullabyJourneyEvents?.enabled?copy().none:(isEnglish()?'Off':'꺼짐')};
-    for(const [id,value] of Object.entries(values)){const el=document.getElementById(id);if(el)el.textContent=value}
+    const phaseKey=arrived?'Arrived':'Ready',values={phaseLabel:phaseName(phaseKey)||phaseKey,elapsedLabel:'00:00',remainingLabel:fmt(durationMinutes*60000),seatbeltLabel:'—',eventLabel:window.LullabyJourneyEvents?.enabled?copy().none:(window.LullabyLocales?.term?.('off')||'Off')};
+    for(const [id,value] of Object.entries(values)){const el=document.getElementById(id);if(el)el.textContent=value}const phaseLabel=document.getElementById('phaseLabel');if(phaseLabel)phaseLabel.dataset.phaseKey=phaseKey;
     const progress=document.getElementById('journeyProgress');if(progress)progress.style.width='0';
     setStatus(arrived?(isEnglish()?'Journey complete.':'여정이 종료되었습니다.'):(isEnglish()?'Stopped':'정지됨'));updateNowPlaying();
+    document.dispatchEvent(new CustomEvent('lullaby-journey-stopped',{detail:{id:activeJourneyId,arrived}}));
   }
 
   startScene=async function(){return isTrain()?startTrain():aircraft.start()};
@@ -158,7 +159,7 @@
     const row=document.createElement('div');row.id='journeySelector';row.className='journey-selector';row.setAttribute('aria-label','Journey');
     row.innerHTML=`<button type="button" data-journey="${AIRCRAFT_ID}">✈ <span>Aircraft</span></button><button type="button" data-journey="${TRAIN_ID}">▰ <span>Train</span></button>`;
     card.insertAdjacentElement('beforebegin',row);
-    row.addEventListener('click',event=>{const button=event.target.closest('[data-journey]');if(!button||scenePlaying)return;stopScene(false);activeJourneyId=button.dataset.journey;renderJourney();document.dispatchEvent(new CustomEvent('lullaby-journey-changed',{detail:{id:activeJourneyId}}))});
+    row.addEventListener('click',event=>{const button=event.target.closest('[data-journey]');if(!button||button.dataset.journey===activeJourneyId)return;stopScene(false);activeJourneyId=button.dataset.journey;renderJourney();document.dispatchEvent(new CustomEvent('lullaby-journey-changed',{detail:{id:activeJourneyId}}))});
     const style=document.createElement('style');style.textContent='.journey-selector{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.journey-selector button{border:1px solid var(--line,#343a4a);border-radius:999px;background:transparent;color:inherit;padding:9px 14px;cursor:pointer}.journey-selector button.active{border-color:#8aa8ff;background:rgba(92,126,220,.18)}';document.head.appendChild(style);
   }
   function renderJourney(){

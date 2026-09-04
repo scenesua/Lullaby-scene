@@ -12,7 +12,7 @@ const context={window:{},document,navigator:{languages:['en'],language:'en'},loc
 context.window=context;
 vm.runInNewContext(source,context,{filename:'site-locales-v10.js'});
 const {EN,T,TERMS,CATALOG,JOURNEY_TRANSLATIONS,TRAIN_TRANSLATIONS}=context.__localeAudit;
-const languages=['ko','ja','zh-CN','zh-TW','ru','fr','es','pt','th','tl','hi','vi'];
+const languages=['ko','ar','ja','zh-CN','zh-TW','ru','fr','es','pt','th','tl','hi','vi'];
 for(const code of languages){
   const missing=Object.keys(EN).filter(key=>!Object.hasOwn(T[code]||{},key));
   if(missing.length)fail(`Web locale ${code} is missing: ${missing.join(', ')}`);
@@ -39,12 +39,16 @@ if(unknown.length)fail(`HTML uses unknown translation keys: ${unknown.join(', ')
 
 const names=file=>new Set([...read(file).matchAll(/<string\s+name="([^"]+)"/g)].map(match=>match[1]));
 for(const file of fs.readdirSync(path.join(root,'app/src/main/res/values')).filter(name=>name.endsWith('.xml'))){
-  const base=`app/src/main/res/values/${file}`,translated=`app/src/main/res/values-ko/${file}`;
+  const base=`app/src/main/res/values/${file}`;
   if(!read(base).includes('<string '))continue;
-  if(!fs.existsSync(path.join(root,translated)))fail(`Missing Korean resource file: ${file}`);
-  const en=names(base),ko=names(translated),missing=[...en].filter(key=>!ko.has(key));
-  if(missing.length)fail(`Android ${file} is missing Korean strings: ${missing.join(', ')}`);
+  const en=names(base);
+  for(const [code,label] of [['ko','Korean'],['ar','Arabic']]){
+    const translated=`app/src/main/res/values-${code}/${file}`;
+    if(!fs.existsSync(path.join(root,translated)))fail(`Missing ${label} resource file: ${file}`);
+    const localized=names(translated),missing=[...en].filter(key=>!localized.has(key));
+    if(missing.length)fail(`Android ${file} is missing ${label} strings: ${missing.join(', ')}`);
+  }
   const hangul=[...read(base).matchAll(/<string\s+name="([^"]+)"[^>]*>([^<]*[가-힣][^<]*)<\/string>/g)].map(match=>match[1]);
   if(hangul.length)fail(`Android default ${file} contains Korean text: ${hangul.join(', ')}`);
 }
-console.log(`Translation coverage OK: ${Object.keys(EN).length} web keys, ${languages.length+1} locales, Android EN/KO parity.`);
+console.log(`Translation coverage OK: ${Object.keys(EN).length} web keys, ${languages.length+1} locales, Android EN/KO/AR parity.`);

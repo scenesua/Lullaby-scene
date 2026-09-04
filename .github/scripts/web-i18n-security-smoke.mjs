@@ -38,6 +38,7 @@ async function setLanguage(code){await page.evaluate(code=>window.LullabyLocales
 const expected={
   ko:['준비된 장면','비','비 오는 카페'],
   en:['Ready-made Scenes','Rain','Rainy Cafe'],
+  ar:['مشاهد جاهزة','المطر','مقهى ممطر'],
   ja:['用意されたシーン','雨','雨のカフェ'],
   'zh-CN':['预设场景','雨','雨天咖啡馆'],
   'zh-TW':['預設場景','雨聲','雨天咖啡館'],
@@ -58,6 +59,7 @@ for(const[code,[prepared,rain,preset]]of Object.entries(expected)){
   await expectText('#mixerGrid [data-source="rain"] strong',rain);
   await expectText('#builtInPresets [data-preset="preset_rainy_cafe"] strong',preset);
   await expectText('[data-quick-source="rain"] strong',rain);
+  const direction=await page.locator('html').getAttribute('dir');if(direction!==(code==='ar'?'rtl':'ltr'))throw new Error(`document direction mismatch for ${code}: ${direction}`);
   const ui=await page.evaluate(()=>({now:window.LullabyLocales.t('nowPlaying'),black:window.LullabyLocales.t('blackScreen'),scene:window.LullabyLocales.t('sceneScreen'),events:window.LullabyLocales.t('randomEvents'),duration:window.LullabyLocales.t('customDuration')}));
   await expectText('[data-i18n="nowPlaying"]',ui.now);
   await expectText('[data-blackout-label]',ui.black);
@@ -65,7 +67,7 @@ for(const[code,[prepared,rain,preset]]of Object.entries(expected)){
   await expectText('[data-journey-event-label]',ui.events);
   await expectText('[data-direct-title]',ui.duration);
   await expectText('[data-blackout-placement="mobile"] [data-blackout-label]',ui.black);
-  const shortScene={ko:'장면 화면',en:'Scene Screen',ja:'シーン画面','zh-CN':'场景画面','zh-TW':'場景畫面',ru:'Сцена',fr:'Scène',es:'Escena',pt:'Cena',th:'ฉาก',tl:'Eksena',hi:'दृश्य',vi:'Cảnh'};
+  const shortScene={ko:'장면 화면',en:'Scene Screen',ar:'شاشة المشهد',ja:'シーン画面','zh-CN':'场景画面','zh-TW':'場景畫面',ru:'Сцена',fr:'Scène',es:'Escena',pt:'Cena',th:'ฉาก',tl:'Eksena',hi:'दृश्य',vi:'Cảnh'};
   await expectText('[data-mobile-display-label]',shortScene[code]);
   if(await page.locator('[data-journey-display-placement="mobile"]').getAttribute('aria-label')!==ui.scene)throw new Error('Full accessible scene label missing');
   for(const width of [320,390]){
@@ -73,7 +75,7 @@ for(const[code,[prepared,rain,preset]]of Object.entries(expected)){
     const controls=await page.locator('.android-top-actions>button,.android-top-blackout').evaluateAll(buttons=>buttons.map(button=>{const r=button.getBoundingClientRect(),label=button.querySelector('span');return{width:r.width,height:r.height,right:r.right,label:label?.textContent,clipped:label&&(label.getBoundingClientRect().top+label.scrollHeight>r.bottom-2||label.scrollWidth>r.width-6)}}));
     if(controls.length!==4||controls.some(c=>c.width<44||c.height<44||c.right>width||!c.label||c.clipped))throw new Error(`Mobile action layout ${code}/${width}: ${JSON.stringify(controls)}`);
     const tabs=await page.locator('.mobile-tab').evaluateAll(buttons=>buttons.map(button=>{const r=button.getBoundingClientRect();return{x:r.x,right:r.right,width:r.width,height:r.height,svg:button.querySelectorAll('svg').length}}));
-    if(tabs.length!==5||tabs.some((tab,index)=>tab.width<44||tab.height<44||tab.svg!==1||(index>0&&tab.x-tabs[index-1].right<5)))throw new Error(`Bottom tab spacing ${code}/${width}: ${JSON.stringify(tabs)}`);
+    const tabsByPosition=[...tabs].sort((a,b)=>a.x-b.x);if(tabs.length!==5||tabs.some(tab=>tab.width<44||tab.height<44||tab.svg!==1)||tabsByPosition.some((tab,index)=>index>0&&tab.x-tabsByPosition[index-1].right<5))throw new Error(`Bottom tab spacing ${code}/${width}: ${JSON.stringify(tabs)}`);
   }
   await page.setViewportSize({width:1280,height:900});
 }
@@ -192,4 +194,4 @@ if(!await page.locator('[data-panel="settings"]').evaluate(el=>el.classList.cont
 await page.evaluate(()=>window.__mutationObserver?.disconnect());
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log(`${browserName}: 13-locale + mobile shell + blackout placement + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);
+console.log(`${browserName}: 14-locale + mobile shell + blackout placement + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);

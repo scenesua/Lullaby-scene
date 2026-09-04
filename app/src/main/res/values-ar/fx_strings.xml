@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_fx">FX</string><string name="fx_master">رف المؤثرات الداخلي</string><string name="fx_master_desc">يشغل الرف أو يوقفه. يبقى الصوت دون تغيير عندما تكون كل القيم 0%.</string>
+    <string name="fx_tone">النغمة</string><string name="fx_tone_desc">اضبط الدفء وهواء الترددات العالية من دون استبدال المعادل.</string><string name="fx_warmth">الدفء</string><string name="fx_warmth_desc">يضيف امتلاء لطيفا للترددات المتوسطة المنخفضة مع ضبط الجهير العميق.</string><string name="fx_air">الهواء</string><string name="fx_air_desc">يعيد قدرا بسيطا من الانفتاح والتفاصيل في الترددات العليا.</string>
+    <string name="fx_body">القوام</string><string name="fx_body_desc">يضيف وزنا منخفضا منضبطا باستخدام جلسة صوت الجهاز.</string><string name="fx_body_amount">قوام الجهير</string><string name="fx_body_amount_desc">تعزيز محافظ للجهير؛ 0% يتجاوزه بالكامل.</string>
+    <string name="fx_space">المكان</string><string name="fx_space_desc">يوسع الأجواء بحساسية تناسب كل مصدر.</string><string name="fx_space_amount">العرض المكاني</string><string name="fx_space_amount_desc">تستجيب الغابات والمقاهي والطائرات والقطارات والطبيعة أكثر، وتستجيب الضوضاء الثابتة والمراوح أقل.</string>
+    <string name="fx_dynamics">الديناميكية</string><string name="fx_dynamics_desc">يلطف القمم ويدمج طبقات الأجواء.</string><string name="fx_glue">الدمج</string><string name="fx_glue_desc">يفعل الديناميكية والتحديد بلطف بدلا من الضغط القاسي.</string>
+    <string name="fx_output">الخرج</string><string name="fx_output_desc">الكسب النهائي بعد مرحلتي النغمة والديناميكية.</string><string name="fx_loudness">شدة الصوت</string><string name="fx_loudness_desc">يضيف كسبا محدودا ومريحا للاستماع الطويل.</string>
+    <string name="fx_eq_on">معادل الصوت مفعل</string><string name="fx_eq_off">تم تجاوز معادل الصوت</string><string name="fx_eq_editor_desc">يوجد معادل الرسوم ذي النطاقات العشرة داخل رف المؤثرات.</string><string name="fx_open_eq">فتح معادل 10 نطاقات</string><string name="fx_reset">إعادة ضبط المؤثرات الداخلية</string>
+</resources>

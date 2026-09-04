@@ -55,6 +55,7 @@ object Commands {
     const val EXTRA_ELAPSED_MS = "elapsed_ms"
     const val EXTRA_DIRECTION = "direction"
     const val EXTRA_ENABLED = "enabled"
+    const val EXTRA_SCENE_SOURCES = "scene_sources"
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -122,10 +123,11 @@ object Commands {
         loudness = args.getFloat(EXTRA_FX_LOUDNESS, 0f),
     ).normalized()
 
-    fun startScene(sceneId: String, totalDurationMinutes: Int): SessionCommand =
+    fun startScene(sceneId: String, totalDurationMinutes: Int, extraSourceIds: Collection<String> = emptyList()): SessionCommand =
         SessionCommand(START_SCENE, Bundle().apply {
             putString(EXTRA_SCENE_ID, sceneId)
             putInt(EXTRA_ARC_MINUTES, totalDurationMinutes)
+            putStringArrayList(EXTRA_SCENE_SOURCES, ArrayList(extraSourceIds.take(6)))
         })
 
     val stopScene: SessionCommand = SessionCommand(STOP_SCENE, Bundle())

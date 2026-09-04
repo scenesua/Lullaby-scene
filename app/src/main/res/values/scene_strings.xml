@@ -111,4 +111,9 @@
     <string name="update_install_failed">Could not open the Android package installer</string>
     <string name="scene_previous_phase">◀ Previous phase</string>
     <string name="scene_next_phase">Next phase ▶</string>
+    <string name="scene_add_sound_title">Add a sound to this journey</string>
+    <string name="scene_choose_sound">Choose a sound</string>
+    <string name="scene_add_sound_action">Add</string>
+    <string name="scene_remove_sound_action">Remove</string>
+    <string name="scene_no_added_sounds">No added sounds</string>
 </resources>
