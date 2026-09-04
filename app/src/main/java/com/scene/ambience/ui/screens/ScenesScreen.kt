@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -172,7 +173,7 @@ fun ScenesScreen(
                         }
                     }
 
-                    Text(context.getString(R.string.scene_add_sound_title), style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.scene_add_sound_title), style = MaterialTheme.typography.titleSmall)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -184,12 +185,12 @@ fun ScenesScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 val selected = extraSoundCandidates.firstOrNull { it.sourceId.id == pendingExtraSoundId }
-                                Text(selected?.let { context.getString(it.displayNameRes) } ?: context.getString(R.string.scene_choose_sound))
+                                Text(stringResource(selected?.displayNameRes ?: R.string.scene_choose_sound))
                             }
                             DropdownMenu(expanded = extraMenuExpanded, onDismissRequest = { extraMenuExpanded = false }) {
                                 extraSoundCandidates.filterNot { it.sourceId.id in selectedExtraSounds }.forEach { definition ->
                                     DropdownMenuItem(
-                                        text = { Text(context.getString(definition.displayNameRes)) },
+                                        text = { Text(stringResource(definition.displayNameRes)) },
                                         onClick = {
                                             pendingExtraSoundId = definition.sourceId.id
                                             extraMenuExpanded = false
@@ -206,19 +207,19 @@ fun ScenesScreen(
                                 pendingExtraSoundId = null
                                 if (active) viewModel.setSourceVolume(id, 0.25f)
                             },
-                        ) { Text(context.getString(R.string.scene_add_sound_action)) }
+                        ) { Text(stringResource(R.string.scene_add_sound_action)) }
                     }
                     if (selectedExtraSounds.isEmpty()) {
-                        Text(context.getString(R.string.scene_no_added_sounds), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.scene_no_added_sounds), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
                         selectedExtraSounds.forEach { sourceId ->
                             val definition = extraSoundCandidates.firstOrNull { it.sourceId.id == sourceId } ?: return@forEach
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(context.getString(definition.displayNameRes), style = MaterialTheme.typography.bodyMedium)
+                                Text(stringResource(definition.displayNameRes), style = MaterialTheme.typography.bodyMedium)
                                 OutlinedButton(onClick = {
                                     extraSoundsByJourney = extraSoundsByJourney + (selectedSceneId to selectedExtraSounds.filterNot { it == sourceId })
                                     if (active) viewModel.setSourceVolume(sourceId, 0f)
-                                }) { Text(context.getString(R.string.scene_remove_sound_action)) }
+                                }) { Text(stringResource(R.string.scene_remove_sound_action)) }
                             }
                         }
                     }
