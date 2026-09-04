@@ -111,4 +111,9 @@
     <string name="update_install_failed">Android 패키지 설치 화면을 열지 못했습니다</string>
     <string name="scene_previous_phase">◀ 이전 단계</string>
     <string name="scene_next_phase">다음 단계 ▶</string>
+    <string name="scene_add_sound_title">여정에 소리 추가</string>
+    <string name="scene_choose_sound">소리 선택</string>
+    <string name="scene_add_sound_action">추가</string>
+    <string name="scene_remove_sound_action">제거</string>
+    <string name="scene_no_added_sounds">추가된 소리 없음</string>
 </resources>

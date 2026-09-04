@@ -70,10 +70,11 @@
     for(const node of [sceneNode,taxiNode])if(node){node.el.pause();try{node.el.currentTime=0}catch{}node.gain.gain.value=0}
     audiblePhase=arrived?'Arrived':'Ready';
     if(playButton)playButton.textContent=english()?'▶ Start journey':'▶ 장면 시작';
-    const ids={phaseLabel:arrived?'Arrived':'Ready',elapsedLabel:'00:00',remainingLabel:fmt(durationMinutes*60000),seatbeltLabel:'—',eventLabel:'None'};
-    for(const [id,text] of Object.entries(ids)){const el=document.getElementById(id);if(el)el.textContent=text}
+    const phaseKey=arrived?'Arrived':'Ready',ids={phaseLabel:localizedPhase(phaseKey),elapsedLabel:'00:00',remainingLabel:fmt(durationMinutes*60000),seatbeltLabel:'—',eventLabel:localizedTerm('none','None')};
+    for(const [id,text] of Object.entries(ids)){const el=document.getElementById(id);if(el)el.textContent=text}const phaseLabel=document.getElementById('phaseLabel');if(phaseLabel)phaseLabel.dataset.phaseKey=phaseKey;
     const progress=document.getElementById('journeyProgress');if(progress)progress.style.width='0';syncJourneySeekAria();
     setStatus(arrived?(english()?'Journey complete.':'여정이 종료되었습니다.'):(english()?'Stopped':'정지됨'));updateNowPlaying();
+    document.dispatchEvent(new CustomEvent('lullaby-journey-stopped',{detail:{id:activeJourneyId,arrived}}));
   };
   startScene=async function(){
     try{
@@ -121,18 +122,20 @@
   const aircraftStageLabels={
     'Taxi out':['Taxi out','지상 이동'],'Takeoff':['Takeoff','이륙'],'Climb':['Climb','상승'],'Cruise':['Cruise','순항'],Descent:['Descent','하강'],Approach:['Approach','접근'],Touchdown:['Touchdown','착륙'],'Taxi in':['Taxi in','도착 이동'],Arrived:['Arrived','도착']
   };
+  const localizedPhase=raw=>window.LullabyCatalogI18n?.phaseName?.(raw)||raw;
+  const localizedTerm=(key,fallback)=>{const term=window.LullabyLocales?.term?.(key);return term&&term!==key?term:(window.LullabyLocales?.t?.(key)||fallback)};
   function aircraftStagePoints(total){return phaseSteps.map(([name,ratio])=>({label:aircraftStageLabels[name],ms:Math.min(total-1,Math.round(total*ratio))}))}
   function currentStagePoints(){const total=Math.max(60000,durationMinutes*60000);if(activeJourneyId==='train_journey'&&window.LullabyTrainJourney?.stagePoints)return window.LullabyTrainJourney.stagePoints(total);if(window.LullabyRemainingJourneys?.configs?.[activeJourneyId]&&window.LullabyRemainingJourneys.stagePoints)return window.LullabyRemainingJourneys.stagePoints(total);return aircraftStagePoints(total)}
   function renderStageControl(){
-    const bar=document.getElementById('journeyStageBar'),select=document.getElementById('journeyStageSelect');if(!bar||!select)return;const ko=!english(),points=currentStagePoints();
-    const label=document.querySelector('.journey-stage-select span');if(label)label.textContent=ko?'여정 단계':'Journey stage';
-    bar.innerHTML=points.map((point,index)=>`<button type="button" data-stage-index="${index}"><span>${index+1}</span><b>${point.label[ko?1:0]}</b></button>`).join('');
-    select.innerHTML=points.map((point,index)=>`<option value="${index}">${index+1}. ${point.label[ko?1:0]}</option>`).join('');syncStageControl();
+    const bar=document.getElementById('journeyStageBar'),select=document.getElementById('journeyStageSelect');if(!bar||!select)return;const points=currentStagePoints();
+    const label=document.querySelector('.journey-stage-select span');if(label)label.textContent=localizedTerm('journeyStages','Journey stage');
+    bar.innerHTML=points.map((point,index)=>{const raw=point.label[0];return`<button type="button" data-stage-index="${index}" data-phase-key="${raw}"><span>${index+1}</span><b>${localizedPhase(raw)}</b></button>`}).join('');
+    select.innerHTML=points.map((point,index)=>{const raw=point.label[0];return`<option value="${index}" data-phase-key="${raw}">${index+1}. ${localizedPhase(raw)}</option>`}).join('');syncStageControl();
   }
   function syncStageControl(){const points=currentStagePoints(),elapsed=currentElapsed();let active=0;for(let i=0;i<points.length;i++)if(elapsed>=points[i].ms-500)active=i;document.querySelectorAll('#journeyStageBar [data-stage-index]').forEach((button,index)=>{button.classList.toggle('active',index===active);if(index===active)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current')});const select=document.getElementById('journeyStageSelect');if(select&&select.value!==String(active))select.value=String(active)}
   function localizePhaseButtons(){
-    const en=english(),prev=document.getElementById('journeyPrevPhase'),next=document.getElementById('journeyNextPhase');
-    if(prev)prev.textContent=en?'◀ Previous phase':'◀ 이전 단계';if(next)next.textContent=en?'Next phase ▶':'다음 단계 ▶';
+    const prev=document.getElementById('journeyPrevPhase'),next=document.getElementById('journeyNextPhase');
+    if(prev)prev.textContent=localizedTerm('previousPhase','◀ Previous phase');if(next)next.textContent=localizedTerm('nextPhase','Next phase ▶');
   }
   function syncEventToggle(){const button=document.getElementById('journeyEventToggle'),label=document.querySelector('[data-journey-event-label]'),name=window.LullabyLocales?.t?.('randomEvents')||'Random events',term=(key,fallback)=>window.LullabyLocales?.term?.(key)||fallback;if(label)label.textContent=name;if(button){button.setAttribute('aria-label',name);button.setAttribute('aria-checked',String(journeyEventsEnabled));button.textContent=journeyEventsEnabled?term('on','On'):term('off','Off')}}
   function setJourneyEventsEnabled(enabled){journeyEventsEnabled=Boolean(enabled);localStorage.setItem('lullaby-journey-random-events',journeyEventsEnabled?'on':'off');syncEventToggle();if(!journeyEventsEnabled)stopAircraftEvent();else if(scenePlaying&&activeJourneyId==='passenger_aircraft_cabin')scheduleAircraftEvent();document.dispatchEvent(new CustomEvent('lullaby-journey-events-changed',{detail:{enabled:journeyEventsEnabled}}));if(scenePlaying)updateSceneUi();else if(activeJourneyId==='passenger_aircraft_cabin'){const label=document.getElementById('eventLabel');if(label)label.textContent=journeyEventsEnabled?'None':(english()?'Off':'꺼짐')}}
@@ -162,7 +165,7 @@
 
   const baseUpdateSceneUi=updateSceneUi;updateSceneUi=function(){baseUpdateSceneUi();const label=document.getElementById('eventLabel');if(label&&activeJourneyId==='passenger_aircraft_cabin'){if(!journeyEventsEnabled)label.textContent=english()?'Off':'꺼짐';else if(performance.now()<aircraftEventLabelUntil)label.textContent=english()?'Cabin chime':'기내 안내음'}syncJourneySeekAria();syncStageControl()};
   bindJourneySeek();ensurePhaseButtons();
-  document.addEventListener('lullaby-language-changed',()=>{const track=document.querySelector('.journey-track'),label=document.querySelector('.journey-stage-select span');if(track)track.setAttribute('aria-label',english()?'Journey position':'여정 위치');if(label)label.textContent=english()?'Journey stage':'여정 단계';localizePhaseButtons();syncEventToggle();renderStageControl();syncJourneySeekAria()});
+  document.addEventListener('lullaby-language-changed',()=>{const track=document.querySelector('.journey-track'),label=document.querySelector('.journey-stage-select span');if(track)track.setAttribute('aria-label',localizedTerm('journeyPosition','Journey position'));if(label)label.textContent=localizedTerm('journeyStages','Journey stage');localizePhaseButtons();syncEventToggle();renderStageControl();syncJourneySeekAria()});
   window.LullabyJourneyStageControl={render:renderStageControl,sync:syncStageControl,transitionToMs:transitionSceneToMs,transitionProfileAt};
   window.LullabyJourneyRuntime={seekToMs:seekSceneToMs,transitionToMs:transitionSceneToMs,previousPhase:()=>stepScenePhase(-1),nextPhase:()=>stepScenePhase(1),get elapsedMs(){return currentElapsed()},get totalMs(){return durationMinutes*60000}};
   window.LullabyJourneyEvents={get enabled(){return journeyEventsEnabled},setEnabled:setJourneyEventsEnabled};

@@ -58,13 +58,13 @@ jobs:
           ! grep -Fq 'eval(' web/player-controls-v11.js
           node -e "const r=require('./web/_routes.json');if(JSON.stringify(r.include)!=='[\"/*\"]'||r.exclude.length)process.exit(1)"
           for page in web/index.html web/player/index.html web/download/index.html web/privacy/index.html web/terms/index.html web/credits/index.html web/blackout/index.html web/404.html; do
-            grep -Fq '/site-locales-v10.js?v=24' "$page"
-            grep -Fq '/i18n-runtime-v3.js?v=11' "$page"
-            grep -Fq '/mobile-android-shell-v1.js?v=8' "$page"
+            grep -Fq '/site-locales-v10.js?v=25' "$page"
+            grep -Fq '/i18n-runtime-v3.js?v=12' "$page"
+            grep -Fq '/mobile-android-shell-v1.js?v=9' "$page"
           done
-          grep -Fq '/site-locales-v10.js?v=24' web/sw.js
-          grep -Fq '/i18n-runtime-v3.js?v=11' web/sw.js
-          grep -Fq '/mobile-android-shell-v1.js?v=8' web/sw.js
+          grep -Fq '/site-locales-v10.js?v=25' web/sw.js
+          grep -Fq '/i18n-runtime-v3.js?v=12' web/sw.js
+          grep -Fq '/mobile-android-shell-v1.js?v=9' web/sw.js
           ! grep -Fq 'i18n-catalog-v2.js' web/_worker.js
           ! grep -Fq "observe(host,{childList:true,subtree:true" web/i18n-runtime-v3.js
           ! grep -Eq "script-src[^;]*unsafe-(inline|eval)" web/_worker.js
@@ -93,9 +93,9 @@ jobs:
           grep -Eiq '^content-security-policy:.*frame-ancestors .none.' /tmp/headers
           grep -Eiq '^content-security-policy:.*object-src .none.' /tmp/headers
           grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000' /tmp/headers
-          grep -Fq 'site-locales-v10.js?v=24' /tmp/home
-          grep -Fq 'i18n-runtime-v3.js?v=11' /tmp/home
-          grep -Fq 'mobile-android-shell-v1.js?v=8' /tmp/home
+          grep -Fq 'site-locales-v10.js?v=25' /tmp/home
+          grep -Fq 'i18n-runtime-v3.js?v=12' /tmp/home
+          grep -Fq 'mobile-android-shell-v1.js?v=9' /tmp/home
           curl -fsS http://127.0.0.1:4174/.well-known/security.txt | grep -Fq 'mailto:scenesuastudio@gmail.com'
 
           code=$(curl -sS -o /tmp/cross.json -w '%{http_code}' -X POST \

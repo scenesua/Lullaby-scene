@@ -191,6 +191,9 @@ class AmbiencePlaybackService : MediaSessionService() {
                 val id = args.getString(Commands.EXTRA_SCENE_ID) ?: return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
                 val started = sceneOrchestrator.start(id, args.getInt(Commands.EXTRA_ARC_MINUTES, 480))
                 if (!started) return SessionResult(SessionResult.RESULT_ERROR_BAD_VALUE)
+                args.getStringArrayList(Commands.EXTRA_SCENE_SOURCES).orEmpty().distinct().take(6).forEach { sourceId ->
+                    if (com.scene.ambience.data.model.SourceId.fromId(sourceId) != null) engine.setSourceVolume(sourceId, 0.25f)
+                }
             }
             Commands.STOP_SCENE -> sceneOrchestrator.stopScene()
             Commands.SET_SCENE_MACRO -> {

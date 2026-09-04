@@ -178,7 +178,7 @@ class AmbienceControllerRepository(
     fun setEqualizer(enabled: Boolean, presetName: String, bands: List<Int>) = dispatch(Commands.setEqualizer(enabled, presetName, bands))
     fun setFx(settings: FxSettings) = dispatch(Commands.setFx(settings))
 
-    fun startScene(sceneId: String, totalDurationMinutes: Int) = dispatch(Commands.startScene(sceneId, totalDurationMinutes))
+    fun startScene(sceneId: String, totalDurationMinutes: Int, extraSourceIds: Collection<String> = emptyList()) = dispatch(Commands.startScene(sceneId, totalDurationMinutes, extraSourceIds))
     fun stopScene() = dispatch(Commands.stopScene)
     fun setSceneMacro(key: String, value: Float) = dispatch(Commands.setSceneMacro(key, value))
     fun setSceneDuration(minutes: Int) = dispatch(Commands.setSceneDuration(minutes))
