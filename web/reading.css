@@ -1,0 +1,17 @@
+.reading-page{background:var(--bg,#11131a);color:var(--text,#f5f3ed)}
+.reading-page::before,.content-page::before{background:radial-gradient(900px 620px at 78% -10%,rgba(122,102,175,.09),transparent 68%),var(--bg)}
+@media(prefers-color-scheme:light){.content-page .landing-card:first-child,.content-page .platform{background:linear-gradient(135deg,var(--surface-2),var(--surface))}}
+.reading-main{width:min(100% - 40px,820px);margin:auto;padding:70px 0 96px}
+.reading-hero{padding:16px 0 28px}.reading-hero h1{font-size:clamp(2.25rem,5vw,4.25rem);line-height:1.16;letter-spacing:-.04em;text-wrap:balance}
+.reading-lead{font-size:1.18rem;line-height:1.85;color:var(--muted)}.reading-byline{font-size:.88rem;color:var(--muted)}
+.reading-main section{padding:24px 0;border-bottom:1px solid var(--line);scroll-margin-top:100px}
+.reading-main h2{font-size:clamp(1.35rem,3vw,1.75rem);line-height:1.4;letter-spacing:-.02em}
+.reading-main section p{font-size:1.06rem;line-height:1.95;word-break:keep-all;overflow-wrap:anywhere}
+.reading-main a:not(.button){text-decoration:underline;text-underline-offset:4px}
+.reading-toc,.reading-next{padding:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(135deg,rgba(155,213,209,.07),rgba(216,199,255,.06))}
+.reading-toc,.reading-next nav{display:grid;gap:8px}.reading-toc a,.reading-next nav a{display:block;padding:8px 0;line-height:1.5}
+.reading-next{margin-top:42px}.reading-next p{display:flex;align-items:center;flex-wrap:wrap;gap:20px}
+.reading-main [aria-current=page]{font-weight:700}.reading-page [hidden]{display:none!important}
+.reading-page :where(a,button):focus-visible{outline:3px solid var(--accent-2,#9bd5d1);outline-offset:4px}
+.reading-page .skip-link{position:fixed;top:-100px;left:16px;z-index:1000;padding:12px;background:var(--surface,#202431)}.reading-page .skip-link:focus{top:12px}
+@media(max-width:600px){.reading-main{padding-top:28px}.reading-page .site-header{flex-wrap:wrap;gap:12px}.reading-page .header-actions{flex-wrap:wrap}.reading-page .nav{display:flex;flex-wrap:wrap}.reading-toc,.reading-next{padding:18px}.reading-main section p{word-break:normal}}

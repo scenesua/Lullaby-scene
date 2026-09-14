@@ -16,6 +16,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Wait for public guides and verify ownership files
+        env:
+          TRUST_BASE_URL: https://lullabyscene.com
+        shell: bash
+        run: |
+          for i in {1..24}; do
+            if node .github/scripts/web-trust-pages-smoke.mjs; then exit 0; fi
+            sleep 5
+          done
+          exit 1
       - name: Wait for Cloudflare production and verify blackout v4 plus all Journeys
         shell: bash
         run: |
