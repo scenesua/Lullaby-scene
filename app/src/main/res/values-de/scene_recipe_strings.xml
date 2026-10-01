@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scene_recipe_share_title">Diese Szene teilen</string>
+    <string name="scene_recipe_share_desc">Derselbe Link lässt sich in der Android-App oder im Webplayer öffnen.</string>
+    <string name="scene_recipe_share">Link teilen</string>
+    <string name="scene_recipe_share_chooser">Lullaby Scene teilen</string>
+    <string name="scene_recipe_share_unavailable">Starte vor dem Teilen mindestens einen Klang.</string>
+</resources>

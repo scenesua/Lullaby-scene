@@ -10,10 +10,11 @@
   const clamp=v=>Math.max(0,Math.min(1,Number(v)||0));
   const source=id=>R.sourceById[id]||R.catalog.find(item=>item.id===id)||null;
   const text={
+    de:{share:'Szenenlink kopieren',copied:'Szenenlink kopiert.',invalid:'Dieser Szenenlink konnte nicht gelesen werden.',loaded:'Geteilte Szene geladen.',preview:'Vorschau der geteilten Szene',load:'Laden und abspielen',safe:'Geteilte Links sind auf 8 Klänge und insgesamt 120 % Quellenlautstärke begrenzt.'},
     ko:{share:'씬 링크 복사',copied:'씬 공유 링크를 복사했습니다.',invalid:'씬 공유 링크를 읽지 못했습니다.',loaded:'공유 씬을 불러왔습니다.',preview:'공유 씬 설정 미리보기',load:'불러와 재생',safe:'공유 링크는 최대 8개 소스와 합산 음량 120%로 제한됩니다.'},
     en:{share:'Copy scene link',copied:'Copied the scene share link.',invalid:'Could not read this scene link.',loaded:'Loaded the shared scene.',preview:'Shared Scene settings preview',load:'Load and play',safe:'Shared links are limited to 8 sources and 120% combined source gain.'}
   };
-  const words=()=>ko()?text.ko:text.en;
+  const words=()=>text[window.LullabyI18n?.language||document.documentElement.lang]||text.en;
 
   function encodeUtf8(value){
     const bytes=new TextEncoder().encode(value);let binary='';
@@ -118,7 +119,7 @@
     root.querySelector('[data-recipe-preview-label]').textContent=words().preview;
     root.querySelector('[data-recipe-preview-name]').textContent=recipe.name||'Shared Scene';
     const entries=Object.entries(recipe.mix),total=entries.reduce((sum,[,value])=>sum+value,0);
-    root.querySelector('[data-recipe-preview-summary]').textContent=ko()?`소스 ${entries.length}개 · 마스터 ${Math.round(recipe.master*100)}% · 합산 음량 ${Math.round(total*100)}%`:`${entries.length} sources · Master ${Math.round(recipe.master*100)}% · Combined gain ${Math.round(total*100)}%`;
+    root.querySelector('[data-recipe-preview-summary]').textContent=ko()?`소스 ${entries.length}개 · 마스터 ${Math.round(recipe.master*100)}% · 합산 음량 ${Math.round(total*100)}%`:window.LullabyI18n?.language==='de'?`${entries.length} Klänge · Gesamt ${Math.round(recipe.master*100)}% · Quellenlautstärke ${Math.round(total*100)}%`:`${entries.length} sources · Master ${Math.round(recipe.master*100)}% · Combined gain ${Math.round(total*100)}%`;
     const list=root.querySelector('[data-recipe-preview-sources]');list.replaceChildren(...entries.map(([id,value])=>{const item=document.createElement('li');item.textContent=`${source(id)?.name||id} · ${Math.round(value*100)}%`;return item}));
     root.querySelector('[data-recipe-preview-safe]').textContent=words().safe;
     root.querySelector('[data-recipe-load]').textContent=words().load;

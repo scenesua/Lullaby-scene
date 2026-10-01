@@ -49,7 +49,8 @@ const expected={
   th:['ฉากพร้อมใช้','ฝน','คาเฟ่ยามฝนตก'],
   tl:['Mga Nakahandang Eksena','Ulan','Maulang Café'],
   hi:['तैयार दृश्य','बारिश','बरसाती कैफ़े'],
-  vi:['Cảnh dựng sẵn','Mưa','Quán cà phê mưa']
+  vi:['Cảnh dựng sẵn','Mưa','Quán cà phê mưa'],
+  de:['Fertige Szenen','Regen','Café im Regen']
 };
 const options=await page.locator('.language-select').first().locator('option').evaluateAll(nodes=>nodes.map(node=>node.value));
 if(JSON.stringify(options)!==JSON.stringify(Object.keys(expected)))throw new Error(`language dropdown mismatch: ${JSON.stringify(options)}`);
@@ -67,7 +68,7 @@ for(const[code,[prepared,rain,preset]]of Object.entries(expected)){
   await expectText('[data-journey-event-label]',ui.events);
   await expectText('[data-direct-title]',ui.duration);
   await expectText('[data-blackout-placement="mobile"] [data-blackout-label]',ui.black);
-  const shortScene={ko:'장면 화면',en:'Scene Screen',ar:'شاشة المشهد',ja:'シーン画面','zh-CN':'场景画面','zh-TW':'場景畫面',ru:'Сцена',fr:'Scène',es:'Escena',pt:'Cena',th:'ฉาก',tl:'Eksena',hi:'दृश्य',vi:'Cảnh'};
+  const shortScene={de:'Ansicht',ko:'장면 화면',en:'Scene Screen',ar:'شاشة المشهد',ja:'シーン画面','zh-CN':'场景画面','zh-TW':'場景畫面',ru:'Сцена',fr:'Scène',es:'Escena',pt:'Cena',th:'ฉาก',tl:'Eksena',hi:'दृश्य',vi:'Cảnh'};
   await expectText('[data-mobile-display-label]',shortScene[code]);
   if(await page.locator('[data-journey-display-placement="mobile"]').getAttribute('aria-label')!==ui.scene)throw new Error('Full accessible scene label missing');
   for(const width of [320,390]){
@@ -79,6 +80,28 @@ for(const[code,[prepared,rain,preset]]of Object.entries(expected)){
   }
   await page.setViewportSize({width:1280,height:900});
 }
+// German phase updates must stay German, including after a timer tick and reload.
+await setLanguage('de');
+await page.locator('#journeySelector [data-journey="forest_temple_journey"]').click();
+await page.waitForTimeout(120);
+await expectText('.aircraft-title-row h3','Waldtempel');
+await expectText('#phaseLabel','Bereit');
+await page.evaluate(()=>{document.getElementById('phaseLabel').textContent='Forest meditation';window.LullabyCatalogI18n.apply()});
+await page.waitForTimeout(40);await expectText('#phaseLabel','Meditation im Wald');
+await page.reload({waitUntil:'networkidle'});
+await expectText('.language-select','한국어Englishالعربية日本語简体中文繁體中文РусскийFrançaisEspañolPortuguêsไทยTagalogहिन्दीTiếng ViệtDeutsch');
+if(await page.locator('.language-select').first().inputValue()!=='de')throw new Error('German preference was lost on reload');
+await page.goto(`${baseUrl}/`,{waitUntil:'networkidle'});
+await expectText('.hero-copy h1','Wähle einen Ort.Bleib eine Weile.');
+await expectText('#places-title','Orte zum Verweilen');
+if(await page.locator('html').getAttribute('lang')!=='de')throw new Error('German homepage language is incorrect');
+await page.goto(`${baseUrl}/player/`,{waitUntil:'networkidle'});
+const germanContext=await browser.newContext({locale:'de-DE'});
+const germanPage=await germanContext.newPage();
+await germanPage.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
+await germanPage.goto(`${baseUrl}/player/`,{waitUntil:'networkidle'});
+if(await germanPage.locator('html').getAttribute('lang')!=='de')throw new Error('de-DE browser locale was not normalized to German');
+await germanContext.close();
 await setLanguage('vi');
 await page.locator('#journeySelector [data-journey="spacecraft_journey"]').click();await page.waitForTimeout(120);
 const spacecraftVi=await page.evaluate(()=>window.LullabyLocales.journey('spacecraft_journey'));
@@ -194,4 +217,4 @@ if(!await page.locator('[data-panel="settings"]').evaluate(el=>el.classList.cont
 await page.evaluate(()=>window.__mutationObserver?.disconnect());
 if(errors.length)throw new Error(`browser errors: ${errors.join(' | ')}`);
 await browser.close();
-console.log(`${browserName}: 14-locale + mobile shell + blackout placement + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);
+console.log(`${browserName}: 15-locale + mobile shell + blackout placement + theme stable; idle mutations=${mutationCount}, ticks=${ticks}`);

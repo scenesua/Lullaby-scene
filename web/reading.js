@@ -11,13 +11,13 @@
     }
     document.documentElement.classList.remove('i18n-pending');
     document.querySelectorAll('[data-reading-ko]').forEach(node => {
-      const translated = !['ko', 'en'].includes(locale) && node.dataset.readingKey ? window.LullabyLocales?.t(node.dataset.readingKey) : null;
+      const translated = node.getAttribute(`data-reading-${locale}`) || (!['ko', 'en'].includes(locale) && node.dataset.readingKey ? window.LullabyLocales?.t(node.dataset.readingKey) : null);
       const text = translated || (lang === 'ko' ? node.dataset.readingKo : node.dataset.readingEn);
       if (node.textContent !== text) node.textContent = text;
       const textLanguage = translated ? locale : lang;
       if (node.lang !== textLanguage) node.lang = textLanguage;
     });
-    document.querySelectorAll('[data-reading-title-second]').forEach(node => { node.hidden = !['ko', 'en'].includes(locale); });
+    document.querySelectorAll('[data-reading-title-second]').forEach(node => { node.hidden = !['ko', 'en', 'de'].includes(locale); });
     if (article) document.querySelectorAll('.language-toggle').forEach(button => {
       button.textContent = lang === 'ko' ? 'English' : '한국어';
       button.setAttribute('aria-label', lang === 'ko' ? 'Read in English' : '한국어로 읽기');

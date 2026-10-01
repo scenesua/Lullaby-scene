@@ -1,5 +1,5 @@
 (()=>{
-  const supported=['ko','en','ar','ja','zh-CN','zh-TW','ru','fr','es','pt','th','tl','hi','vi'];
+  const supported=['ko','en','ar','ja','zh-CN','zh-TW','ru','fr','es','pt','th','tl','hi','vi','de'];
   const normalize=value=>{
     const raw=String(value||'').toLowerCase();
     if(raw.startsWith('zh'))return /tw|hk|hant/.test(raw)?'zh-TW':'zh-CN';
