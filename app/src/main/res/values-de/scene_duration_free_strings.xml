@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scene_duration_direct">Eigene Dauer</string>
+    <string name="scene_duration_direct_hint">HH:MM · jede positive Dauer</string>
+    <string name="scene_duration_apply">Übernehmen</string>
+    <string name="scene_duration_direct_error">Gib mindestens 00:01 im Format HH:MM ein.</string>
+    <string name="scene_duration_slider_hint">Regler: 1 Min.–12 Std. · feste Tasten sind Empfehlungen für die jeweilige Szene</string>
+</resources>

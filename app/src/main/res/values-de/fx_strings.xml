@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_fx">FX</string>
+    <string name="fx_master">Interne Effekte</string>
+    <string name="fx_master_desc">Schaltet die Effekte ein oder aus. Bei 0 % auf allen Reglern bleibt der Klang unverändert.</string>
+    <string name="fx_tone">Klangfarbe</string>
+    <string name="fx_tone_desc">Wärme und Luftigkeit der Höhen formen, ohne den Equalizer zu ersetzen.</string>
+    <string name="fx_warmth">Wärme</string>
+    <string name="fx_warmth_desc">Fügt sanfte Fülle in den unteren Mitten hinzu und hält den Tiefbass unter Kontrolle.</string>
+    <string name="fx_air">Luftigkeit</string>
+    <string name="fx_air_desc">Fügt etwas Offenheit und Detail in den hohen Frequenzen hinzu.</string>
+    <string name="fx_body">Fülle</string>
+    <string name="fx_body_desc">Fügt über die Audiositzung des Geräts dezente Tieftonfülle hinzu.</string>
+    <string name="fx_body_amount">Bassfülle</string>
+    <string name="fx_body_amount_desc">Dezente Bassverstärkung; bei 0 % vollständig deaktiviert.</string>
+    <string name="fx_space">Raum</string>
+    <string name="fx_space_desc">Verbreitert die Klangkulisse abhängig von der Quelle, statt jeden Klang gleich zu behandeln.</string>
+    <string name="fx_space_amount">Räumliche Breite</string>
+    <string name="fx_space_amount_desc">Wald, Café, Flugzeug, Zug und Naturklänge reagieren stärker; gleichmäßiges Rauschen und Ventilatoren weniger.</string>
+    <string name="fx_dynamics">Dynamik</string>
+    <string name="fx_dynamics_desc">Glättet Pegelspitzen und verbindet mehrere Klangschichten.</string>
+    <string name="fx_glue">Zusammenhalt</string>
+    <string name="fx_glue_desc">Setzt schrittweise sanfte Dynamikbearbeitung und Pegelbegrenzung statt harter Kompression ein.</string>
+    <string name="fx_output">Ausgabe</string>
+    <string name="fx_output_desc">Endlautstärke nach Klangfarben- und Dynamikbearbeitung.</string>
+    <string name="fx_loudness">Lautheit</string>
+    <string name="fx_loudness_desc">Fügt begrenzte Pegelanhebung hinzu, für angenehmes längeres Hören.</string>
+    <string name="fx_eq_on">Equalizer aktiviert</string>
+    <string name="fx_eq_off">Equalizer deaktiviert</string>
+    <string name="fx_eq_editor_desc">Der grafische 10-Band-Equalizer ist jetzt Teil der internen Effekte.</string>
+    <string name="fx_open_eq">10-Band-EQ öffnen</string>
+    <string name="fx_reset">Interne Effekte zurücksetzen</string>
+</resources>
