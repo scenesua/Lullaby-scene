@@ -2,7 +2,7 @@
 <resources>
     <string name="nav_fx">FX</string>
     <string name="fx_master">Interne Effekte</string>
-    <string name="fx_master_desc">Schaltet die Effekte ein oder aus. Bei 0 % auf allen Reglern bleibt der Klang unverändert.</string>
+    <string name="fx_master_desc" formatted="false">Schaltet die Effekte ein oder aus. Bei 0 % auf allen Reglern bleibt der Klang unverändert.</string>
     <string name="fx_tone">Klangfarbe</string>
     <string name="fx_tone_desc">Wärme und Luftigkeit der Höhen formen, ohne den Equalizer zu ersetzen.</string>
     <string name="fx_warmth">Wärme</string>
@@ -12,7 +12,7 @@
     <string name="fx_body">Fülle</string>
     <string name="fx_body_desc">Fügt über die Audiositzung des Geräts dezente Tieftonfülle hinzu.</string>
     <string name="fx_body_amount">Bassfülle</string>
-    <string name="fx_body_amount_desc">Dezente Bassverstärkung; bei 0 % vollständig deaktiviert.</string>
+    <string name="fx_body_amount_desc" formatted="false">Dezente Bassverstärkung; bei 0 % vollständig deaktiviert.</string>
     <string name="fx_space">Raum</string>
     <string name="fx_space_desc">Verbreitert die Klangkulisse abhängig von der Quelle, statt jeden Klang gleich zu behandeln.</string>
     <string name="fx_space_amount">Räumliche Breite</string>
