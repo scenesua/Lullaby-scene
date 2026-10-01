@@ -50,5 +50,40 @@ try {
     assert(await page.locator('main section:visible').count() >= 6);
   }
   await context.close();
+  const listening = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'ko-KR', serviceWorkers: 'block' });
+  const player = await listening.newPage();
+  const ids = ['passenger_aircraft_cabin','train_journey','spacecraft_journey','ferry_journey','submarine_journey','forest_temple_journey','hood_journey'];
+  for (const id of ids) {
+    await player.goto(`${base}/player/?scene=journey&journey=${id}`);
+    assert.equal(await player.locator('#journeySelector .active').getAttribute('data-journey'), id, 'Guide opens the requested journey');
+    assert.equal(await player.evaluate(() => scenePlaying), false, 'A link never starts playback');
+  }
+  await player.locator('[data-journey="train_journey"]').click();
+  await player.reload();
+  assert.equal(await player.locator('#journeySelector .active').getAttribute('data-journey'), 'train_journey', 'Selection is reflected in the URL');
+  await player.goto(`${base}/player/?journey=unknown%22%5D`);
+  assert.equal(await player.locator('#journeySelector .active').getAttribute('data-journey'), 'passenger_aircraft_cabin', 'Unknown IDs keep the default');
+  await player.goto(`${base}/player/?scene=simple&journey=hood_journey`);
+  assert.equal(await player.locator('#simpleSceneTab').getAttribute('aria-selected'), 'true', 'Explicit simple mode takes precedence');
+  await player.goto(`${base}/sound-design/`);
+  await player.evaluate(() => localStorage.setItem('lullaby-language', 'ko'));
+  await player.reload();
+  assert.equal(await player.locator('audio:visible').count(), 2);
+  await player.locator('audio:visible').first().evaluate(audio => audio.play());
+  await player.locator('audio:visible').last().evaluate(audio => audio.play());
+  assert.equal(await player.locator('audio:visible').first().evaluate(audio => audio.paused), true, 'Listening examples do not overlap');
+  await player.getByRole('button', { name: 'Read in English' }).click();
+  assert.equal(await player.locator('audio').evaluateAll(audios => audios.every(audio => audio.paused)), true, 'Language changes do not leave hidden audio playing');
+  await player.goto(base + '/');
+  assert.equal(await player.locator('.place-entry').count(), 7);
+  await player.evaluate(() => window.LullabyLocales.setLanguage('en'));
+  assert.equal((await player.locator('.hero h1').innerText()).replace(/\s+/g, ' '), 'Choose a place. Stay for a while.');
+  await player.evaluate(() => window.LullabyLocales.setLanguage('ko'));
+  assert.equal((await player.locator('.hero h1').innerText()).replace(/\s+/g, ' '), '잠들기 전, 소리로 고르는 장소.');
+  await player.evaluate(() => window.LullabyLocales.setLanguage('ar'));
+  assert.equal((await player.locator('.hero h1').innerText()).trim(), await player.evaluate(() => window.LullabyLocales.t('heroTitle')), 'Existing localized home titles remain available');
+  await player.evaluate(() => window.LullabyLocales.setLanguage('ko'));
+  assert.equal((await player.locator('.hero h1').innerText()).replace(/\s+/g, ' '), '잠들기 전, 소리로 고르는 장소.', 'Switching back restores both title lines');
+  await listening.close();
   console.log('Five guides: mobile/desktop, KO/EN, saved language, RTL fallback, anchors and no-JS verified.');
 } finally { await browser.close(); }

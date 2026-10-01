@@ -94,6 +94,6 @@
   ensureTopBar();ensureBottomNav();ensureFxPanel();ensureLanguageSetting();ensureJourneyIcons();
   document.addEventListener('lullaby-language-changed',()=>{L()?.apply?.();updateChrome();window.LullabyCatalogI18n?.apply?.()});document.addEventListener('lullaby-locales-applied',updateChrome);document.addEventListener('lullaby-view-changed',inferFromEvents);document.addEventListener('lullaby-scene-mode-changed',inferFromEvents);
   const media=matchMedia('(max-width:900px)');media.addEventListener?.('change',event=>{if(!event.matches&&activeDest==='fx'){window.switchView?.('scene');window.setLullabySceneMode?.('simple')}});
-  setInterval(syncPlayButton,700);showDestination('scenes');setTimeout(()=>{window.LullabyMixerFx?.syncUi?.();updateChrome()},250);
+  setInterval(syncPlayButton,700);showDestination(new URL(location.href).searchParams.get('scene')==='simple'?'prepared':'scenes');setTimeout(()=>{window.LullabyMixerFx?.syncUi?.();updateChrome()},250);
   window.LullabyAndroidWebShell={showDestination,get activeDestination(){return activeDest}};
 })();
