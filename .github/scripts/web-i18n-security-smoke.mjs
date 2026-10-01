@@ -10,7 +10,8 @@ if(browserName==='chromium'&&!executablePath)throw new Error('No Chrome/Chromium
 const baseUrl=(process.env.BASE_URL||'http://127.0.0.1:4173').replace(/\/$/,'');
 
 const browser=await browserType.launch(browserName==='chromium'?{headless:true,executablePath,args:['--no-sandbox']}:{headless:true});
-const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR'});
+// Service workers have their own smoke test; keep visitor API mocks effective here.
+const context=await browser.newContext({viewport:{width:1280,height:900},locale:'ko-KR',serviceWorkers:'block'});
 const page=await context.newPage();
 const errors=[];
 page.on('pageerror',error=>errors.push(String(error)));
@@ -96,7 +97,7 @@ await expectText('.hero-copy h1','Wähle einen Ort.Bleib eine Weile.');
 await expectText('#places-title','Orte zum Verweilen');
 if(await page.locator('html').getAttribute('lang')!=='de')throw new Error('German homepage language is incorrect');
 await page.goto(`${baseUrl}/player/`,{waitUntil:'networkidle'});
-const germanContext=await browser.newContext({locale:'de-DE'});
+const germanContext=await browser.newContext({locale:'de-DE',serviceWorkers:'block'});
 const germanPage=await germanContext.newPage();
 await germanPage.route('**/api/visitors',route=>route.fulfill({status:200,contentType:'application/json',body:'{"available":false}'}));
 await germanPage.goto(`${baseUrl}/player/`,{waitUntil:'networkidle'});
