@@ -83,7 +83,8 @@ function updateCamera(){
  const bend=clamp(state.bowAmount||0,0,1);
  // Bend at the waist: the eyes lower and move nearer to the physical table.
  const eye=[seatEye[0]+TABLE3D.x*.29*bend,seatEye[1]-.39*bend,seatEye[2]-.84*bend];
- const tableLook=[TABLE3D.x,TABLE3D.y+.07,TABLE3D.z-.04];const gaze=fpSmooth(bend)*.93;
+ const pickedAnchor=state.restAction&&state.restActionTime>0?restAnchor(state.restAction):null;
+  const tableLook=[pickedAnchor?pickedAnchor[0]:TABLE3D.x,TABLE3D.y+.06,TABLE3D.z-.04];const gaze=clamp(fpSmooth(bend)*(portrait?1.17:.93),0,1);
  for(let i=0;i<3;i++)target[i]=lerp(target[i],tableLook[i],gaze);
  target[1]+=(state.headPitch||0)*20;
  target[0]+=Math.sin(state.headRoll||0)*1.3;
@@ -328,12 +329,15 @@ const REST_MOTION={
 };
 function restScalar(p,keys){if(p<=keys[0][0])return keys[0][1];for(let i=1;i<keys.length;i++)if(p<=keys[i][0])return lerp(keys[i-1][1],keys[i][1],fpSmooth((p-keys[i-1][0])/(keys[i][0]-keys[i-1][0])));return keys[keys.length-1][1];}
 function restAnchor(k){const T=TABLE3D,yy=T.y+.10;return k==='beer'?[T.x-T.width*.34,yy+.16,T.z+.02]:k==='smoke'?[T.x-T.width*.06,yy+.065,T.z+.005]:[T.x+T.width*.27,yy+.055,T.z+.005];}
+// Portrait phones use a narrower shoulder rig so the hand enters from the screen edge,
+// not from a desktop-sized position offscreen.
+function fpShoulder(){return portrait?[.22,-1.26,-1.13]:[.93,-1.28,-1.06];}
 function fpModelFrame(){if(!state.restAction||state.restActionTime<=0||state.menu)return null;
  const p=restProgress(),k=state.restAction,motion=REST_MOTION[k];if(!motion)return null;
  const localItem=viewPoint(restAnchor(k));
  // Fingers really converge on the position of the world item as we lean over it.
  const contact= k==='beer'?[localItem[0],localItem[1]-.15,localItem[2]]:k==='smoke'?[localItem[0]+.025,localItem[1]-.08,localItem[2]]:[localItem[0]+.04,localItem[1]-.12,localItem[2]];
- const home=motion.home,mouth=motion.mouth;
+ const home=portrait?[.27,motion.home[1],motion.home[2]]:motion.home,mouth=portrait?[0,-.15,-1.16]:motion.mouth;
  let xyz;
  if(p<.085){xyz=fpKey(p,[[0,...home],[.085,home[0]-.08,home[1]+.04,home[2]-.14]]);}
  else if(p<motion.pickup){const w=fpSmooth((p-.085)/(motion.pickup-.085));xyz=home.map((v,i)=>lerp(v,contact[i],w));}
@@ -347,7 +351,7 @@ function fpModelFrame(){if(!state.restAction||state.restActionTime<=0||state.men
  return {k,p,x:xyz[0],y:xyz[1],z:xyz[2],tilt,grip:[xyz[0]+.06,xyz[1]-.12,xyz[2]+.035],head:restScalar(p,motion.head),bow:restScalar(p,motion.bend),holding:p>=motion.pickup&&p<motion.putdown, pickup:motion.pickup,putdown:motion.putdown,contact};
 }
 function fpHand(out,palm,scale=1){const skin=fpRGB('#c9a98b'),hi=fpRGB('#e0ba99'),shade=fpRGB('#9c7c66'),coat=fpRGB('#455957');
- const shoulder=[.93,-1.28,-1.06],elbow=[lerp(shoulder[0],palm[0],.44)+.12,lerp(shoulder[1],palm[1],.36)-.09,lerp(shoulder[2],palm[2],.50)];
+ const shoulder=fpShoulder(),elbow=[lerp(shoulder[0],palm[0],.44)+.12,lerp(shoulder[1],palm[1],.36)-.09,lerp(shoulder[2],palm[2],.50)];
  fpCylinder(out,shoulder,elbow,.145,.134,coat,8);fpCylinder(out,elbow,[palm[0]+.1,palm[1]-.12,palm[2]],.132,.100,coat,8);
  fpCylinder(out,[palm[0]+.09,palm[1]-.13,palm[2]],[palm[0],palm[1]+.005,palm[2]-.02],.094,.11,skin,8);
  for(let i=0;i<4;i++){let off=(i-1.5)*.034;fpCylinder(out,[palm[0]-.06+off,palm[1]-.02,palm[2]+.018],[palm[0]-.085+off,palm[1]+.12-(i%2)*.013,palm[2]-.045],.029,.023,i%2?hi:skin,6);}
@@ -416,7 +420,7 @@ function drawTableProps(L,t){if(fallbackActive)return;const verts=buildTableProp
 }
 function drawFirstPerson3D(L,t){if(fallbackActive||!state.restAction||state.restActionTime<=0||state.menu)return;
  const f=fpModelFrame();if(!f)return;const verts=[];if(f.k==='beer')fpBottle(verts,f);else if(f.k==='smoke')fpSmoke(verts,f);else fpSashimi(verts,f);
- if(!verts.length)return;const projection=projectMatrix((portrait?68:63)*PI/180,aspect,.065,10);
+ if(!verts.length)return;const projection=projectMatrix((portrait?74:62)*PI/180,aspect,.065,10);
  gl.disable(gl.DEPTH_TEST);gl.useProgram(objectProgram);gl.uniformMatrix4fv(U.obj.vp,false,projection);gl.uniform1f(U.obj.time,t);gl.uniform3fv(U.obj.light,[.28,.7,.82]);gl.uniform3fv(U.obj.lightColor,[.95,.87,.74]);gl.uniform3fv(U.obj.ambient,[.62,.68,.66]);gl.uniform3fv(U.obj.fogColor,[0,0,0]);gl.uniform1f(U.obj.fog,0);gl.uniform1f(U.obj.night,L.night);gl.uniform1f(U.obj.ink,state.quality==='pixel'?.67:.28);
  gl.bindBuffer(gl.ARRAY_BUFFER,fpBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.DYNAMIC_DRAW);bindGeometry(fpBuffer);gl.drawArrays(gl.TRIANGLES,0,verts.length/9);
 }
@@ -518,9 +522,9 @@ function drawShoreMoments(){
  // Render a first-person arm reaching the projected table position, using the exact pose as WebGL.
  if(state.restActionTime<=0||!state.restAction)return;
  const f=fpModelFrame();if(!f)return;
- const projectView=(v)=>{let depth=Math.max(.18,-v[2]),F=1/Math.tan((portrait?68:63)*PI/360);return [vw*.5+v[0]*F*vh*.5/depth, vh*.5-v[1]*F*vh*.5/depth];};
- const tip=projectView([f.x,f.y,f.z]),shoulder=projectView([.91,-1.28,-1.08]);
- const scale=clamp(1.65/Math.max(.45,-f.z),.52,1.65),p=f.p;
+ const projectView=(v)=>{let depth=Math.max(.18,-v[2]),F=1/Math.tan((portrait?74:62)*PI/360);return [vw*.5+v[0]*F*vh*.5/depth, vh*.5-v[1]*F*vh*.5/depth];};
+ const tip=projectView([f.x,f.y,f.z]),shoulder=projectView(fpShoulder());
+ const scale=clamp((portrait?1.23:1.65)/Math.max(.45,-f.z),.50,portrait?1.28:1.65),p=f.p;
  pen.save();pen.lineCap='round';pen.lineJoin='round';
  const armStart=[shoulder[0]+28,shoulder[1]+vh*.16],wrist=[tip[0]+12,tip[1]+8];
  const elbow=[lerp(armStart[0],wrist[0],.48)+14*scale,lerp(armStart[1],wrist[1],.53)+18*scale];
@@ -947,6 +951,6 @@ function tick(dt,realDt=dt){if(!state.menu&&state.started){state.gameSeconds+=dt
 function frame(now){const realDt=last?Math.max(0,(now-last)/1000):0;let dt=clamp(realDt,0,.05);last=now;tick(dt,realDt);updateCamera();drawWorld(state.sceneSeconds);drawEffects(dt);requestAnimationFrame(frame)}
 window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,120));
 loadSettings();applyBaitValue();for(const f of inventory.fish){ensureFishID(f);if(!inventory.records.some(r=>r.id===f.id))inventory.records.push({...f,status:'kept',when:new Date().toISOString()});}inventory.records=inventory.records.slice(0,300);save();state.weatherPrev=state.weather;resize();buildWorld();document.querySelectorAll('.placeTile').forEach(b=>b.classList.toggle('active',b.dataset.place===state.spot));setTimeLabel();refreshHUD();requestAnimationFrame(frame);
-window.__stillwater={state,inventory,biteRate,startBiteWait,advanceBiteClock,table:TABLE3D,fishScore,rodPose:getRodPose,rodKeyframe,castRig,buyRod,buyBait,sellFish,renderShop,renderLeaderboard,toggleRodRest,doRestAction,chooseFish:selectFish,debugFrame(){return fpModelFrame()},debugTableProp(k){return propOnTable(k)},debugMotion(){return {bow:state.bowAmount,head:state.headPitch,pose:fpModelFrame()}},triggerBite(){if(state.started&&!state.menu){state.phase='bite';state.biteWindow=5;eventMsg('입질!')}},forceLand(){if(state.started&&!state.menu){if(!state.fish)state.fish=selectFish();landFish()}},setWeather(w){if(WEATHER[w]){$('weatherSelect').value=w;state.weather=w;refreshHUD()}},setSpot};
+window.__stillwater={state,inventory,biteRate,startBiteWait,advanceBiteClock,table:TABLE3D,fishScore,rodPose:getRodPose,rodKeyframe,castRig,buyRod,buyBait,sellFish,renderShop,renderLeaderboard,toggleRodRest,doRestAction,chooseFish:selectFish,debugFrame(){return fpModelFrame()},debugTableProp(k){return propOnTable(k)},debugMotion(){return {bow:state.bowAmount,head:state.headPitch,pose:fpModelFrame()}},debugRestAim(){const f=fpModelFrame();return {table:screenPoint([TABLE3D.x,TABLE3D.y,TABLE3D.z]),prop:state.restAction?screenPoint(restAnchor(state.restAction)):null,tip:f?viewPoint(restAnchor(f.k)):null,viewport:[vw,vh],shoulder:fpShoulder()}},triggerBite(){if(state.started&&!state.menu){state.phase='bite';state.biteWindow=5;eventMsg('입질!')}},forceLand(){if(state.started&&!state.menu){if(!state.fish)state.fish=selectFish();landFish()}},setWeather(w){if(WEATHER[w]){$('weatherSelect').value=w;state.weather=w;refreshHUD()}},setSpot};
 })();
 

@@ -215,13 +215,13 @@ button,select,input,textarea{font-family:var(--font-ui)!important;letter-spacing
 
 /* v1.4 / seated horizon and physical bank layout: rest controls never cover the stand. */
 @media (orientation:portrait){
- #gameRoot .restBar{top:calc(228px + env(safe-area-inset-top));bottom:auto;left:calc(10px + env(safe-area-inset-left));right:calc(10px + env(safe-area-inset-right));width:auto;max-width:none;padding:7px;}
+ #gameRoot .restBar{top:auto;bottom:calc(134px + env(safe-area-inset-bottom));left:calc(10px + env(safe-area-inset-left));right:calc(10px + env(safe-area-inset-right));width:auto;max-width:none;padding:7px;}
  #gameRoot .restHint{display:none;}
  #gameRoot .restButtons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
  #gameRoot .restButtons button{min-width:0;min-height:41px;white-space:nowrap;font-size:10px;padding:6px 4px;}
 }
 @media (orientation:landscape) and (max-height:540px){
- #gameRoot .restBar{top:calc(142px + env(safe-area-inset-top));bottom:auto;left:auto;right:calc(12px + env(safe-area-inset-right));width:min(480px,58vw);}
+ #gameRoot .restBar{top:auto;bottom:calc(90px + env(safe-area-inset-bottom));left:calc(12px + env(safe-area-inset-left));right:auto;width:min(480px,58vw);}
  #gameRoot .restHint{display:none;}
  #gameRoot .restButtons button{min-height:34px;}
 }
