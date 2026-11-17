@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101b1d">
-<title>STILLWATER / Lullaby Scene · Build 2.1 — Retrieval & Species Field Guide</title>
+<title>STILLWATER / Lullaby Scene · Build 2.3.2 — Every Catch Measured</title>
 <!-- Galmuri by Lee Minseo / quiple, SIL Open Font License 1.1.
      Webfont served via the official npm package; no font binaries redistributed. -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
-<link rel="stylesheet" href="game.css?v=21">
-<link rel="stylesheet" href="journal.css?v=21">
+<link rel="stylesheet" href="game.css?v=232">
+<link rel="stylesheet" href="journal.css?v=232">
 </head>
 <body>
 <main id="gameRoot" role="application" aria-label="Stillwater 낚시 게임">
@@ -41,6 +41,17 @@
   <div class="restCaption" id="restCaption" aria-live="polite"></div>
   <div class="biteForecast" id="biteForecast"><strong id="forecastName">조황 보통</strong><span id="forecastDesc">해 질 무렵</span><span id="waitClock" hidden>00:00</span></div><div class="sideLabel" id="sideLabel"><span class="lineIndicator"></span><span id="conditionLine"></span></div>
   <div id="eventBanner" role="status" aria-live="polite"><small id="eventPrefix">A MOMENT IN THE WATER</small><strong id="eventTitle">입질!</strong></div>
+  <div id="recordCelebration" class="recordCelebration" aria-hidden="true"><div class="recordBurstRing"></div><div class="recordStarfield" id="recordStarfield"></div><div class="recordWords"><small>PERSONAL BEST · FIELD JOURNAL</small><strong>NEW RECORD!!</strong><span id="recordDetail"></span></div></div>
+  <!-- Brief physical tape in gold, translucent blue or translucent neutral; the fish stays until keep/release. -->
+  <div id="recordMeasure" class="recordMeasure" aria-hidden="true">
+    <div class="measureOverline">PERSONAL BEST · SPECIMEN MEASURED</div>
+    <div class="measureDevice">
+      <div class="measureSpool"><span class="measureSpoolMark">✳</span></div>
+      <div class="measureTapeClip"><div class="measureTape" id="measureTape"><span class="measureTicks"></span><span class="measureReadout" id="measureReadout">0 cm</span></div></div>
+      <span class="measureCap"></span>
+    </div>
+    <div class="measureSub"><span id="measureSpecies">SPECIMEN</span><strong id="measureWeight">0.00 kg</strong></div>
+  </div>
   <div id="reelToast" aria-hidden="true">줄을 잠시 풀어주세요</div><div id="castPower" aria-hidden="true"><div class="chargeLabel">CAST POWER <b id="powerPercent">0%</b></div><div class="chargeTrack"><i id="chargeFill"></i></div><p>길게 누를수록 멀리 던집니다</p></div>
   <section class="bottomHud" aria-label="게임 조작">
     <div class="statusDock"><small id="statusEyebrow">FIELD NOTE / READY</small><div id="statusTitle">조용히 낚싯대를 들어보세요.</div><p id="statusDescription">던진 뒤에는 물결과 소리를 즐기며 기다리세요.</p></div>
@@ -124,6 +135,7 @@
       </div>
     </div>
   </div>
+  <div id="achievementToast" aria-live="polite" role="status"></div>
   <div id="journalOverlay" hidden role="dialog" aria-modal="true" aria-label="STILLWATER 물고기 도감">
     <div id="journalModal">
       <header class="diaryTop"><div><strong>FIELD JOURNAL</strong><small>STILLWATER · PERSONAL SPECIMEN LOG</small></div><button id="journalClose" type="button" aria-label="도감 닫기">×</button></header>
@@ -144,8 +156,8 @@
   </div>
   <div id="errorBox" hidden><strong>WebGL을 사용할 수 없습니다.</strong><p>최신 Chrome, Edge, Safari에서 열어주세요.</p></div>
 </main>
-<script src="game-content.js?v=21" defer></script>
-<script src="game.js?v=21" defer></script>
-<script src="game-journal.js?v=21" defer></script>
+<script src="game-content.js?v=232" defer></script>
+<script src="game.js?v=232" defer></script>
+<script src="game-journal.js?v=232" defer></script>
 </body>
 </html>

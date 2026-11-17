@@ -240,3 +240,159 @@ button,select,input,textarea{font-family:var(--font-ui)!important;letter-spacing
 #gameRoot.retrieving .actionButton{opacity:.75;cursor:wait}
 @media(orientation:portrait){#gameRoot .actionSide #retrieveButton{width:53px;min-height:56px}}
 @media(orientation:landscape) and (max-height:530px){#gameRoot .actionSide #retrieveButton{width:48px;min-height:48px}}
+
+/* v2.2 — Juicy record celebration, drawn above the game but clear of its buttons. */
+#gameRoot .recordCelebration{position:absolute;z-index:24;top:12%;left:50%;width:min(670px,94vw);height:185px;transform:translateX(-50%);pointer-events:none;display:grid;place-items:center;opacity:0;visibility:hidden;isolation:isolate}
+#gameRoot .recordCelebration.active{opacity:1;visibility:visible;animation:recordEnvelope 3.05s both}
+#gameRoot .recordWords{position:relative;z-index:2;text-align:center;display:grid;gap:5px;justify-items:center;filter:drop-shadow(3px 5px 0 #1c1c19)}
+#gameRoot .recordWords small{color:#fff0b4;font:700 clamp(8px,1.4vw,12px)/1.4 var(--font-data);letter-spacing:.21em;text-shadow:1px 2px 0 #1e160f}
+#gameRoot .recordWords strong{display:block;white-space:nowrap;font:900 clamp(37px,8.4vw,86px)/.95 var(--font-display);letter-spacing:-.018em;color:#ffdf53;-webkit-text-stroke:1.2px #9b5a10;text-shadow:0 3px #764415,0 6px #5d381b,0 9px 18px #080d10,0 0 28px #f8ce4a;}
+#gameRoot .recordWords span{font:700 clamp(10px,1.9vw,15px)/1.5 var(--font-ui);color:#fff8d1;background:rgba(43,33,24,.87);border:1px solid #ffdd76;padding:4px 11px;box-shadow:3px 3px 0 #10161a}
+#gameRoot .recordBurstRing{position:absolute;width:min(435px,79vw);height:min(435px,79vw);border:4px dashed #f7d65b;border-radius:50%;opacity:0;filter:drop-shadow(0 0 10px #ffb443);}
+#gameRoot .recordStarfield{position:absolute;inset:0;z-index:1;display:grid;place-items:center}
+#gameRoot .recordStarfield i{position:absolute;left:50%;top:45%;width:9px;height:9px;display:block;background:#ffe175;border:2px solid #fff6c7;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:recordStar .95s cubic-bezier(.18,.7,.18,1) both;animation-delay:calc(var(--i) * 22ms)}
+@keyframes recordEnvelope{0%,100%{opacity:0;visibility:hidden}5%,78%{opacity:1;visibility:visible}88%{opacity:.9;visibility:visible}}
+@keyframes recordPop{0%{opacity:0;transform:scale(.24) rotate(-6deg)}9%{opacity:1;transform:scale(1.32) rotate(3deg)}15%{transform:scale(.88) rotate(-2deg)}20%{transform:scale(1.06) rotate(1deg)}25%,65%{transform:scale(1)}72%{transform:scale(1.04)}91%,100%{opacity:0;transform:scale(.75) translateY(-35px)}}
+@keyframes recordRing{0%{opacity:0;transform:scale(.13) rotate(-25deg)}10%{opacity:.87}75%{opacity:.62;transform:scale(1.2) rotate(25deg)}100%{opacity:0;transform:scale(1.45) rotate(50deg)}}
+@keyframes recordStar{0%{opacity:0;transform:translate(0,0) scale(.1) rotate(0)}25%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.45) rotate(110deg)}}
+#gameRoot .rodShopPreview{display:inline-block;position:relative;flex:0 0 86px;min-width:86px;height:53px;transform:rotate(-22deg);background:transparent}
+#gameRoot .rodShopPreview i{position:absolute;left:7px;top:23px;width:75px;height:5px;border-radius:5px;background:linear-gradient(90deg,var(--grip) 0 23%,var(--shaft) 23% 82%,var(--tip) 100%);border:1px solid #101d23;box-shadow:0 3px 0 #0a161a}
+#gameRoot .rodShopPreview b{position:absolute;left:18px;top:17px;width:15px;height:15px;border-radius:50%;border:3px solid var(--reel);background:#1c292e;box-shadow:inset 0 0 0 2px var(--tip)}
+#gameRoot .rodShopPreview-bamboo{--grip:#67472f;--shaft:#a87b4b;--tip:#e6d5a6;--reel:#a88f66}
+#gameRoot .rodShopPreview-graphite{--grip:#243138;--shaft:#344d52;--tip:#a1b7a3;--reel:#566f74}
+#gameRoot .rodShopPreview-carbon{--grip:#171e29;--shaft:#222d38;--tip:#b6c0c4;--reel:#303f4b}
+#gameRoot .rodShopPreview-moon{--grip:#353047;--shaft:#4c4a76;--tip:#c0e7e0;--reel:#7365a0}
+@media(max-width:560px){#gameRoot .recordCelebration{top:15%;height:160px}#gameRoot .recordWords strong{font-size:clamp(30px,10vw,51px)}#gameRoot .recordWords small{font-size:7px}#gameRoot .recordStarfield i{width:6px;height:6px}#gameRoot .rodShopPreview{flex-basis:55px;min-width:55px}#gameRoot .rodShopPreview i{width:55px}}
+@media(prefers-reduced-motion:reduce){#gameRoot .recordCelebration.active,#gameRoot .recordWords strong,#gameRoot .recordBurstRing,#gameRoot .recordStarfield i{animation:none!important;opacity:1;visibility:visible}#gameRoot .recordStarfield i,#gameRoot .recordBurstRing{display:none}}
+
+/* Mobile gameplay stays pressable even in fullscreen: no Android selection/callout on game UI. */
+#gameRoot,#gameRoot button,#gameRoot canvas,#gameRoot .actionButton *,#gameRoot .liftButton *{
+ -webkit-touch-callout:none;
+ -webkit-user-select:none;
+ user-select:none;
+ -webkit-user-drag:none;
+}
+#gameRoot .actionButton,#gameRoot .liftButton,#gameRoot #rodStandButton,#gameRoot #retrieveButton{
+ touch-action:none;overscroll-behavior:contain;
+}
+/* Save code is the single intentional place where selecting and copying text is allowed. */
+#gameRoot input,#gameRoot textarea,#gameRoot select,#saveCodeText{
+ -webkit-touch-callout:default;-webkit-user-select:text;user-select:text;
+}
+#gameRoot .recordCelebration.first .recordWords strong{
+ color:#94e7ff;-webkit-text-stroke:1.2px #236d86;
+ text-shadow:0 3px #21617f,0 6px #164357,0 9px 18px #06161d,0 0 28px #6be7ff;
+}
+#gameRoot .recordCelebration.first .recordWords small{color:#c0f4ff}
+#gameRoot .recordCelebration.first .recordWords span{color:#e3faff;border-color:#7edcf0;background:rgba(16,40,51,.9)}
+#gameRoot .recordCelebration.first .recordBurstRing{border-color:#74daf2;filter:drop-shadow(0 0 10px #59d0e8)}
+#gameRoot .recordCelebration.first .recordStarfield i{background:#69e7ff;border-color:#f3fdff}
+@media(orientation:portrait){
+ /* Catch panel uses top 13–36%: celebrate below it, never paint under the result card. */
+ #gameRoot .recordCelebration{top:42%;height:165px}
+}
+@media(orientation:landscape) and (max-height:530px){
+ #gameRoot .recordCelebration{top:29%;left:67%;width:min(55vw,550px);height:160px}
+ #gameRoot .recordWords strong{font-size:clamp(30px,5.4vw,65px)}
+}
+
+/* Restart celebrations only when triggered, not on page load while their parent is hidden. */
+#gameRoot .recordCelebration.active .recordWords strong{animation:recordPop 3.05s both}
+#gameRoot .recordCelebration.active .recordBurstRing{animation:recordRing 2s .1s both}
+#gameRoot .recordWords{padding:9px 18px 12px;max-width:100%;background:radial-gradient(ellipse at center,rgba(10,28,31,.65) 0,rgba(10,28,31,.39) 54%,transparent 84%)}
+@media (orientation:portrait){#gameRoot .recordWords{padding:12px 4px 15px}}
+
+/* v2.3 polishing: leave water/rod unobstructed during fights. */
+#gameRoot.fighting .statusDock{display:none!important}
+#gameRoot.fighting .sideLabel{opacity:.18;pointer-events:none}
+#gameRoot.fighting #eventBanner{max-width:min(340px,75vw)}
+#gameRoot.fighting .reelToast{top:calc(14% + env(safe-area-inset-top));font-size:clamp(11px,2vw,14px)}
+@media(max-width:700px){#gameRoot.fighting .fightHud{left:12px;right:auto;max-width:min(65vw,254px);padding:9px 11px;transform:none}
+#gameRoot.fighting .fightTop{font-size:12px}
+#gameRoot.fighting .fightHud small{font-size:9px}
+#gameRoot #eventBanner{font-size:clamp(12px,3.5vw,18px)}
+#gameRoot #reelToast{top:calc(30% + env(safe-area-inset-top));max-width:75vw;font-size:12px}}
+
+
+/* v2.3.1 — tactile, gold ruler that unfolds AFTER the record burst, with its own timing.
+   The landing dialog stays hidden until the fish has disappeared from the line. */
+#gameRoot .recordMeasure{
+ position:absolute;z-index:23;top:56%;left:50%;width:min(620px,92vw);
+ transform:translate(-50%,18px) scale(.94);opacity:0;visibility:hidden;
+ pointer-events:none;filter:drop-shadow(0 10px 9px rgba(5,17,20,.45));
+}
+#gameRoot .recordMeasure.active{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1);animation:measureArrive .34s cubic-bezier(.17,.9,.18,1) both}
+#gameRoot .recordMeasure.departing{animation:measureExit .34s ease-out both}
+#gameRoot .measureOverline{text-align:center;font:700 clamp(8px,1.3vw,10px)/1.5 var(--font-data);letter-spacing:.22em;color:#ffe3a3;text-shadow:0 2px 6px #15252e;margin-bottom:12px}
+#gameRoot .measureDevice{display:flex;align-items:center;width:100%;height:64px;position:relative;isolation:isolate}
+#gameRoot .measureSpool{position:relative;z-index:4;flex:0 0 64px;width:64px;height:64px;display:grid;place-items:center;border-radius:10px 12px 12px 10px;border:4px solid #563a1f;background:radial-gradient(circle at 37% 32%,#e8c16a 0,#ba8c3d 39%,#78552a 65%,#4c3828 86%);box-shadow:inset 0 0 0 3px #ffe5a0,5px 6px 0 #101c21}
+#gameRoot .measureSpool::before{content:'';position:absolute;inset:8px;border-radius:50%;border:4px dashed rgba(75,52,28,.7);background:radial-gradient(circle,#f1dea4 0 13%,#b98543 20% 59%,#e1bf77 68%)}
+#gameRoot .measureSpoolMark{position:relative;z-index:1;font:800 28px/1 var(--font-display);color:#533c26;transform:rotate(-15deg)}
+#gameRoot .measureTapeClip{position:relative;flex:1;min-width:0;margin-left:-8px;height:49px;overflow:hidden;z-index:2}
+#gameRoot .measureTape{position:absolute;inset:0 0 0 0;transform:scaleX(var(--tape-stretch,0));transform-origin:left center;background:linear-gradient(180deg,#fff0bd 0%,#f0c96c 36%,#e3b756 81%,#c39139 100%);border:3px solid #785128;border-left:0;box-shadow:inset 0 3px 3px #fff6cc,0 3px 0 #4c3729;will-change:transform;overflow:hidden}
+#gameRoot .measureTicks{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 7px,rgba(54,40,23,.88) 7px 8px,transparent 8px 17px,rgba(54,40,23,.36) 17px 18px,transparent 18px 24px);background-size:24px 100%;mask-image:linear-gradient(to bottom,#000 0 31%,transparent 32%)}
+#gameRoot .measureReadout{position:absolute;right:15px;bottom:4px;color:#3f3025;font:900 clamp(17px,3.1vw,26px)/1 var(--font-data);letter-spacing:.03em;white-space:nowrap;text-shadow:0 1px 0 #fff2be}
+#gameRoot .measureCap{flex:0 0 10px;height:39px;border-radius:2px;background:#c9c9b5;border:2px solid #645639;margin-left:-3px;z-index:3;box-shadow:1px 2px 0 #101e21}
+#gameRoot .measureSub{display:flex;justify-content:space-between;gap:12px;margin:9px 11px 0 70px;color:#fff4c9;text-shadow:1px 2px #1c2b30}
+#gameRoot .measureSub span{font:700 clamp(10px,1.9vw,14px)/1.3 var(--font-ui)}
+#gameRoot .measureSub strong{font:800 clamp(12px,2vw,17px)/1.2 var(--font-data);white-space:nowrap}
+@keyframes measureArrive{0%{opacity:0;transform:translate(-50%,20px) scale(.83)}72%{opacity:1;transform:translate(-50%,-4px) scale(1.025)}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
+@keyframes measureExit{0%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;visibility:hidden;transform:translate(-50%,-24px) scale(.96)}}
+@media(orientation:portrait){
+ #gameRoot .recordMeasure{top:59%;width:91vw}
+ #gameRoot .measureDevice{height:57px}
+ #gameRoot .measureSpool{flex-basis:55px;width:55px;height:55px;border-width:3px}
+ #gameRoot .measureTapeClip{height:43px;margin-left:-6px}
+ #gameRoot .measureTape{border-width:2px}
+ #gameRoot .measureReadout{font-size:clamp(15px,4.4vw,19px);bottom:5px;right:8px}
+ #gameRoot .measureSub{margin-left:57px}
+ #gameRoot .measureOverline{font-size:8px;letter-spacing:.1em}
+}
+@media(orientation:landscape) and (max-height:530px){
+ #gameRoot .recordMeasure{top:57%;left:55%;width:min(53vw,510px)}
+ #gameRoot .measureDevice{height:48px}
+ #gameRoot .measureSpool{width:45px;height:45px;flex-basis:45px;border-width:3px}
+ #gameRoot .measureTapeClip{height:33px}
+ #gameRoot .measureSub{margin:3px 0 0 45px}
+ #gameRoot .measureOverline{margin-bottom:4px}
+ #gameRoot .measureReadout{font-size:16px;bottom:3px}
+}
+@media(prefers-reduced-motion:reduce){#gameRoot .recordMeasure.active,#gameRoot .recordMeasure.departing{animation:none!important}}
+
+
+/* v2.3.2 – all catches get a physical tape. Only the tape fades; the hook and fish remain. */
+#gameRoot .recordMeasure.tone-record{--tape-title:#ffe3a3}
+#gameRoot .recordMeasure.tone-first{--tape-title:#acdfff}
+#gameRoot .recordMeasure.tone-normal{--tape-title:#d8dcd4}
+#gameRoot .recordMeasure .measureOverline{color:var(--tape-title,#ffe3a3)}
+#gameRoot .recordMeasure.tone-first .measureSpool{
+ background:radial-gradient(circle at 37% 32%,rgba(169,226,250,.84),rgba(78,146,173,.74) 45%,rgba(40,87,107,.76) 83%);
+ border-color:rgba(76,133,164,.85);box-shadow:inset 0 0 0 3px rgba(190,238,255,.63),5px 6px 0 rgba(16,28,34,.54)
+}
+#gameRoot .recordMeasure.tone-first .measureSpool::before{
+ border-color:rgba(47,93,121,.67);background:radial-gradient(circle,rgba(212,245,255,.81) 0 13%,rgba(92,163,195,.75) 20% 59%,rgba(156,218,242,.78) 68%)
+}
+#gameRoot .recordMeasure.tone-first .measureSpoolMark{color:#24526f}
+#gameRoot .recordMeasure.tone-first .measureTape{
+ background:linear-gradient(180deg,rgba(202,240,253,.76),rgba(110,195,229,.66) 47%,rgba(51,127,172,.64));
+ border-color:rgba(43,104,140,.81);box-shadow:inset 0 3px 3px rgba(245,255,255,.6),0 3px 0 rgba(29,73,100,.5)
+}
+#gameRoot .recordMeasure.tone-first .measureReadout{color:#16405d;text-shadow:0 1px 0 rgba(237,251,255,.74)}
+#gameRoot .recordMeasure.tone-first .measureSub{color:#d0eeff}
+#gameRoot .recordMeasure.tone-first .measureCap{background:rgba(159,220,235,.67);border-color:#4d889b}
+#gameRoot .recordMeasure.tone-normal .measureSpool{
+ background:radial-gradient(circle at 37% 32%,rgba(229,227,207,.71),rgba(156,161,152,.67) 46%,rgba(84,105,103,.75) 85%);
+ border-color:rgba(91,104,101,.85);box-shadow:inset 0 0 0 3px rgba(238,238,226,.47),5px 6px 0 rgba(16,28,34,.44)
+}
+#gameRoot .recordMeasure.tone-normal .measureSpool::before{
+ border-color:rgba(74,92,91,.6);background:radial-gradient(circle,rgba(230,237,225,.72) 0 13%,rgba(137,156,151,.68) 20% 59%,rgba(197,209,197,.72) 68%)
+}
+#gameRoot .recordMeasure.tone-normal .measureSpoolMark{color:#374947}
+#gameRoot .recordMeasure.tone-normal .measureTape{
+ background:linear-gradient(180deg,rgba(240,239,222,.61),rgba(176,191,182,.58) 50%,rgba(110,142,139,.58));
+ border-color:rgba(82,114,109,.69);box-shadow:inset 0 3px 3px rgba(250,255,245,.51),0 3px 0 rgba(27,54,57,.40)
+}
+#gameRoot .recordMeasure.tone-normal .measureReadout{color:#334743;text-shadow:0 1px 0 rgba(247,251,239,.61)}
+#gameRoot .recordMeasure.tone-normal .measureSub{color:#e2ebe2}
+#gameRoot .recordMeasure.tone-normal .measureCap{background:rgba(172,195,188,.61);border-color:#68817c}
+@media(prefers-reduced-motion:reduce){#gameRoot .recordMeasure.active{animation:none;opacity:1;visibility:visible}#gameRoot .recordMeasure.departing{opacity:0;visibility:hidden;animation:none}}
