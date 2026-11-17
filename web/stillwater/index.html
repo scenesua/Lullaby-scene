@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b1d">
+<title>STILLWATER &lt;beta&gt; — Lullaby Scene</title>
+<!-- Galmuri by Lee Minseo / quiple, SIL Open Font License 1.1.
+     Webfont served via the official npm package; no font binaries redistributed. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
+<link rel="stylesheet" href="/stillwater/game.css">
+</head>
+<body>
+<main id="gameRoot" role="application" aria-label="Stillwater 낚시 게임">
+  <canvas id="world" aria-label="WebGL 3D 낚시 풍경"></canvas>
+  <canvas id="fallbackScene" aria-hidden="true"></canvas>
+  <canvas id="effects" aria-hidden="true"></canvas><div class="cinemaBars" aria-hidden="true"></div>
+  <div id="colorWash" aria-hidden="true"></div><div id="filmGrain" aria-hidden="true"></div><div class="vignette" aria-hidden="true"></div>
+  <div class="topHud">
+    <div class="identity">
+      <div class="symbol">✳</div>
+      <div class="identityText"><div class="titleRow"><strong>STILLWATER</strong><span class="betaTag">&lt;beta&gt;</span></div><span>LULLABY SCENE <i>·</i> <span id="spotSub">RIVER BANK</span></span></div>
+    </div>
+    <div class="topRight">
+      <span class="timeChip"><span id="weatherIcon">☀</span><span id="timeChip">17:30</span> <span class="dotSep">/</span> <span id="weatherChip">맑음</span></span>
+      <button class="iconButton" id="inventoryBtn" aria-label="어획 기록 열기" title="어획 기록">▤<em id="bagCount">0</em></button>
+      <button class="iconButton" id="pauseBtn" aria-label="일시정지" title="일시정지">Ⅱ</button>
+    </div>
+  </div>
+  <nav id="fieldTools" class="fieldTools" aria-label="낚시와 휴식 도구">
+    <button type="button" id="rodStandButton" class="fieldTool" aria-pressed="false" aria-label="낚싯대 거치대"><b>⌁</b><span>거치대</span></button>
+    <button type="button" id="shopButton" class="fieldTool" aria-label="낚시 상점"><b>◇</b><span>상점</span></button>
+    <button type="button" id="boardButton" class="fieldTool" aria-label="종합 희귀도 리더보드"><b>✧</b><span>기록</span></button>
+  </nav>
+  <div class="restBar" id="restBar" hidden aria-label="낚싯대를 거치한 뒤 휴식하기">
+    <span class="restHint">ROD ON STAND · 쉬어가는 시간</span>
+    <div class="restButtons"><button type="button" id="drinkButton">맥주 한 모금</button><button type="button" id="smokeButton">담배 한 모금</button><button type="button" id="sashimiButton">회 한 점</button></div>
+  </div>
+  <div class="restCaption" id="restCaption" aria-live="polite"></div>
+  <div class="biteForecast" id="biteForecast"><strong id="forecastName">조황 보통</strong><span id="forecastDesc">해 질 무렵</span><span id="waitClock" hidden>00:00</span></div><div class="sideLabel" id="sideLabel"><span class="lineIndicator"></span><span id="conditionLine"></span></div>
+  <div id="eventBanner" role="status" aria-live="polite"><small id="eventPrefix">A MOMENT IN THE WATER</small><strong id="eventTitle">입질!</strong></div>
+  <div id="reelToast" aria-hidden="true">줄을 잠시 풀어주세요</div><div id="castPower" aria-hidden="true"><div class="chargeLabel">CAST POWER <b id="powerPercent">0%</b></div><div class="chargeTrack"><i id="chargeFill"></i></div><p>길게 누를수록 멀리 던집니다</p></div>
+  <section class="bottomHud" aria-label="게임 조작">
+    <div class="statusDock"><small id="statusEyebrow">FIELD NOTE / READY</small><div id="statusTitle">조용히 낚싯대를 들어보세요.</div><p id="statusDescription">던진 뒤에는 물결과 소리를 즐기며 기다리세요.</p></div>
+    <div class="fightHud" id="fightHud" hidden>
+      <div class="fightTop"><span><b id="fishFightName">UNKNOWN</b> <small id="fishRunState">버티는 중</small></span><strong id="distanceLabel">18.0 m</strong></div>
+      <div class="barName"><span>물고기 체력</span><b id="energyPct">100%</b></div><div class="gauge"><i id="energyFill"></i></div>
+      <div class="barName"><span>낚싯줄 장력</span><b id="tensionPct">20%</b></div><div class="gauge tension"><i id="tensionFill"></i></div>
+    </div>
+    <div class="actionDock">
+      <button id="liftButton" class="liftButton" disabled><span class="btnIcon">↟</span><span class="btnLabel">펌핑</span></button>
+      <button id="actionButton" class="actionButton"><span class="actionHalo"></span><span class="actionIcon" id="actionIcon">↗</span><strong id="actionLabel">던지기</strong><small id="actionSub">HOLD</small></button>
+    </div>
+  </section>
+  <section id="landingSheet" aria-label="어획 결과" hidden>
+    <div class="catchTop"><span id="caughtGrade">COMMON CATCH</span><span class="littleStar">✧</span></div>
+    <h2 id="caughtName">—</h2><div class="catchDetail" id="caughtStats">0.00 kg · 0 cm</div><div class="catchScore" id="caughtScore">종합 희귀도 0 pts</div><p id="caughtPrice">매각 예상가 ¤ 0</p>
+    <div class="catchButtons"><button id="releaseButton" class="subtleButton">방생하기</button><button id="keepButton" class="goldButton">보관하기</button></div>
+  </section>
+  <button id="muteButton" class="soundChip" title="환경음 켜기 또는 끄기"><span id="soundIcon">♫</span><span id="soundLabel">AMBIENCE OFF</span></button>
+  <div class="keyHelp" id="keyHelp"><kbd>SPACE</kbd> 던지기 · 챔질 · 릴링 <span>│</span> <kbd>ESC</kbd> 일시정지</div>
+  <div id="overlay" aria-hidden="true">
+    <div id="panel" class="menuPanel" role="dialog" aria-modal="true" aria-label="게임 메뉴">
+      <div class="panelTop"><div><small id="panelOverline">LULLABY SCENE / STILLWATER</small><h1 id="panelHeading">PAUSED</h1></div><button id="closeMenu" class="closeBtn" aria-label="메뉴 닫기">×</button></div>
+      <div id="pauseContent" class="panelContent">
+        <p class="panelLead">잠시 시간을 멈춥니다. 다시 물가에 머물러보세요.</p>
+        <button id="resumeButton" class="goldButton wideButton">▶ 계속하기</button><div class="menuShortcuts"><button type="button" id="pauseShopButton">◇ 상점</button><button type="button" id="pauseBoardButton">✧ 리더보드</button></div>
+        <div class="menuBlock"><label class="blockTitle">FISHING GROUNDS <small>낚시터 선택</small></label><div class="placePicker">
+          <button class="placeTile active" data-place="river"><strong>강</strong><small>RIVER</small><span>맞은편 강둑</span></button>
+          <button class="placeTile" data-place="sea"><strong>바다</strong><small>SEA</small><span>해안과 수평선</span></button>
+          <button class="placeTile" data-place="lake"><strong>저수지</strong><small>RESERVOIR</small><span>수면과 소나무</span></button>
+        </div></div>
+        <div class="menuBlock"><label class="blockTitle">ENVIRONMENT <small>시간 · 날씨</small></label>
+          <div class="inputRow"><label for="weatherSelect">날씨</label><select id="weatherSelect"><option value="clear">맑음</option><option value="cloud">흐림</option><option value="fog">안개</option><option value="rain">비</option><option value="storm">폭풍우</option></select></div>
+          <div class="inputRow timeRow"><label for="timeSlider">시간대 <b id="menuTime">17:30</b></label><input type="range" id="timeSlider" min="0" max="24" step=".1" value="17.5"></div>
+          <div class="inputRow"><label for="baitSelect">미끼</label><select id="baitSelect"><option value="worm">지렁이</option><option value="lure">루어</option><option value="shrimp">새우</option></select></div>
+          <div class="inputRow"><label for="soundVolume">환경음 크기</label><input type="range" id="soundVolume" min="0" max="1" step=".05" value=".6"></div>
+          <div class="inputRow"><label for="ambientFile">음원 파일</label><input type="file" id="ambientFile" accept="audio/*" aria-label="개인 앰비언트 오디오 파일 불러오기"></div>
+          <label class="toggleRow"><span>시간 자동 진행</span><input type="checkbox" id="autoTime" checked></label>
+          <label class="toggleRow"><span>입질 대기 단축 <small>(테스트)</small></span><input type="checkbox" id="shortWait"></label>
+        </div>
+        <div class="menuBlock"><label class="blockTitle">FISHING CONDITIONS <small>조황과 플레이 방식</small></label>
+          <div id="forecastPanel" class="forecastPanel"></div>
+          <label class="toggleRow"><span>날씨 자동 변화 <small>(게임 시간에 따라)</small></span><input type="checkbox" id="autoWeather"></label>
+          <label class="toggleRow"><span>진동 피드백 <small>(지원하는 모바일)</small></span><input type="checkbox" id="haptics" checked></label>
+          <div class="inputRow"><label for="renderQuality">렌더링 품질</label><select id="renderQuality"><option value="pixel">PS1 · 픽셀</option><option value="smooth">HD-2D · 선명</option></select></div>
+        </div>
+        <div class="menuBlock"><label class="blockTitle">RIVERSIDE MOMENTS <small>거치대 · 소품</small></label>
+          <p class="softNote">낚싯대를 거치하면 기다리는 동안 잠시 쉴 수 있습니다. 소품은 눈에 보이는 연출이며 낚시 능력치를 올리지 않습니다.</p>
+          <label class="toggleRow"><span>맥주병 보이기</span><input type="checkbox" id="beerVisible" checked></label>
+          <label class="toggleRow"><span>담배와 재떨이 보이기</span><input type="checkbox" id="smokeVisible" checked></label>
+          <label class="toggleRow"><span>회 접시 보이기</span><input type="checkbox" id="sashimiVisible" checked></label>
+        </div>
+        <div class="menuBlock"><label class="blockTitle">GAME OPTIONS</label><button class="outlineButton" id="fullscreenMenu">⛶ 전체화면 전환</button><button class="outlineButton" id="resetCastMenu">↺ 지금 낚시 취소</button></div>
+        <p class="saveNote">원본 자연환경 사운드는 직접 합성하므로 오프라인에서도 동작합니다. 실서비스에서는 기존 Lullaby Scene 믹서에 연결할 수 있도록 이벤트 브리지를 포함했습니다. 어획 기록은 이 브라우저에 자동 저장됩니다. 로컬 오디오 파일을 불러와 들을 수 있습니다. 기존 Lullaby Scene 믹서 통합 전 버전입니다.</p>
+      </div>
+      <div id="inventoryContent" class="panelContent" hidden>
+        <p class="panelLead">물가에서 만난 물고기를 기록합니다. 보관한 어획물만 이곳에 남습니다.</p>
+        <div class="inventorySummary"><span>FISH KEPT <b id="inventoryCount">0</b></span><span>TOTAL VALUE <b id="inventoryMoney">¤ 0</b></span></div>
+        <button type="button" class="outlineButton" id="sellAllButton">보관한 물고기 모두 판매</button><p class="softNote">보관은 판매가 아닙니다. 판매한 물고기는 가방에서 사라지지만 리더보드 기록에는 남습니다.</p><div class="inventoryFilter"><button type="button" class="filterButton active" data-sort="new">최신</button><button type="button" class="filterButton" data-sort="rare">희귀도</button><button type="button" class="filterButton" data-sort="value">가치</button></div><div id="inventoryList" class="inventoryList"><div class="inventoryEmpty">아직 보관한 물고기가 없습니다.</div></div>
+        <button class="outlineButton" id="backGame">← 게임으로 돌아가기</button>
+      </div>
+
+      <div id="shopContent" class="panelContent" hidden>
+        <p class="panelLead">잡아둔 물고기를 팔고, 더 좋은 낚싯대와 미끼를 마련하세요. 업그레이드는 플레이에 실제로 반영됩니다.</p>
+        <div class="shopWallet"><span>보유 자금</span><strong id="shopMoney">¤ 0</strong></div>
+        <div class="menuBlock"><label class="blockTitle">FISHING RODS <small>낚싯대 업그레이드</small></label><div id="rodShopList" class="storeGrid"></div></div>
+        <div class="menuBlock"><label class="blockTitle">BAITS & LURES <small>소모품 · 재고</small></label><div id="baitShopList" class="storeGrid"></div></div>
+        <div class="menuBlock"><button class="outlineButton" id="shopInventoryButton" type="button">▤ 보관함 열고 물고기 팔기</button></div>
+        <button class="outlineButton" id="shopBackButton" type="button">← 물가로 돌아가기</button>
+      </div>
+      <div id="leaderboardContent" class="panelContent" hidden>
+        <p class="panelLead">길이·무게·어종 자체의 희귀도·특수 등급을 합산한 종합 점수. 판매하거나 방생해도 기록은 남습니다.</p>
+        <div class="boardFormula">SCORE = <strong>어종</strong> + <strong>길이</strong> + <strong>무게</strong> + <strong>특수 등급</strong> + <strong>트로피 보너스</strong></div>
+        <div class="boardFilters"><button type="button" class="boardFilter active" data-board-spot="all">전체</button><button type="button" class="boardFilter" data-board-spot="river">강</button><button type="button" class="boardFilter" data-board-spot="sea">바다</button><button type="button" class="boardFilter" data-board-spot="lake">저수지</button></div>
+        <div class="leaderboardList" id="leaderboardList"></div>
+        <div class="softNote">이 버전은 브라우저에 저장되는 <b>개인 리더보드</b>입니다. 다른 플레이어와 경쟁하는 서버 순위는 아직 연결하지 않았습니다.</div>
+        <button class="outlineButton" id="boardBackButton" type="button">← 물가로 돌아가기</button>
+      </div>
+    </div>
+  </div>
+  <div id="startOverlay" aria-label="게임 시작 화면">
+    <div class="startCopy"><div class="introOverline">LULLABY SCENE PRESENTS</div><div class="startTitleRow"><h1>STILLWATER</h1><span class="betaTag">&lt;beta&gt;</span></div><p>기다림마저 풍경이 되는 낚시.</p><div class="dividerMark">✦</div><button id="startButton" class="goldButton startButton">물가로 들어가기 <span>↗</span></button><small>PC · MOBILE / WEBGL · ORIGINAL LOW-POLY FISH · HEADPHONES RECOMMENDED</small></div>
+  </div>
+  <div id="errorBox" hidden><strong>WebGL을 사용할 수 없습니다.</strong><p>최신 Chrome, Edge, Safari에서 열어주세요.</p></div>
+</main>
+<script src="/stillwater/game.js" defer></script>
+</body>
+</html>
