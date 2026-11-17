@@ -28,13 +28,35 @@ migrate();
 function recordCatch(f){
  if(!f||!isSpecies(f.spot,f.name))return;
  const k=key(f.spot,f.name),v=inv.journal[k]||emptyStats();
+ const firstEver=v.catches===0;
  v.caught=true;v.catches=(Number(v.catches)||0)+1;
  v.bestWeight=Math.max(Number(v.bestWeight)||0,cleanNumber(f.weight,0,500));
  v.bestLength=Math.max(Number(v.bestLength)||0,cleanNumber(f.length,0,500));
  inv.journal[k]=v;
+ if(firstEver)lastDiscovered=k;
+ // Tiny evergreen achievements: not a compulsive daily task schedule.
+ if(f.name==='붕어'&&['rain','storm'].includes(S.weather))giveStamp('rain_crucian','비 오는 날의 첫 붕어');
+ const species=speciesInfo(f.spot,f.name);
+ if(species&&(relativeSize(f.weight,species[2],species[3])>=85||relativeSize(f.length,species[6],species[7])>=85))giveStamp('xxl','첫 XXL 개체');
+ if(allSpecies[f.spot].every(x=>inv.journal[key(f.spot,x[0])]?.catches>0))giveStamp('complete_'+f.spot,`${regionNames[f.spot]} 물고기 18종 발견`);
  // Main game's recordCatch will save the inventory after this hook runs.
 }
 const tiers=['XS','S','M','L','XL','XXL'];
+let lastDiscovered=null;
+const HABITAT_RULES=[
+ {re:/메기|동자개|가물치|미꾸라지|모래무지|광어|도다리|가자미|대구/,zone:'바닥층',time:'저녁~밤',hint:'미끼를 바닥 가까이에 두면 유리해요'},
+ {re:/송어|산천어|은어|쏘가리|꺽지|농어|배스|볼락|우럭/,zone:'중층·장애물 부근',time:'새벽·해질녘',hint:'활성 시간대와 루어를 활용해 보세요'},
+ {re:/고등어|전갱이|삼치|학꽁치|갈치|강준치/,zone:'표층~중층',time:'새벽·해질녘',hint:'빠르게 움직이는 미끼에 반응하기 쉬워요'},
+ {re:/잉어|향어|붕어|떡붕어|누치|블루길|피라미/,zone:'얕은 물·중층',time:'아침·저녁',hint:'느린 움직임으로 기다려 보세요'}
+];
+function fishHabitat(name,spot){const rule=HABITAT_RULES.find(x=>x.re.test(name));return rule||{zone:spot==='sea'?'연안 수역':'수초·수변',time:'상황에 따라 변화',hint:'날씨와 활동 시간대를 살펴보세요'}}
+function relativeSize(value,min,max){return Math.round(100*Math.max(0,Math.min(1,(value-min)/Math.max(.001,max-min))))}
+function giveStamp(id,message){if(!Array.isArray(inv.badges))inv.badges=[];if(inv.badges.includes(id))return;
+ inv.badges.push(id);R.save();const toast=$('achievementToast');if(!toast)return;
+ toast.textContent='✦ 관찰 일지 · '+message;toast.classList.remove('active');void toast.offsetWidth;toast.classList.add('active');
+ setTimeout(()=>toast.classList.remove('active'),2700);
+}
+
 function sizeTier(n,min,max){const ratio=max>min?Math.max(0,Math.min(1,(n-min)/(max-min))):0;return tiers[ratio<.10?0:ratio<.25?1:ratio<.45?2:ratio<.65?3:ratio<.85?4:5];}
 // Hand-drawn 2D field-guide illustrations: fish are distinct silhouettes, not a single blob.
 // 3D animation remains low-poly; this vector field illustration is used ONLY in the leather journal.
@@ -101,8 +123,12 @@ function render(){
  if(!fish){notebook.textContent='물고기 자료가 없습니다.';return}
  if(!info){notebook.innerHTML=`<div class="diaryBigFish unknown">${fishPicture(fish[0],fish[5],true)}</div><p class="diaryOverline">SPECIMEN UNKNOWN</p><h2>???</h2><p class="diaryLocked">아직 만나지 못한 물고기야.<br>낚싯대 끝에서 첫 인사를 기다리는 중.</p><div class="diaryUnknownMark">✧ 미발견 · 기록 없음</div>`;return}
  const wt=sizeTier(info.bestWeight,fish[2],fish[3]),lt=sizeTier(info.bestLength,fish[6],fish[7]);
+ const wRatio=relativeSize(info.bestWeight,fish[2],fish[3]),lRatio=relativeSize(info.bestLength,fish[6],fish[7]);
+ const habitat=fishHabitat(fish[0],current),newlyFound=lastDiscovered===key(current,fish[0]);
+ const marks=(inv.badges||[]).filter(x=>x==='xxl'||x==='rain_crucian'||x==='complete_'+current).map(x=>({xxl:'✦ XXL 개체 발견',rain_crucian:'☂ 빗속의 붕어', ['complete_'+current]:'▣ 18종 발견'}[x]||x)).join(' · ');
+
  const [description,tmi]=C.notes[current][fish[0]];
- notebook.innerHTML=`<div class="diaryBigFish">${fishPicture(fish[0],fish[5])}</div><p class="diaryOverline">SPECIMEN · ${String(selection+1).padStart(2,'0')}</p><h2>${esc(fish[0])}</h2><div class="diaryCount">누적 포획 <strong>${Math.floor(info.catches).toLocaleString('ko-KR')}회</strong></div><div class="diaryMeasures"><div><span>역대 최대 무게</span><strong>${info.bestWeight.toFixed(2)}<small>kg</small></strong><em>${wt}</em></div><div><span>역대 최대 길이</span><strong>${info.bestLength.toFixed(0)}<small>cm</small></strong><em>${lt}</em></div></div><div class="diaryStory"><p class="diaryBio">${esc(description)}</p><p class="diaryTmi">${esc(tmi)}</p></div>`;
+ notebook.innerHTML=`<div class="diaryBigFish ${newlyFound?'inkReveal':''}">${fishPicture(fish[0],fish[5])}${newlyFound?'<span class="discoveryStamp">NEW DISCOVERY</span>':''}</div><p class="diaryOverline">SPECIMEN · ${String(selection+1).padStart(2,'0')}</p><h2>${esc(fish[0])}</h2><div class="diaryCount">누적 포획 <strong>${Math.floor(info.catches).toLocaleString('ko-KR')}회</strong></div><div class="diaryMeasures"><div><span>역대 최대 무게</span><strong>${info.bestWeight.toFixed(2)}<small>kg</small></strong><em>${wt}</em></div><div><span>역대 최대 길이</span><strong>${info.bestLength.toFixed(0)}<small>cm</small></strong><em>${lt}</em></div></div><div class="diarySizeCompare"><div class="compareLegend">내 최고 기록 <small>도감 범위 중간점 = 50%</small></div><div class="compareTrack"><span>무게</span><i><b style="width:${wRatio}%"></b><em></em></i><strong>${wRatio}%</strong></div><div class="compareTrack"><span>길이</span><i><b style="width:${lRatio}%"></b><em></em></i><strong>${lRatio}%</strong></div></div><div class="diaryHabitat"><strong>낚시 힌트 · ${esc(habitat.zone)}</strong><span>주요 활동: ${esc(habitat.time)}</span><p>${esc(habitat.hint)}</p></div>${marks?`<div class="diaryBadges">${esc(marks)}</div>`:''}<div class="diaryStory"><p class="diaryBio">${esc(description)}</p><p class="diaryTmi">${esc(tmi)}</p></div>`;
 }
 function jump(spot){if(!regions.includes(spot))return;current=spot;page=0;selection=0;render();$('journalBook').classList.remove('pageFlip');void $('journalBook').offsetWidth;$('journalBook').classList.add('pageFlip')}
 function flip(step){const index=regions.indexOf(current)*2+page+step;if(index<0||index>=regions.length*2)return;current=regions[Math.floor(index/2)];page=index%2;selection=page*9;render();$('journalBook').classList.remove('pageFlip');void $('journalBook').offsetWidth;$('journalBook').classList.add('pageFlip')}
@@ -116,7 +142,7 @@ function unb64(str){if(!/^[A-Za-z0-9_-]+$/.test(str)||str.length>1200000)throw E
 async function packed(data){if(typeof CompressionStream!=='function')return {mode:'J',bytes:data};const cs=new CompressionStream('gzip');const encoded=await new Response(new Blob([data]).stream().pipeThrough(cs)).arrayBuffer();return{mode:'G',bytes:new Uint8Array(encoded)}}
 async function unpack(mode,data){if(mode!=='G')return data;if(typeof DecompressionStream!=='function')throw Error('이 브라우저는 압축된 코드를 지원하지 않아. 최신 브라우저에서 다시 시도해줘.');const ds=new DecompressionStream('gzip');const bytes=await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer();if(bytes.byteLength>1000000)throw Error('저장 데이터가 허용 크기를 초과했어.');return new Uint8Array(bytes)}
 function validateFish(f){if(!f||typeof f!=='object'||!isSpecies(f.spot,f.name))return null;const info=speciesInfo(f.spot,f.name),weight=cleanNumber(f.weight,0,500),length=cleanNumber(f.length,0,500);return{id:String(f.id||'').replace(/[^\w-]/g,'').slice(0,72)||'fish-'+crypto.randomUUID(),name:f.name,spot:f.spot,weight,length,grade:Math.round(cleanNumber(f.grade,0,4)),price:Math.round(cleanNumber(f.price,0,1e9)),tint:info[5],score:Math.round(cleanNumber(f.score,0,1e9)),status:['kept','released','sold'].includes(f.status)?f.status:'kept',when:typeof f.when==='string'?f.when.slice(0,35):''}}
-function sanitizedInventory(raw){if(!raw||typeof raw!=='object')throw Error('세이브 데이터 형식이 잘못됐어.');const fish=Array.isArray(raw.fish)?raw.fish.slice(0,200).map(validateFish).filter(Boolean):[],records=Array.isArray(raw.records)?raw.records.slice(0,300).map(validateFish).filter(Boolean):[];const rods=Array.isArray(raw.rods)?raw.rods.filter(x=>['bamboo','graphite','carbon','moon'].includes(x)):['bamboo'];if(!rods.includes('bamboo'))rods.unshift('bamboo');const rod=rods.includes(raw.rod)?raw.rod:'bamboo';const baitStock={};for(const b of ['shrimp','lure','glow'])baitStock[b]=Math.floor(cleanNumber(raw.baitStock?.[b],0,1000000));const journal={};for(const spot of regions){for(const f of allSpecies[spot]){const k=key(spot,f[0]),x=raw.journal?.[k];if(!x||typeof x!=='object')continue;const catches=Math.floor(cleanNumber(x.catches,0,100000000));if(!catches)continue;journal[k]={caught:true,catches,bestWeight:cleanNumber(x.bestWeight,0,500),bestLength:cleanNumber(x.bestLength,0,500)}}}return{money:cleanNumber(raw.money,0,1e12),fish,records,rods,rod,baitStock,journal}}
+function sanitizedInventory(raw){if(!raw||typeof raw!=='object')throw Error('세이브 데이터 형식이 잘못됐어.');const fish=Array.isArray(raw.fish)?raw.fish.slice(0,200).map(validateFish).filter(Boolean):[],records=Array.isArray(raw.records)?raw.records.slice(0,300).map(validateFish).filter(Boolean):[];const rods=Array.isArray(raw.rods)?raw.rods.filter(x=>['bamboo','graphite','carbon','moon'].includes(x)):['bamboo'];if(!rods.includes('bamboo'))rods.unshift('bamboo');const rod=rods.includes(raw.rod)?raw.rod:'bamboo';const baitStock={};for(const b of ['shrimp','lure','glow'])baitStock[b]=Math.floor(cleanNumber(raw.baitStock?.[b],0,1000000));const journal={};for(const spot of regions){for(const f of allSpecies[spot]){const k=key(spot,f[0]),x=raw.journal?.[k];if(!x||typeof x!=='object')continue;const catches=Math.floor(cleanNumber(x.catches,0,100000000));if(!catches)continue;journal[k]={caught:true,catches,bestWeight:cleanNumber(x.bestWeight,0,500),bestLength:cleanNumber(x.bestLength,0,500)}}}return{money:cleanNumber(raw.money,0,1e12),fish,records,rods,rod,baitStock,journal,badges:Array.isArray(raw.badges)?raw.badges.filter(x=>typeof x==='string'&&x.length<=40).slice(0,30):[]}}
 function sanitizedSettings(v){const s=v&&typeof v==='object'?v:{},result={};if(regions.includes(s.spot))result.spot=s.spot;if(['clear','rain','cloud','fog','storm'].includes(s.weather))result.weather=s.weather;if(Number.isFinite(+s.time))result.time=cleanNumber(s.time,0,24);if(['worm','shrimp','glow','lure'].includes(s.bait))result.bait=s.bait;if(['festival','arcade','relaxed','reality'].includes(s.biteMode))result.biteMode=s.biteMode;for(const k of ['autoTime','weatherAuto'])if(typeof s[k]==='boolean')result[k]=s[k];if(['pixel','smooth'].includes(s.quality))result.quality=s.quality;if(Number.isFinite(+s.volume))result.volume=cleanNumber(s.volume,0,1);result.restProps={};for(const k of ['beer','smoke','sashimi'])result.restProps[k]=s.restProps?.[k]!==false;return result}
 const say=x=>{const status=$('saveCodeStatus');status.textContent=x;status.setAttribute('role','status')};
 async function exportCode(){try{
