@@ -1,4 +1,3 @@
-
 (()=>{'use strict';
 
 // Strict 32-color source palette for the scene, shared by WebGL and 2D effects.
@@ -26,17 +25,20 @@ const DATA={
   sea:{ko:'바다',eng:'COASTLINE',desc:'잔잔한 파도가 갯바위를 두드립니다',fish:[['농어',.38,.6,6,2600,'#d3ded6',29,87],['참돔',.17,.5,4.7,7400,'#d58d7f',30,74],['우럭',.43,.27,3.1,2300,'#918d81',18,57],['고등어',.47,.18,1.2,1400,'#8ba8bd',21,48],['광어',.24,.8,7.0,2500,'#aea187',35,100]]},
   lake:{ko:'저수지',eng:'RESERVOIR',desc:'맞은편 소나무 숲이 고요하게 물에 비칩니다',fish:[['붕어',.57,.2,2.4,1700,'#b2a280',16,55],['배스',.47,.3,4.2,1600,'#8ca883',25,65],['잉어',.32,.7,8,1300,'#a69672',34,105],['가물치',.19,.7,5.9,3500,'#757e74',35,104],['블루길',.39,.07,.42,730,'#85a2bd',11,26]]}
 };
+// 54 regional species; catalogue is static, requiring no storage API.
+if(window.StillwaterContent?.spots)Object.assign(DATA,window.StillwaterContent.spots);
 const GRADES=[{label:'일반',en:'COMMON',color:'#dbe6db',factor:1},{label:'실버',en:'SILVER',color:'#d3e3f6',factor:2.4},{label:'골드',en:'GOLD',color:'#ffe4a0',factor:6.2},{label:'플래티넘',en:'PLATINUM',color:'#bcecf1',factor:19},{label:'다이아',en:'DIAMOND',color:'#a2fdff',factor:70}];
 const WEATHER={clear:{ko:'맑음',icon:'☀',bit:1,cloud:.14},cloud:{ko:'흐림',icon:'☁',bit:.9,cloud:.65},fog:{ko:'안개',icon:'≋',bit:1.25,cloud:.2},rain:{ko:'비',icon:'☂',bit:.83,cloud:.8},storm:{ko:'폭풍우',icon:'ϟ',bit:1.55,cloud:1}};
 const storageKey='lullaby_stillwater_webgl_v03', settingsKey='lullaby_stillwater_settings_v05';
 const RODS={bamboo:{name:'낡은 대나무 낚싯대',price:0,desc:'물가에서 시작하는 오래된 낚싯대',reel:1,stress:1,cast:1},graphite:{name:'흑연 스피닝 로드',price:6500,desc:'릴 감기 +14% · 줄 부담 −8%',reel:1.14,stress:.92,cast:1.08},carbon:{name:'카본 텔레스코픽',price:29000,desc:'릴 감기 +30% · 줄 부담 −18%',reel:1.30,stress:.82,cast:1.19},moon:{name:'달빛의 낚싯대',price:115000,desc:'릴 감기 +48% · 줄 부담 −29%',reel:1.48,stress:.71,cast:1.28}};
 const BAITS={worm:{name:'지렁이',price:0,count:Infinity,desc:'기본 미끼 · 무료 · 언제나 사용 가능',bite:1,rarity:0},shrimp:{name:'새우',price:500,count:3,desc:'3회분 · 바닷물고기 조황 향상',bite:.84,rarity:0},lure:{name:'스푼 루어',price:1300,count:3,desc:'3회분 · 공격적인 어종 유인',bite:.91,rarity:.01},glow:{name:'달빛 발광 미끼',price:3900,count:3,desc:'3회분 · 입질 단축 · 특수 등급 소폭 우대',bite:.72,rarity:.035}};
 const SPECIES_RARITY={'피라미':1,'고등어':1,'블루길':1,'붕어':2,'잉어':2,'배스':2,'메기':3,'우럭':3,'농어':3,'꺽지':4,'쏘가리':4,'광어':4,'가물치':5,'참돔':5};
+for(const pool of Object.values(DATA))for(const f of pool.fish)if(!Object.hasOwn(SPECIES_RARITY,f[0]))SPECIES_RARITY[f[0]]=f[1]<.19?5:f[1]<.30?4:f[1]<.40?3:f[1]<.52?2:1;
 const SIDES=['일반','실버','골드','플래티넘','다이아'];
 let inventory={money:0,fish:[],records:[],rods:['bamboo'],rod:'bamboo',baitStock:{shrimp:0,lure:0,glow:0}};
-try{const v=JSON.parse(localStorage.getItem(storageKey)||'null');if(v&&Array.isArray(v.fish)){inventory.money=Number(v.money)||0;inventory.fish=v.fish.slice(0,100);inventory.records=Array.isArray(v.records)?v.records.slice(0,300):[];inventory.rods=Array.isArray(v.rods)?v.rods.filter(k=>RODS[k]):['bamboo'];if(!inventory.rods.includes('bamboo'))inventory.rods.unshift('bamboo');inventory.rod=inventory.rods.includes(v.rod)?v.rod:'bamboo';inventory.baitStock={shrimp:0,lure:0,glow:0,...v.baitStock};}}
+try{const v=JSON.parse(localStorage.getItem(storageKey)||'null');if(v&&Array.isArray(v.fish)){inventory.money=Number(v.money)||0;inventory.fish=v.fish.slice(0,100);inventory.records=Array.isArray(v.records)?v.records.slice(0,300):[];inventory.rods=Array.isArray(v.rods)?v.rods.filter(k=>RODS[k]):['bamboo'];if(!inventory.rods.includes('bamboo'))inventory.rods.unshift('bamboo');inventory.rod=inventory.rods.includes(v.rod)?v.rod:'bamboo';inventory.baitStock={shrimp:0,lure:0,glow:0,...v.baitStock};if(v.journal&&typeof v.journal==='object'&&!Array.isArray(v.journal))inventory.journal=v.journal;}}
 catch{}
-const state={spot:'river',weather:'clear',time:17.5,autoTime:true,test:false,bait:'worm',started:false,menu:null,phase:'idle',castStart:0,power:0,flight:0,wait:0,waiting:0,biteWindow:0,fish:null,landedFish:null,distance:0,energy:1,tension:.16,runTimer:0,runIntensity:0,snapCount:0,escapeCount:0,reeling:false,lifting:false,fishMood:'느긋하게 버티는 중',baitX:0,baitZ:-13,particles:[],ripples:[],sceneSeconds:0,gameSeconds:0,shake:0,flash:0,eventLeft:0,dayLuck:Math.random(),soundOn:false,voiceTimer:0,fishSide:0,fishDepth:.0,tailPhase:0,fishBehavior:'hover',behaviorClock:0,behaviorLength:2,runBurst:0,fightLastSecond:0,weatherAuto:false,weatherClock:0,weatherPrev:'clear',weatherBlend:1,fightFeedback:0,quality:'pixel',fov:0,activeBait:'worm',rodRested:false,restProps:{beer:true,smoke:true,sashimi:true},restAction:'',restActionTime:0,restCooldown:0,restCaptionTime:0,marketVisits:0,restDuration:2.8,restTime:0,headPitch:0,headRoll:0,strikeAge:99,reelBlend:0,slackBlend:0,reelRotation:0,reelClickClock:0,hookJolt:0,rodQuiver:0,foam:[],lineMeters:0,sashimiPieces:6,sashimiTaking:false,restReturned:false,bowAmount:0,restBeat:0,restTouch:false,biteThreshold:0,biteHazard:0,quickBiteAt:0,waitWallClock:0};
+const state={biteMode:'reality',biteTarget:0,spot:'river',weather:'clear',time:17.5,autoTime:true,test:false,bait:'worm',started:false,menu:null,phase:'idle',castStart:0,power:0,flight:0,wait:0,waiting:0,biteWindow:0,fish:null,landedFish:null,distance:0,energy:1,tension:.16,runTimer:0,runIntensity:0,snapCount:0,escapeCount:0,reeling:false,lifting:false,fishMood:'느긋하게 버티는 중',baitX:0,baitZ:-13,particles:[],ripples:[],sceneSeconds:0,gameSeconds:0,shake:0,flash:0,eventLeft:0,dayLuck:Math.random(),soundOn:false,voiceTimer:0,fishSide:0,fishDepth:.0,tailPhase:0,fishBehavior:'hover',behaviorClock:0,behaviorLength:2,runBurst:0,fightLastSecond:0,weatherAuto:false,weatherClock:0,weatherPrev:'clear',weatherBlend:1,fightFeedback:0,quality:'pixel',fov:0,activeBait:'worm',rodRested:false,restProps:{beer:true,smoke:true,sashimi:true},restAction:'',restActionTime:0,restCooldown:0,restCaptionTime:0,marketVisits:0,restDuration:2.8,restTime:0,headPitch:0,headRoll:0,strikeAge:99,reelBlend:0,slackBlend:0,reelRotation:0,reelClickClock:0,hookJolt:0,rodQuiver:0,foam:[],lineMeters:0,sashimiPieces:6,sashimiTaking:false,restReturned:false,bowAmount:0,restBeat:0,restTouch:false,biteThreshold:0,biteHazard:0,quickBiteAt:0,waitWallClock:0};
 let vw=innerWidth,vh=innerHeight,aspect=vw/vh,portrait=vh>vw,viewProj=new Float32Array(16),sceneBuffer=null,waterBuffer=null,sceneVertexCount=0,waterVertexCount=0,last=0,fxClock=0,hudClock=0,lastWash='',fallbackActive=!realGL;
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();fallbackActive=true;fallbackCanvas.style.display='block';canvas.style.opacity='0'});
 canvas.addEventListener('webglcontextrestored',()=>{fallbackActive=true;fallbackCanvas.style.display='block';canvas.style.opacity='0'});
@@ -44,8 +46,8 @@ if(fallbackActive){fallbackCanvas.style.display='block';canvas.style.opacity='0'
 let audioCtx=null,audioMaster=null,audioNoiseGain=null,audioOscGain=null,noiseSource=null,audioOsc=null,customAudio=null,customAudioURL=null;let natureSources=[],waterSound=null,windSound=null,rainSound=null,cricketsSound=null,birdsSound=null,thunderTimer=0,footSFXClock=0;
 
 function setWeather(w){if(!WEATHER[w])return;state.weatherPrev=state.weather;state.weather=w;state.weatherBlend=0;$('weatherSelect').value=w;eventMsg(`날씨: ${WEATHER[w].ko}`,'WEATHER SHIFT',1.4);updateAudio();refreshHUD();}
-function loadSettings(){try{const o=JSON.parse(localStorage.getItem(settingsKey)||localStorage.getItem('lullaby_stillwater_settings_v04')||'null');if(!o)return;if(DATA[o.spot])state.spot=o.spot;if(WEATHER[o.weather])state.weather=o.weather;if(Number.isFinite(o.time))state.time=clamp(o.time,0,24);if(BAITS[o.bait]&&(o.bait==='worm'||(inventory.baitStock[o.bait]||0)>0))state.bait=o.bait;state.autoTime=o.autoTime!==false;state.weatherAuto=!!o.weatherAuto;state.quality=o.quality==='smooth'?'smooth':'pixel';$('weatherSelect').value=state.weather;$('baitSelect').value=state.bait;$('autoTime').checked=state.autoTime;$('autoWeather').checked=state.weatherAuto;$('renderQuality').value=state.quality;if(typeof o.volume==='number')$('soundVolume').value=o.volume; if(o.restProps){for(const k of ['beer','smoke','sashimi'])if(typeof o.restProps[k]==='boolean')state.restProps[k]=o.restProps[k];} for(const k of ['beer','smoke','sashimi'])$(k==='smoke'?'smokeVisible':k+'Visible').checked=state.restProps[k];}catch(e){console.warn('Settings:',e)}}
-function persistSettings(){try{localStorage.setItem(settingsKey,JSON.stringify({spot:state.spot,weather:state.weather,time:state.time,bait:state.bait,autoTime:state.autoTime,weatherAuto:state.weatherAuto,quality:state.quality,volume:Number($('soundVolume').value),restProps:state.restProps}))}catch{}}
+function loadSettings(){try{const o=JSON.parse(localStorage.getItem(settingsKey)||localStorage.getItem('lullaby_stillwater_settings_v04')||'null');if(!o)return;if(DATA[o.spot])state.spot=o.spot;if(WEATHER[o.weather])state.weather=o.weather;if(Number.isFinite(o.time))state.time=clamp(o.time,0,24);if(BAITS[o.bait]&&(o.bait==='worm'||(inventory.baitStock[o.bait]||0)>0))state.bait=o.bait;state.autoTime=o.autoTime!==false;state.weatherAuto=!!o.weatherAuto;state.quality=o.quality==='smooth'?'smooth':'pixel';$('weatherSelect').value=state.weather;$('baitSelect').value=state.bait;$('autoTime').checked=state.autoTime;$('autoWeather').checked=state.weatherAuto;$('renderQuality').value=state.quality;if(typeof o.volume==='number')$('soundVolume').value=o.volume; if(['festival','arcade','relaxed','reality'].includes(o.biteMode))state.biteMode=o.biteMode;if($('biteMode'))$('biteMode').value=state.biteMode;if(o.restProps){for(const k of ['beer','smoke','sashimi'])if(typeof o.restProps[k]==='boolean')state.restProps[k]=o.restProps[k];} for(const k of ['beer','smoke','sashimi'])$(k==='smoke'?'smokeVisible':k+'Visible').checked=state.restProps[k];}catch(e){console.warn('Settings:',e)}}
+function persistSettings(){try{localStorage.setItem(settingsKey,JSON.stringify({spot:state.spot,weather:state.weather,time:state.time,bait:state.bait,biteMode:state.biteMode,autoTime:state.autoTime,weatherAuto:state.weatherAuto,quality:state.quality,volume:Number($('soundVolume').value),restProps:state.restProps}))}catch{}}
 function forecastText(){const good=(state.time>5.5&&state.time<8.5)||(state.time>16.4&&state.time<19.4);return `오늘의 조황 ${luckName()} · ${good?'활성 시간대':'보통 시간대'} · ${WEATHER[state.weather].ko}`;}
 let lastForecastHTML='';function forecastUI(){const l=luckName(),good=(state.time>5.5&&state.time<8.5)||(state.time>16.4&&state.time<19.4);$('forecastName').textContent='조황 '+l;$('forecastDesc').textContent=good?'입질 활발 시간':'평온한 시간';const html=`<strong>오늘의 조황: ${l}</strong><p>맑은 날도 기다림이 길 수 있어요. ${good?'지금은 물고기가 활발해질 가능성이 높은 시간대입니다.':'새벽 05:30~08:30, 해질녘 16:30~19:30에는 입질이 조금 더 유리합니다.'}</p><p>${WEATHER[state.weather].ko} · ${DATA[state.spot].ko} · ${state.bait==='lure'?'루어':state.bait==='shrimp'?'새우':'지렁이'} 미끼</p>`;if(lastForecastHTML!==html){$('forecastPanel').innerHTML=html;lastForecastHTML=html;}}
 function randomWeather(){const all=['clear','cloud','fog','rain','storm'];const curr=state.weather;if(curr==='storm')return Math.random()<.68?'rain':'cloud';if(curr==='fog')return Math.random()<.6?'clear':'cloud';if(curr==='rain')return Math.random()<.55?'cloud':Math.random()<.76?'storm':'clear';if(curr==='clear')return Math.random()<.48?'cloud':Math.random()<.72?'fog':'rain';return Math.random()<.31?'clear':Math.random()<.62?'rain':Math.random()<.84?'fog':'storm';}
@@ -64,7 +66,7 @@ function ensureFishID(f){if(!f.id)f.id='fish-'+Date.now().toString(36)+'-'+Math.
 function equippedRod(){return RODS[inventory.rod]||RODS.bamboo;}
 function baitInventoryLabel(k){return k==='worm'?'∞':String(inventory.baitStock[k]||0);}
 function applyBaitValue(){const select=$('baitSelect');select.innerHTML=Object.entries(BAITS).map(([k,b])=>`<option value="${k}">${b.name} · ${baitInventoryLabel(k)}</option>`).join('');if(state.bait!=='worm'&&!(inventory.baitStock[state.bait]>0))state.bait='worm';select.value=state.bait;}
-function recordCatch(f,status){ensureFishID(f);const idx=inventory.records.findIndex(x=>x.id===f.id);const record={...f,status,when:new Date().toISOString()};if(idx>=0)inventory.records[idx]=record;else inventory.records.unshift(record);inventory.records=inventory.records.slice(0,300);save();}
+function recordCatch(f,status){ensureFishID(f);window.StillwaterExtras?.recordCatch(f);const idx=inventory.records.findIndex(x=>x.id===f.id);const record={...f,status,when:new Date().toISOString()};if(idx>=0)inventory.records[idx]=record;else inventory.records.unshift(record);inventory.records=inventory.records.slice(0,300);save();}
 
 function hexToRgb(hex){return [1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255)}
 function rgbToHex(rgb){return '#'+rgb.map(v=>Math.round(clamp(v,0,1)*255).toString(16).padStart(2,'0')).join('')}
@@ -329,8 +331,8 @@ const REST_MOTION={
 };
 function restScalar(p,keys){if(p<=keys[0][0])return keys[0][1];for(let i=1;i<keys.length;i++)if(p<=keys[i][0])return lerp(keys[i-1][1],keys[i][1],fpSmooth((p-keys[i-1][0])/(keys[i][0]-keys[i-1][0])));return keys[keys.length-1][1];}
 function restAnchor(k){const T=TABLE3D,yy=T.y+.10;return k==='beer'?[T.x-T.width*.34,yy+.16,T.z+.02]:k==='smoke'?[T.x-T.width*.06,yy+.065,T.z+.005]:[T.x+T.width*.27,yy+.055,T.z+.005];}
-// Portrait phones use a narrower shoulder rig so the hand enters from the screen edge,
-// not from a desktop-sized position offscreen.
+// Mobile portrait uses a narrower hand rig: the shoulder begins near the right edge,
+// instead of projecting completely offscreen from desktop-sized camera coordinates.
 function fpShoulder(){return portrait?[.22,-1.26,-1.13]:[.93,-1.28,-1.06];}
 function fpModelFrame(){if(!state.restAction||state.restActionTime<=0||state.menu)return null;
  const p=restProgress(),k=state.restAction,motion=REST_MOTION[k];if(!motion)return null;
@@ -366,10 +368,13 @@ function fpBottle(out,frame){if(!frame.holding){fpHand(out,[frame.x,frame.y,fram
  fpHand(out,[frame.x+.065,frame.y-.10,frame.z+.09]);
  for(let j=0;j<3;j++){const off=j*.06;fpCylinder(out,P([.105,-.16+off,.035]),P([.13,-.14+off,.12]),.025,.020,fpRGB('#d4b298'),6);}
 }
-function fpSmoke(out,frame){if(!frame.holding){fpHand(out,[frame.x,frame.y,frame.z]);return;}const p=frame.p,skin=fpRGB('#d8b294'),white=fpRGB('#e9e1ce');fpHand(out,[frame.x+.02,frame.y-.04,frame.z+.075]);
- const a=[frame.x-.055,frame.y+.14,frame.z+.032],b=[frame.x-.20,frame.y+.24,frame.z+.21];fpCylinder(out,a,b,.014,.013,white,8);fpCylinder(out,b,[b[0]-.028,b[1]+.018,b[2]+.04],.016,.016,p>.48&&p<.61?fpRGB('#eea65e'):fpRGB('#a57b5e'),7);
- // Amber ember changes with inhale phase, darkens when the hand comes down.
- if(p>.48&&p<.61)fpCylinder(out,b,[b[0]-.038,b[1]+.025,b[2]+.057],.019,.014,fpRGB('#f7b76a'),7);
+function fpSmoke(out,frame){if(!frame.holding){fpHand(out,[frame.x,frame.y,frame.z]);return;}const p=frame.p,white=fpRGB('#e9e1ce');fpHand(out,[frame.x+.02,frame.y-.04,frame.z+.075]);
+ // Filter stays at the mouth-side point A; the burning ember is ONLY on distal point B.
+ const a=[frame.x-.055,frame.y+.14,frame.z+.032],b=[frame.x-.20,frame.y+.24,frame.z+.21];
+ const delta=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],filterEnd=a.map((v,i)=>v+delta[i]*.22),emberStart=a.map((v,i)=>v+delta[i]*.91);
+ fpCylinder(out,a,filterEnd,.014,.014,fpRGB('#caa37b'),8);fpCylinder(out,filterEnd,emberStart,.014,.013,white,8);
+ fpCylinder(out,emberStart,b,.015,.014,p>.48&&p<.61?fpRGB('#f7b76a'):fpRGB('#8d6552'),8);
+ if(p>.48&&p<.61)fpCylinder(out,b,[b[0]-.018,b[1]+.012,b[2]+.025],.018,.012,fpRGB('#f7b76a'),7);
 }
 function fpSashimi(out,frame){const p=frame.p,palm=[frame.x+.04,frame.y-.05,frame.z+.04];fpHand(out,palm);if(!frame.holding)return;
  // Two true cylindrical chopsticks, separate in space; the fish is pinched at their tips.
@@ -537,7 +542,7 @@ function drawShoreMoments(){
    fxPoly([[-15,17],[15,17],[12,-37],[5,-56],[5,-72],[-5,-72],[-5,-56],[-12,-37]],'#30664e');
    fxPoly([[-12,-29],[12,-29],[12,-6],[-12,-6]],'#ddccae');fxPoly([[-5,-68],[0,-72],[3,-43],[-2,-45]],'#88ab88');
   }else if(f.k==='smoke'){
-   fxLine([-2,-15],[21,-45],'#f4e7ce',3);fxCircle(21,-45,2.3,p>.48&&p<.62?'#edaa65':'#ba845f');
+   fxLine([-2,-15],[21,-45],'#f4e7ce',3);fxLine([-2,-15],[3,-22],'#c9a57e',4);fxCircle(21,-45,2.3,p>.48&&p<.62?'#edaa65':'#785848');
   }else{
    fxLine([-9,-14],[25,-54],'#ddbf88',2);fxLine([-4,-11],[30,-51],'#c8a46d',2);
    if(p>=.365&&p<.635)fxPoly([[24,-51],[33,-58],[45,-50],[33,-43]],'#e6a299');
@@ -711,11 +716,70 @@ function drawRod(dt){const pose=getRodPose();
 function drawRipples(){for(const rip of state.ripples){pen.save();pen.globalAlpha=rip.life*.47;pen.strokeStyle='#e2f9f1';pen.lineWidth=Math.max(1,rip.life*2);pen.beginPath();pen.ellipse(rip.x,rip.y,rip.r*1.9,rip.r*.4,-.06,0,TAU);pen.stroke();pen.restore();}}
 function drawRain(){const count=state.weather==='storm'?Math.floor(Math.min(180,vw*vh/3000)):state.weather==='rain'?Math.floor(Math.min(110,vw*vh/4700)):0;const t=state.sceneSeconds;for(let i=0;i<count;i++){let x=(H(i*13.4)*vw+(t*(state.weather==='storm'?145:65)))%vw,y=(H(i*2.72)*vh+(t*(state.weather==='storm'?530:360)))%vh;pen.strokeStyle=state.weather==='storm'?'rgba(210,233,247,.36)':'rgba(208,237,243,.27)';pen.lineWidth=1;pen.beginPath();pen.moveTo(x,y);pen.lineTo(x-2,y+11);pen.stroke();}}
 function drawParticles(dt){for(let i=state.particles.length-1;i>=0;i--){let p=state.particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=340*dt;p.life-=dt;if(p.life<=0){state.particles.splice(i,1);continue;}fxCircle(p.x,p.y,p.size,p.color,clamp(p.life/p.max,0,1))}for(let i=state.ripples.length-1;i>=0;i--){const q=state.ripples[i];q.r+=40*dt;q.life-=dt*.67;if(q.life<=0)state.ripples.splice(i,1)}}
-function drawFlyingLife(){if(state.weather==='storm'||state.weather==='rain')return;const t=state.sceneSeconds;
- const day=state.time>=5.5&&state.time<=19.5;const count=day?(state.spot==='sea'?7:13):18;
- for(let i=0;i<count;i++){let x=vw*(.15+H(i*31)*.7)+Math.sin(t*.4+i)*14;let y=vh*(.28+H(i*7)*.42)+Math.sin(t*.8+i*3)*9;
- if(day){pen.strokeStyle='rgba(24,48,51,.28)';pen.lineWidth=1;pen.beginPath();pen.moveTo(x-4,y-2);pen.lineTo(x,y+Math.sin(t*14+i)*2);pen.lineTo(x+4,y-2);pen.stroke();}
- else{const a=.25+.23*Math.sin(t*2+i*6);fxCircle(x,y,1.7,'#dcf1bb',a);}}
+// Rare wildlife events rather than a constant repeating flock: suitable for hours of fishing.
+// Timers are in *play* seconds, so pausing or background throttling never causes a burst of birds.
+const wildlife={river:null,sea:null,nextRiver:0,nextSea:0,region:null,drawn:0};
+function resetWildlifeSchedule(){wildlife.region=state.spot;wildlife.river=null;wildlife.sea=null;wildlife.nextRiver=state.gameSeconds+R(100,260);wildlife.nextSea=state.gameSeconds+R(130,320);}
+function wildlifeStep(){
+ if(wildlife.region!==state.spot)resetWildlifeSchedule();
+ if(!state.started||state.menu)return;
+ const t=state.gameSeconds,storm=state.weather==='storm',night=state.time<5.5||state.time>19.5;
+ if(state.spot==='river'&&!wildlife.river&&t>=wildlife.nextRiver){
+  wildlife.nextRiver=t+R(390,790);if(!storm)wildlife.river={born:t,duration:R(48,72),z:R(-1.0,2.5),dir:1};
+ }
+ if(state.spot==='sea'&&!wildlife.sea&&t>=wildlife.nextSea){
+  wildlife.nextSea=t+R(390,790);if(!storm&&!night)wildlife.sea={born:t,duration:R(32,48),dir:Math.random()<.5?-1:1,kind:Math.random()<.72?'gulls':'migrants'};
+ }
+ if(wildlife.river&&t-wildlife.river.born>wildlife.river.duration)wildlife.river=null;
+ if(wildlife.sea&&t-wildlife.sea.born>wildlife.sea.duration)wildlife.sea=null;
+}
+function drawMallard(cx,cy,size,phase,drake){
+ if(!Number.isFinite(cx+cy)||cx < -size*3||cx>vw+size*3||cy < -size*3||cy>vh+size*3)return;
+ const w=size,h=size*.57;
+ pen.save();pen.translate(cx,cy);pen.lineCap='round';pen.lineJoin='round';
+ // Small aft wake and subtle bobbing make the three ducks appear to ride the current.
+ pen.strokeStyle='#b4c3a8';pen.lineWidth=Math.max(.8,size*.065);pen.globalAlpha=.32;
+ for(let i=0;i<2;i++){const a=size*(.65+i*.42);pen.beginPath();pen.ellipse(-a,h*.45,size*(.42+i*.16),h*(.15+i*.07),0,-.5,.75);pen.stroke()}
+ pen.globalAlpha=1;
+ pen.fillStyle=drake?'#755944':'#736751';pen.beginPath();pen.ellipse(0,0,w*.65,h*.63,-.07,0,Math.PI*2);pen.fill();
+ pen.fillStyle=drake?'#637d69':'#8d7c5b';pen.beginPath();pen.ellipse(-w*.08,-h*.18,w*.43,h*.34,-.30,0,Math.PI*2);pen.fill();
+ pen.fillStyle=drake?'#2f6552':'#8f7356';pen.beginPath();pen.ellipse(w*.51,-h*.50,w*.23,h*.40,.15,0,Math.PI*2);pen.fill();
+ pen.fillStyle=drake?'#d7c49b':'#b5ab85';pen.fillRect(w*.36,-h*.36,w*.12,h*.09);
+ pen.fillStyle='#cdb372';pen.beginPath();pen.moveTo(w*.69,-h*.56);pen.lineTo(w*.97,-h*.47);pen.lineTo(w*.69,-h*.38);pen.fill();
+ pen.fillStyle='#26332e';pen.beginPath();pen.arc(w*.57,-h*.63,Math.max(.8,size*.035),0,Math.PI*2);pen.fill();
+ pen.fillStyle='#3a4c42';pen.beginPath();pen.moveTo(-w*.54,-h*.09);pen.lineTo(-w*.84,-h*.40);pen.lineTo(-w*.64,h*.03);pen.fill();
+ pen.restore();
+}
+function drawRareWildlife(){
+ const event=wildlife.river,t=state.gameSeconds;
+ if(state.spot==='river'&&event){const u=clamp((t-event.born)/event.duration,0,1),x=-9+u*18;
+  for(let i=0;i<3;i++){
+   const lag=[0,-.72,-1.45][i],offset=[0,.28,-.31][i];
+   const wx=x+lag,wy=.10+Math.sin(t*1.8+i*1.3)*.024,wz=event.z+offset;
+   const a=screenPoint([wx,wy,wz]),b=screenPoint([wx+.6,wy,wz]);
+   const scale=clamp(Math.abs(b[0]-a[0])*.78,5.5,22);
+   drawMallard(a[0],a[1],scale,t+i,i===0);
+  }
+ }
+ const flock=wildlife.sea;
+ if(state.spot==='sea'&&flock){const u=clamp((t-flock.born)/flock.duration,0,1),count=flock.kind==='gulls'?3:5;
+  for(let i=0;i<count;i++){
+   const behind=i*.055,travel=(u-behind)/(1-behind),dir=flock.dir;
+   if(travel<0||travel>1)continue;
+   const x=dir>0?vw*(-.08+travel*1.17):vw*(1.08-travel*1.17);
+   const y=vh*(.19+.09*Math.sin(i*.8)+.018*Math.sin(t*.55+i));
+   const wing=clamp(vw*.018,6,18)*(i%2?.83:1.05),flap=Math.sin(t*3.1+i*1.3)*(flock.kind==='gulls'?.3:.62);
+   pen.save();pen.translate(x,y);pen.scale(dir,1);pen.strokeStyle='#e8e4d3';pen.lineWidth=clamp(wing*.17,1.2,2.4);pen.lineCap='round';pen.lineJoin='round';
+   pen.beginPath();pen.moveTo(-wing,-wing*(.30+flap*.45));pen.quadraticCurveTo(-wing*.45,wing*.07,0,0);pen.quadraticCurveTo(wing*.43,wing*.03,wing,-wing*(.30+flap*.45));pen.stroke();
+   pen.strokeStyle='#354c51';pen.lineWidth=Math.max(.7,wing*.06);pen.beginPath();pen.moveTo(-wing*.45,wing*.11);pen.lineTo(wing*.45,wing*.11);pen.stroke();pen.restore();
+  }
+ }
+}
+function drawFlyingLife(){const t=state.sceneSeconds;
+ // Keep only a few nearly invisible night insects; daylight birds come from rare flock events.
+ if(state.weather==='storm'||state.weather==='rain'||(state.time>=5.5&&state.time<=19.5))return;
+ for(let i=0;i<7;i++){const x=vw*(.15+H(i*31)*.7)+Math.sin(t*.4+i)*10,y=vh*(.35+H(i*7)*.28)+Math.sin(t*.8+i*3)*6;
+ fxCircle(x,y,1.2,'#dcf1bb',.10+.11*Math.sin(t*2+i*6));}
 }
 function drawAtmosphericGlints(){
  const t=state.sceneSeconds,day=state.time>=6&&state.time<19.5,golden=Math.max(0,1-Math.abs(state.time-18.0)/2.2),dawn=Math.max(0,1-Math.abs(state.time-6.3)/1.7);const glow=Math.max(golden,dawn)* (state.weather==='clear'?1:state.weather==='cloud'?.43:.2);
@@ -731,7 +795,8 @@ function drawBreathEffects(){if(!state.restAction||state.restActionTime<=0||stat
   const inhale=fpSmooth((progress-.40)/.12)*(1-fpSmooth((progress-.61)/.05));
   const exhale=fpSmooth((progress-.68)/.12)*(1-fpSmooth((progress-.94)/.09));
   if(exhale>.015){pen.save();for(let i=0;i<11;i++){const u=(i/11+((t*.11)%1))%1,px=vw*(.46+Math.sin(t*1.2+i*2)*.025+u*.08),py=vh*(.42-u*.16+Math.sin(t+i)*.008);pen.globalAlpha=exhale*(.10+.15*(1-u));pen.fillStyle='#e7e9dc';pen.beginPath();pen.ellipse(px,py,7+u*25,3.5+u*14,.13,0,TAU);pen.fill();}pen.restore();}
-  if(inhale>.02)fxCircle(vw*.48,vh*.43,2.4,'#ffb974',.10+inhale*.16);
+  // The glowing ember is at the cigarette's distal tip (not the filter).
+  if(inhale>.02)fxCircle(vw*.57,vh*.40,2.4,'#ffb974',.10+inhale*.16);
  }
  if(state.restAction==='beer'){
   const sip=fpSmooth((progress-.48)/.10)*(1-fpSmooth((progress-.72)/.06));
@@ -741,9 +806,9 @@ function drawBreathEffects(){if(!state.restAction||state.restActionTime<=0||stat
 function drawPixelPass(){if(state.quality!=='pixel')return;pen.save();for(let y=0;y<vh;y+=4){pen.fillStyle=(Math.floor(y/4)%2===0)?'rgba(9,17,18,.07)':'rgba(255,240,205,.018)';pen.fillRect(0,y,vw,2);}for(let x=0;x<vw;x+=5){pen.fillStyle='rgba(4,8,9,.03)';pen.fillRect(x,0,1,vh);}for(let i=0;i<45;i++){const x=(H(i*91.7+state.sceneSeconds*.2)*vw)|0,y=(H(i*47.3+state.sceneSeconds*.3)*vh)|0;pen.fillStyle=(i%3===0)?'rgba(255,255,255,.028)':'rgba(5,9,10,.028)';pen.fillRect(x,y,3,3);}pen.restore()}
 function emitFoam(amount=3,force=0){const pos=waterBob();if(!Number.isFinite(pos[0])||!Number.isFinite(pos[1]))return;for(let i=0;i<amount;i++){if(state.foam.length>165)state.foam.shift();state.foam.push({x:pos[0]+(Math.random()-.5)*(12+force*22),y:pos[1]+(Math.random()-.5)*(6+force*10),vx:(Math.random()-.5)*17,vy:-(Math.random()*7+2),life:.35+Math.random()*.65,max:1,r:1+Math.random()*2.8});}}
 function drawFoam(dt){for(let i=state.foam.length-1;i>=0;i--){const b=state.foam[i];b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(b.life<=0){state.foam.splice(i,1);continue;}const a=.27+.5*b.life/b.max;pen.save();pen.globalAlpha=a;pen.strokeStyle='#f4f0d9';pen.lineWidth=1.5;pen.beginPath();pen.ellipse(b.x,b.y,b.r*1.4,b.r*.67,0,0,TAU);pen.stroke();pen.restore();}}
-function drawEffects(dt){pen.setTransform(1,0,0,1,0,0);pen.clearRect(0,0,fx.width,fx.height);const sx=fx.width/vw,sy=fx.height/vh;pen.scale(sx,sy);pen.save();if(state.shake>0)pen.translate(R(-state.shake,state.shake),R(-state.shake,state.shake));drawRipples();drawFoam(dt);drawFlyingLife();drawAtmosphericGlints();drawShoreMoments();drawRod(dt);drawBreathEffects();drawRain();drawParticles(dt);pen.restore();if(state.flash>0){pen.globalAlpha=state.flash*.2;pen.fillStyle='#fff5de';pen.fillRect(0,0,vw,vh);pen.globalAlpha=1}quantizeCanvas2D(pen,fx.width,fx.height)}
+function drawEffects(dt){pen.setTransform(1,0,0,1,0,0);pen.clearRect(0,0,fx.width,fx.height);const sx=fx.width/vw,sy=fx.height/vh;pen.scale(sx,sy);pen.save();if(state.shake>0)pen.translate(R(-state.shake,state.shake),R(-state.shake,state.shake));drawRipples();drawFoam(dt);drawRareWildlife();drawFlyingLife();drawAtmosphericGlints();drawShoreMoments();drawRod(dt);drawBreathEffects();drawRain();drawParticles(dt);pen.restore();if(state.flash>0){pen.globalAlpha=state.flash*.2;pen.fillStyle='#fff5de';pen.fillRect(0,0,vw,vh);pen.globalAlpha=1}quantizeCanvas2D(pen,fx.width,fx.height)}
 function setTimeLabel(){let h=Math.floor(state.time)%24,m=Math.floor((state.time%1)*60);let val=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;$('timeChip').textContent=val;$('menuTime').textContent=val;$('timeSlider').value=state.time}
-function refreshHUD(){const s=state,p=s.phase;forecastUI();$('waitClock').hidden=p!=='waiting';if(p==='waiting')$('waitClock').textContent='대기 '+elapsedLabel(s.waiting);$('gameRoot').classList.toggle('resting',!!s.rodRested);$('gameRoot').classList.toggle('restPerforming',!!s.restAction&&s.restActionTime>0);$('gameRoot').classList.toggle('fighting',p==='fight');$('gameRoot').classList.toggle('landed',p==='landed');$('gameRoot').classList.toggle('biting',p==='bite');$('weatherIcon').textContent=WEATHER[s.weather].icon;$('weatherChip').textContent=WEATHER[s.weather].ko;$('spotSub').textContent=DATA[s.spot].eng;$('conditionLine').textContent=DATA[s.spot].desc;const activeFight=p==='fight';$('fightHud').hidden=!activeFight;$('liftButton').disabled=!activeFight||!!state.menu;const btn=$('actionButton');btn.disabled=!!state.menu;const labels={idle:['↗','던지기','HOLD'],charging:['✦','던지는 중','RELEASE'],flying:['↗','캐스팅 중','···'],waiting:['⌛','기다리는 중','WAIT'],bite:['!','챔질!','TAP'],fight:['↻','릴링','HOLD'],landed:['✦','잡았다!','RESULT'],lost:['↗','다시 던지기','HOLD']};const a=labels[p];$('actionIcon').textContent=a[0];$('actionLabel').textContent=a[1];$('actionSub').textContent=a[2];$('actionButton').style.opacity=(p==='flying'||p==='waiting'||p==='landed')?.65:1;
+function refreshHUD(){const s=state,p=s.phase;forecastUI();$('waitClock').hidden=p!=='waiting';if(p==='waiting')$('waitClock').textContent='대기 '+elapsedLabel(s.waiting);$('gameRoot').classList.toggle('waiting',p==='waiting');$('gameRoot').classList.toggle('resting',!!s.rodRested);$('gameRoot').classList.toggle('restPerforming',!!s.restAction&&s.restActionTime>0);$('gameRoot').classList.toggle('fighting',p==='fight');$('gameRoot').classList.toggle('landed',p==='landed');$('gameRoot').classList.toggle('biting',p==='bite');$('weatherIcon').textContent=WEATHER[s.weather].icon;$('weatherChip').textContent=WEATHER[s.weather].ko;$('spotSub').textContent=DATA[s.spot].eng;$('conditionLine').textContent=DATA[s.spot].desc;const activeFight=p==='fight';$('fightHud').hidden=!activeFight;$('liftButton').disabled=!activeFight||!!state.menu;const btn=$('actionButton');btn.disabled=!!state.menu;const labels={idle:['↗','던지기','HOLD'],charging:['✦','던지는 중','RELEASE'],flying:['↗','캐스팅 중','···'],waiting:['⌛','기다리는 중','WAIT'],bite:['!','챔질!','TAP'],fight:['↻','릴링','HOLD'],landed:['✦','잡았다!','RESULT'],lost:['↗','다시 던지기','HOLD']};const a=labels[p];$('actionIcon').textContent=a[0];$('actionLabel').textContent=a[1];$('actionSub').textContent=a[2];$('actionButton').style.opacity=(p==='flying'||p==='waiting'||p==='landed')?.65:1;
 const status={idle:['FIELD NOTE / READY','물가에 낚싯대를 드리워볼까요.','입질이 오기까지 오래 걸릴 수도 있어요.'],charging:['CASTING / CHARGE','서서히 힘을 모으는 중','손을 떼면 미끼가 날아갑니다.'],flying:['CASTING / IN AIR','미끼가 물을 향해 날아갑니다.','잔잔한 수면 위에 던져 보세요.'],waiting:['WAITING / TIME','가끔은 기다림이 더 좋습니다.','시간·날씨·조황에 따라 입질이 달라집니다.'],bite:['BITE / STRIKE NOW','찌가 흔들립니다!','지금 챔질 버튼을 눌러주세요.'],fight:['FIGHT / TENSION','줄이 팽팽해집니다.','릴 감기엔 짧고 강한 진동, 줄 풀기엔 느슨한 복원. 장력을 관리하세요.'],landed:['LANDED / THE MOMENT','물고기가 낚싯줄에 매달려 있습니다.','보관 또는 방생을 선택해야 합니다.'],lost:['ESCAPED / TRY AGAIN','물고기가 빠져나갔습니다.','다시 조용히 낚싯대를 드리워보세요.']}[p];$('statusEyebrow').textContent=p==='waiting'?`WAITING / ${String(Math.floor(s.waiting/60)).padStart(2,'0')}:${String(Math.floor(s.waiting%60)).padStart(2,'0')}`:status[0];$('statusTitle').textContent=status[1];$('statusDescription').textContent=status[2];$('castPower').classList.toggle('show',p==='charging');$('powerPercent').textContent=Math.round(s.power*100)+'%';$('chargeFill').style.width=(s.power*100)+'%';if(activeFight&&s.fish){$('fishFightName').textContent=s.fish.name;$('fishRunState').textContent=s.fishMood;$('distanceLabel').textContent=s.distance.toFixed(1)+' m';$('energyFill').style.width=(s.energy*100)+'%';$('energyPct').textContent=Math.round(s.energy*100)+'%';$('tensionFill').style.width=(s.tension*100)+'%';$('tensionPct').textContent=Math.round(s.tension*100)+'%';$('tensionFill').style.background=s.tension>.8?'linear-gradient(90deg,#edb46f,#e46255)':s.tension>.62?'linear-gradient(90deg,#d6ae68,#f4c170)':'linear-gradient(90deg,#7e9b86,#dec88e)';}
  $('bagCount').textContent=inventory.fish.length; $('rodStandButton').classList.toggle('active',!!state.rodRested);$('rodStandButton').setAttribute('aria-pressed',String(!!state.rodRested));$('rodStandButton').querySelector('span').textContent=state.rodRested?'대 들기':'거치대';updateRestButtons();$('soundLabel').textContent=state.soundOn?'AMBIENCE ON':'AMBIENCE OFF';$('soundIcon').textContent=state.soundOn?'♫':'♪';}
 let inventorySort='new',boardFilter='all';
@@ -765,9 +830,10 @@ function selectFish(){const pool=DATA[state.spot].fish;let weights=pool.map((f,i
  if(['쏘가리','농어','배스'].includes(f[0]))w*=(dawn||dusk)?1.55:1;
  if(['붕어','잉어','피라미'].includes(f[0]))w*=state.weather==='cloud'?.95:state.weather==='rain'?1.25:1;
  if(['참돔','고등어'].includes(f[0]))w*=state.weather==='storm'?.62:state.weather==='clear'?1.2:1;
- return w});let n=Math.random()*weights.reduce((a,b)=>a+b,0),idx=0;for(let i=0;i<weights.length;i++){n-=weights[i];if(n<=0){idx=i;break;}}const f=pool[idx],rng=Math.pow(Math.random(),1.31),weight=f[2]+(f[3]-f[2])*rng,len=Math.round(f[6]+(f[7]-f[6])*Math.pow(rng,.75)),q=Math.max(0,Math.random()-(BAITS[state.activeBait]?.rarity||0));let grade=q<.001?4:q<.008?3:q<.035?2:q<.13?1:0;return{name:f[0],spot:state.spot,weight,length:len,grade,price:Math.round((f[4]*Math.pow(weight,1.1)*GRADES[grade].factor)/10)*10,tint:f[5]};}
+ return w});let n=Math.random()*weights.reduce((a,b)=>a+b,0),idx=0;for(let i=0;i<weights.length;i++){n-=weights[i];if(n<=0){idx=i;break;}}const f=pool[idx],rng=Math.pow(Math.random(),1.31),weight=f[2]+(f[3]-f[2])*rng,len=Math.round(f[6]+(f[7]-f[6])*rng),q=Math.max(0,Math.random()-(BAITS[state.activeBait]?.rarity||0));let grade=q<.001?4:q<.008?3:q<.035?2:q<.13?1:0;return{name:f[0],spot:state.spot,weight,length:len,grade,price:Math.round((f[4]*Math.pow(weight,1.1)*GRADES[grade].factor)/10)*10,tint:f[5]};}
 // Real-time bite window: 10 minutes minimum, usually within 90 minutes, two-hour safety limit.
 // Weibull cumulative hazard preserves weather/time/bait/luck adjustments as time passes.
+const BITE_MODES={festival:[5,20],arcade:[10,60],relaxed:[20,180],reality:null};
 const BITE_MIN_SECONDS=10*60;
 const BITE_MAX_SECONDS=2*60*60;
 const BITE_WEIBULL_SCALE=40*60;
@@ -776,6 +842,7 @@ function startBiteWait(){
  state.waiting=0;state.biteHazard=0;
  state.biteThreshold=-Math.log(Math.max(1e-12,Math.random()));
  state.quickBiteAt=0; // removed the old 6-75 second surprise bite
+ const range=BITE_MODES[state.biteMode];state.biteTarget=range?range[0]+Math.random()*(range[1]-range[0]):0;
  state.waitWallClock=performance.now();
 }
 function biteRate(){
@@ -793,6 +860,7 @@ function advanceBiteClock(realElapsed){
  const previous=state.waiting;
  state.waiting+=seconds;
  if(state.test)return state.waiting>=5; // explicit developer fast-bite toggle only
+ if(BITE_MODES[state.biteMode])return state.waiting>=state.biteTarget;
  if(state.waiting>=BITE_MAX_SECONDS)return true; // cannot run past 2h
  if(state.waiting<=BITE_MIN_SECONDS)return false;
  // Integrate an age-dependent hazard exactly over this interval to handle sleeping tabs.
@@ -834,7 +902,7 @@ for(const [k,id] of [['beer','beerVisible'],['smoke','smokeVisible'],['sashimi',
 let keyDown=false,liftDown=false;document.addEventListener('keydown',e=>{const tag=document.activeElement?.tagName;if(['INPUT','SELECT','TEXTAREA'].includes(tag))return;if(e.code==='Escape'){e.preventDefault();if(state.menu)closeMenu();else if(state.started)openMenu('pause');return}if(e.code==='Space'&&!e.repeat){e.preventDefault();keyDown=true;actionDown();}if(e.code==='KeyE'&&!e.repeat){e.preventDefault();liftDown=true;if(state.phase==='fight')state.lifting=true;}if(e.code==='KeyF'&&!e.repeat){e.preventDefault();$('fullscreenMenu').click();return}if(e.code==='KeyI'&&!e.repeat){e.preventDefault();if(!state.menu)openMenu('inventory');}if(e.code==='KeyR'&&!e.repeat){e.preventDefault();toggleRodRest();}if(e.code==='KeyB'&&!e.repeat){e.preventDefault();openMenu('shop');}if(e.code==='KeyL'&&!e.repeat){e.preventDefault();openMenu('leaderboard');}});
 document.addEventListener('keyup',e=>{if(e.code==='Space'&&keyDown){e.preventDefault();keyDown=false;actionUp();}if(e.code==='KeyE'&&liftDown){e.preventDefault();liftDown=false;state.lifting=false;}});
 document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{inventorySort=b.dataset.sort;document.querySelectorAll('[data-sort]').forEach(c=>c.classList.toggle('active',c===b));drawInventory()});$('pauseBtn').onclick=()=>openMenu('pause');$('inventoryBtn').onclick=()=>openMenu('inventory');$('closeMenu').onclick=closeMenu;$('resumeButton').onclick=closeMenu;$('backGame').onclick=closeMenu;$('resetCastMenu').onclick=()=>{cancelCast();closeMenu()};$('keepButton').onclick=keep;$('releaseButton').onclick=release;
-$('weatherSelect').onchange=e=>{setWeather(e.target.value);persistSettings()};$('baitSelect').onchange=e=>{state.bait=e.target.value;if(state.bait!=='worm'&&!(inventory.baitStock[state.bait]>0)){state.bait='worm';eventMsg('미끼 재고가 없습니다','TACKLE SHOP',1.5);}applyBaitValue();persistSettings()};$('timeSlider').oninput=e=>{state.time=Number(e.target.value);setTimeLabel();buildWorld();persistSettings()};$('autoTime').onchange=e=>{state.autoTime=e.target.checked;persistSettings()};$('autoWeather').onchange=e=>{state.weatherAuto=e.target.checked;persistSettings()};$('haptics').onchange=persistSettings;$('renderQuality').onchange=e=>{state.quality=e.target.value;resize();persistSettings()};$('shortWait').onchange=e=>state.test=e.target.checked;$('soundVolume').oninput=()=>{updateAudio();persistSettings()};
+$('weatherSelect').onchange=e=>{setWeather(e.target.value);persistSettings()};$('baitSelect').onchange=e=>{state.bait=e.target.value;if(state.bait!=='worm'&&!(inventory.baitStock[state.bait]>0)){state.bait='worm';eventMsg('미끼 재고가 없습니다','TACKLE SHOP',1.5);}applyBaitValue();persistSettings()};$('timeSlider').oninput=e=>{state.time=Number(e.target.value);setTimeLabel();buildWorld();persistSettings()};$('autoTime').onchange=e=>{state.autoTime=e.target.checked;persistSettings()};$('autoWeather').onchange=e=>{state.weatherAuto=e.target.checked;persistSettings()};$('biteMode').onchange=e=>{const mode=e.target.value;if(!Object.hasOwn(BITE_MODES,mode))return;state.biteMode=mode;if(state.phase==='waiting'){const r=BITE_MODES[mode];state.biteTarget=r?state.waiting+r[0]+Math.random()*(r[1]-r[0]):0;state.biteHazard=0;state.biteThreshold=-Math.log(Math.max(1e-12,Math.random()));}persistSettings();};$('haptics').onchange=persistSettings;$('renderQuality').onchange=e=>{state.quality=e.target.value;resize();persistSettings()};$('shortWait').onchange=e=>state.test=e.target.checked;$('soundVolume').oninput=()=>{updateAudio();persistSettings()};
 $('ambientFile').onchange=e=>{const f=e.target.files?.[0];if(!f)return;if(customAudioURL)URL.revokeObjectURL(customAudioURL);customAudioURL=URL.createObjectURL(f);if(!customAudio){customAudio=new Audio();customAudio.loop=true;}customAudio.src=customAudioURL;setSound(true);};
 $('fullscreenMenu').onclick=()=>{if(!document.fullscreenElement){$('gameRoot').requestFullscreen?.().catch(()=>{});}else document.exitFullscreen?.().catch(()=>{});};
 document.querySelectorAll('.placeTile').forEach(b=>b.onclick=()=>setSpot(b.dataset.place));
@@ -910,7 +978,7 @@ function fightUpdate(dt){const f=state.fish;if(!f)return;
 }
 function showReelToast(txt){$('reelToast').textContent=txt;$('reelToast').classList.add('show');setTimeout(()=>{$('reelToast').classList.remove('show')},1150);}
 
-function tick(dt,realDt=dt){if(!state.menu&&state.started){state.gameSeconds+=dt;state.weatherClock+=dt;if(state.weatherAuto&&state.weatherClock>900){state.weatherClock=0;setWeather(randomWeather());persistSettings();}state.weatherBlend=Math.min(1,state.weatherBlend+dt/8);if(state.autoTime){let old=Math.floor(state.time*2);let oldTime=state.time;state.time=(state.time+dt/900)%24;if(oldTime>state.time){state.dayLuck=Math.random();eventMsg('새로운 하루','NEW FISHING DAY',1.2);}if(state.gameSeconds%2<dt)setTimeLabel();if(old!==Math.floor(state.time*2)&&realGL)buildWorld()}
+function tick(dt,realDt=dt){wildlifeStep();if(!state.menu&&state.started){state.gameSeconds+=dt;state.weatherClock+=dt;if(state.weatherAuto&&state.weatherClock>900){state.weatherClock=0;setWeather(randomWeather());persistSettings();}state.weatherBlend=Math.min(1,state.weatherBlend+dt/8);if(state.autoTime){let old=Math.floor(state.time*2);let oldTime=state.time;state.time=(state.time+dt/900)%24;if(oldTime>state.time){state.dayLuck=Math.random();eventMsg('새로운 하루','NEW FISHING DAY',1.2);}if(state.gameSeconds%2<dt)setTimeLabel();if(old!==Math.floor(state.time*2)&&realGL)buildWorld()}
  state.reelBlend+=((state.phase==='fight'&&state.reeling?1:0)-state.reelBlend)*Math.min(1,dt*10);
  state.slackBlend+=((state.phase==='fight'&&!state.reeling?1:0)-state.slackBlend)*Math.min(1,dt*5);
  state.rodQuiver+=((state.phase==='fight'?clamp(state.runIntensity*.76+state.tension*.35,.12,1):0)-state.rodQuiver)*Math.min(1,dt*4.8);
@@ -951,6 +1019,7 @@ function tick(dt,realDt=dt){if(!state.menu&&state.started){state.gameSeconds+=dt
 function frame(now){const realDt=last?Math.max(0,(now-last)/1000):0;let dt=clamp(realDt,0,.05);last=now;tick(dt,realDt);updateCamera();drawWorld(state.sceneSeconds);drawEffects(dt);requestAnimationFrame(frame)}
 window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,120));
 loadSettings();applyBaitValue();for(const f of inventory.fish){ensureFishID(f);if(!inventory.records.some(r=>r.id===f.id))inventory.records.push({...f,status:'kept',when:new Date().toISOString()});}inventory.records=inventory.records.slice(0,300);save();state.weatherPrev=state.weather;resize();buildWorld();document.querySelectorAll('.placeTile').forEach(b=>b.classList.toggle('active',b.dataset.place===state.spot));setTimeLabel();refreshHUD();requestAnimationFrame(frame);
-window.__stillwater={state,inventory,biteRate,startBiteWait,advanceBiteClock,table:TABLE3D,fishScore,rodPose:getRodPose,rodKeyframe,castRig,buyRod,buyBait,sellFish,renderShop,renderLeaderboard,toggleRodRest,doRestAction,chooseFish:selectFish,debugFrame(){return fpModelFrame()},debugTableProp(k){return propOnTable(k)},debugMotion(){return {bow:state.bowAmount,head:state.headPitch,pose:fpModelFrame()}},debugRestAim(){const f=fpModelFrame();return {table:screenPoint([TABLE3D.x,TABLE3D.y,TABLE3D.z]),prop:state.restAction?screenPoint(restAnchor(state.restAction)):null,tip:f?viewPoint(restAnchor(f.k)):null,viewport:[vw,vh],shoulder:fpShoulder()}},triggerBite(){if(state.started&&!state.menu){state.phase='bite';state.biteWindow=5;eventMsg('입질!')}},forceLand(){if(state.started&&!state.menu){if(!state.fish)state.fish=selectFish();landFish()}},setWeather(w){if(WEATHER[w]){$('weatherSelect').value=w;state.weather=w;refreshHUD()}},setSpot};
+window.__stillwater={state,inventory,DATA,wildlife,renderOnce(){updateCamera();drawWorld(state.sceneSeconds);drawEffects(0);},projectPoint:screenPoint,forceWildlife(kind='river'){const now=state.gameSeconds;if(kind==='river')wildlife.river={born:now-34,duration:60,z:1,dir:1};else wildlife.sea={born:now-8,duration:42,dir:1,kind:'gulls'};},storageKey,settingsKey,save,persistSettings,refreshHUD,closeMenu,biteRate,startBiteWait,advanceBiteClock,table:TABLE3D,fishScore,rodPose:getRodPose,rodKeyframe,castRig,buyRod,buyBait,sellFish,renderShop,renderLeaderboard,toggleRodRest,doRestAction,chooseFish:selectFish,debugFrame(){return fpModelFrame()},debugTableProp(k){return propOnTable(k)},debugMotion(){return {bow:state.bowAmount,head:state.headPitch,pose:fpModelFrame()}},debugRestAim(){const f=fpModelFrame();return {table:screenPoint([TABLE3D.x,TABLE3D.y,TABLE3D.z]),prop:state.restAction?screenPoint(restAnchor(state.restAction)):null,tip:f?viewPoint(restAnchor(f.k)):null,viewport:[vw,vh],shoulder:fpShoulder()}},triggerBite(){if(state.started&&!state.menu){state.phase='bite';state.biteWindow=5;eventMsg('입질!')}},forceLand(){if(state.started&&!state.menu){if(!state.fish)state.fish=selectFish();landFish()}},setWeather(w){if(WEATHER[w]){$('weatherSelect').value=w;state.weather=w;refreshHUD()}},setSpot};
 })();
+
 
