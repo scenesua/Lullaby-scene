@@ -241,7 +241,7 @@ button,select,input,textarea{font-family:var(--font-ui)!important;letter-spacing
 #gameRoot .titleRow{position:relative;display:inline-flex;align-items:center;flex-wrap:nowrap;margin-top:13px;overflow:visible}
 #gameRoot .titleRow > strong{position:relative;z-index:1}
 #gameRoot .identityText .titleRow .betaTag{
- position:absolute;top:-19px;left:-10px;z-index:3;display:block;margin:0!important;
+ position:absolute;top:1px;left:-10px;z-index:3;display:block;margin:0!important;
  color:#ec484d!important;font:700 clamp(20px,2.1vw,27px)/1 var(--font-display)!important;
  letter-spacing:0!important;white-space:nowrap;text-shadow:2px 2px 0 #0a1015,0 0 10px #371015;
  transform:rotate(-16deg)!important;transform-origin:left bottom;pointer-events:none
@@ -249,14 +249,14 @@ button,select,input,textarea{font-family:var(--font-ui)!important;letter-spacing
 #gameRoot .startTitleRow{position:relative;display:inline-flex;align-items:center;justify-content:center;flex-wrap:nowrap;margin-top:24px;overflow:visible}
 #gameRoot .startTitleRow h1{position:relative;z-index:1;margin:13px 0}
 #gameRoot .startTitleRow .betaTag{
- position:absolute;left:-15px;top:-26px;z-index:3;display:block;margin:0!important;
+ position:absolute;left:-15px;top:14px;z-index:3;display:block;margin:0!important;
  color:#ec484d!important;font:700 clamp(28px,4.3vw,51px)/1 var(--font-display)!important;
  letter-spacing:0!important;white-space:nowrap;text-shadow:3px 3px 0 #0a1015,0 0 20px #471719;
  transform:rotate(-15deg)!important;transform-origin:left bottom;pointer-events:none
 }
 @media (orientation:portrait){
  #gameRoot .titleRow{margin-top:11px}
- #gameRoot .identityText .titleRow .betaTag{left:-5px;top:-16px;font-size:20px!important}
+ #gameRoot .identityText .titleRow .betaTag{left:-5px;top:3px;font-size:20px!important}
  #gameRoot .startTitleRow{margin-top:22px}
- #gameRoot .startTitleRow .betaTag{left:-5px;top:-21px;font-size:clamp(25px,7vw,33px)!important}
+ #gameRoot .startTitleRow .betaTag{left:-5px;top:14px;font-size:clamp(25px,7vw,33px)!important}
 }
