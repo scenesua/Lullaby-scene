@@ -233,3 +233,12 @@ button,select,input,textarea{font-family:var(--font-ui)!important;letter-spacing
 .startTitleRow{display:flex;align-items:flex-start;justify-content:center;gap:0;flex-wrap:wrap}
 .startTitleRow .betaTag{font-size:.62em;margin-left:10px;margin-top:6px}
 
+
+/* Retrieve a cast without waiting for a fish; beside stand + cast buttons. */
+#gameRoot .actionSide #retrieveButton{display:none;flex-direction:column;justify-content:center;align-items:center;gap:3px;min-width:54px;width:60px;min-height:60px;flex:none;padding:5px;border:2px solid #83a7a1;border-radius:5px;box-shadow:3px 3px 0 #0a1015;background:#263d3d;color:#f4eed7}
+#gameRoot .actionSide #retrieveButton b{font-size:25px;line-height:1}
+#gameRoot .actionSide #retrieveButton span{font:700 10px var(--font-ui)}
+#gameRoot.canRetrieve .actionSide #retrieveButton{display:flex}
+#gameRoot.retrieving .actionButton{opacity:.75;cursor:wait}
+@media(orientation:portrait){#gameRoot .actionSide #retrieveButton{width:53px;min-height:56px}}
+@media(orientation:landscape) and (max-height:530px){#gameRoot .actionSide #retrieveButton{width:48px;min-width:48px;min-height:48px}}
