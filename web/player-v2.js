@@ -37,7 +37,14 @@ const builtinPresets=[
  {id:'preset_simple_forest_temple',name:'Forest Temple · Simple',master:.62,mix:{forest:.34,birds:.16,singing_bowl:.09}},
  {id:'preset_winter_lighthouse',name:'Winter Lighthouse',master:.65,mix:{snowy_night:.38,lighthouse:.25,wind:.1}},
  {id:'preset_harbor_cabin',name:'Harbor Cabin',master:.65,mix:{ferry_journey_bed:.35,ocean:.22,lighthouse:.14}},
- {id:'preset_polar_night_train',name:'Polar Night Train',master:.65,mix:{train_journey_bed:.38,snowy_night:.28,brown_noise:.1}}
+ {id:'preset_polar_night_train',name:'Polar Night Train',master:.65,mix:{train_journey_bed:.38,snowy_night:.28,brown_noise:.1}},
+ // STILLWATER fishing grounds: separate clear/rain mixes, all using existing licensed sources.
+ {id:'preset_fishing_river_clear',name:'River Fishing · Clear',category:'fishing',master:.66,mix:{stream:.42,forest:.19,birds:.12,wind:.07}},
+ {id:'preset_fishing_river_rain',name:'River Fishing · Rain',category:'fishing',master:.66,mix:{stream:.33,rain:.41,forest:.11,wind:.09}},
+ {id:'preset_fishing_lake_clear',name:'Reservoir Fishing · Clear',category:'fishing',master:.66,mix:{forest:.28,birds:.15,stream:.12,wind:.09}},
+ {id:'preset_fishing_lake_rain',name:'Reservoir Fishing · Rain',category:'fishing',master:.66,mix:{rain:.43,forest:.21,stream:.08,wind:.07}},
+ {id:'preset_fishing_sea_clear',name:'Sea Fishing · Clear',category:'fishing',master:.66,mix:{ocean:.51,wind:.24}},
+ {id:'preset_fishing_sea_rain',name:'Sea Fishing · Rain',category:'fishing',master:.66,mix:{ocean:.43,rain:.36,wind:.18}}
 ];
 
 const presetVisuals={
@@ -52,7 +59,10 @@ const presetVisuals={
  preset_fan_room:'/assets/simple-scenes/fan-room.webp',preset_winter_lighthouse:'/assets/simple-scenes/winter-lighthouse.webp',
  preset_train_journey:'/assets/journeys/train.webp',preset_simple_train:'/assets/journeys/train.webp',preset_polar_night_train:'/assets/journeys/train.webp',
  preset_simple_aircraft:'/assets/journeys/aircraft.webp',preset_simple_ferry:'/assets/journeys/ferry.webp',preset_harbor_cabin:'/assets/journeys/ferry.webp',
- preset_simple_spacecraft:'/assets/journeys/spacecraft.webp',preset_simple_submarine:'/assets/journeys/submarine.webp',preset_simple_forest_temple:'/assets/journeys/forest-temple.webp'
+ preset_simple_spacecraft:'/assets/journeys/spacecraft.webp',preset_simple_submarine:'/assets/journeys/submarine.webp',preset_simple_forest_temple:'/assets/journeys/forest-temple.webp',
+ preset_fishing_river_clear:'/assets/simple-scenes/forest-morning.webp',preset_fishing_river_rain:'/assets/simple-scenes/rain-eaves.webp',
+ preset_fishing_lake_clear:'/assets/simple-scenes/forest-morning.webp',preset_fishing_lake_rain:'/assets/simple-scenes/rain-eaves.webp',
+ preset_fishing_sea_clear:'/assets/simple-scenes/ocean-night.webp',preset_fishing_sea_rain:'/assets/simple-scenes/thunderstorm.webp'
 };
 window.LullabyPresetVisuals=presetVisuals;
 
@@ -127,7 +137,7 @@ $$('[data-macro]').forEach(input=>input.addEventListener('input',e=>{const k=e.t
 
 function updateNowPlaying(){const active=[],journeyNames={train_journey:'Overnight Train Journey',ferry_journey:'Night Ferry Journey',spacecraft_journey:'Spacecraft Drift',submarine_journey:'Submarine Voyage',hood_journey:'HOOD Night',forest_temple_journey:'Forest Temple'};if(scenePlaying)active.push(journeyNames[activeJourneyId]||'Passenger Aircraft Cabin');catalog.forEach(s=>{const st=getMixerUiState(s.id);if(st.on)active.push(s.name)});$('#railNowPlaying').textContent=active.length?`${active.length} active`:'Stopped'}
 
-function renderPresets(){if(!$('#builtInPresets'))return;$('#builtInPresets').innerHTML=builtinPresets.map(p=>`<button class="preset-card preset-card-visual" data-preset="${p.id}" type="button"><strong>${p.name}</strong><span>${Object.keys(p.mix).length} sources</span></button>`).join('');$$('#builtInPresets [data-preset]').forEach(b=>{b.style.setProperty('--preset-image',`url("${presetVisuals[b.dataset.preset]}")`);b.addEventListener('click',()=>applyPreset(b.dataset.preset))});renderUserPresets()}
+function renderPresets(){if(!$('#builtInPresets'))return;const card=p=>`<button class="preset-card preset-card-visual" data-preset="${p.id}" type="button"><strong>${p.name}</strong><span>${Object.keys(p.mix).length} sources</span></button>`;const usual=builtinPresets.filter(p=>p.category!=='fishing'),fishing=builtinPresets.filter(p=>p.category==='fishing');$('#builtInPresets').innerHTML=usual.map(card).join('')+'<h5 class="preset-category-title">🎣 낚시 · Fishing</h5>'+fishing.map(card).join('');$$('#builtInPresets [data-preset]').forEach(b=>{b.style.setProperty('--preset-image',`url("${presetVisuals[b.dataset.preset]}")`);b.addEventListener('click',()=>applyPreset(b.dataset.preset))});renderUserPresets()}
 async function applyPreset(id){const p=builtinPresets.find(x=>x.id===id)||loadUserPresets().find(x=>x.id===id);if(!p)return;try{await ensureContext();stopJourneyPlayback();stopAllMixer();setMaster(p.master);for(const [sourceId,volume] of Object.entries(p.mix)){const def=sourceById[sourceId];if(!def)continue;if(def.kind==='event'){startEventLayer(def);eventState[sourceId].volume=volume}else{if(!nodes[sourceId])nodes[sourceId]=await makeSourceNode(def);nodes[sourceId].gain.gain.value=volume;await nodes[sourceId].el.play()}}renderMixer();updateNowPlaying();setStatus(`${p.name} 프리셋 적용됨`);if(presetVisuals[id])document.dispatchEvent(new CustomEvent('lullaby-preset-applied',{detail:{id,image:presetVisuals[id]}}));switchView('mixer')}catch(err){console.error(err);setStatus('프리셋을 적용하지 못했습니다.')}}
 function snapshotMix(){const mix={};catalog.forEach(s=>{const st=getMixerUiState(s.id);if(st.on)mix[s.id]=st.volume/100});return mix}
 const USER_PRESET_ID=/^user_[A-Za-z0-9_-]+$/;
