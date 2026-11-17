@@ -1,4 +1,5 @@
 
+
 /* 8-bit type system: Korean UI, titles and telemetry share pixel-grid typography. */
 :root{
  --font-display:'Galmuri14','Galmuri11','Malgun Gothic',monospace;
@@ -232,31 +233,12 @@ button,select,input,textarea{font-family:var(--font-ui)!important;letter-spacing
 .startTitleRow{display:flex;align-items:flex-start;justify-content:center;gap:0;flex-wrap:wrap}
 .startTitleRow .betaTag{font-size:.62em;margin-left:10px;margin-top:6px}
 
-/* Production beta mark: keep legible on small game HUDs. */
-.identityText .titleRow .betaTag{font-family:var(--font-display);font-size:clamp(11px,1vw,14px);line-height:1.1;color:#d64545;letter-spacing:0;margin:2px 0 0 7px;transform:rotate(-14deg) translateY(-3px)}
-.startTitleRow .betaTag{font-family:var(--font-display);font-size:clamp(13px,1.7vw,20px);line-height:1.1;color:#d64545;letter-spacing:0;margin:2px 0 0 8px;transform:rotate(-14deg) translateY(-1px)}
-@media (orientation:portrait){.identityText .titleRow .betaTag{font-size:10px;margin-left:5px;margin-top:0}.startTitleRow .betaTag{font-size:13px;margin-left:5px}}
 
-/* v1.4 beta: bold diagonal stamp overlapping the upper-right corner of each title. */
-#gameRoot .titleRow{position:relative;display:inline-flex;align-items:center;flex-wrap:nowrap;margin-top:13px;overflow:visible}
-#gameRoot .titleRow > strong{position:relative;z-index:1}
-#gameRoot .identityText .titleRow .betaTag{
- position:absolute;top:-10px;left:auto;right:-12px;z-index:3;display:block;margin:0!important;
- color:#ec484d!important;font:700 clamp(20px,2.1vw,27px)/1 var(--font-display)!important;
- letter-spacing:0!important;white-space:nowrap;text-shadow:2px 2px 0 #0a1015,0 0 10px #371015;
- transform:rotate(16deg)!important;transform-origin:right bottom;pointer-events:none
-}
-#gameRoot .startTitleRow{position:relative;display:inline-flex;align-items:center;justify-content:center;flex-wrap:nowrap;margin-top:24px;overflow:visible}
-#gameRoot .startTitleRow h1{position:relative;z-index:1;margin:13px 0}
-#gameRoot .startTitleRow .betaTag{
- position:absolute;left:auto;right:-19px;top:-6px;z-index:3;display:block;margin:0!important;
- color:#ec484d!important;font:700 clamp(28px,4.3vw,51px)/1 var(--font-display)!important;
- letter-spacing:0!important;white-space:nowrap;text-shadow:3px 3px 0 #0a1015,0 0 20px #471719;
- transform:rotate(15deg)!important;transform-origin:right bottom;pointer-events:none
-}
-@media (orientation:portrait){
- #gameRoot .titleRow{margin-top:11px}
- #gameRoot .identityText .titleRow .betaTag{left:auto;right:-6px;top:-10px;font-size:20px!important}
- #gameRoot .startTitleRow{margin-top:22px}
- #gameRoot .startTitleRow .betaTag{left:auto;right:-4px;top:-5px;font-size:clamp(25px,7vw,33px)!important}
-}
+/* Retrieve a cast without waiting for a fish; beside stand + cast buttons. */
+#gameRoot .actionSide #retrieveButton{display:none;flex-direction:column;justify-content:center;align-items:center;gap:3px;min-width:54px;width:60px;min-height:60px;flex:none;padding:5px;border:2px solid #83a7a1;border-radius:5px;box-shadow:3px 3px 0 #0a1015;background:#263d3d;color:#f4eed7}
+#gameRoot .actionSide #retrieveButton b{font-size:25px;line-height:1}
+#gameRoot .actionSide #retrieveButton span{font:700 10px var(--font-ui)}
+#gameRoot.canRetrieve .actionSide #retrieveButton{display:flex}
+#gameRoot.retrieving .actionButton{opacity:.75;cursor:wait}
+@media(orientation:portrait){#gameRoot .actionSide #retrieveButton{width:53px;min-height:56px}}
+@media(orientation:landscape) and (max-height:530px){#gameRoot .actionSide #retrieveButton{width:48px;min-width:48px;min-height:48px}}

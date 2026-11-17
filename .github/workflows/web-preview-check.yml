@@ -64,6 +64,10 @@ jobs:
         run: |
           node --check web/site.js
           node --check web/player-v2.js
+          node --check web/stillwater/game-content.js
+          node --check web/stillwater/game.js
+          node --check web/stillwater/game-journal.js
+          node --check web/stillwater-overlay-v1.js
           node --check web/scene-audio-v2.js
           node --check web/train-journey-v1.js
           node --check web/remaining-journeys-v1.js
