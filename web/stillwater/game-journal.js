@@ -37,19 +37,55 @@ function recordCatch(f){
 }
 const tiers=['XS','S','M','L','XL','XXL'];
 function sizeTier(n,min,max){const ratio=max>min?Math.max(0,Math.min(1,(n-min)/(max-min))):0;return tiers[ratio<.10?0:ratio<.25?1:ratio<.45?2:ratio<.65?3:ratio<.85?4:5];}
-const kind=name=>/광어|도다리|가자미/.test(name)?'flat':/갈치|학꽁치|미꾸라지|가물치|메기|대구/.test(name)?'long':/붕어|잉어|도미|돔|블루길|떡붕어|향어/.test(name)?'round':'normal';
+// Illustrated species field guide: anatomical silhouettes vary by species.
+function illustrationKind(n){
+ if(/광어|도다리|가자미/.test(n))return 'flat';
+ if(n==='갈치')return 'ribbon';if(n==='학꽁치')return 'needle';
+ if(/가물치|미꾸라지/.test(n))return 'eel';
+ if(/메기|동자개|대구/.test(n))return 'cat';
+ if(/산천어|송어|은어/.test(n))return 'trout';
+ if(/참돔|감성돔|벵에돔|전어|붕어|떡붕어|참붕어|블루길|납자루/.test(n))return 'bream';
+ if(/잉어|향어|누치|돌고기|모래무지|참마자/.test(n))return 'carp';
+ if(/고등어|삼치|전갱이|강준치|피라미|빙어|쉬리|버들치|끄리/.test(n))return 'stream';
+ if(/꺽지|쏘가리|우럭|볼락|쥐노래미/.test(n))return 'perch';
+ return 'bass';
+}
+const fishShapes={
+carp:{body:'M12 33 Q18 18 43 18 Q73 16 99 30 Q83 49 53 47 Q23 49 12 33Z',tail:'M96 30 Q113 21 119 17 L116 34 L120 47 Q108 42 96 37Z',dorsal:'M34 20 L44 10 L49 5 L57 12 L76 15 L84 23Z',belly:'M48 46 Q59 60 71 49 L83 41',mouth:'M13 31 L7 35 L14 37',mark:'M31 28 Q52 18 76 28 M28 35 Q55 41 80 35'},
+bream:{body:'M12 29 Q31 3 59 4 Q84 6 97 29 Q84 56 56 55 Q29 52 12 29Z',tail:'M94 29 L119 14 L115 30 L119 49 L95 37Z',dorsal:'M29 16 L36 1 L43 10 L51 0 L58 8 L67 3 L82 17Z',belly:'M34 46 L50 60 L62 51 L79 46',mouth:'M13 28 L8 31 L14 34',mark:'M29 25 Q55 14 81 25 M23 36 Q55 45 82 35'},
+perch:{body:'M11 30 Q20 16 43 18 Q71 15 98 26 Q93 39 64 44 Q32 48 11 30Z',tail:'M95 27 L121 15 L116 29 L122 44 L97 36Z',dorsal:'M28 21 L32 8 L39 15 L45 3 L51 14 L58 7 L65 18 L76 15 L82 21Z',belly:'M40 41 L57 55 L68 42',mouth:'M10 29 L3 27 L7 34 L15 35',mark:'M40 21 L48 39 M55 20 L62 40 M71 21 L77 38'},
+trout:{body:'M9 30 Q29 18 64 19 Q85 18 104 29 Q85 42 54 42 Q24 42 9 30Z',tail:'M101 28 Q116 19 122 17 L116 30 L122 44 L101 34Z',dorsal:'M49 20 L55 9 L68 18 M81 36 L86 31 L89 39',belly:'M58 40 L68 48 L74 39',mouth:'M9 29 L4 28 L8 34',mark:'M27 25 L38 25 M48 23 L50 25 M65 22 L67 24 M76 26 L78 28 M54 32 L55 33 M69 35 L71 35'},
+bass:{body:'M11 27 Q28 15 62 18 Q88 16 100 28 Q90 41 59 45 Q30 42 11 27Z',tail:'M98 28 L120 16 L114 31 L120 46 L98 36Z',dorsal:'M37 20 L39 10 L46 16 L53 8 L61 17 L72 15 L85 23Z',belly:'M47 42 L67 51 L75 42',mouth:'M13 24 L3 24 L5 31 L14 35',mark:'M26 31 Q53 37 86 30'},
+stream:{body:'M9 29 Q38 22 70 23 Q90 22 103 30 Q86 38 57 37 Q31 38 9 29Z',tail:'M101 29 L123 15 L116 29 L123 45 L102 34Z',dorsal:'M51 23 L58 13 L68 22 M82 35 L88 42 L93 34',belly:'M42 36 L58 45 L64 37',mouth:'M10 28 L4 27 L9 32',mark:'M24 29 Q62 26 91 30'},
+cat:{body:'M8 30 Q13 18 33 18 Q55 22 81 24 Q98 25 105 31 Q80 44 44 45 Q15 44 8 30Z',tail:'M102 30 L122 17 L115 31 L122 42 L102 37Z',dorsal:'M40 20 L49 10 L54 23 M78 25 L86 21 L88 27',belly:'M38 43 L52 52 L64 44',mouth:'M12 28 L3 27 L12 36',mark:'M23 21 Q38 19 53 26',whisker:true},
+eel:{body:'M5 34 Q22 22 48 25 Q71 27 84 32 Q104 39 114 31 Q101 49 81 43 Q62 37 41 37 Q17 42 5 34Z',tail:'M112 31 L123 28 L117 37 L106 42Z',dorsal:'M23 27 Q55 20 87 29',belly:'M39 38 Q71 43 98 37',mouth:'M8 32 L3 34 L8 36',mark:'M26 33 Q60 30 89 35'},
+needle:{body:'M15 29 Q55 24 94 27 L111 31 L92 35 Q55 37 15 32Z',tail:'M110 31 L124 18 L119 32 L124 46 L110 34Z',dorsal:'M69 26 L75 17 L84 27',belly:'M65 35 L74 39 L83 34',mouth:'M15 29 L1 28 L14 31',mark:'M26 30 L93 30'},
+ribbon:{body:'M4 28 Q22 17 44 22 Q68 27 88 24 Q106 23 117 29 Q103 39 82 35 Q62 31 42 32 Q17 34 4 28Z',tail:'M116 28 L124 25 L119 34Z',dorsal:'M7 27 Q21 8 51 18 Q81 24 110 25',belly:'M24 32 Q55 34 94 33',mouth:'M4 27 L1 29 L4 31',mark:'M10 29 Q53 27 111 30'},
+flat:{body:'M14 31 Q31 12 60 11 Q84 14 103 30 Q91 48 61 51 Q31 50 14 31Z',tail:'M100 29 L121 21 L116 32 L121 42 L100 37Z',dorsal:'M21 24 Q55 3 94 23',belly:'M22 40 Q55 57 92 40',mouth:'M15 28 L6 30 L16 34',mark:'M27 29 Q54 18 80 30 M29 36 Q56 46 81 35'}
+};
 function fishPicture(name,tint,unseen=false){
- const shape=kind(name),body=shape==='flat'?`<ellipse cx="56" cy="30" rx="37" ry="15"/>`:shape==='long'?`<path d="M18 29 Q35 18 75 24 Q96 23 103 29 Q89 36 66 34 Q34 39 18 29Z"/>`:shape==='round'?`<path d="M17 29 Q31 3 63 8 Q91 11 96 30 Q83 52 53 50 Q28 46 17 29Z"/>`:`<path d="M17 29 Q32 12 64 15 Q85 17 101 29 Q80 44 55 43 Q32 42 17 29Z"/>`;
- const color=unseen?'#1e1a18':tint,accent=unseen?'#1e1a18':'#665946';
- return `<svg viewBox="0 0 126 62" role="img" aria-label="${unseen?'미발견 물고기':esc(name)}"><g fill="${color}" stroke="${accent}" stroke-width="1.2"><path d="M22 28 L2 8 L2 53 L22 32Z"/>${body}<path d="M37 18 L52 5 L66 18Z"/><path d="M45 39 L57 56 L67 39Z"/></g>${unseen?'':`<circle cx="92" cy="27" r="2.6" fill="#1a2422"/><path d="M68 20 Q75 29 66 40" fill="none" stroke="#645b49" stroke-width="1.5"/>`}</svg>`;
+ const type=illustrationKind(name),shape=fishShapes[type],fill=unseen?'#201d1a':tint,ink=unseen?'#201d1a':'#394943',pale=unseen?'#201d1a':'#d5c7a2';
+ const part=(d,color)=>'<path d="'+d+'" fill="'+color+'" stroke="'+ink+'" stroke-width="1" stroke-linejoin="round"/>';
+ let detail='';
+ if(!unseen){
+  detail='<path d="'+shape.mark+'" fill="none" stroke="'+ink+'" stroke-width="1.1" opacity=".60" stroke-linecap="round"/>';
+  const eyeX=type==='ribbon'?13:type==='needle'?23:type==='flat'?35:24,eyeY=type==='flat'?25:type==='bream'?25:27;
+  detail+='<circle cx="'+eyeX+'" cy="'+eyeY+'" r="2.4" fill="#202a27"/><circle cx="'+(eyeX-.65)+'" cy="'+(eyeY-.8)+'" r=".8" fill="#e6e2d5"/>';
+  if(shape.whisker)detail+='<path d="M12 30 Q5 21 1 22 M12 32 Q5 42 1 40 M18 34 Q11 44 6 46" fill="none" stroke="'+ink+'" stroke-width="1.4"/>';
+  if(type==='trout'||/쏘가리|볼락|쥐노래미|산천어/.test(name))for(let i=0;i<12;i++){const x=37+(i%6)*9,y=26+Math.floor(i/6)*9;detail+='<circle cx="'+x+'" cy="'+y+'" r="'+(i%3===0?1.7:1.1)+'" fill="'+ink+'" opacity=".5"/>';}
+  if(/고등어|삼치|전갱이/.test(name))for(let i=0;i<5;i++){const x=39+i*10;detail+='<path d="M'+x+' 24 l6 7 l-4 -4" fill="none" stroke="'+ink+'" stroke-width="1.2" opacity=".65"/>';}
+  if(type==='flat')detail+='<circle cx="46" cy="25" r="2.2" fill="#202a27"/>';
+  detail+='<path d="M40 29 Q68 33 93 29" stroke="'+pale+'" stroke-width=".65" opacity=".55" fill="none"/>';
+ }
+ return '<svg viewBox="0 0 126 62" role="img" aria-label="'+(unseen?'미발견 물고기':esc(name))+'" xmlns="http://www.w3.org/2000/svg"><g>'+part(shape.tail,fill)+part(shape.dorsal,fill)+part(shape.belly,fill)+part(shape.body,fill)+part(shape.mouth,fill)+detail+'</g></svg>';
 }
 let current='river',page=0,selection=0,lastFocus=null;
 function statsFor(spot,name){const raw=inv.journal?.[key(spot,name)];return raw&&raw.catches>0?raw:null}
 function render(){
  const fishes=allSpecies[current],start=page*9,shown=fishes.slice(start,start+9),sum=fishes.filter(f=>statsFor(current,f[0])).length;
  $('journalRegion').textContent=`${regionNames[current]} · ${sum}/18 발견`;
- $('journalPage').textContent=`${page+1} / 2`;
- $('journalPrev').disabled=page===0;$('journalNext').disabled=page===1;
+ $('journalPage').textContent=`${regionNames[current]} ${page+1}/2 · ${regions.indexOf(current)*2+page+1}/6`;
+ $('journalPrev').disabled=current===regions[0]&&page===0;$('journalNext').disabled=current===regions[regions.length-1]&&page===1;
  document.querySelectorAll('[data-journal-region]').forEach(el=>{const active=el.dataset.journalRegion===current;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active))});
  $('journalSpecies').innerHTML=shown.map((fish,i)=>{
   const known=!!statsFor(current,fish[0]),active=selection===start+i;
@@ -64,7 +100,7 @@ function render(){
  notebook.innerHTML=`<div class="diaryBigFish">${fishPicture(fish[0],fish[5])}</div><p class="diaryOverline">SPECIMEN · ${String(selection+1).padStart(2,'0')}</p><h2>${esc(fish[0])}</h2><div class="diaryCount">누적 포획 <strong>${Math.floor(info.catches).toLocaleString('ko-KR')}회</strong></div><div class="diaryMeasures"><div><span>역대 최대 무게</span><strong>${info.bestWeight.toFixed(2)}<small>kg</small></strong><em>${wt}</em></div><div><span>역대 최대 길이</span><strong>${info.bestLength.toFixed(0)}<small>cm</small></strong><em>${lt}</em></div></div><div class="diaryStory"><p class="diaryBio">${esc(description)}</p><p class="diaryTmi">${esc(tmi)}</p></div>`;
 }
 function jump(spot){if(!regions.includes(spot))return;current=spot;page=0;selection=0;render();$('journalBook').classList.remove('pageFlip');void $('journalBook').offsetWidth;$('journalBook').classList.add('pageFlip')}
-function flip(step){const next=page+step;if(next<0||next>1)return;page=next;selection=page*9;render();$('journalBook').classList.remove('pageFlip');void $('journalBook').offsetWidth;$('journalBook').classList.add('pageFlip')}
+function flip(step){const index=regions.indexOf(current)*2+page+step;if(index<0||index>=regions.length*2)return;current=regions[Math.floor(index/2)];page=index%2;selection=page*9;render();$('journalBook').classList.remove('pageFlip');void $('journalBook').offsetWidth;$('journalBook').classList.add('pageFlip')}
 function open(){if(!$('journalOverlay').hidden)return;lastFocus=document.activeElement;R.closeMenu();S.menu='journal';S.reeling=S.lifting=false;$('journalOverlay').hidden=false;current=S.spot||'river';page=0;selection=0;render();$('journalClose').focus({preventScroll:true})}
 function close(){if($('journalOverlay').hidden)return;$('journalOverlay').hidden=true;S.menu=null;R.refreshHUD();lastFocus?.focus?.({preventScroll:true})}
 // All save-code work runs locally in the player's browser: no fetch, server or database.
