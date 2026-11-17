@@ -240,3 +240,64 @@ button,select,input,textarea{font-family:var(--font-ui)!important;letter-spacing
 #gameRoot.retrieving .actionButton{opacity:.75;cursor:wait}
 @media(orientation:portrait){#gameRoot .actionSide #retrieveButton{width:53px;min-height:56px}}
 @media(orientation:landscape) and (max-height:530px){#gameRoot .actionSide #retrieveButton{width:48px;min-height:48px}}
+
+/* v2.2 — Juicy record celebration, drawn above the game but clear of its buttons. */
+#gameRoot .recordCelebration{position:absolute;z-index:24;top:12%;left:50%;width:min(670px,94vw);height:185px;transform:translateX(-50%);pointer-events:none;display:grid;place-items:center;opacity:0;visibility:hidden;isolation:isolate}
+#gameRoot .recordCelebration.active{opacity:1;visibility:visible;animation:recordEnvelope 3.05s both}
+#gameRoot .recordWords{position:relative;z-index:2;text-align:center;display:grid;gap:5px;justify-items:center;filter:drop-shadow(3px 5px 0 #1c1c19)}
+#gameRoot .recordWords small{color:#fff0b4;font:700 clamp(8px,1.4vw,12px)/1.4 var(--font-data);letter-spacing:.21em;text-shadow:1px 2px 0 #1e160f}
+#gameRoot .recordWords strong{display:block;white-space:nowrap;font:900 clamp(37px,8.4vw,86px)/.95 var(--font-display);letter-spacing:-.018em;color:#ffdf53;-webkit-text-stroke:1.2px #9b5a10;text-shadow:0 3px #764415,0 6px #5d381b,0 9px 18px #080d10,0 0 28px #f8ce4a;}
+#gameRoot .recordWords span{font:700 clamp(10px,1.9vw,15px)/1.5 var(--font-ui);color:#fff8d1;background:rgba(43,33,24,.87);border:1px solid #ffdd76;padding:4px 11px;box-shadow:3px 3px 0 #10161a}
+#gameRoot .recordBurstRing{position:absolute;width:min(435px,79vw);height:min(435px,79vw);border:4px dashed #f7d65b;border-radius:50%;opacity:0;filter:drop-shadow(0 0 10px #ffb443);}
+#gameRoot .recordStarfield{position:absolute;inset:0;z-index:1;display:grid;place-items:center}
+#gameRoot .recordStarfield i{position:absolute;left:50%;top:45%;width:9px;height:9px;display:block;background:#ffe175;border:2px solid #fff6c7;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:recordStar .95s cubic-bezier(.18,.7,.18,1) both;animation-delay:calc(var(--i) * 22ms)}
+@keyframes recordEnvelope{0%,100%{opacity:0;visibility:hidden}5%,78%{opacity:1;visibility:visible}88%{opacity:.9;visibility:visible}}
+@keyframes recordPop{0%{opacity:0;transform:scale(.24) rotate(-6deg)}9%{opacity:1;transform:scale(1.32) rotate(3deg)}15%{transform:scale(.88) rotate(-2deg)}20%{transform:scale(1.06) rotate(1deg)}25%,65%{transform:scale(1)}72%{transform:scale(1.04)}91%,100%{opacity:0;transform:scale(.75) translateY(-35px)}}
+@keyframes recordRing{0%{opacity:0;transform:scale(.13) rotate(-25deg)}10%{opacity:.87}75%{opacity:.62;transform:scale(1.2) rotate(25deg)}100%{opacity:0;transform:scale(1.45) rotate(50deg)}}
+@keyframes recordStar{0%{opacity:0;transform:translate(0,0) scale(.1) rotate(0)}25%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.45) rotate(110deg)}}
+#gameRoot .rodShopPreview{display:inline-block;position:relative;flex:0 0 86px;min-width:86px;height:53px;transform:rotate(-22deg);background:transparent}
+#gameRoot .rodShopPreview i{position:absolute;left:7px;top:23px;width:75px;height:5px;border-radius:5px;background:linear-gradient(90deg,var(--grip) 0 23%,var(--shaft) 23% 82%,var(--tip) 100%);border:1px solid #101d23;box-shadow:0 3px 0 #0a161a}
+#gameRoot .rodShopPreview b{position:absolute;left:18px;top:17px;width:15px;height:15px;border-radius:50%;border:3px solid var(--reel);background:#1c292e;box-shadow:inset 0 0 0 2px var(--tip)}
+#gameRoot .rodShopPreview-bamboo{--grip:#67472f;--shaft:#a87b4b;--tip:#e6d5a6;--reel:#a88f66}
+#gameRoot .rodShopPreview-graphite{--grip:#243138;--shaft:#344d52;--tip:#a1b7a3;--reel:#566f74}
+#gameRoot .rodShopPreview-carbon{--grip:#171e29;--shaft:#222d38;--tip:#b6c0c4;--reel:#303f4b}
+#gameRoot .rodShopPreview-moon{--grip:#353047;--shaft:#4c4a76;--tip:#c0e7e0;--reel:#7365a0}
+@media(max-width:560px){#gameRoot .recordCelebration{top:15%;height:160px}#gameRoot .recordWords strong{font-size:clamp(30px,10vw,51px)}#gameRoot .recordWords small{font-size:7px}#gameRoot .recordStarfield i{width:6px;height:6px}#gameRoot .rodShopPreview{flex-basis:55px;min-width:55px}#gameRoot .rodShopPreview i{width:55px}}
+@media(prefers-reduced-motion:reduce){#gameRoot .recordCelebration.active,#gameRoot .recordWords strong,#gameRoot .recordBurstRing,#gameRoot .recordStarfield i{animation:none!important;opacity:1;visibility:visible}#gameRoot .recordStarfield i,#gameRoot .recordBurstRing{display:none}}
+
+/* Mobile gameplay stays pressable even in fullscreen: no Android selection/callout on game UI. */
+#gameRoot,#gameRoot button,#gameRoot canvas,#gameRoot .actionButton *,#gameRoot .liftButton *{
+ -webkit-touch-callout:none;
+ -webkit-user-select:none;
+ user-select:none;
+ -webkit-user-drag:none;
+}
+#gameRoot .actionButton,#gameRoot .liftButton,#gameRoot #rodStandButton,#gameRoot #retrieveButton{
+ touch-action:none;overscroll-behavior:contain;
+}
+/* Save code is the single intentional place where selecting and copying text is allowed. */
+#gameRoot input,#gameRoot textarea,#gameRoot select,#saveCodeText{
+ -webkit-touch-callout:default;-webkit-user-select:text;user-select:text;
+}
+#gameRoot .recordCelebration.first .recordWords strong{
+ color:#94e7ff;-webkit-text-stroke:1.2px #236d86;
+ text-shadow:0 3px #21617f,0 6px #164357,0 9px 18px #06161d,0 0 28px #6be7ff;
+}
+#gameRoot .recordCelebration.first .recordWords small{color:#c0f4ff}
+#gameRoot .recordCelebration.first .recordWords span{color:#e3faff;border-color:#7edcf0;background:rgba(16,40,51,.9)}
+#gameRoot .recordCelebration.first .recordBurstRing{border-color:#74daf2;filter:drop-shadow(0 0 10px #59d0e8)}
+#gameRoot .recordCelebration.first .recordStarfield i{background:#69e7ff;border-color:#f3fdff}
+@media(orientation:portrait){
+ /* Catch panel uses top 13–36%: celebrate below it, never paint under the result card. */
+ #gameRoot .recordCelebration{top:42%;height:165px}
+}
+@media(orientation:landscape) and (max-height:530px){
+ #gameRoot .recordCelebration{top:29%;left:67%;width:min(55vw,550px);height:160px}
+ #gameRoot .recordWords strong{font-size:clamp(30px,5.4vw,65px)}
+}
+
+/* Restart celebrations only when triggered, not on page load while their parent is hidden. */
+#gameRoot .recordCelebration.active .recordWords strong{animation:recordPop 3.05s both}
+#gameRoot .recordCelebration.active .recordBurstRing{animation:recordRing 2s .1s both}
+#gameRoot .recordWords{padding:9px 18px 12px;max-width:100%;background:radial-gradient(ellipse at center,rgba(10,28,31,.65) 0,rgba(10,28,31,.39) 54%,transparent 84%)}
+@media (orientation:portrait){#gameRoot .recordWords{padding:12px 4px 15px}}
