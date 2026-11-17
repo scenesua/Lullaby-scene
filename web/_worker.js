@@ -19,6 +19,12 @@ const SECURITY_HEADERS={
 function secureResponse(response,request){
   const headers=new Headers(response.headers);
   Object.entries(SECURITY_HEADERS).forEach(([name,value])=>headers.set(name,value));
+  // Stillwater beta uses the Galmuri webfont. Only this path permits its CDN styles/fonts.
+  const pagePath=new URL(request.url).pathname;
+  if(pagePath==='/stillwater'||pagePath.startsWith('/stillwater/')){
+    const csp=headers.get('Content-Security-Policy')||'';
+    headers.set('Content-Security-Policy',csp.replace("style-src 'self' 'unsafe-inline';","style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;").replace("font-src 'self' data:;","font-src 'self' data: https://cdn.jsdelivr.net;"));
+  }
   if(new URL(request.url).pathname.startsWith('/api/'))headers.set('X-Robots-Tag','noindex, nofollow');
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
 }
