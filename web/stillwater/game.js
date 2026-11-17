@@ -555,7 +555,9 @@ function waterBob(){
  const swell=state.spot==='sea'?.09*Math.sin(t*1.3+state.baitX*.3)+.035*Math.sin(t*2.1):state.spot==='river'?.024*Math.sin(t*.7+state.baitZ*.2):.012*Math.sin(t*.34);
  return screenPoint([state.baitX,.13+swell,state.baitZ]);
 }
-function splash(x,y,count=20,accent='#e0f8ed'){count=Math.min(count,55);if(state.particles.length>150)state.particles.splice(0,state.particles.length-150);for(let i=0;i<count;i++)state.particles.push({x,y,vx:R(-110,110),vy:R(-160,-20),life:R(.4,1.1),max:1.1,size:R(1.3,4),color:i%3===0?accent:'#c8ebec'});for(let i=0;i<3;i++){if(state.ripples.length>=75)state.ripples.shift();state.ripples.push({x,y,r:5+i*6,life:1-i*.18})}}
+// Shared bounded wake queue: rain, fish splashes and false nibbles obey the same 75-ring cap.
+function pushRipple(ripple){if(state.ripples.length>=75)state.ripples.splice(0,state.ripples.length-74);state.ripples.push(ripple)}
+function splash(x,y,count=20,accent='#e0f8ed'){count=Math.min(count,55);if(state.particles.length>150)state.particles.splice(0,state.particles.length-150);for(let i=0;i<count;i++)state.particles.push({x,y,vx:R(-110,110),vy:R(-160,-20),life:R(.4,1.1),max:1.1,size:R(1.3,4),color:i%3===0?accent:'#c8ebec'});for(let i=0;i<3;i++){if(state.ripples.length>=75)state.ripples.shift();pushRipple({x,y,r:5+i*6,life:1-i*.18})}}
 function eventMsg(title,prefix='A MOMENT IN THE WATER',seconds=1.8){$('eventTitle').textContent=title;$('eventPrefix').textContent=prefix;$('eventBanner').classList.add('show');state.eventLeft=seconds;}
 function restProgress(){return state.restAction&&state.restActionTime>0?clamp(1-state.restActionTime/state.restDuration,0,1):1;}
 function propOnTable(k){if(state.restAction!==k||state.restActionTime<=0)return true;const p=restProgress(),m=REST_MOTION[k];return !m||p<m.pickup||p>=m.putdown;}
@@ -956,7 +958,7 @@ function fishSurfaceImpulse(strength=0.5){
  const size=clamp(.6+near*.8,.65,1.35);
  splash(x,y,Math.floor((5+force*14)*size),force>.75?'#f7f1d7':'#d6eaf0');
  emitFoam(Math.round(6+force*13),force);
- for(let i=0;i<2;i++)state.ripples.push({x:x+R(-5,5),y:y+R(-2.5,2.5),r:2+i*5+force*3,life:.78+i*.14});
+ for(let i=0;i<2;i++)pushRipple({x:x+R(-5,5),y:y+R(-2.5,2.5),r:2+i*5+force*3,life:.78+i*.14});
  state.particles=state.particles.slice(-235);
  playWaterSplash(force,x);
  state.splashSoundCount++;
@@ -1356,7 +1358,7 @@ state.reelRotation+=dt*(state.phase==='fight'?(state.reeling?23*equippedRod().re
   state.baitZ=lerp(state.retrieveFromZ,6.0,sm);
   state.lineMeters=Math.max(0,Math.hypot(state.baitX,state.baitZ-10));
   state.reelRotation+=dt*23*equippedRod().reel;
-  if(Math.random()<dt*6&&u<.95){const [wx,wy]=waterBob();state.ripples.push({x:wx,y:wy,r:2+u*4,life:.50});}
+  if(Math.random()<dt*6&&u<.95){const [wx,wy]=waterBob();pushRipple({x:wx,y:wy,r:2+u*4,life:.50});}
   if(u>=1){state.phase='idle';state.retrieveAge=0;state.waiting=0;state.biteTarget=0;state.biteHazard=0;state.rodQuiver=0;resetCastLine();eventMsg('회수 완료 · 다시 던질 수 있어요','READY TO CAST',1.8);ambientBridge('retrieve-complete',{spot:state.spot});}
  }
  else if(phase==='flying'){state.flight+=dt/1.08;if(state.flight>=1){state.phase='waiting';startBiteWait();const [x,y]=waterBob();splash(x,y,14);sfx('cast');}}
@@ -1366,9 +1368,9 @@ state.reelRotation+=dt*(state.phase==='fight'?(state.reeling?23*equippedRod().re
  state.nibbleClock+=dt;
  if(state.nibbleClock>state.nibbleNext&&state.waiting>12){
   state.nibbleClock=0;state.nibbleNext=R(state.biteMode==='reality'?60:27,state.biteMode==='reality'?115:65);state.nibbleUntil=state.gameSeconds+R(.45,.8);
-  const [nx,ny]=waterBob();state.ripples.push({x:nx,y:ny,r:3,life:.42});
+  const [nx,ny]=waterBob();pushRipple({x:nx,y:ny,r:3,life:.42});
  }
-if(Math.random()<Math.min(.16,realDt/190)){const [wx,wy]=waterBob();state.ripples.push({x:wx+R(-26,26),y:wy+R(-6,6),r:R(3,8),life:.65});}if(advanceBiteClock(realDt)){state.phase='bite';state.restAction='';state.restActionTime=0;state.biteWindow=5;state.shake=3;const [x,y]=waterBob();splash(x,y,18);eventMsg('입질!','THE BOBBER IS MOVING',2);sfx('hit')}}
+if(Math.random()<Math.min(.16,realDt/190)){const [wx,wy]=waterBob();pushRipple({x:wx+R(-26,26),y:wy+R(-6,6),r:R(3,8),life:.65});}if(advanceBiteClock(realDt)){state.phase='bite';state.restAction='';state.restActionTime=0;state.biteWindow=5;state.shake=3;const [x,y]=waterBob();splash(x,y,18);eventMsg('입질!','THE BOBBER IS MOVING',2);sfx('hit')}}
  else if(phase==='bite'){state.biteWindow-=dt;if(state.biteWindow<=0){state.phase='waiting';startBiteWait();eventMsg('놓쳤다','MISSED THE BITE',1.2)}}
  else if(phase==='fight')fightUpdate(dt);
  state.restActionTime=Math.max(0,state.restActionTime-dt);state.restTime=state.restDuration-state.restActionTime;
@@ -1402,7 +1404,7 @@ if(Math.random()<Math.min(.16,realDt/190)){const [wx,wy]=waterBob();state.ripple
    const wetCount=state.weather==='storm'?4:2;
    for(let i=0;i<wetCount;i++){
     if(state.ripples.length>=75)state.ripples.shift();
-    state.ripples.push({x:rx+R(-vw*.44,vw*.44),y:ry+R(-vh*.10,vh*.13),r:R(1,4),life:R(.16,.29)});
+    pushRipple({x:rx+R(-vw*.44,vw*.44),y:ry+R(-vh*.10,vh*.13),r:R(1,4),life:R(.16,.29)});
    }
    state.surfaceRainClock=state.weather==='storm'?.09:.20;
   }
