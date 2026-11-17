@@ -49,7 +49,7 @@ function rodSkin(){return ROD_SKINS[inventory.rod]||ROD_SKINS.bamboo;}
 let inventory={money:0,fish:[],records:[],rods:['bamboo'],rod:'bamboo',baitStock:{shrimp:0,lure:0,glow:0},badges:[]};
 try{const v=JSON.parse(localStorage.getItem(storageKey)||'null');if(v&&Array.isArray(v.fish)){inventory.money=Number(v.money)||0;inventory.fish=v.fish.slice(0,100);inventory.records=Array.isArray(v.records)?v.records.slice(0,300):[];inventory.rods=Array.isArray(v.rods)?v.rods.filter(k=>RODS[k]):['bamboo'];if(!inventory.rods.includes('bamboo'))inventory.rods.unshift('bamboo');inventory.rod=inventory.rods.includes(v.rod)?v.rod:'bamboo';inventory.baitStock={shrimp:0,lure:0,glow:0,...v.baitStock};if(v.journal&&typeof v.journal==='object'&&!Array.isArray(v.journal))inventory.journal=v.journal;if(Array.isArray(v.badges))inventory.badges=v.badges.filter(x=>typeof x==='string').slice(0,30);}}
 catch{}
-const state={biteMode:'reality',biteTarget:0,spot:'river',weather:'clear',time:17.5,autoTime:true,test:false,bait:'worm',started:false,menu:null,phase:'idle',castStart:0,power:0,flight:0,wait:0,waiting:0,biteWindow:0,fish:null,landedFish:null,distance:0,energy:1,tension:.16,runTimer:0,runIntensity:0,snapCount:0,escapeCount:0,reeling:false,lifting:false,fishMood:'느긋하게 버티는 중',baitX:0,baitZ:-13,particles:[],ripples:[],sceneSeconds:0,gameSeconds:0,shake:0,flash:0,eventLeft:0,dayLuck:Math.random(),soundOn:false,voiceTimer:0,fishSide:0,fishDepth:.0,tailPhase:0,fishBehavior:'hover',behaviorClock:0,behaviorLength:2,runBurst:0,fightLastSecond:0,weatherAuto:false,weatherClock:0,weatherPrev:'clear',weatherBlend:1,fightFeedback:0,quality:'pixel',fov:0,activeBait:'worm',rodRested:false,restProps:{beer:true,smoke:true,sashimi:true},restAction:'',restActionTime:0,restCooldown:0,restCaptionTime:0,marketVisits:0,restDuration:2.8,restTime:0,headPitch:0,headRoll:0,strikeAge:99,reelBlend:0,slackBlend:0,reelRotation:0,reelClickClock:0,hookJolt:0,rodQuiver:0,foam:[],lineMeters:0,sashimiPieces:6,sashimiTaking:false,restReturned:false,bowAmount:0,restBeat:0,restTouch:false,restContactUntil:0,restContactKind:"",landingAge:0,landingRevealed:false,firstStamp:false,nibbleClock:0,nibbleUntil:0,dragClock:0,dragSpin:0,fishLeap:0,castWaveAge:0,perfFps:60,perfFrameCost:16.6,hiddenAt:0,surfaceRainClock:0,splashClock:0,splashSoundCount:0,recordCelebrationUntil:0,recordTapeActive:false,recordTapeAge:0,recordTapeDuration:3.30,recordTapeKind:'normal',recordTapeLabel:"",retrieveAge:0,retrieveDuration:3.0,retrieveFromX:0,retrieveFromZ:0,biteThreshold:0,biteHazard:0,quickBiteAt:0,waitWallClock:0};
+const state={biteMode:'reality',biteTarget:0,spot:'river',weather:'clear',time:17.5,autoTime:true,test:false,bait:'worm',started:false,menu:null,phase:'idle',castStart:0,power:0,flight:0,wait:0,waiting:0,biteWindow:0,fish:null,landedFish:null,distance:0,energy:1,tension:.16,runTimer:0,runIntensity:0,snapCount:0,escapeCount:0,reeling:false,lifting:false,fishMood:'느긋하게 버티는 중',baitX:0,baitZ:-13,particles:[],ripples:[],sceneSeconds:0,gameSeconds:0,shake:0,flash:0,eventLeft:0,dayLuck:Math.random(),soundOn:false,voiceTimer:0,fishSide:0,fishDepth:.0,tailPhase:0,fishBehavior:'hover',behaviorClock:0,behaviorLength:2,runBurst:0,fightLastSecond:0,weatherAuto:false,weatherClock:0,weatherPrev:'clear',weatherBlend:1,fightFeedback:0,quality:'pixel',fov:0,activeBait:'worm',rodRested:false,restProps:{beer:true,smoke:true,sashimi:true},restAction:'',restActionTime:0,restCooldown:0,restCaptionTime:0,marketVisits:0,restDuration:2.8,restTime:0,headPitch:0,headRoll:0,strikeAge:99,reelBlend:0,liftBlend:0,slackBlend:0,reelRotation:0,reelClickClock:0,hookJolt:0,rodQuiver:0,foam:[],lineMeters:0,sashimiPieces:6,sashimiTaking:false,restReturned:false,bowAmount:0,restBeat:0,restTouch:false,restContactUntil:0,restContactKind:"",landingAge:0,landingRevealed:false,firstStamp:false,nibbleClock:0,nibbleUntil:0,dragClock:0,dragSpin:0,fishLeap:0,castWaveAge:0,perfFps:60,perfFrameCost:16.6,hiddenAt:0,surfaceRainClock:0,splashClock:0,splashSoundCount:0,recordCelebrationUntil:0,recordTapeActive:false,recordTapeAge:0,recordTapeDuration:3.30,recordTapeKind:'normal',recordTapeLabel:"",retrieveAge:0,retrieveDuration:3.0,retrieveFromX:0,retrieveFromZ:0,biteThreshold:0,biteHazard:0,quickBiteAt:0,waitWallClock:0};
 let vw=innerWidth,vh=innerHeight,aspect=vw/vh,portrait=vh>vw,viewProj=new Float32Array(16),sceneBuffer=null,waterBuffer=null,sceneVertexCount=0,waterVertexCount=0,last=0,fxClock=0,hudClock=0,lastWash='',fallbackActive=!realGL;
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();fallbackActive=true;fallbackCanvas.style.display='block';canvas.style.opacity='0'});
 canvas.addEventListener('webglcontextrestored',()=>{fallbackActive=true;fallbackCanvas.style.display='block';canvas.style.opacity='0'});
@@ -367,7 +367,8 @@ function fishLocation(){const t=state.sceneSeconds,landed=state.phase==='landed'
 
  const burst=state.runIntensity;
  const leap=state.fishLeap*Math.max(0,Math.sin(clamp(state.fishLeap,0,1)*PI));
- return{x:state.baitX,y:-.14+burst*.10+Math.sin(t*7.2)*.04+leap*.32,z:state.baitZ,
+ const nearSurface=clamp((12-state.distance)/8,0,1);
+ return{x:state.baitX,y:-.14+burst*.10+Math.sin(t*7.2)*.04+leap*.32+nearSurface*.23,z:state.baitZ,
   scale:clamp(state.fish.length/62,.47,1.2)*.9,
   yaw:Math.sin(t*(1.6+burst*2.6)+state.fishSide)*(.40+burst*.38),
   roll:Math.sin(t*(5+burst*7))*(.045+burst*.17),mode:'fight'};
@@ -674,6 +675,15 @@ function drawRestStand2D(){
  fxLine(L(p0),L(top),'#aea17e',3.3);
  const cup=L(top);fxLine([cup[0]-6,cup[1]-5],[cup[0],cup[1]+1],'#cbb78f',2.4);fxLine([cup[0],cup[1]+1],[cup[0]+6,cup[1]-5],'#cbb78f',2.4);
 }
+// The grip is the fulcrum: strike pulls the whole rod backward before settling;
+// the separate pump button then levers the loaded blank back and forward.
+function strikePull(t){
+ if(t<0||t>=.78)return 0;
+ if(t<.09)return ease01(t/.09);
+ if(t<.23)return 1;
+ if(t<.51)return 1-.70*ease01((t-.23)/.28);
+ return .30*(1-ease01((t-.51)/.27));
+}
 function getRodPose(p=state.flight){
  if(state.rodRested)return getRestedRodPose();
  const v=rodKeyframe(p),tip=[v[2]*vw,v[3]*vh],handle=[v[0]*vw,v[1]*vh];
@@ -695,14 +705,47 @@ function getRodPose(p=state.flight){
  const bendQuiver=isFight?Math.sin(state.sceneSeconds*(11+state.runIntensity*8))*(1.7+state.runIntensity*3.8):0;
  tip[1]+=bendQuiver;
  const ctrl=[lerp(handle[0],tip[0],.53)+releaseBend*.48-tensionBend*.21,lerp(handle[1],tip[1],.53)+((state.phase==='flying')?-releaseBend*.78:-tensionBend*(.67+.13*state.runIntensity))-snap*vh*.035+bendQuiver*.55];
- return {tip,handle,ctrl,bend:tensionBend+releaseBend};
+ // A loaded fishing rod has a stiff butt and a visibly flexible upper blank.
+ // Shape and line guides share this cubic curve, rather than moving just the tip.
+ const load=isFight?clamp((.16+state.tension*.70+state.runIntensity*.32+(state.reeling?.08:0))*flex,.20,1):0;
+ const ctrl1=isFight?[lerp(handle[0],tip[0],.28),lerp(handle[1],tip[1],.28)-vh*.012*load]:null;
+ const ctrl2=isFight?[lerp(handle[0],tip[0],.78)-vw*.018*load,lerp(handle[1],tip[1],.78)-vh*.255*load]:null;
+ const danger=isFight&&state.tension>.8?clamp(.24+(state.tension-.8)*5,.24,1):0;
+ // Screen-space perspective pivot around the moving reel/handle. Since every control
+ // point shares the same transform, the rod, all guides, and attached line move together.
+ const hookPull=isFight?strikePull(state.strikeAge):0;
+ const pumpPull=isFight?clamp(state.liftBlend,0,1):0;
+ const pitch=isFight?hookPull*.47+pumpPull*.34-(1-pumpPull)*state.slackBlend*.055:0;
+ const cos=Math.cos(pitch),sin=Math.sin(pitch);
+ const turn=q=>q?[
+  handle[0]+(q[0]-handle[0])*cos-(q[1]-handle[1])*sin,
+  handle[1]+(q[0]-handle[0])*sin+(q[1]-handle[1])*cos
+ ]:null;
+ return {tip:turn(tip),handle,ctrl:turn(ctrl),ctrl1:turn(ctrl1),ctrl2:turn(ctrl2),load,danger,
+         pitch,hookPull,pumpPull,bend:tensionBend+releaseBend};
 }
-function rodPoint(pose,t){const a=1-t;return[a*a*pose.handle[0]+2*a*t*pose.ctrl[0]+t*t*pose.tip[0],a*a*pose.handle[1]+2*a*t*pose.ctrl[1]+t*t*pose.tip[1]]}
+function rodPoint(pose,t){const a=1-t;
+ if(pose.ctrl1&&pose.ctrl2){const a2=a*a,t2=t*t;
+  return [a2*a*pose.handle[0]+3*a2*t*pose.ctrl1[0]+3*a*t2*pose.ctrl2[0]+t2*t*pose.tip[0],
+          a2*a*pose.handle[1]+3*a2*t*pose.ctrl1[1]+3*a*t2*pose.ctrl2[1]+t2*t*pose.tip[1]];}
+ return[a*a*pose.handle[0]+2*a*t*pose.ctrl[0]+t*t*pose.tip[0],a*a*pose.handle[1]+2*a*t*pose.ctrl[1]+t*t*pose.tip[1]];
+}
 function drawRodStroke(pose,alpha=1,ghost=false){pen.save();pen.globalAlpha=alpha;pen.lineCap='round';pen.lineJoin='round';
- const trace=()=>{pen.beginPath();pen.moveTo(...pose.handle);pen.quadraticCurveTo(...pose.ctrl,...pose.tip)};
+ const trace=(start=0,end=1)=>{pen.beginPath();pen.moveTo(...rodPoint(pose,start));const segments=Math.max(1,Math.ceil((end-start)*28));for(let i=1;i<=segments;i++)pen.lineTo(...rodPoint(pose,start+(end-start)*i/segments));};
  const inStand=state.rodRested,skin=rodSkin(),r=inStand?.57:1;
  pen.strokeStyle=ghost?skin.highlight:'rgba(7,15,18,.96)';pen.lineWidth=(ghost?5.5:10)*r;trace();pen.stroke();
  pen.strokeStyle=ghost?skin.tip:skin.shaft;pen.lineWidth=(ghost?2.3:5.8)*r;trace();pen.stroke();
+ // The risk light is driven by the SAME red threshold as the HUD tension bar (>80%).
+ // It travels along the actual curved blank, not a straight floating warning graphic.
+ if(!ghost&&pose.danger>0){
+  const pulse=.86+.14*Math.sin(state.sceneSeconds*13),light=pose.danger*pulse;
+  pen.save();pen.shadowColor='#ff3838';pen.shadowBlur=12+24*light;
+  pen.strokeStyle=`rgba(255,45,48,${.45+.45*light})`;pen.lineWidth=(10+5*light)*r;trace(.25,1);pen.stroke();
+  pen.shadowBlur=6+13*light;pen.strokeStyle=`rgba(255,123,104,${.42+.55*light})`;
+  pen.lineWidth=(3.3+2.5*light)*r;trace(.32,1);pen.stroke();
+  pen.shadowBlur=0;for(const t of [.48,.64,.78,.90,.99]){const q=rodPoint(pose,t);fxCircle(q[0],q[1],(2.3+2.0*light)*r,'#ff7166',.32+.48*light);}
+  pen.restore();
+ }
  if(!ghost){
   pen.strokeStyle=skin.highlight;pen.lineWidth=(inventory.rod==='bamboo'?2.2:1.65)*r;trace();pen.stroke();
   // The grip, segmented cane windings, carbon accents and luminous moon fittings remain rod-specific.
@@ -766,62 +809,97 @@ function simulateLine(start,end,dt,phase){const count=23;
  }
  castRig.lastTip=[...start];castRig.lastBob=[...end];return pts;
 }
-function drawCastLine(pose,dt){const phase=state.phase;if(!['flying','waiting','bite','fight','landed','retrieving'].includes(phase)){resetCastLine();return;}
- let end=waterBob();const p=clamp(state.flight,0,1);
- if(phase==='flying'){
-  const fire=clamp((p-.10)/.9,0,1),lead=getRodPose(.12).tip;
-  const ease=1-Math.pow(1-fire,2.25);
-  const launch=[lead[0],lead[1]],landing=waterBob();
-  const gravityArc=Math.sin(fire*PI)*vh*(portrait?.20:.28);
-  const lateralWind=Math.sin(state.sceneSeconds*.6)*Math.sin(fire*PI)*vw*.012;
-  end=[lerp(launch[0],landing[0],ease)+lateralWind,lerp(launch[1],landing[1],ease)-gravityArc];
- }
+// One continuous tackle assembly: guides -> rod tip -> float -> leader -> hook eye -> upper lip.
+// The floating contact point is derived from the SAME animated fish-mouth world anchor.
+function tackleAnchors(pose,phase=state.phase){
  const hookWorld=(phase==='fight'||phase==='landed')?fishHookPoint():null;
  const mouth=hookWorld?screenPoint(hookWorld):null;
- if(phase==='landed'&&mouth)end=mouth;
-
- let pts=simulateLine(pose.tip,end,dt,phase);
- // Re-thread the working line through every guide ring; no independent screen-space string.
+ let float=waterBob();
+ if(phase==='fight'&&hookWorld){
+  // The float stays on the fish's vertical leader at the current water surface.
+  const t=state.sceneSeconds;
+  const swell=state.spot==='sea'?.09*Math.sin(t*1.3+state.baitX*.3)+.035*Math.sin(t*2.1):state.spot==='river'?.024*Math.sin(t*.7+state.baitZ*.2):.012*Math.sin(t*.34);
+  float=screenPoint([hookWorld[0],.13+swell,hookWorld[2]]);
+ }else if(phase==='landed'&&mouth){
+  // Once out of the water the float hangs ABOVE the fish, inline with the taut leader.
+  const dx=pose.tip[0]-mouth[0],dy=pose.tip[1]-mouth[1],length=Math.hypot(dx,dy)||1;
+  const dist=Math.min(38,length*.23);float=[mouth[0]+dx/length*dist,mouth[1]+dy/length*dist];
+ }
+ let eye=null;
+ if(mouth){const dx=float[0]-mouth[0],dy=float[1]-mouth[1],d=Math.hypot(dx,dy)||1;
+  eye=[mouth[0]+dx/d*8,mouth[1]+dy/d*8];}
+ return {float,mouth,eye,hookWorld};
+}
+function drawAttachedHook(eye,mouth){
+ if(!eye||!mouth)return;
+ // A real visible J-hook: eye/shank/curve/barb, with the barb entering the upper lip.
+ const dx=eye[0]-mouth[0],dy=eye[1]-mouth[1],d=Math.hypot(dx,dy)||1;
+ const u=[dx/d,dy/d],n=[-u[1],u[0]],s=clamp(vw/560,.74,1.28);
+ const pt=(along,side=0)=>[mouth[0]+u[0]*along*s+n[0]*side*s,mouth[1]+u[1]*along*s+n[1]*side*s];
+ const ring=pt(8/s); // exactly the anchor at which the leader terminates
+ pen.save();pen.lineCap='round';pen.lineJoin='round';pen.strokeStyle='#13292c';pen.lineWidth=3.4*s;
+ pen.beginPath();pen.moveTo(...ring);pen.lineTo(...pt(1.5));pen.quadraticCurveTo(...pt(-5,3),...pt(-1.5,5));pen.lineTo(...pt(2.2,3.2));pen.stroke();
+ pen.strokeStyle='#e5e2c5';pen.lineWidth=1.8*s;
+ pen.beginPath();pen.moveTo(...ring);pen.lineTo(...pt(1.5));pen.quadraticCurveTo(...pt(-5,3),...pt(-1.5,5));pen.lineTo(...pt(2.2,3.2));pen.stroke();
+ fxCircle(ring[0],ring[1],2.2*s,'#dbe5dc',.96);fxCircle(mouth[0],mouth[1],1.7*s,'#f7e8ba',.95);
+ pen.restore();
+}
+function drawInlineFloat(pos,phase){
+ const t=state.sceneSeconds,dip=phase==='bite'?Math.sin(t*15)*2:state.nibbleUntil>state.gameSeconds?Math.sin(t*28)*1.8:0;
+ const x=pos[0],y=pos[1]+(phase==='waiting'||phase==='bite'?dip:0);
+ pen.save();pen.lineCap='round';
+ // A connected stem and buoy body cover the continuous line at the float's exact anchor.
+ pen.strokeStyle='#25343a';pen.lineWidth=2.8;pen.beginPath();pen.moveTo(x,y-10);pen.lineTo(x,y+9);pen.stroke();
+ pen.fillStyle='#eacb99';pen.beginPath();pen.ellipse(x,y+2,4.6,7.6,0,0,TAU);pen.fill();
+ pen.fillStyle=phase==='bite'?'#ffdd82':'#df745d';pen.beginPath();pen.ellipse(x,y-2.4,3.7,3.6,0,PI,TAU);pen.lineTo(x+3.7,y-2.4);pen.fill();
+ pen.strokeStyle='#15262b';pen.lineWidth=1.5;pen.beginPath();pen.ellipse(x,y+2,4.6,7.6,0,0,TAU);pen.stroke();
+ pen.restore();
+}
+function drawCastLine(pose,dt){const phase=state.phase;
+ if(!['flying','waiting','bite','fight','landed','retrieving'].includes(phase)){resetCastLine();return;}
+ const rig=tackleAnchors(pose,phase);let end=rig.float;
+ const p=clamp(state.flight,0,1);
+ if(phase==='flying'){
+  const fire=clamp((p-.10)/.9,0,1),lead=getRodPose(.12).tip;
+  const ease=1-Math.pow(1-fire,2.25),landing=waterBob();
+  const gravityArc=Math.sin(fire*PI)*vh*(portrait?.20:.28);
+  const lateralWind=Math.sin(state.sceneSeconds*.6)*Math.sin(fire*PI)*vw*.012;
+  end=[lerp(lead[0],landing[0],ease)+lateralWind,lerp(lead[1],landing[1],ease)-gravityArc];
+ }
+ const pts=simulateLine(pose.tip,end,dt,phase);
+ // All segments belong to ONE path: guides, loaded main line, float, leader and hook eye.
  const guides=[.22,.40,.59,.75,.87,.95].map(t=>rodPoint(pose,t));
- pen.save();pen.lineCap='round';pen.lineJoin='round';pen.strokeStyle=phase==='fight'?'rgba(255,236,186,.96)':phase==='retrieving'?'rgba(238,246,211,.9)':'rgba(239,247,227,.69)';pen.lineWidth=phase==='fight'?2:phase==='retrieving'?1.6:1.05;
+ pen.save();pen.lineCap='round';pen.lineJoin='round';
+ pen.strokeStyle=phase==='fight'?'rgba(255,236,186,.96)':phase==='retrieving'?'rgba(238,246,211,.9)':'rgba(239,247,227,.81)';
+ pen.lineWidth=phase==='fight'?2:phase==='retrieving'?1.6:1.3;
  pen.beginPath();pen.moveTo(...rodPoint(pose,.23));for(const guide of guides)pen.lineTo(...guide);
- pen.lineTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)pen.lineTo(pts[i].x,pts[i].y);pen.stroke();
- if(phase==='fight'&&mouth){
-  // The fine leader exits the surface float and terminates at the FISH'S MOUTH.
-  fxLine(end,mouth,'rgba(230,244,222,.80)',1.25);
-  fxCircle(mouth[0],mouth[1],1.8,'#e7d49b');
-  // Tight anchored ripples where line enters the water.
+ pen.lineTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)pen.lineTo(pts[i].x,pts[i].y);
+ if(rig.eye)pen.lineTo(...rig.eye);pen.stroke();
+ if(rig.eye)drawAttachedHook(rig.eye,rig.mouth);
+ if(phase==='fight'&&rig.mouth){
+  // The water entry ring and fish are anchored to the same world-space line, not a second wire.
   const shimmer=.17+.13*Math.sin(state.sceneSeconds*10);
   pen.save();pen.globalAlpha=.45;pen.strokeStyle='#dfebd2';pen.lineWidth=1.2;
   pen.beginPath();pen.ellipse(end[0],end[1]+3,5+shimmer*8,1.9+shimmer*3,0,0,TAU);pen.stroke();pen.restore();
- }
- if(phase==='landed'&&mouth){
-  // Hook and lure sit at the top lip; float rides ABOVE, never through the body.
-  const dx=pose.tip[0]-mouth[0],dy=pose.tip[1]-mouth[1],length=Math.hypot(dx,dy)||1;
-  const bx=mouth[0]+dx/length*Math.min(34,length*.21),by=mouth[1]+dy/length*Math.min(34,length*.21);
-  fxCircle(bx,by,4.6,'#c46e52');fxCircle(bx,by-2,2.0,'#f8e4b0');
-  fxLine([mouth[0]-1,mouth[1]],[mouth[0]+4,mouth[1]+5],'#d3d3ba',1.25);
+  if(fallbackActive&&state.distance<12){
+   const size=clamp((12-state.distance)/11,.16,.58);
+   pen.save();pen.translate(rig.mouth[0],rig.mouth[1]);pen.rotate(-Math.sin(state.sceneSeconds*8)*.08);
+   drawFishSprite(42*size,-7*size,size,state.fish,2);pen.restore();
+  }
  }
  if(phase==='flying'){
   const start=Math.max(1,pts.length-7);
   for(let i=start;i<pts.length;i++){const q=pts[i];fxCircle(q.x,q.y,.9,'#f8edc5',clamp((i-start)/(pts.length-start)*.6,0,.6));}
-  fxCircle(end[0],end[1],3.4,'#e7a266',.9);
  }
- if(['waiting','bite','fight','retrieving'].includes(phase)){
-  const dip=phase==='bite'?Math.sin(state.sceneSeconds*15)*4:state.nibbleUntil>state.gameSeconds?Math.sin(state.sceneSeconds*28)*3.1:Math.sin(state.sceneSeconds*(state.spot==='sea'?4.6:2.4))*(state.spot==='sea'?3.0:1.7);
-  const x=end[0],y=end[1]+dip;
-  fxCircle(x,y,phase==='bite'?5.7:4.2,'#253b40');
-  fxCircle(x,y-3.1,phase==='bite'?3.5:2.8,phase==='bite'?'#fff2ab':'#db8c6d');
-  fxLine([x,y-5],[x,y-11],'#f3e9d9',1.6);
-  if(phase==='fight'&&fallbackActive)drawFishSprite(x+Math.sin(state.sceneSeconds*8)*18,y+Math.cos(state.sceneSeconds*8)*5,.38,state.fish,2);
- }
- if(phase==='landed'&&state.landedFish&&fallbackActive&&mouth){
+ if(['flying','waiting','bite','fight','landed','retrieving'].includes(phase))drawInlineFloat(end,phase);
+ if(phase==='landed'&&state.landedFish&&fallbackActive&&rig.mouth){
   const size=portrait?.47:.64;
-  pen.save();pen.translate(mouth[0],mouth[1]);pen.rotate(PI/2+Math.sin(state.sceneSeconds*11)*.13);
-  drawFishSprite(39*size,0,size,state.landedFish,.5);pen.restore();
+  pen.save();pen.translate(rig.mouth[0],rig.mouth[1]);pen.rotate(PI/2+Math.sin(state.sceneSeconds*11)*.13);
+  drawFishSprite(42*size,-7*size,size,state.landedFish,.5);pen.restore();
  }
  pen.restore();
 }
+
 function drawRod(dt){const pose=getRodPose();
  if(state.rodRested){if(fallbackActive)drawRestStand2D();drawRodStroke(pose);drawCastLine(pose,dt);return;}
  // Speed ghosting makes the forward WHIP readable even at 30 fps / pixel resolution.
@@ -1044,8 +1122,8 @@ function retrieveLine(){
  eventMsg('줄을 감아 회수합니다','RETRIEVING',1.15);ambientBridge('retrieve',{spot:state.spot});
  sfx('reel');refreshHUD();return true;
 }
-function doBiteStrike(){if(state.phase!=='bite')return;state.rodRested=false;state.restAction='';state.fish=selectFish();state.phase='fight';state.strikeAge=0;state.hookJolt=1;state.rodQuiver=1;state.reelBlend=0;state.slackBlend=0;resetCastLine();state.distance=clamp(10+state.fish.weight*1.7+state.power*6,11,26);state.lineMeters=state.distance+2.4;state.foam=[];state.energy=1;state.tension=.23;state.runTimer=0;state.runIntensity=0;state.fishBehavior='hover';state.behaviorClock=0;state.behaviorLength=R(1.2,2.7);state.fishSide=0;state.fightFeedback=0;state.splashClock=.16;state.snapCount=0;state.escapeCount=0;state.shake=6;state.flash=.14;eventMsg('걸렸다!','FISH ON',2.2);sfx('hit');if(navigator.vibrate&&$('haptics').checked)navigator.vibrate([75,45,110]);const [x,y]=waterBob();splash(x,y,35);emitFoam(24,.9);playWaterSplash(.85,x);refreshHUD()}
-function lost(why){state.rodRested=false;state.phase='lost';state.fish=null;state.reeling=state.lifting=false;state.shake=6;sfx('lost');if(navigator.vibrate&&$('haptics').checked)navigator.vibrate([40,60,40]);eventMsg(why==='snap'?'줄이 끊어졌다!':'물고기가 도망갔다',why==='snap'?'LINE SNAP':'ESCAPED',2.1);refreshHUD()}
+function doBiteStrike(){if(state.phase!=='bite')return;state.rodRested=false;state.restAction='';state.fish=selectFish();state.phase='fight';state.liftBlend=0;state.strikeAge=0;state.hookJolt=1;state.rodQuiver=1;state.reelBlend=0;state.slackBlend=0;resetCastLine();state.distance=clamp(10+state.fish.weight*1.7+state.power*6,11,26);state.lineMeters=state.distance+2.4;state.foam=[];state.energy=1;state.tension=.23;state.runTimer=0;state.runIntensity=0;state.fishBehavior='hover';state.behaviorClock=0;state.behaviorLength=R(1.2,2.7);state.fishSide=0;state.fightFeedback=0;state.splashClock=.16;state.snapCount=0;state.escapeCount=0;state.shake=6;state.flash=.14;eventMsg('걸렸다!','FISH ON',2.2);sfx('hit');if(navigator.vibrate&&$('haptics').checked)navigator.vibrate([75,45,110]);const [x,y]=waterBob();splash(x,y,35);emitFoam(24,.9);playWaterSplash(.85,x);refreshHUD()}
+function lost(why){state.rodRested=false;state.phase='lost';state.fish=null;state.reeling=state.lifting=false;state.liftBlend=0;state.shake=6;sfx('lost');if(navigator.vibrate&&$('haptics').checked)navigator.vibrate([40,60,40]);eventMsg(why==='snap'?'줄이 끊어졌다!':'물고기가 도망갔다',why==='snap'?'LINE SNAP':'ESCAPED',2.1);refreshHUD()}
 
 // Record celebration is visual/sound-only. Only keep/release writes the catch to local journal.
 function isSpeciesRecord(f){
@@ -1327,6 +1405,8 @@ state.fishMood=state.fishBehavior==='surface'?'수면에서 도약!':state.fishB
 function showReelToast(txt){$('reelToast').textContent=txt;$('reelToast').classList.add('show');setTimeout(()=>{$('reelToast').classList.remove('show')},1150);}
 
 function tick(dt,realDt=dt){wildlifeStep();if(!state.menu&&state.started){state.gameSeconds+=dt;state.weatherClock+=dt;if(state.weatherAuto&&state.weatherClock>900){state.weatherClock=0;setWeather(randomWeather());persistSettings();}state.weatherBlend=Math.min(1,state.weatherBlend+dt/8);if(state.autoTime){let old=Math.floor(state.time*2);let oldTime=state.time;state.time=(state.time+dt/900)%24;if(oldTime>state.time){state.dayLuck=Math.random();eventMsg('새로운 하루','NEW FISHING DAY',1.2);}if(state.gameSeconds%2<dt)setTimeLabel();if(old!==Math.floor(state.time*2)&&realGL&&!document.hidden)buildWorld()}
+ // Pull back on PUMP and relax forward when released; no discontinuous tip teleport.
+ state.liftBlend+=((state.phase==='fight'&&state.lifting?1:0)-state.liftBlend)*Math.min(1,dt*(state.lifting?12:8));
  state.reelBlend+=((state.phase==='fight'&&state.reeling?1:0)-state.reelBlend)*Math.min(1,dt*10);
  state.slackBlend+=((state.phase==='fight'&&!state.reeling?1:0)-state.slackBlend)*Math.min(1,dt*5);
  state.rodQuiver+=((state.phase==='fight'?clamp(state.runIntensity*.76+state.tension*.35,.12,1):0)-state.rodQuiver)*Math.min(1,dt*4.8);
@@ -1433,6 +1513,6 @@ document.addEventListener('visibilitychange',()=>{
 });
 window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,120));
 loadSettings();applyBaitValue();for(const f of inventory.fish){ensureFishID(f);if(!inventory.records.some(r=>r.id===f.id))inventory.records.push({...f,status:'kept',when:new Date().toISOString()});}inventory.records=inventory.records.slice(0,300);save();state.weatherPrev=state.weather;resize();buildWorld();document.querySelectorAll('.placeTile').forEach(b=>b.classList.toggle('active',b.dataset.place===state.spot));setTimeLabel();refreshHUD();requestAnimationFrame(frame);
-window.__stillwater={state,inventory,DATA,wildlife,debugStep(dt=.05){tick(dt,dt);updateCamera();},renderOnce(){updateCamera();drawWorld(state.sceneSeconds);drawEffects(0);},projectPoint:screenPoint,forceWildlife(kind='river'){const now=state.gameSeconds;if(kind==='river')wildlife.river={born:now-34,duration:60,z:1,dir:1};else wildlife.sea={born:now-8,duration:42,dir:1,kind:'gulls'};},storageKey,settingsKey,save,persistSettings,refreshHUD,closeMenu,biteRate,startBiteWait,advanceBiteClock,table:TABLE3D,fishScore,rodPose:getRodPose,rodKeyframe,castRig,buyRod,buyBait,sellFish,renderShop,renderLeaderboard,toggleRodRest,retrieveLine,doRestAction,chooseFish:selectFish,debugFrame(){return fpModelFrame()},debugTableProp(k){return propOnTable(k)},debugMotion(){return {bow:state.bowAmount,head:state.headPitch,pose:fpModelFrame()}},debugRestAim(){const f=fpModelFrame();return {table:screenPoint([TABLE3D.x,TABLE3D.y,TABLE3D.z]),prop:state.restAction?screenPoint(restAnchor(state.restAction)):null,tip:f?viewPoint(restAnchor(f.k)):null,viewport:[vw,vh],shoulder:fpShoulder()}},triggerBite(){if(state.started&&!state.menu){state.phase='bite';state.biteWindow=5;eventMsg('입질!')}},forceLand(){if(state.started&&!state.menu){if(!state.fish)state.fish=selectFish();landFish()}},debugSplash(power=.8){fishSurfaceImpulse(power);},debugRodSkin(){return {rod:inventory.rod,skin:rodSkin(),pose:getRodPose(),linePoints:castRig.points.length,guideCount:6}},debugHook(){const fish=state.phase==='landed'?state.landedFish:state.fish;if(!fish)return null;const mouth=fishHookPoint();return {pose:fishLocation(),mouth,screen:mouth?screenPoint(mouth):null,phase:state.phase}},debugPerformance(){return{fps:state.perfFps,frameCost:state.perfFrameCost,particles:state.particles.length,ripples:state.ripples.length}},debugNewRecord(){const f=state.landedFish||selectFish();celebrateRecord(f);return isSpeciesRecord(f)},debugRecordTape(){return{active:state.recordTapeActive,age:state.recordTapeAge,kind:state.recordTapeKind,fishVisible:state.phase==='landed'&&!!state.landedFish,label:state.recordTapeLabel,stretch:$('recordMeasure')?.style.getPropertyValue('--tape-stretch')||'0'}},setWeather(w){if(WEATHER[w]){$('weatherSelect').value=w;state.weather=w;refreshHUD()}},setSpot};
+window.__stillwater={state,inventory,DATA,wildlife,debugStep(dt=.05){tick(dt,dt);updateCamera();},renderOnce(){updateCamera();drawWorld(state.sceneSeconds);drawEffects(0);},projectPoint:screenPoint,forceWildlife(kind='river'){const now=state.gameSeconds;if(kind==='river')wildlife.river={born:now-34,duration:60,z:1,dir:1};else wildlife.sea={born:now-8,duration:42,dir:1,kind:'gulls'};},storageKey,settingsKey,save,persistSettings,refreshHUD,closeMenu,biteRate,startBiteWait,advanceBiteClock,table:TABLE3D,fishScore,rodPose:getRodPose,rodPoint,tackleAnchors,strikePull,rodKeyframe,castRig,buyRod,buyBait,sellFish,renderShop,renderLeaderboard,toggleRodRest,retrieveLine,doRestAction,chooseFish:selectFish,debugFrame(){return fpModelFrame()},debugTableProp(k){return propOnTable(k)},debugMotion(){return {bow:state.bowAmount,head:state.headPitch,pose:fpModelFrame()}},debugRestAim(){const f=fpModelFrame();return {table:screenPoint([TABLE3D.x,TABLE3D.y,TABLE3D.z]),prop:state.restAction?screenPoint(restAnchor(state.restAction)):null,tip:f?viewPoint(restAnchor(f.k)):null,viewport:[vw,vh],shoulder:fpShoulder()}},triggerBite(){if(state.started&&!state.menu){state.phase='bite';state.biteWindow=5;eventMsg('입질!')}},forceLand(){if(state.started&&!state.menu){if(!state.fish)state.fish=selectFish();landFish()}},debugSplash(power=.8){fishSurfaceImpulse(power);},debugRodSkin(){return {rod:inventory.rod,skin:rodSkin(),pose:getRodPose(),linePoints:castRig.points.length,guideCount:6}},debugHook(){const fish=state.phase==='landed'?state.landedFish:state.fish;if(!fish)return null;const mouth=fishHookPoint();return {pose:fishLocation(),mouth,screen:mouth?screenPoint(mouth):null,phase:state.phase}},debugPerformance(){return{fps:state.perfFps,frameCost:state.perfFrameCost,particles:state.particles.length,ripples:state.ripples.length}},debugNewRecord(){const f=state.landedFish||selectFish();celebrateRecord(f);return isSpeciesRecord(f)},debugRecordTape(){return{active:state.recordTapeActive,age:state.recordTapeAge,kind:state.recordTapeKind,fishVisible:state.phase==='landed'&&!!state.landedFish,label:state.recordTapeLabel,stretch:$('recordMeasure')?.style.getPropertyValue('--tape-stretch')||'0'}},setWeather(w){if(WEATHER[w]){$('weatherSelect').value=w;state.weather=w;refreshHUD()}},setSpot};
 })();
 
