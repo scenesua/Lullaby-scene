@@ -43,3 +43,28 @@
 #gameRoot.waiting .actionSide #rodStandButton,#gameRoot.resting .actionSide #rodStandButton{display:flex}
 @media(orientation:portrait){#gameRoot .actionSide{gap:7px}#gameRoot .actionSide #rodStandButton{width:53px;min-height:56px}#gameRoot .actionSide #rodStandButton span{font-size:9px}}
 @media(orientation:landscape) and (max-height:530px){#gameRoot .actionSide #rodStandButton{width:48px;min-height:48px}}
+
+/* Ecological journal annotations and quiet specimen milestones. */
+.diarySizeCompare{margin:10px 0 12px;padding:8px 9px;border-top:1px solid #a18b6a;border-bottom:1px solid #aa9570;color:#4f4835}
+.compareLegend{display:flex;align-items:center;justify-content:space-between;gap:4px;font-weight:bold;font-size:11px}
+.compareLegend small{font-size:9px;opacity:.75}
+.compareTrack{display:grid;grid-template-columns:36px minmax(50px,1fr) 37px;align-items:center;gap:7px;margin:6px 0;font-size:11px}
+.compareTrack>i{position:relative;display:block;background:#b2a182;height:9px;border-radius:2px;overflow:hidden}
+.compareTrack i b{position:absolute;inset:0 auto 0 0;background:#556a58;box-shadow:0 0 3px #3c4d35}
+.compareTrack i em{position:absolute;inset:0 auto 0 50%;width:2px;background:#efdfb9;box-shadow:0 0 2px #393429}
+.compareTrack strong{text-align:right;font-size:11px}
+.diaryHabitat{margin:8px 0 12px;border-left:3px solid #8b6f4e;padding:5px 0 5px 9px;color:#49402f;font-size:11px}
+.diaryHabitat strong,.diaryHabitat span{display:block}.diaryHabitat p{margin:4px 0 0;font-size:10px;line-height:1.4}
+.diaryBadges{margin:5px 0;padding:5px 8px;background:#e8d5a3;color:#684723;border:1px dashed #9e7741;font-size:10px}
+.diaryBigFish.inkReveal svg{animation:specimenInk 1.25s ease both}
+.discoveryStamp{position:absolute;right:8px;top:8px;color:#8f4928;border:2px solid #8f4928;font-weight:bold;transform:rotate(-11deg);padding:3px 5px;font-size:10px;animation:stampIn .9s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes specimenInk{from{opacity:.15;filter:grayscale(1) blur(3px)}to{opacity:1;filter:none}}
+@keyframes stampIn{0%{opacity:0;transform:rotate(-11deg) scale(2.5)}100%{opacity:1;transform:rotate(-11deg) scale(1)}}
+#achievementToast{position:fixed;z-index:310;top:calc(104px + env(safe-area-inset-top));left:50%;width:max-content;max-width:90vw;transform:translate(-50%,-20px);background:#e4d3aa;color:#534023;border:2px solid #967445;padding:9px 13px;border-radius:4px;font-size:12px;font-weight:900;opacity:0;pointer-events:none;transition:opacity .3s,transform .4s}
+#achievementToast.active{opacity:1;transform:translate(-50%,0)}
+@media(max-width:600px){.diaryHabitat{font-size:10px}.compareLegend{font-size:10px}.compareLegend small{font-size:8px}.diarySizeCompare{padding:6px}.discoveryStamp{font-size:8px;right:3px;top:3px}}
+@media(prefers-reduced-motion:reduce){.diaryBigFish.inkReveal svg,.discoveryStamp{animation:none}}
+/* Always show the actual newly discovered specimen while ink/stamp animates. */
+.diaryBigFish{position:relative}
+@keyframes specimenInk{0%{opacity:.62;filter:grayscale(.65) blur(.8px)}100%{opacity:1;filter:none}}
+@media(max-width:700px){.diaryBigFish.inkReveal svg{animation-duration:.8s}}
