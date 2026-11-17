@@ -134,7 +134,8 @@ jobs:
           node -e "const x=require('fs').readFileSync('/tmp/ok.json','utf8');const j=JSON.parse(x);if(!j.available||j.mode!=='pageviews'||j.incremented!==true||j.today<1||j.total<1)throw new Error(x)"
 
   cross-browser:
-    runs-on: ubuntu-latest
+    # Playwright 1.55 Firefox/WebKit does not support the ubuntu26.04 image behind ubuntu-latest.
+    runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
