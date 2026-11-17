@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101b1d">
-<title>STILLWATER / Lullaby Scene · Build 2.0 — Field Journal & Wildlife</title>
+<title>STILLWATER / Lullaby Scene · Build 2.1 — Retrieval & Species Guide</title>
 <!-- Galmuri by Lee Minseo / quiple, SIL Open Font License 1.1.
      Webfont served via the official npm package; no font binaries redistributed. -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
-<link rel="stylesheet" href="/stillwater/game.css?v=3">
-<link rel="stylesheet" href="/stillwater/journal.css?v=3">
+<link rel="stylesheet" href="/stillwater/game.css?v=4">
+<link rel="stylesheet" href="/stillwater/journal.css?v=4">
 </head>
 <body>
 <main id="gameRoot" role="application" aria-label="Stillwater 낚시 게임">
@@ -51,7 +51,7 @@
     </div>
     <div class="actionDock">
       <button id="liftButton" class="liftButton" disabled><span class="btnIcon">↟</span><span class="btnLabel">펌핑</span></button>
-      <div class="actionSide"><button type="button" id="rodStandButton" class="fieldTool" aria-pressed="false" aria-label="낚싯대 거치대"><b>⌁</b><span>거치대</span></button>
+      <div class="actionSide"><button type="button" id="retrieveButton" class="fieldTool retrieveButton" aria-label="낚싯줄 회수하기" title="입질 전 줄 감아 회수하기"><b>↶</b><span>회수</span></button><button type="button" id="rodStandButton" class="fieldTool" aria-pressed="false" aria-label="낚싯대 거치대"><b>⌁</b><span>거치대</span></button>
       <button id="actionButton" class="actionButton"><span class="actionHalo"></span><span class="actionIcon" id="actionIcon">↗</span><strong id="actionLabel">던지기</strong><small id="actionSub">HOLD</small></button></div>
     </div>
   </section>
@@ -61,7 +61,7 @@
     <div class="catchButtons"><button id="releaseButton" class="subtleButton">방생하기</button><button id="keepButton" class="goldButton">보관하기</button></div>
   </section>
   <button id="muteButton" class="soundChip" title="환경음 켜기 또는 끄기"><span id="soundIcon">♫</span><span id="soundLabel">AMBIENCE OFF</span></button>
-  <div class="keyHelp" id="keyHelp"><kbd>SPACE</kbd> 던지기 · 챔질 · 릴링 <span>│</span> <kbd>ESC</kbd> 일시정지</div>
+  <div class="keyHelp" id="keyHelp"><kbd>SPACE</kbd> 던지기 · 챔질 · 릴링 <span>│</span> <kbd>Q</kbd> 입질 전 회수 <span>│</span> <kbd>ESC</kbd> 일시정지</div>
   <div id="overlay" aria-hidden="true">
     <div id="panel" class="menuPanel" role="dialog" aria-modal="true" aria-label="게임 메뉴">
       <div class="panelTop"><div><small id="panelOverline">LULLABY SCENE / STILLWATER</small><h1 id="panelHeading">PAUSED</h1></div><button id="closeMenu" class="closeBtn" aria-label="메뉴 닫기">×</button></div>
@@ -144,8 +144,8 @@
   </div>
   <div id="errorBox" hidden><strong>WebGL을 사용할 수 없습니다.</strong><p>최신 Chrome, Edge, Safari에서 열어주세요.</p></div>
 </main>
-<script src="/stillwater/game-content.js?v=3" defer></script>
-<script src="/stillwater/game.js?v=3" defer></script>
-<script src="/stillwater/game-journal.js?v=3" defer></script>
+<script src="/stillwater/game-content.js?v=4" defer></script>
+<script src="/stillwater/game.js?v=4" defer></script>
+<script src="/stillwater/game-journal.js?v=4" defer></script>
 </body>
 </html>
